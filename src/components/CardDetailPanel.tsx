@@ -115,11 +115,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
       <div className="relative w-full max-w-4xl max-h-[90vh] bg-white dark:bg-slate-800 shadow-2xl rounded-2xl flex overflow-hidden">
         {/* Left: Card content */}
         <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
-          <div className="shrink-0 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: column?.color }} />
-              <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">{column?.title}</span>
-            </div>
+          <div className="shrink-0 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 px-6 py-4 flex items-center justify-end">
             <div className="flex items-center gap-2">
               <button onClick={handleDelete} className="text-xs text-red-400 hover:text-red-600 px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition">
                 Delete
