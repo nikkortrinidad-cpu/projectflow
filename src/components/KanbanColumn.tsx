@@ -18,6 +18,11 @@ export function KanbanColumn({ column, cards, swimlaneId, onCardClick, dragHandl
   const [newTitle, setNewTitle] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(column.title);
+  const [showColumnMenu, setShowColumnMenu] = useState(false);
+  const [showListSettings, setShowListSettings] = useState(false);
+  const [settingsTitle, setSettingsTitle] = useState(column.title);
+  const [settingsWipLimit, setSettingsWipLimit] = useState(String(column.wipLimit));
+  const [settingsColor, setSettingsColor] = useState(column.color);
   const droppableId = `${column.id}::${swimlaneId}`;
 
   const { setNodeRef, isOver } = useDroppable({
@@ -84,7 +89,145 @@ export function KanbanColumn({ column, cards, swimlaneId, onCardClick, dragHandl
             {cards.length}{column.wipLimit > 0 ? `/${column.wipLimit}` : ''}
           </span>
         </div>
+
+        {/* 3-dot menu */}
+        <div className="relative">
+          <button
+            onClick={() => setShowColumnMenu(!showColumnMenu)}
+            className="w-6 h-6 flex items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-300 transition"
+          >
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+            </svg>
+          </button>
+
+          {showColumnMenu && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setShowColumnMenu(false)} />
+              <div className="absolute right-0 top-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg shadow-xl z-20 py-1 w-44">
+                {/* List Settings */}
+                <button
+                  onClick={() => {
+                    setSettingsTitle(column.title);
+                    setSettingsWipLimit(String(column.wipLimit));
+                    setSettingsColor(column.color);
+                    setShowListSettings(true);
+                    setShowColumnMenu(false);
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
+                >
+                  <svg className="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                  List settings
+                </button>
+
+                {/* Archive List */}
+                <button
+                  onClick={() => {
+                    store.deleteColumn(column.id);
+                    setShowColumnMenu(false);
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
+                >
+                  <svg className="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
+                  Archive list
+                </button>
+
+                <div className="border-t border-slate-100 dark:border-slate-700 my-1" />
+
+                {/* Delete List */}
+                <button
+                  onClick={() => {
+                    if (window.confirm(`Delete "${column.title}" and all its cards? This cannot be undone.`)) {
+                      store.deleteColumn(column.id);
+                    }
+                    setShowColumnMenu(false);
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                  Delete list
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
+
+      {/* List Settings Modal */}
+      {showListSettings && (
+        <>
+          <div className="fixed inset-0 z-50 bg-black/20" onClick={() => setShowListSettings(false)} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+            <div className="pointer-events-auto w-full max-w-sm bg-white dark:bg-slate-800 rounded-xl shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between px-5 pt-4 pb-2">
+                <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">List Settings</h3>
+                <button onClick={() => setShowListSettings(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+
+              <div className="px-5 py-3 space-y-3">
+                {/* Title */}
+                <div>
+                  <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1 block">Title</label>
+                  <input
+                    value={settingsTitle}
+                    onChange={e => setSettingsTitle(e.target.value)}
+                    className="w-full text-sm border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 outline-none focus:border-primary bg-white dark:bg-slate-700 dark:text-slate-200"
+                  />
+                </div>
+
+                {/* WIP Limit */}
+                <div>
+                  <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1 block">WIP Limit <span className="normal-case">(0 = unlimited)</span></label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={settingsWipLimit}
+                    onChange={e => setSettingsWipLimit(e.target.value)}
+                    className="w-full text-sm border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 outline-none focus:border-primary bg-white dark:bg-slate-700 dark:text-slate-200"
+                  />
+                </div>
+
+                {/* Color */}
+                <div>
+                  <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5 block">Color</label>
+                  <div className="flex gap-2 flex-wrap">
+                    {['#94a3b8','#6366f1','#f59e0b','#8b5cf6','#10b981','#ef4444','#3b82f6','#ec4899','#14b8a6','#f97316'].map(c => (
+                      <button
+                        key={c}
+                        onClick={() => setSettingsColor(c)}
+                        className={`w-7 h-7 rounded-full transition ring-offset-2 dark:ring-offset-slate-800 ${settingsColor === c ? 'ring-2 ring-primary scale-110' : 'hover:scale-110'}`}
+                        style={{ backgroundColor: c }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-2">
+                <button onClick={() => setShowListSettings(false)}
+                  className="text-xs text-slate-500 dark:text-slate-400 px-3 py-1.5 hover:text-slate-700 dark:hover:text-slate-200 transition">
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    store.updateColumn(column.id, {
+                      title: settingsTitle.trim() || column.title,
+                      wipLimit: Math.max(0, parseInt(settingsWipLimit) || 0),
+                      color: settingsColor,
+                    });
+                    setShowListSettings(false);
+                  }}
+                  className="text-xs bg-primary text-white px-4 py-1.5 rounded-lg hover:bg-primary-dark transition font-medium"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       <div
         ref={setNodeRef}
