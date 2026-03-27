@@ -338,7 +338,7 @@ export function CommentEditor({ onSubmit, placeholder: placeholderText, compact 
           <button onClick={handleSubmit}
             disabled={isEmpty}
             title="Send (⌘+Enter)"
-            className={`text-white px-2.5 py-1.5 rounded-l-lg transition flex items-center justify-center ${isEmpty ? 'bg-primary/40 cursor-not-allowed' : 'bg-primary hover:bg-primary-dark'}`}>
+            className={`text-white px-2.5 h-8 rounded-l-lg transition flex items-center justify-center ${isEmpty ? 'bg-primary/40 cursor-not-allowed' : 'bg-primary hover:bg-primary-dark'}`}>
             <svg className="w-4 h-4 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
           </button>
           <div className="relative">
@@ -346,7 +346,7 @@ export function CommentEditor({ onSubmit, placeholder: placeholderText, compact 
               onClick={() => !isEmpty && setShowScheduleMenu(!showScheduleMenu)}
               disabled={isEmpty}
               title="Schedule send"
-              className={`text-white px-1.5 py-1.5 rounded-r-lg transition border-l border-white/20 flex items-center justify-center ${isEmpty ? 'bg-primary/40 cursor-not-allowed' : 'bg-primary hover:bg-primary-dark'}`}
+              className={`text-white px-1.5 h-8 rounded-r-lg transition border-l border-white/20 flex items-center justify-center ${isEmpty ? 'bg-primary/40 cursor-not-allowed' : 'bg-primary hover:bg-primary-dark'}`}
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
