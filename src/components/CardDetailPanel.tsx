@@ -654,7 +654,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
                     Progress
                   </label>
                   <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
-                    {(card.checklist || []).filter(i => i.checked).length}/{(card.checklist || []).length} done · {Math.round(((card.checklist || []).filter(i => i.checked).length / (card.checklist || []).length) * 100)}%
+                    {Math.round(((card.checklist || []).filter(i => i.checked).length / (card.checklist || []).length) * 100)}%
                   </span>
                 </div>
                 <div className="w-full h-2 bg-slate-200 dark:bg-slate-600 rounded-full overflow-hidden">
@@ -675,6 +675,11 @@ export function CardDetailPanel({ card, onClose }: Props) {
                   </svg>
                   Checklist
                 </label>
+                {(card.checklist || []).length > 0 && (
+                  <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                    {(card.checklist || []).filter(i => i.checked).length}/{(card.checklist || []).length} done
+                  </span>
+                )}
               </div>
 
               {/* Table */}
