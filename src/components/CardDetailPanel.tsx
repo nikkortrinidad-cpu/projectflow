@@ -84,6 +84,14 @@ export function CardDetailPanel({ card, onClose }: Props) {
   const column = state.columns.find(c => c.id === card.columnId);
   const activities = state.activityLog.filter(a => a.cardId === card.id).slice(0, 20);
 
+  const hasUnsavedChanges =
+    title !== card.title ||
+    description !== card.description ||
+    priority !== card.priority ||
+    (dueDate || '') !== (card.dueDate || '') ||
+    (assigneeId || '') !== (card.assigneeId || '') ||
+    JSON.stringify(selectedLabels) !== JSON.stringify(card.labels);
+
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={onClose} />
@@ -112,6 +120,17 @@ export function CardDetailPanel({ card, onClose }: Props) {
             <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 dark:text-slate-600 opacity-0 group-hover/title:opacity-100 transition-opacity pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
             </svg>
+          </div>
+
+          <div className={`flex items-center gap-1.5 text-[11px] font-medium px-1 py-1 rounded-md transition-all ${
+            hasUnsavedChanges
+              ? 'text-amber-600 dark:text-amber-400'
+              : 'text-green-600 dark:text-green-400'
+          }`}>
+            <div className={`w-1.5 h-1.5 rounded-full ${
+              hasUnsavedChanges ? 'bg-amber-500' : 'bg-green-500'
+            }`} />
+            {hasUnsavedChanges ? 'Unsaved changes' : 'All changes saved'}
           </div>
 
           <MarkdownEditor
