@@ -123,14 +123,30 @@ export function CardDetailPanel({ card, onClose }: Props) {
   };
 
 
-  const descriptionDirty = description !== card.description;
+  const [descriptionDirty, setDescriptionDirty] = useState(false);
+  const initialDescription = useRef(card.description);
+  const firstUpdate = useRef(true);
+
+  const handleDescriptionChange = (val: string) => {
+    setDescription(val);
+    // Skip the first update from TipTap initialization (HTML normalization)
+    if (firstUpdate.current) {
+      firstUpdate.current = false;
+      initialDescription.current = val;
+      return;
+    }
+    setDescriptionDirty(val !== initialDescription.current);
+  };
 
   const handleSaveDescription = () => {
     store.updateCard(card.id, { description });
+    initialDescription.current = description;
+    setDescriptionDirty(false);
   };
 
   const handleCancelDescription = () => {
-    setDescription(card.description);
+    setDescription(initialDescription.current);
+    setDescriptionDirty(false);
   };
 
   const column = state.columns.find(c => c.id === card.columnId);
@@ -661,7 +677,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
 
             <MarkdownEditor
               value={description}
-              onChange={setDescription}
+              onChange={handleDescriptionChange}
               maxLength={2000}
               placeholder="Add a description... (supports markdown)"
               headerRight={
