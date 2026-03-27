@@ -200,6 +200,14 @@ class BoardStore {
     if (col) { Object.assign(col, updates); this.save(); }
   }
 
+  reorderColumns(fromIndex: number, toIndex: number) {
+    const sorted = [...this.state.columns].sort((a, b) => a.order - b.order);
+    const [moved] = sorted.splice(fromIndex, 1);
+    sorted.splice(toIndex, 0, moved);
+    sorted.forEach((col, i) => { col.order = i; });
+    this.save();
+  }
+
   deleteColumn(colId: string) {
     this.state.cards = this.state.cards.filter(c => c.columnId !== colId);
     this.state.columns = this.state.columns.filter(c => c.id !== colId);

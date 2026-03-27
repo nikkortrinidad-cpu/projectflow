@@ -1,7 +1,35 @@
 import { useState } from 'react';
+import {
+  DndContext, closestCenter, PointerSensor, useSensor, useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useBoard } from '../store/useStore';
 import { store } from '../store/boardStore';
-import type { UserRole } from '../types';
+import type { Column, UserRole } from '../types';
+
+function SortableColumnRow({ col, children }: { col: Column; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: col.id,
+  });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+  return (
+    <div ref={setNodeRef} style={style} {...attributes}
+      className="flex items-center gap-3 bg-slate-50 rounded-lg p-3">
+      <button {...listeners} className="cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-500 touch-none">
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M7 2a2 2 0 10.001 4.001A2 2 0 007 2zm0 6a2 2 0 10.001 4.001A2 2 0 007 8zm0 6a2 2 0 10.001 4.001A2 2 0 007 14zm6-8a2 2 0 10-.001-4.001A2 2 0 0013 6zm0 2a2 2 0 10.001 4.001A2 2 0 0013 8zm0 6a2 2 0 10.001 4.001A2 2 0 0013 14z" />
+        </svg>
+      </button>
+      {children}
+    </div>
+  );
+}
 
 export function BoardSettings({ onClose }: { onClose: () => void }) {
   const { state } = useBoard();
@@ -10,6 +38,21 @@ export function BoardSettings({ onClose }: { onClose: () => void }) {
   const [newColor, setNewColor] = useState('#6366f1');
   const [newEmail, setNewEmail] = useState('');
   const [newRole, setNewRole] = useState<UserRole>('member');
+
+  const settingsSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
+  const sortedColumns = [...state.columns].sort((a, b) => a.order - b.order);
+
+  const handleColumnDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const fromIndex = sortedColumns.findIndex(c => c.id === active.id);
+    const toIndex = sortedColumns.findIndex(c => c.id === over.id);
+    if (fromIndex !== -1 && toIndex !== -1) {
+      store.reorderColumns(fromIndex, toIndex);
+    }
+  };
 
   const tabs = [
     { id: 'columns' as const, label: 'Columns' },
@@ -57,30 +100,34 @@ export function BoardSettings({ onClose }: { onClose: () => void }) {
 
         <div className="p-6 overflow-y-auto max-h-[60vh]">
           {tab === 'columns' && (
-            <div className="space-y-2">
-              {state.columns.sort((a, b) => a.order - b.order).map(col => (
-                <div key={col.id} className="flex items-center gap-3 bg-slate-50 rounded-lg p-3">
-                  <input type="color" value={col.color}
-                    onChange={e => store.updateColumn(col.id, { color: e.target.value })}
-                    className="w-6 h-6 rounded cursor-pointer border-none" />
-                  <input value={col.title}
-                    onChange={e => store.updateColumn(col.id, { title: e.target.value })}
-                    className="flex-1 text-sm bg-transparent outline-none font-medium" />
-                  <div className="flex items-center gap-1">
-                    <span className="text-[10px] text-slate-400">WIP:</span>
-                    <input type="number" min="0" value={col.wipLimit}
-                      onChange={e => store.updateColumn(col.id, { wipLimit: parseInt(e.target.value) || 0 })}
-                      className="w-12 text-xs text-center border border-slate-200 rounded px-1 py-0.5 outline-none" />
-                  </div>
-                  <button onClick={() => store.deleteColumn(col.id)}
-                    className="text-slate-300 hover:text-red-500 transition">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
+            <DndContext sensors={settingsSensors} collisionDetection={closestCenter} onDragEnd={handleColumnDragEnd}>
+              <SortableContext items={sortedColumns.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                <div className="space-y-2">
+                  {sortedColumns.map(col => (
+                    <SortableColumnRow key={col.id} col={col}>
+                      <input type="color" value={col.color}
+                        onChange={e => store.updateColumn(col.id, { color: e.target.value })}
+                        className="w-6 h-6 rounded cursor-pointer border-none" />
+                      <input value={col.title}
+                        onChange={e => store.updateColumn(col.id, { title: e.target.value })}
+                        className="flex-1 text-sm bg-transparent outline-none font-medium" />
+                      <div className="flex items-center gap-1">
+                        <span className="text-[10px] text-slate-400">WIP:</span>
+                        <input type="number" min="0" value={col.wipLimit}
+                          onChange={e => store.updateColumn(col.id, { wipLimit: parseInt(e.target.value) || 0 })}
+                          className="w-12 text-xs text-center border border-slate-200 rounded px-1 py-0.5 outline-none" />
+                      </div>
+                      <button onClick={() => store.deleteColumn(col.id)}
+                        className="text-slate-300 hover:text-red-500 transition">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </SortableColumnRow>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </SortableContext>
+            </DndContext>
           )}
 
           {tab === 'swimlanes' && (
