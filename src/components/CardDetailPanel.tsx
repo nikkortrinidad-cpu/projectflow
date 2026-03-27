@@ -27,15 +27,14 @@ export function CardDetailPanel({ card, onClose }: Props) {
   const [editLabelColor, setEditLabelColor] = useState('');
   const [newChecklistItem, setNewChecklistItem] = useState('');
   const [showAddMenu, setShowAddMenu] = useState(false);
+  const [showLabelsDropdown, setShowLabelsDropdown] = useState(false);
 
   // Section visibility toggles
-  const [showLabelsSection, setShowLabelsSection] = useState(card.labels.length > 0);
   const [showDatesSection, setShowDatesSection] = useState(!!card.dueDate);
   const [showChecklistSection, setShowChecklistSection] = useState((card.checklist || []).length > 0);
   /* Hidden Attachment state — available if needed */
 
   // Refs for scrolling
-  const labelsRef = useRef<HTMLDivElement>(null);
   const datesRef = useRef<HTMLDivElement>(null);
   const checklistRef = useRef<HTMLDivElement>(null);
 
@@ -159,7 +158,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
                     <div className="fixed inset-0 z-10" onClick={() => setShowAddMenu(false)} />
                     <div className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg shadow-xl z-20 py-1 w-40">
                       {[
-                        { label: 'Labels', icon: 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z', action: () => { setShowLabelsSection(true); setShowAddMenu(false); scrollToRef(labelsRef); } },
+                        { label: 'Labels', icon: 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z', action: () => { setShowLabelsDropdown(true); setShowAddMenu(false); } },
                         { label: 'Due Date', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z', action: () => { setShowDatesSection(true); setShowAddMenu(false); scrollToRef(datesRef); } },
                         { label: 'Checklist', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4', action: () => { setShowChecklistSection(true); setShowAddMenu(false); scrollToRef(checklistRef); } },
                         /* Hidden Attachment — available in store if needed */
@@ -177,20 +176,100 @@ export function CardDetailPanel({ card, onClose }: Props) {
                 )}
               </div>
 
-              {/* Quick action buttons */}
-              <button
-                onClick={() => { setShowLabelsSection(true); scrollToRef(labelsRef); }}
-                className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition ${
-                  showLabelsSection
-                    ? 'border-primary/30 bg-primary/5 text-primary dark:bg-primary/10'
-                    : 'border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
-                }`}
-              >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                </svg>
-                Labels
-              </button>
+              {/* Labels dropdown with manage */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowLabelsDropdown(!showLabelsDropdown)}
+                  className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition ${
+                    selectedLabels.length > 0 || showLabelsDropdown
+                      ? 'border-primary/30 bg-primary/5 text-primary dark:bg-primary/10'
+                      : 'border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                  Labels
+                </button>
+                {showLabelsDropdown && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => { setShowLabelsDropdown(false); setShowLabelManager(false); }} />
+                    <div className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg shadow-xl z-20 w-64 overflow-hidden">
+                      <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Labels</span>
+                        <button onClick={() => setShowLabelManager(!showLabelManager)}
+                          className="text-[10px] text-primary hover:text-primary-dark font-medium transition">
+                          {showLabelManager ? 'Done' : 'Manage'}
+                        </button>
+                      </div>
+                      <div className="p-2 max-h-60 overflow-y-auto space-y-1">
+                        {!showLabelManager ? (
+                          /* Label selection */
+                          state.labels.map(l => (
+                            <button key={l.id}
+                              onClick={() => toggleLabel(l.id)}
+                              className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+                              <div className={`w-4 h-4 shrink-0 rounded border-2 flex items-center justify-center transition ${
+                                selectedLabels.includes(l.id)
+                                  ? 'bg-primary border-primary text-white'
+                                  : 'border-slate-300 dark:border-slate-500'
+                              }`}>
+                                {selectedLabels.includes(l.id) && (
+                                  <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                  </svg>
+                                )}
+                              </div>
+                              <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: l.color }} />
+                              <span className="text-slate-600 dark:text-slate-300 font-medium">{l.name}</span>
+                            </button>
+                          ))
+                        ) : (
+                          /* Label manager */
+                          <>
+                            {state.labels.map(l => (
+                              <div key={l.id} className="flex items-center gap-2 py-1">
+                                {editingLabelId === l.id ? (
+                                  <>
+                                    <ColorPicker value={editLabelColor} onChange={setEditLabelColor} />
+                                    <input value={editLabelName} onChange={e => setEditLabelName(e.target.value)}
+                                      onKeyDown={e => { if (e.key === 'Enter') handleEditLabel(l.id); if (e.key === 'Escape') setEditingLabelId(null); }}
+                                      className="flex-1 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded px-2 py-1 outline-none focus:border-primary dark:text-slate-200" />
+                                    <button onClick={() => handleEditLabel(l.id)}
+                                      className="text-[10px] text-primary hover:text-primary-dark font-medium">Save</button>
+                                    <button onClick={() => setEditingLabelId(null)}
+                                      className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">✕</button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: l.color }} />
+                                    <span className="flex-1 text-xs font-medium text-slate-600 dark:text-slate-300">{l.name}</span>
+                                    <button onClick={() => { setEditingLabelId(l.id); setEditLabelName(l.name); setEditLabelColor(l.color); }}
+                                      className="text-[10px] text-slate-400 hover:text-primary transition">Edit</button>
+                                    <button onClick={() => handleDeleteLabel(l.id)}
+                                      className="text-[10px] text-slate-400 hover:text-red-500 transition">✕</button>
+                                  </>
+                                )}
+                              </div>
+                            ))}
+                            <div className="flex items-center gap-2 pt-2 border-t border-slate-200 dark:border-slate-600 mt-1">
+                              <ColorPicker value={newLabelColor} onChange={setNewLabelColor} />
+                              <input value={newLabelName} onChange={e => setNewLabelName(e.target.value)}
+                                onKeyDown={e => { if (e.key === 'Enter') handleCreateLabel(); }}
+                                placeholder="New label..."
+                                className="flex-1 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded px-2 py-1 outline-none focus:border-primary dark:text-slate-200" />
+                              <button onClick={handleCreateLabel}
+                                className="text-[10px] bg-primary text-white px-2 py-1 rounded font-medium hover:bg-primary-dark transition">
+                                Add
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
 
               <button
                 onClick={() => { setShowDatesSection(true); scrollToRef(datesRef); }}
@@ -222,6 +301,21 @@ export function CardDetailPanel({ card, onClose }: Props) {
 
               {/* Hidden Attachment button — available in store if needed */}
             </div>
+
+            {/* Labels display */}
+            {selectedLabels.length > 0 && (
+              <div>
+                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 block">Labels</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {state.labels.filter(l => selectedLabels.includes(l.id)).map(l => (
+                    <span key={l.id} className="text-xs px-2.5 py-1 rounded-full font-medium text-white shadow-sm"
+                      style={{ backgroundColor: l.color }}>
+                      {l.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Members section */}
             <div>
@@ -311,74 +405,6 @@ export function CardDetailPanel({ card, onClose }: Props) {
                 </div>
               )}
             </div>
-
-            {showLabelsSection && (
-            <div ref={labelsRef}>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Labels</label>
-                <button onClick={() => setShowLabelManager(!showLabelManager)}
-                  className="text-[10px] text-primary hover:text-primary-dark font-medium transition">
-                  {showLabelManager ? 'Done' : 'Manage'}
-                </button>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {state.labels.map(l => (
-                  <button key={l.id}
-                    onClick={() => toggleLabel(l.id)}
-                    className={`text-xs px-2.5 py-1 rounded-full font-medium transition ${
-                      selectedLabels.includes(l.id)
-                        ? 'text-white shadow-sm'
-                        : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
-                    }`}
-                    style={selectedLabels.includes(l.id) ? { backgroundColor: l.color } : {}}>
-                    {l.name}
-                  </button>
-                ))}
-              </div>
-
-              {showLabelManager && (
-                <div className="mt-3 border border-slate-200 dark:border-slate-600 rounded-lg p-3 space-y-2 bg-slate-50 dark:bg-slate-700">
-                  {state.labels.map(l => (
-                    <div key={l.id} className="flex items-center gap-2">
-                      {editingLabelId === l.id ? (
-                        <>
-                          <ColorPicker value={editLabelColor} onChange={setEditLabelColor} />
-                          <input value={editLabelName} onChange={e => setEditLabelName(e.target.value)}
-                            onKeyDown={e => { if (e.key === 'Enter') handleEditLabel(l.id); if (e.key === 'Escape') setEditingLabelId(null); }}
-                            className="flex-1 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded px-2 py-1 outline-none focus:border-primary dark:text-slate-200" />
-                          <button onClick={() => handleEditLabel(l.id)}
-                            className="text-[10px] text-primary hover:text-primary-dark font-medium">Save</button>
-                          <button onClick={() => setEditingLabelId(null)}
-                            className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">Cancel</button>
-                        </>
-                      ) : (
-                        <>
-                          <div className="w-4 h-4 rounded-full shrink-0" style={{ backgroundColor: l.color }} />
-                          <span className="flex-1 text-xs font-medium text-slate-600 dark:text-slate-300">{l.name}</span>
-                          <button onClick={() => { setEditingLabelId(l.id); setEditLabelName(l.name); setEditLabelColor(l.color); }}
-                            className="text-[10px] text-slate-400 hover:text-primary transition">Edit</button>
-                          <button onClick={() => handleDeleteLabel(l.id)}
-                            className="text-[10px] text-slate-400 hover:text-red-500 transition">Remove</button>
-                        </>
-                      )}
-                    </div>
-                  ))}
-
-                  <div className="flex items-center gap-2 pt-2 border-t border-slate-200 dark:border-slate-600">
-                    <ColorPicker value={newLabelColor} onChange={setNewLabelColor} />
-                    <input value={newLabelName} onChange={e => setNewLabelName(e.target.value)}
-                      onKeyDown={e => { if (e.key === 'Enter') handleCreateLabel(); }}
-                      placeholder="New label name..."
-                      className="flex-1 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded px-2 py-1 outline-none focus:border-primary dark:text-slate-200" />
-                    <button onClick={handleCreateLabel}
-                      className="text-[10px] bg-primary text-white px-2 py-1 rounded font-medium hover:bg-primary-dark transition">
-                      Create
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-            )}
 
             {/* Checklist section */}
             {showChecklistSection && (
