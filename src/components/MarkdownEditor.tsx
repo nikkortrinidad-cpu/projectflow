@@ -50,7 +50,7 @@ export function MarkdownEditor({ value, onChange, maxLength, placeholder, header
     content: value ? markdownToHtml(value) : '',
     editorProps: {
       attributes: {
-        class: 'outline-none min-h-[200px] p-3 text-sm text-slate-600 dark:text-slate-300 prose-editor',
+        class: 'outline-none min-h-[280px] p-3 text-sm text-slate-600 dark:text-slate-300 prose-editor',
       },
       handleKeyDown: (_view, event) => {
         const mod = event.metaKey || event.ctrlKey;
