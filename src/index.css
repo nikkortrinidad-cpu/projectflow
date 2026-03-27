@@ -94,7 +94,7 @@ html.dark ::-webkit-scrollbar-thumb:hover {
   border-left: 3px solid #cbd5e1; padding-left: 0.75em;
   color: #64748b; margin: 0.5em 0; font-style: italic;
 }
-.tiptap hr { border: none; border-top: 1px solid #e2e8f0; margin: 0.75em 0; }
+.tiptap hr { border: none; border-top: 2px solid #cbd5e1; margin: 1em 0; }
 .tiptap p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   float: left; color: #94a3b8; pointer-events: none; height: 0;
@@ -106,7 +106,7 @@ html.dark .tiptap pre { background: #1e293b; }
 html.dark .tiptap a { color: #818cf8; }
 html.dark .tiptap a:hover { color: #a5b4fc; }
 html.dark .tiptap blockquote { border-left-color: #475569; color: #94a3b8; }
-html.dark .tiptap hr { border-top-color: #334155; }
+html.dark .tiptap hr { border-top-color: #475569; }
 
 /* Comment rendered HTML */
 .prose-comment p { margin: 0.15em 0; }
