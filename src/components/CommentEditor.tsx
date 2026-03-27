@@ -6,7 +6,7 @@ import Image from '@tiptap/extension-image';
 import Placeholder from '@tiptap/extension-placeholder';
 
 interface Props {
-  onSubmit: (html: string) => void;
+  onSubmit: (html: string, scheduledAt?: string) => void;
   placeholder?: string;
   compact?: boolean;
 }
@@ -21,6 +21,9 @@ export function CommentEditor({ onSubmit, placeholder: placeholderText, compact 
   const [showToolbar, setShowToolbar] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showGifPicker, setShowGifPicker] = useState(false);
+  const [showScheduleMenu, setShowScheduleMenu] = useState(false);
+  const [showCustomPicker, setShowCustomPicker] = useState(false);
+  const [customDateTime, setCustomDateTime] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const editor = useEditor({
@@ -262,12 +265,121 @@ export function CommentEditor({ onSubmit, placeholder: placeholderText, compact 
           <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileUpload} accept="image/*,.pdf,.doc,.docx,.txt,.csv,.xlsx" />
         </div>
 
-        {/* Right: Send button */}
-        <button onClick={handleSubmit}
-          title="Send (⌘+Enter)"
-          className="text-xs bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-primary-dark transition font-medium shrink-0">
-          Send
-        </button>
+        {/* Right: Send + Schedule */}
+        <div className="flex items-center shrink-0">
+          <button onClick={handleSubmit}
+            title="Send (⌘+Enter)"
+            className="text-xs bg-primary text-white px-3 py-1.5 rounded-l-lg hover:bg-primary-dark transition font-medium">
+            Send
+          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowScheduleMenu(!showScheduleMenu)}
+              title="Schedule send"
+              className="text-xs bg-primary text-white px-1.5 py-1.5 rounded-r-lg hover:bg-primary-dark transition border-l border-white/20"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+              </svg>
+            </button>
+            {showScheduleMenu && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => { setShowScheduleMenu(false); setShowCustomPicker(false); }} />
+                <div className="absolute bottom-full right-0 mb-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl shadow-xl z-20 w-56 overflow-hidden">
+                  <div className="px-3 pt-3 pb-1.5">
+                    <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide">Schedule send</p>
+                  </div>
+                  <div className="py-1">
+                    <button
+                      onClick={() => {
+                        const time = new Date(Date.now() + 20 * 60 * 1000);
+                        const html = editor.getHTML();
+                        const text = editor.getText().trim();
+                        if (!text) return;
+                        onSubmit(html, time.toISOString());
+                        editor.commands.clearContent();
+                        setShowScheduleMenu(false);
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
+                    >
+                      <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      In 20 minutes
+                    </button>
+                    <button
+                      onClick={() => {
+                        const time = new Date(Date.now() + 2 * 60 * 60 * 1000);
+                        const html = editor.getHTML();
+                        const text = editor.getText().trim();
+                        if (!text) return;
+                        onSubmit(html, time.toISOString());
+                        editor.commands.clearContent();
+                        setShowScheduleMenu(false);
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
+                    >
+                      <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      In 2 hours
+                    </button>
+                    <button
+                      onClick={() => {
+                        const tomorrow = new Date();
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                        tomorrow.setHours(9, 0, 0, 0);
+                        const html = editor.getHTML();
+                        const text = editor.getText().trim();
+                        if (!text) return;
+                        onSubmit(html, tomorrow.toISOString());
+                        editor.commands.clearContent();
+                        setShowScheduleMenu(false);
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
+                    >
+                      <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      Tomorrow at 9:00 AM
+                    </button>
+                  </div>
+                  <div className="border-t border-slate-100 dark:border-slate-700">
+                    {!showCustomPicker ? (
+                      <button
+                        onClick={() => setShowCustomPicker(true)}
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
+                      >
+                        <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        Pick a custom time
+                      </button>
+                    ) : (
+                      <div className="px-3 py-2.5 space-y-2">
+                        <input
+                          type="datetime-local"
+                          value={customDateTime}
+                          onChange={e => setCustomDateTime(e.target.value)}
+                          min={new Date().toISOString().slice(0, 16)}
+                          className="w-full text-xs border border-slate-200 dark:border-slate-600 rounded-lg px-2.5 py-1.5 outline-none focus:border-primary bg-white dark:bg-slate-700 dark:text-slate-200"
+                        />
+                        <button
+                          onClick={() => {
+                            if (!customDateTime) return;
+                            const html = editor.getHTML();
+                            const text = editor.getText().trim();
+                            if (!text) return;
+                            onSubmit(html, new Date(customDateTime).toISOString());
+                            editor.commands.clearContent();
+                            setShowScheduleMenu(false);
+                            setShowCustomPicker(false);
+                            setCustomDateTime('');
+                          }}
+                          className="w-full text-xs bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-primary-dark transition font-medium"
+                        >
+                          Schedule
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

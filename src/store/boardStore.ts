@@ -319,12 +319,16 @@ class BoardStore {
     this.save();
   }
 
-  addComment(cardId: string, text: string) {
+  addComment(cardId: string, text: string, scheduledAt?: string) {
     const card = this.state.cards.find(c => c.id === cardId);
     if (!card) return;
-    const comment: Comment = { id: uuid(), authorId: 'user-1', text, createdAt: new Date().toISOString() };
+    const comment: Comment = { id: uuid(), authorId: 'user-1', text, createdAt: new Date().toISOString(), scheduledAt };
     card.comments.push(comment);
-    this.logActivity(cardId, 'user-1', 'commented', `Commented on "${card.title}"`);
+    if (scheduledAt) {
+      this.logActivity(cardId, 'user-1', 'scheduled', `Scheduled a comment on "${card.title}"`);
+    } else {
+      this.logActivity(cardId, 'user-1', 'commented', `Commented on "${card.title}"`);
+    }
     this.save();
   }
 

@@ -113,10 +113,10 @@ export function CardDetailPanel({ card, onClose }: Props) {
     onClose();
   };
 
-  const handleAddComment = (html?: string) => {
+  const handleAddComment = (html?: string, scheduledAt?: string) => {
     const text = html || commentText.trim();
     if (text) {
-      store.addComment(card.id, text);
+      store.addComment(card.id, text, scheduledAt);
       setCommentText('');
     }
   };
@@ -966,6 +966,12 @@ export function CardDetailPanel({ card, onClose }: Props) {
                               <p className="text-[10px] text-slate-400 dark:text-slate-500">
                                 {new Date(c.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                               </p>
+                              {c.scheduledAt && new Date(c.scheduledAt) > new Date() && (
+                                <span className="text-[9px] font-medium text-amber-500 dark:text-amber-400 flex items-center gap-0.5">
+                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                  Scheduled {new Date(c.scheduledAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              )}
                               <button
                                 onClick={() => setReplyingTo(replyingTo === c.id ? null : c.id)}
                                 className="text-[10px] font-medium text-slate-400 hover:text-primary transition"
@@ -1041,7 +1047,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
           {/* Comment input pinned at bottom — only show on comments tab */}
           {activityTab === 'comments' && (
             <div className="shrink-0 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-              <CommentEditor onSubmit={(html) => handleAddComment(html)} />
+              <CommentEditor onSubmit={(html, scheduledAt) => handleAddComment(html, scheduledAt)} />
             </div>
           )}
         </div>
