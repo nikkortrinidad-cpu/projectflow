@@ -331,7 +331,17 @@ class BoardStore {
   addReply(cardId: string, commentId: string, text: string) {
     const card = this.state.cards.find(c => c.id === cardId);
     if (!card) return;
-    const comment = card.comments.find(c => c.id === commentId);
+    const findComment = (comments: Comment[]): Comment | undefined => {
+      for (const c of comments) {
+        if (c.id === commentId) return c;
+        if (c.replies) {
+          const found = findComment(c.replies);
+          if (found) return found;
+        }
+      }
+      return undefined;
+    };
+    const comment = findComment(card.comments);
     if (!comment) return;
     if (!comment.replies) comment.replies = [];
     const reply: Comment = { id: uuid(), authorId: 'user-1', text, createdAt: new Date().toISOString() };

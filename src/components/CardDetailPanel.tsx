@@ -36,6 +36,25 @@ export function CardDetailPanel({ card, onClose }: Props) {
   const [showCardMenu, setShowCardMenu] = useState(false);
   const [activityTab, setActivityTab] = useState<'comments' | 'activity'>('comments');
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [collapsedComments, setCollapsedComments] = useState<Set<string>>(new Set());
+
+  const toggleCollapse = (commentId: string) => {
+    setCollapsedComments(prev => {
+      const next = new Set(prev);
+      if (next.has(commentId)) next.delete(commentId);
+      else next.add(commentId);
+      return next;
+    });
+  };
+
+  const countAllReplies = (replies: typeof card.comments): number => {
+    let count = 0;
+    for (const r of replies) {
+      count++;
+      if (r.replies) count += countAllReplies(r.replies);
+    }
+    return count;
+  };
   const [shareInviteEmail, setShareInviteEmail] = useState('');
   const [sharePublicLink, setSharePublicLink] = useState(false);
   const [sharePermission, setSharePermission] = useState<'full_edit' | 'can_comment' | 'view_only'>('full_edit');
@@ -875,6 +894,62 @@ export function CardDetailPanel({ card, onClose }: Props) {
                   ) : (
                     [...card.comments].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((c, i, arr) => {
                       const author = state.members.find(m => m.id === c.authorId);
+                      const totalReplies = countAllReplies(c.replies || []);
+                      const isCollapsed = collapsedComments.has(c.id);
+
+                      const renderReplies = (replies: typeof card.comments, depth: number = 1) => (
+                        <div className={`mt-2 space-y-2 ${depth === 1 ? 'ml-2' : 'ml-3'}`}>
+                          {replies.map(reply => {
+                            const replyAuthor = state.members.find(m => m.id === reply.authorId);
+                            return (
+                              <div key={`reply-${reply.id}`}>
+                                <div className="relative pl-5">
+                                  <div className="absolute left-0 top-0.5 w-[14px] h-[14px] rounded-full bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400 text-[7px] font-bold flex items-center justify-center">
+                                    {(replyAuthor?.name || '?').charAt(0)}
+                                  </div>
+                                  <div className="bg-slate-100 dark:bg-slate-600/50 rounded-lg p-2 shadow-sm">
+                                    <div className="flex items-center gap-1.5 mb-0.5">
+                                      <span className="text-[11px] font-medium text-slate-700 dark:text-slate-200">{replyAuthor?.name || 'Unknown'}{replyAuthor?.id === store.getCurrentMemberId() && <span className="text-[10px] text-slate-400 font-normal ml-1">(You)</span>}</span>
+                                    </div>
+                                    <div className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed prose-comment" dangerouslySetInnerHTML={{ __html: reply.text }} />
+                                    <div className="flex items-center gap-3 mt-1">
+                                      <p className="text-[9px] text-slate-400 dark:text-slate-500">
+                                        {new Date(reply.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                      </p>
+                                      <button
+                                        onClick={() => setReplyingTo(replyingTo === reply.id ? null : reply.id)}
+                                        className="text-[9px] font-medium text-slate-400 hover:text-primary transition"
+                                      >
+                                        Reply
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Nested replies */}
+                                {(reply.replies || []).length > 0 && renderReplies(reply.replies!, depth + 1)}
+
+                                {/* Reply input for this reply */}
+                                {replyingTo === reply.id && (
+                                  <div className="mt-2 ml-5">
+                                    <CommentEditor
+                                      onSubmit={(html) => {
+                                        if (html) {
+                                          store.addReply(card.id, reply.id, html);
+                                          setReplyingTo(null);
+                                        }
+                                      }}
+                                      placeholder="Write a reply..."
+                                      compact
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+
                       return (
                         <div key={`comment-${c.id}`} className="relative pl-6">
                           {i < arr.length - 1 && (
@@ -898,36 +973,22 @@ export function CardDetailPanel({ card, onClose }: Props) {
                               >
                                 Reply
                               </button>
-                              {(c.replies?.length || 0) > 0 && (
-                                <span className="text-[10px] text-slate-400 dark:text-slate-500">{c.replies!.length} {c.replies!.length === 1 ? 'reply' : 'replies'}</span>
+                              {totalReplies > 0 && (
+                                <button
+                                  onClick={() => toggleCollapse(c.id)}
+                                  className="text-[10px] font-medium text-primary hover:text-primary-dark transition flex items-center gap-0.5"
+                                >
+                                  <svg className={`w-3 h-3 transition-transform ${isCollapsed ? '' : 'rotate-90'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                  </svg>
+                                  {totalReplies} {totalReplies === 1 ? 'reply' : 'replies'}
+                                </button>
                               )}
                             </div>
                           </div>
 
-                          {/* Replies */}
-                          {(c.replies || []).length > 0 && (
-                            <div className="mt-2 space-y-2 ml-2">
-                              {c.replies!.map(reply => {
-                                const replyAuthor = state.members.find(m => m.id === reply.authorId);
-                                return (
-                                  <div key={`reply-${reply.id}`} className="relative pl-5">
-                                    <div className="absolute left-0 top-0.5 w-[14px] h-[14px] rounded-full bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400 text-[7px] font-bold flex items-center justify-center">
-                                      {(replyAuthor?.name || '?').charAt(0)}
-                                    </div>
-                                    <div className="bg-slate-100 dark:bg-slate-600/50 rounded-lg p-2 shadow-sm">
-                                      <div className="flex items-center gap-1.5 mb-0.5">
-                                        <span className="text-[11px] font-medium text-slate-700 dark:text-slate-200">{replyAuthor?.name || 'Unknown'}{replyAuthor?.id === store.getCurrentMemberId() && <span className="text-[10px] text-slate-400 font-normal ml-1">(You)</span>}</span>
-                                      </div>
-                                      <div className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed prose-comment" dangerouslySetInnerHTML={{ __html: reply.text }} />
-                                      <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-1">
-                                        {new Date(reply.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                      </p>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
+                          {/* Replies — collapsible */}
+                          {!isCollapsed && (c.replies || []).length > 0 && renderReplies(c.replies!)}
 
                           {/* Reply input */}
                           {replyingTo === c.id && (
