@@ -81,6 +81,15 @@ export interface Notification {
   cardId?: string;
 }
 
+export interface TrashItem {
+  id: string;
+  type: 'card' | 'column';
+  data: Card | Column;
+  deletedAt: string;
+  /** Cards that belonged to the column (only for column trash items) */
+  associatedCards?: Card[];
+}
+
 export interface BoardState {
   columns: Column[];
   swimlanes: Swimlane[];
@@ -92,6 +101,7 @@ export interface BoardState {
   filters: FilterState;
   savedColors: string[];
   theme: 'light' | 'dark';
+  trash: TrashItem[];
 }
 
 export interface FilterState {

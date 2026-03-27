@@ -3,7 +3,7 @@ import { doc, setDoc, onSnapshot, type Unsubscribe } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import type {
   BoardState, Card, Column, Swimlane, Label, TeamMember,
-  Notification, FilterState, Priority, Comment, ChecklistItem
+  Notification, FilterState, Priority, Comment, ChecklistItem, TrashItem
 } from '../types';
 
 const STORAGE_KEY = 'kanban-board-state';
@@ -36,6 +36,7 @@ function createDefaultState(): BoardState {
     filters: { search: '', assigneeIds: [], labelIds: [], priorities: [], dueDateRange: { from: null, to: null } },
     savedColors: ['#ef4444', '#f97316', '#f59e0b', '#10b981', '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899'],
     theme: 'light',
+    trash: [],
   };
 }
 
@@ -50,6 +51,7 @@ function loadState(): BoardState {
       if (!parsed.theme) {
         parsed.theme = 'light';
       }
+      if (!parsed.trash) parsed.trash = [];
       if (parsed.cards) {
         parsed.cards.forEach((c: Card) => {
           if (!c.checklist) c.checklist = [];
@@ -77,6 +79,7 @@ function migrateState(parsed: any): BoardState {
   if (!parsed.members) parsed.members = [];
   if (!parsed.notifications) parsed.notifications = [];
   if (!parsed.activityLog) parsed.activityLog = [];
+  if (!parsed.trash) parsed.trash = [];
   if (!parsed.filters) parsed.filters = { search: '', assigneeIds: [], labelIds: [], priorities: [], dueDateRange: { from: null, to: null } };
 
   parsed.cards.forEach((c: Card) => {
@@ -263,10 +266,20 @@ class BoardStore {
 
   deleteCard(cardId: string) {
     const card = this.state.cards.find(c => c.id === cardId);
-    this.state.cards = this.state.cards.filter(c => c.id !== cardId);
     if (card) {
-      this.logActivity(cardId, 'user-1', 'deleted', `Deleted card "${card.title}"`);
+      // Move to trash instead of permanent delete
+      const trashItem: TrashItem = {
+        id: uuid(),
+        type: 'card',
+        data: { ...card },
+        deletedAt: new Date().toISOString(),
+      };
+      this.state.trash.push(trashItem);
+      this.state.cards = this.state.cards.filter(c => c.id !== cardId);
+      this.logActivity(cardId, 'user-1', 'deleted', `Moved card "${card.title}" to trash`);
+      this.addNotification(`Card "${card.title}" moved to trash`, 'info', cardId);
     }
+    this.cleanupTrash();
     this.save();
   }
 
@@ -387,8 +400,22 @@ class BoardStore {
   }
 
   deleteColumn(colId: string) {
-    this.state.cards = this.state.cards.filter(c => c.columnId !== colId);
-    this.state.columns = this.state.columns.filter(c => c.id !== colId);
+    const col = this.state.columns.find(c => c.id === colId);
+    if (col) {
+      const associatedCards = this.state.cards.filter(c => c.columnId === colId).map(c => ({ ...c }));
+      const trashItem: TrashItem = {
+        id: uuid(),
+        type: 'column',
+        data: { ...col },
+        deletedAt: new Date().toISOString(),
+        associatedCards,
+      };
+      this.state.trash.push(trashItem);
+      this.state.cards = this.state.cards.filter(c => c.columnId !== colId);
+      this.state.columns = this.state.columns.filter(c => c.id !== colId);
+      this.logActivity(colId, 'user-1', 'deleted', `Moved list "${col.title}" to trash`);
+    }
+    this.cleanupTrash();
     this.save();
   }
 
@@ -536,6 +563,62 @@ class BoardStore {
   resetBoard() {
     this.state = createDefaultState();
     this.save();
+  }
+
+  // --- Trash ---
+  private cleanupTrash() {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    this.state.trash = this.state.trash.filter(item => new Date(item.deletedAt) > thirtyDaysAgo);
+  }
+
+  restoreFromTrash(trashId: string) {
+    const trashItem = this.state.trash.find(t => t.id === trashId);
+    if (!trashItem) return;
+
+    if (trashItem.type === 'card') {
+      const card = trashItem.data as Card;
+      // Check if column still exists, otherwise put in first column
+      const colExists = this.state.columns.some(c => c.id === card.columnId);
+      if (!colExists && this.state.columns.length > 0) {
+        card.columnId = this.state.columns[0].id;
+      }
+      card.order = this.state.cards.filter(c => c.columnId === card.columnId).length;
+      this.state.cards.push(card);
+      this.logActivity(card.id, 'user-1', 'restored', `Restored card "${card.title}" from trash`);
+      this.addNotification(`Card "${card.title}" restored`, 'success', card.id);
+    } else if (trashItem.type === 'column') {
+      const col = trashItem.data as Column;
+      col.order = this.state.columns.length;
+      this.state.columns.push(col);
+      // Restore associated cards
+      if (trashItem.associatedCards) {
+        trashItem.associatedCards.forEach(card => {
+          card.columnId = col.id;
+          this.state.cards.push(card);
+        });
+      }
+      this.logActivity(col.id, 'user-1', 'restored', `Restored list "${col.title}" from trash`);
+      this.addNotification(`List "${col.title}" restored with its cards`, 'success');
+    }
+
+    this.state.trash = this.state.trash.filter(t => t.id !== trashId);
+    this.save();
+  }
+
+  permanentDeleteFromTrash(trashId: string) {
+    this.state.trash = this.state.trash.filter(t => t.id !== trashId);
+    this.save();
+  }
+
+  emptyTrash() {
+    this.state.trash = [];
+    this.save();
+  }
+
+  getTrash(): TrashItem[] {
+    this.cleanupTrash();
+    return this.state.trash.sort((a, b) => new Date(b.deletedAt).getTime() - new Date(a.deletedAt).getTime());
   }
 }
 
