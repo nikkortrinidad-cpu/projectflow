@@ -50,7 +50,7 @@ export function MarkdownEditor({ value, onChange, maxLength, placeholder }: Prop
     content: value ? markdownToHtml(value) : '',
     editorProps: {
       attributes: {
-        class: 'outline-none min-h-[120px] p-3 text-sm text-slate-600 dark:text-slate-300 prose-editor',
+        class: 'outline-none min-h-[200px] p-3 text-sm text-slate-600 dark:text-slate-300 prose-editor',
       },
       handleKeyDown: (_view, event) => {
         const mod = event.metaKey || event.ctrlKey;
@@ -288,7 +288,7 @@ export function MarkdownEditor({ value, onChange, maxLength, placeholder }: Prop
         <textarea
           value={value}
           readOnly
-          className="w-full min-h-[120px] text-sm text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 rounded-lg p-3 outline-none bg-slate-50 dark:bg-slate-700 font-mono resize-none"
+          className="w-full min-h-[200px] text-sm text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 rounded-lg p-3 outline-none bg-slate-50 dark:bg-slate-700 font-mono resize-none"
         />
       )}
 
