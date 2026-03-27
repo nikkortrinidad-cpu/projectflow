@@ -104,14 +104,6 @@ export function CardDetailPanel({ card, onClose }: Props) {
     }
   };
 
-  const handleSave = () => {
-    store.updateCard(card.id, {
-      title, description, priority, startDate: startDate || null,
-      dueDate: dueDate || null, assigneeId: assigneeId || null,
-      labels: selectedLabels,
-    });
-    onClose();
-  };
 
   const handleAddComment = (html?: string, scheduledAt?: string) => {
     const text = html || commentText.trim();
@@ -857,16 +849,6 @@ export function CardDetailPanel({ card, onClose }: Props) {
             {/* Hidden Attachment section — available in store if needed */}
 
 
-            <div className="flex items-center gap-2">
-              <button onClick={handleSave}
-                className="bg-primary text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-primary-dark transition">
-                Save
-              </button>
-              <button onClick={onClose}
-                className="text-sm text-slate-500 dark:text-slate-400 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition">
-                Cancel
-              </button>
-            </div>
           </div>
         </div>
 
