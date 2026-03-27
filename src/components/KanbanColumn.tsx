@@ -37,17 +37,17 @@ export function KanbanColumn({ column, cards, swimlaneId, onCardClick, dragHandl
   };
 
   return (
-    <div className="flex-shrink-0 w-72">
-      <div className="flex items-center justify-between mb-3 px-1">
+    <div className="flex-shrink-0 w-72 rounded-xl overflow-hidden" style={{ backgroundColor: `${column.color}10` }}>
+      <div className="h-1.5 w-full" style={{ backgroundColor: column.color }} />
+      <div className="flex items-center justify-between py-2.5 px-3">
         <div className="flex items-center gap-2">
           {dragHandleProps && (
-            <button {...dragHandleProps} className="cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-500 touch-none -ml-1">
+            <button {...dragHandleProps} className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 touch-none -ml-1">
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M7 2a2 2 0 10.001 4.001A2 2 0 007 2zm0 6a2 2 0 10.001 4.001A2 2 0 007 8zm0 6a2 2 0 10.001 4.001A2 2 0 007 14zm6-8a2 2 0 10-.001-4.001A2 2 0 0013 6zm0 2a2 2 0 10.001 4.001A2 2 0 0013 8zm0 6a2 2 0 10.001 4.001A2 2 0 0013 14z" />
               </svg>
             </button>
           )}
-          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: column.color }} />
           {isEditing ? (
             <input
               autoFocus
@@ -96,9 +96,9 @@ export function KanbanColumn({ column, cards, swimlaneId, onCardClick, dragHandl
 
       <div
         ref={setNodeRef}
-        className={`min-h-[60px] rounded-xl p-2 space-y-2 transition-colors ${
-          isOver ? 'bg-primary/5 ring-2 ring-primary/20' : 'bg-slate-50'
-        } ${wipExceeded ? 'ring-2 ring-red-200 bg-red-50/50' : ''}`}
+        className={`min-h-[60px] rounded-b-xl p-2 space-y-2 transition-colors ${
+          isOver ? 'ring-2 ring-primary/30' : ''
+        } ${wipExceeded ? 'ring-2 ring-red-200' : ''}`}
       >
         <SortableContext items={cards.map(c => c.id)} strategy={verticalListSortingStrategy}>
           {cards.map(card => (
