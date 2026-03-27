@@ -26,6 +26,8 @@ export function CommentEditor({ onSubmit, placeholder: placeholderText, compact 
   const [customDateTime, setCustomDateTime] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [isEmpty, setIsEmpty] = useState(true);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -49,6 +51,9 @@ export function CommentEditor({ onSubmit, placeholder: placeholderText, compact 
         class: `outline-none text-xs text-slate-600 dark:text-slate-300 leading-relaxed overflow-y-auto px-3 py-2 ${compact ? 'min-h-[32px] max-h-[80px]' : 'min-h-[40px] max-h-[120px]'}`,
       },
     },
+    onUpdate: ({ editor: ed }) => {
+      setIsEmpty(!ed.getText().trim());
+    },
   });
 
   if (!editor) return null;
@@ -59,6 +64,7 @@ export function CommentEditor({ onSubmit, placeholder: placeholderText, compact 
     if (!text) return;
     onSubmit(html);
     editor.commands.clearContent();
+    setIsEmpty(true);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -268,15 +274,17 @@ export function CommentEditor({ onSubmit, placeholder: placeholderText, compact 
         {/* Right: Send + Schedule */}
         <div className="flex items-center shrink-0">
           <button onClick={handleSubmit}
+            disabled={isEmpty}
             title="Send (⌘+Enter)"
-            className="text-xs bg-primary text-white px-3 py-1.5 rounded-l-lg hover:bg-primary-dark transition font-medium">
+            className={`text-xs text-white px-3 py-1.5 rounded-l-lg transition font-medium ${isEmpty ? 'bg-primary/40 cursor-not-allowed' : 'bg-primary hover:bg-primary-dark'}`}>
             Send
           </button>
           <div className="relative">
             <button
-              onClick={() => setShowScheduleMenu(!showScheduleMenu)}
+              onClick={() => !isEmpty && setShowScheduleMenu(!showScheduleMenu)}
+              disabled={isEmpty}
               title="Schedule send"
-              className="text-xs bg-primary text-white px-1.5 py-1.5 rounded-r-lg hover:bg-primary-dark transition border-l border-white/20"
+              className={`text-xs text-white px-1.5 py-1.5 rounded-r-lg transition border-l border-white/20 ${isEmpty ? 'bg-primary/40 cursor-not-allowed' : 'bg-primary hover:bg-primary-dark'}`}
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -298,6 +306,7 @@ export function CommentEditor({ onSubmit, placeholder: placeholderText, compact 
                         if (!text) return;
                         onSubmit(html, time.toISOString());
                         editor.commands.clearContent();
+                        setIsEmpty(true);
                         setShowScheduleMenu(false);
                       }}
                       className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
@@ -313,6 +322,7 @@ export function CommentEditor({ onSubmit, placeholder: placeholderText, compact 
                         if (!text) return;
                         onSubmit(html, time.toISOString());
                         editor.commands.clearContent();
+                        setIsEmpty(true);
                         setShowScheduleMenu(false);
                       }}
                       className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
@@ -330,6 +340,7 @@ export function CommentEditor({ onSubmit, placeholder: placeholderText, compact 
                         if (!text) return;
                         onSubmit(html, tomorrow.toISOString());
                         editor.commands.clearContent();
+                        setIsEmpty(true);
                         setShowScheduleMenu(false);
                       }}
                       className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
