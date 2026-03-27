@@ -32,13 +32,12 @@ export function CardDetailPanel({ card, onClose }: Props) {
   const [showLabelsSection, setShowLabelsSection] = useState(card.labels.length > 0);
   const [showDatesSection, setShowDatesSection] = useState(!!card.dueDate);
   const [showChecklistSection, setShowChecklistSection] = useState((card.checklist || []).length > 0);
-  const [showAttachmentSection, setShowAttachmentSection] = useState(card.attachments.length > 0);
+  /* Hidden Attachment state — available if needed */
 
   // Refs for scrolling
   const labelsRef = useRef<HTMLDivElement>(null);
   const datesRef = useRef<HTMLDivElement>(null);
   const checklistRef = useRef<HTMLDivElement>(null);
-  const attachmentRef = useRef<HTMLDivElement>(null);
 
   const scrollToRef = (ref: React.RefObject<HTMLDivElement | null>) => {
     setTimeout(() => ref.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
@@ -163,7 +162,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
                         { label: 'Labels', icon: 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z', action: () => { setShowLabelsSection(true); setShowAddMenu(false); scrollToRef(labelsRef); } },
                         { label: 'Due Date', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z', action: () => { setShowDatesSection(true); setShowAddMenu(false); scrollToRef(datesRef); } },
                         { label: 'Checklist', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4', action: () => { setShowChecklistSection(true); setShowAddMenu(false); scrollToRef(checklistRef); } },
-                        { label: 'Attachment', icon: 'M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13', action: () => { setShowAttachmentSection(true); setShowAddMenu(false); scrollToRef(attachmentRef); } },
+                        /* Hidden Attachment — available in store if needed */
                       ].map(item => (
                         <button key={item.label} onClick={item.action}
                           className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition">
@@ -221,19 +220,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
                 Checklist
               </button>
 
-              <button
-                onClick={() => { setShowAttachmentSection(true); scrollToRef(attachmentRef); }}
-                className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition ${
-                  showAttachmentSection
-                    ? 'border-primary/30 bg-primary/5 text-primary dark:bg-primary/10'
-                    : 'border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
-                }`}
-              >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                </svg>
-                Attachment
-              </button>
+              {/* Hidden Attachment button — available in store if needed */}
             </div>
 
             {/* Members section */}
@@ -472,43 +459,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
               </div>
             )}
 
-            {/* Attachment section */}
-            {showAttachmentSection && (
-              <div ref={attachmentRef}>
-                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 block">Attachments</label>
-                <div className="space-y-1.5">
-                  {card.attachments.map((url, i) => (
-                    <div key={i} className="flex items-center gap-2 group/attach bg-slate-50 dark:bg-slate-700 rounded-lg px-3 py-2">
-                      <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                      </svg>
-                      <a href={url} target="_blank" rel="noopener noreferrer"
-                        className="flex-1 text-xs text-primary hover:text-primary-dark truncate">{url}</a>
-                      <button
-                        onClick={() => store.removeAttachment(card.id, i)}
-                        className="text-slate-300 dark:text-slate-600 hover:text-red-500 opacity-0 group-hover/attach:opacity-100 transition"
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-                <button
-                  onClick={() => {
-                    const url = prompt('Enter attachment URL:');
-                    if (url?.trim()) store.addAttachment(card.id, url.trim());
-                  }}
-                  className="flex items-center gap-1.5 text-xs text-primary hover:text-primary-dark font-medium mt-2 transition"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  Add attachment
-                </button>
-              </div>
-            )}
+            {/* Hidden Attachment section — available in store if needed */}
 
             <div>
               <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1 block">Move to Column</label>
