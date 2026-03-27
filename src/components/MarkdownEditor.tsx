@@ -126,7 +126,15 @@ export function MarkdownEditor({ value, onChange, maxLength, placeholder }: Prop
     if (mod && e.key === 'b') { e.preventDefault(); handleBold(); }
     if (mod && e.key === 'i') { e.preventDefault(); handleItalic(); }
     if (mod && e.key === 'k') { e.preventDefault(); handleLink(); }
+    // Alt+Cmd/Ctrl+0-5 for headings
+    if (mod && e.altKey && e.key >= '0' && e.key <= '5') {
+      e.preventDefault();
+      handleHeading(parseInt(e.key));
+    }
   };
+
+  const isMac = typeof navigator !== 'undefined' && /Mac/.test(navigator.platform);
+  const headingShortcut = (n: number) => isMac ? `\u2325\u2318${n}` : `Ctrl+Alt+${n}`;
 
   const tools: { label: string; icon: React.ReactNode; action: () => void; title: string }[] = [
     {
@@ -234,7 +242,7 @@ export function MarkdownEditor({ value, onChange, maxLength, placeholder }: Prop
                 </svg>
               </button>
               {showHeadingMenu && (
-                <div className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg shadow-xl z-50 py-1 w-36 overflow-hidden">
+                <div className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg shadow-xl z-50 py-1 w-52 overflow-hidden">
                   {[
                     { level: 0, label: 'Plain Text', className: 'text-xs' },
                     { level: 1, label: 'Heading 1', className: 'text-base font-bold' },
@@ -246,9 +254,10 @@ export function MarkdownEditor({ value, onChange, maxLength, placeholder }: Prop
                     <button
                       key={h.level}
                       onClick={(e) => { e.preventDefault(); handleHeading(h.level); }}
-                      className={`w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition ${h.className}`}
+                      className={`w-full flex items-center justify-between px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition ${h.className}`}
                     >
-                      {h.label}
+                      <span>{h.label}</span>
+                      <span className="text-[10px] font-normal text-slate-400 dark:text-slate-500 ml-3">{headingShortcut(h.level)}</span>
                     </button>
                   ))}
                 </div>
