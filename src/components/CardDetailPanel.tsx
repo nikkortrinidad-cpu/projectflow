@@ -35,6 +35,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showCardMenu, setShowCardMenu] = useState(false);
   const [activityTab, setActivityTab] = useState<'comments' | 'activity'>('comments');
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [shareInviteEmail, setShareInviteEmail] = useState('');
   const [sharePublicLink, setSharePublicLink] = useState(false);
   const [sharePermission, setSharePermission] = useState<'full_edit' | 'can_comment' | 'view_only'>('full_edit');
@@ -887,10 +888,62 @@ export function CardDetailPanel({ card, onClose }: Props) {
                               <span className="text-xs font-medium text-slate-700 dark:text-slate-200">{author?.name || 'Unknown'}{author?.id === store.getCurrentMemberId() && <span className="text-[10px] text-slate-400 font-normal ml-1">(You)</span>}</span>
                             </div>
                             <div className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed prose-comment" dangerouslySetInnerHTML={{ __html: c.text }} />
-                            <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1.5">
-                              {new Date(c.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                            </p>
+                            <div className="flex items-center gap-3 mt-1.5">
+                              <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                                {new Date(c.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                              </p>
+                              <button
+                                onClick={() => setReplyingTo(replyingTo === c.id ? null : c.id)}
+                                className="text-[10px] font-medium text-slate-400 hover:text-primary transition"
+                              >
+                                Reply
+                              </button>
+                              {(c.replies?.length || 0) > 0 && (
+                                <span className="text-[10px] text-slate-400 dark:text-slate-500">{c.replies!.length} {c.replies!.length === 1 ? 'reply' : 'replies'}</span>
+                              )}
+                            </div>
                           </div>
+
+                          {/* Replies */}
+                          {(c.replies || []).length > 0 && (
+                            <div className="mt-2 space-y-2 ml-2">
+                              {c.replies!.map(reply => {
+                                const replyAuthor = state.members.find(m => m.id === reply.authorId);
+                                return (
+                                  <div key={`reply-${reply.id}`} className="relative pl-5">
+                                    <div className="absolute left-0 top-0.5 w-[14px] h-[14px] rounded-full bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400 text-[7px] font-bold flex items-center justify-center">
+                                      {(replyAuthor?.name || '?').charAt(0)}
+                                    </div>
+                                    <div className="bg-slate-100 dark:bg-slate-600/50 rounded-lg p-2 shadow-sm">
+                                      <div className="flex items-center gap-1.5 mb-0.5">
+                                        <span className="text-[11px] font-medium text-slate-700 dark:text-slate-200">{replyAuthor?.name || 'Unknown'}{replyAuthor?.id === store.getCurrentMemberId() && <span className="text-[10px] text-slate-400 font-normal ml-1">(You)</span>}</span>
+                                      </div>
+                                      <div className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed prose-comment" dangerouslySetInnerHTML={{ __html: reply.text }} />
+                                      <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-1">
+                                        {new Date(reply.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                      </p>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {/* Reply input */}
+                          {replyingTo === c.id && (
+                            <div className="mt-2 ml-2">
+                              <CommentEditor
+                                onSubmit={(html) => {
+                                  if (html) {
+                                    store.addReply(card.id, c.id, html);
+                                    setReplyingTo(null);
+                                  }
+                                }}
+                                placeholder="Write a reply..."
+                                compact
+                              />
+                            </div>
+                          )}
                         </div>
                       );
                     })

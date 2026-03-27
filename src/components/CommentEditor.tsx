@@ -7,6 +7,8 @@ import Placeholder from '@tiptap/extension-placeholder';
 
 interface Props {
   onSubmit: (html: string) => void;
+  placeholder?: string;
+  compact?: boolean;
 }
 
 const EMOJI_LIST = [
@@ -15,7 +17,7 @@ const EMOJI_LIST = [
   '😊','😢','😡','🤝','👏','🙏','💪','🎯','📝','🏆',
 ];
 
-export function CommentEditor({ onSubmit }: Props) {
+export function CommentEditor({ onSubmit, placeholder: placeholderText, compact }: Props) {
   const [showToolbar, setShowToolbar] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showGifPicker, setShowGifPicker] = useState(false);
@@ -35,13 +37,13 @@ export function CommentEditor({ onSubmit }: Props) {
         HTMLAttributes: { class: 'max-w-full rounded my-1' },
       }),
       Placeholder.configure({
-        placeholder: 'Write a comment...',
+        placeholder: placeholderText || 'Write a comment...',
       }),
     ],
     content: '',
     editorProps: {
       attributes: {
-        class: 'outline-none text-xs text-slate-600 dark:text-slate-300 leading-relaxed min-h-[40px] max-h-[120px] overflow-y-auto px-3 py-2',
+        class: `outline-none text-xs text-slate-600 dark:text-slate-300 leading-relaxed overflow-y-auto px-3 py-2 ${compact ? 'min-h-[32px] max-h-[80px]' : 'min-h-[40px] max-h-[120px]'}`,
       },
     },
   });

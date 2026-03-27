@@ -12,6 +12,7 @@ export interface Comment {
   authorId: string;
   text: string;
   createdAt: string;
+  replies?: Comment[];
 }
 
 export interface ActivityEntry {

@@ -328,6 +328,17 @@ class BoardStore {
     this.save();
   }
 
+  addReply(cardId: string, commentId: string, text: string) {
+    const card = this.state.cards.find(c => c.id === cardId);
+    if (!card) return;
+    const comment = card.comments.find(c => c.id === commentId);
+    if (!comment) return;
+    if (!comment.replies) comment.replies = [];
+    const reply: Comment = { id: uuid(), authorId: 'user-1', text, createdAt: new Date().toISOString() };
+    comment.replies.push(reply);
+    this.save();
+  }
+
   // --- Checklist ---
   addChecklistItem(cardId: string, text: string, assigneeId: string | null = null) {
     const card = this.state.cards.find(c => c.id === cardId);
