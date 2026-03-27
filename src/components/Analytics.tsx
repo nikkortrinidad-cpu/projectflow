@@ -1,4 +1,4 @@
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { useBoard } from '../store/useStore';
 import { store } from '../store/boardStore';
 
@@ -60,15 +60,16 @@ export function Analytics({ onClose }: { onClose: () => void }) {
 
             <div className="bg-slate-50 rounded-xl p-4">
               <h3 className="text-sm font-semibold text-slate-700 mb-3">Cards by Priority</h3>
-              <ResponsiveContainer width="100%" height={200}>
+              <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
-                  <Pie data={priorityData} dataKey="count" nameKey="name" cx="50%" cy="50%"
-                    outerRadius={70} innerRadius={40} paddingAngle={2} label={({ name, value }) => (value as number) > 0 ? `${name}: ${value}` : ''}>
+                  <Pie data={priorityData} dataKey="count" nameKey="name" cx="50%" cy="45%"
+                    outerRadius={60} innerRadius={35} paddingAngle={2}>
                     {priorityData.map((_, i) => (
                       <Cell key={i} fill={PRIORITY_COLORS[i]} />
                     ))}
                   </Pie>
                   <Tooltip />
+                  <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: '12px' }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
