@@ -78,7 +78,7 @@ export function BoardSettings({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-xl max-h-[80vh] overflow-hidden">
+      <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Board Settings</h2>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition">
@@ -88,18 +88,21 @@ export function BoardSettings({ onClose }: { onClose: () => void }) {
           </button>
         </div>
 
-        <div className="flex border-b border-slate-100 dark:border-slate-700">
-          {tabs.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)}
-              className={`flex-1 text-sm py-2.5 font-medium transition ${
-                tab === t.id ? 'text-primary border-b-2 border-primary' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
-              }`}>
-              {t.label}
-            </button>
-          ))}
-        </div>
+        <div className="flex">
+          <div className="w-40 shrink-0 border-r border-slate-100 dark:border-slate-700 py-3 px-2">
+            {tabs.map(t => (
+              <button key={t.id} onClick={() => setTab(t.id)}
+                className={`w-full text-left text-sm px-3 py-2 rounded-lg font-medium transition mb-0.5 ${
+                  tab === t.id
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200'
+                }`}>
+                {t.label}
+              </button>
+            ))}
+          </div>
 
-        <div className="p-6 overflow-y-auto max-h-[60vh]">
+          <div className="flex-1 p-6 overflow-y-auto max-h-[65vh]">
           {tab === 'general' && (
             <div className="space-y-6">
               <div>
@@ -263,6 +266,7 @@ export function BoardSettings({ onClose }: { onClose: () => void }) {
               </button>
             </div>
           )}
+          </div>
         </div>
       </div>
     </div>
