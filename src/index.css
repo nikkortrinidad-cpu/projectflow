@@ -94,7 +94,7 @@ html.dark ::-webkit-scrollbar-thumb:hover {
   border-left: 3px solid #cbd5e1; padding-left: 0.75em;
   color: #64748b; margin: 0.5em 0; font-style: italic;
 }
-.tiptap hr { border: none; border-top: 2px solid #cbd5e1; margin: 1em 0; }
+.tiptap hr { border: none; border-top: 2px solid #cbd5e1; margin: 1em auto; width: 60%; }
 .tiptap p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   float: left; color: #94a3b8; pointer-events: none; height: 0;
