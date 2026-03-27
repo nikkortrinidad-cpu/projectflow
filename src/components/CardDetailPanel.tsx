@@ -112,24 +112,28 @@ export function CardDetailPanel({ card, onClose }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-4xl max-h-[90vh] bg-white dark:bg-slate-800 shadow-2xl rounded-2xl flex overflow-hidden">
-        {/* Left: Card content */}
-        <div className="flex-1 min-w-0 flex flex-col overflow-hidden relative">
-          {/* Close button */}
-          <button onClick={onClose} className="absolute top-3 right-3 z-10 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition">
+      <div className="relative w-full max-w-4xl max-h-[90vh] bg-white dark:bg-slate-800 shadow-2xl rounded-2xl flex flex-col overflow-hidden">
+        {/* Title bar */}
+        <div className="shrink-0 flex items-center gap-3 px-6 py-3 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
+          <div className="flex-1 min-w-0 relative group/title">
+            <input value={title} onChange={e => setTitle(e.target.value)}
+              className="w-full text-lg font-semibold text-slate-800 dark:text-slate-100 border border-transparent outline-none bg-transparent rounded-lg px-2 py-0.5 -ml-2 hover:border-slate-200 dark:hover:border-slate-600 focus:border-primary focus:bg-amber-50 dark:focus:bg-slate-700 transition" />
+            <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 dark:text-slate-600 opacity-0 group-hover/title:opacity-100 transition-opacity pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+          </div>
+          <button onClick={onClose} className="shrink-0 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
+        </div>
 
+        {/* Body: left content + right sidebar */}
+        <div className="flex-1 flex overflow-hidden">
+        {/* Left: Card content */}
+        <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto p-6 space-y-5">
-            <div className="relative group/title">
-              <input value={title} onChange={e => setTitle(e.target.value)}
-                className="w-full text-xl font-semibold text-slate-800 dark:text-slate-100 border border-transparent outline-none bg-transparent rounded-lg px-2 py-1 -ml-2 hover:border-slate-200 dark:hover:border-slate-600 focus:border-primary focus:bg-amber-50 dark:focus:bg-slate-700 transition" />
-              <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 dark:text-slate-600 opacity-0 group-hover/title:opacity-100 transition-opacity pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-              </svg>
-            </div>
 
             {/* Action buttons row */}
             <div className="flex items-center gap-2 flex-wrap">
@@ -713,6 +717,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
               </button>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </div>
