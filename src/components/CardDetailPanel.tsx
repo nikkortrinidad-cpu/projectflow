@@ -105,8 +105,13 @@ export function CardDetailPanel({ card, onClose }: Props) {
         </div>
 
         <div className="p-6 space-y-5">
-          <input value={title} onChange={e => setTitle(e.target.value)}
-            className="w-full text-xl font-semibold text-slate-800 border-none outline-none bg-transparent" />
+          <div className="relative group/title">
+            <input value={title} onChange={e => setTitle(e.target.value)}
+              className="w-full text-xl font-semibold text-slate-800 border border-transparent outline-none bg-transparent rounded-lg px-2 py-1 -ml-2 hover:border-slate-200 focus:border-primary focus:bg-amber-50 transition" />
+            <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 opacity-0 group-hover/title:opacity-100 transition-opacity pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+          </div>
 
           <div>
             <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1 block">Description</label>

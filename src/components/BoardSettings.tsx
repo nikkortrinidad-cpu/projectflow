@@ -108,9 +108,14 @@ export function BoardSettings({ onClose }: { onClose: () => void }) {
                       <input type="color" value={col.color}
                         onChange={e => store.updateColumn(col.id, { color: e.target.value })}
                         className="w-6 h-6 rounded cursor-pointer border-none" />
-                      <input value={col.title}
-                        onChange={e => store.updateColumn(col.id, { title: e.target.value })}
-                        className="flex-1 text-sm bg-transparent outline-none font-medium" />
+                      <div className="relative flex-1 group/colname">
+                        <input value={col.title}
+                          onChange={e => store.updateColumn(col.id, { title: e.target.value })}
+                          className="w-full text-sm bg-transparent outline-none font-medium rounded px-1.5 py-0.5 -ml-1.5 border border-transparent hover:border-slate-200 focus:border-primary focus:bg-amber-50 transition" />
+                        <svg className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-300 opacity-0 group-hover/colname:opacity-100 transition-opacity pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                      </div>
                       <div className="flex items-center gap-1">
                         <span className="text-[10px] text-slate-400">WIP:</span>
                         <input type="number" min="0" value={col.wipLimit}
@@ -134,9 +139,14 @@ export function BoardSettings({ onClose }: { onClose: () => void }) {
             <div className="space-y-2">
               {state.swimlanes.sort((a, b) => a.order - b.order).map(s => (
                 <div key={s.id} className="flex items-center gap-3 bg-slate-50 rounded-lg p-3">
-                  <input value={s.title}
-                    onChange={e => store.updateSwimlane(s.id, { title: e.target.value })}
-                    className="flex-1 text-sm bg-transparent outline-none font-medium" />
+                  <div className="relative flex-1 group/swimname">
+                    <input value={s.title}
+                      onChange={e => store.updateSwimlane(s.id, { title: e.target.value })}
+                      className="w-full text-sm bg-transparent outline-none font-medium rounded px-1.5 py-0.5 -ml-1.5 border border-transparent hover:border-slate-200 focus:border-primary focus:bg-amber-50 transition" />
+                    <svg className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-300 opacity-0 group-hover/swimname:opacity-100 transition-opacity pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </div>
                   <button onClick={() => store.deleteSwimlane(s.id)}
                     className="text-slate-300 hover:text-red-500 transition text-xs">
                     Delete

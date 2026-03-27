@@ -62,14 +62,19 @@ export function KanbanColumn({ column, cards, swimlaneId, onCardClick, dragHandl
                 if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
                 if (e.key === 'Escape') { setEditTitle(column.title); setIsEditing(false); }
               }}
-              className="text-sm font-semibold text-slate-700 uppercase tracking-wide bg-white border border-primary rounded px-1.5 py-0.5 outline-none w-28"
+              className="text-sm font-semibold text-slate-700 uppercase tracking-wide bg-amber-50 border border-primary rounded px-1.5 py-0.5 outline-none w-28"
             />
           ) : (
             <h3
               onDoubleClick={() => { setEditTitle(column.title); setIsEditing(true); }}
-              className="text-sm font-semibold text-slate-700 uppercase tracking-wide cursor-pointer hover:text-primary transition"
+              className="text-sm font-semibold text-slate-700 uppercase tracking-wide cursor-pointer hover:text-primary transition group/rename flex items-center gap-1"
               title="Double-click to rename"
-            >{column.title}</h3>
+            >
+              {column.title}
+              <svg className="w-3 h-3 text-slate-300 opacity-0 group-hover/rename:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+            </h3>
           )}
           <span className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${
             wipExceeded ? 'bg-red-100 text-red-600' :
