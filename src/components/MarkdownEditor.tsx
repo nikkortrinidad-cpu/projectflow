@@ -6,7 +6,7 @@ import {
   insertAtLineStart,
   insertLink,
   insertImage,
-  toggleHeading,
+  setHeading,
   type InsertResult,
 } from '../utils/markdownInsert';
 
@@ -31,8 +31,22 @@ function renderMarkdown(md: string): string {
 
 export function MarkdownEditor({ value, onChange, maxLength, placeholder }: Props) {
   const [mode, setMode] = useState<'edit' | 'preview'>('edit');
+  const [showHeadingMenu, setShowHeadingMenu] = useState(false);
+  const headingMenuRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const pendingCursor = useRef<{ start: number; end: number } | null>(null);
+
+  // Close heading dropdown on outside click
+  useEffect(() => {
+    if (!showHeadingMenu) return;
+    const handleClick = (e: MouseEvent) => {
+      if (headingMenuRef.current && !headingMenuRef.current.contains(e.target as Node)) {
+        setShowHeadingMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showHeadingMenu]);
 
   // Restore cursor after React re-render
   useEffect(() => {
@@ -81,9 +95,10 @@ export function MarkdownEditor({ value, onChange, maxLength, placeholder }: Prop
     }
   };
 
-  const handleHeading = () => {
+  const handleHeading = (level: number) => {
     const { start } = getSelection();
-    applyInsert(toggleHeading(value, start));
+    applyInsert(setHeading(value, start, level));
+    setShowHeadingMenu(false);
   };
 
   const handleUnorderedList = () => {
@@ -114,12 +129,6 @@ export function MarkdownEditor({ value, onChange, maxLength, placeholder }: Prop
   };
 
   const tools: { label: string; icon: React.ReactNode; action: () => void; title: string }[] = [
-    {
-      label: 'H',
-      icon: <span className="text-[11px] font-bold leading-none">H</span>,
-      action: handleHeading,
-      title: 'Heading (cycle H1/H2/H3)',
-    },
     {
       label: 'B',
       icon: <span className="text-[11px] font-bold leading-none">B</span>,
@@ -212,6 +221,40 @@ export function MarkdownEditor({ value, onChange, maxLength, placeholder }: Prop
       {mode === 'edit' && (
         <>
           <div className="flex items-center gap-0.5 border border-slate-200 dark:border-slate-600 border-b-0 rounded-t-lg bg-slate-50 dark:bg-slate-700 px-1.5 py-1">
+            {/* Heading dropdown */}
+            <div className="relative" ref={headingMenuRef}>
+              <button
+                onClick={(e) => { e.preventDefault(); setShowHeadingMenu(!showHeadingMenu); }}
+                title="Text style"
+                className="h-6 flex items-center gap-0.5 rounded text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 hover:text-slate-700 dark:hover:text-slate-200 transition px-1.5"
+              >
+                <span className="text-[11px] font-bold leading-none">H</span>
+                <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {showHeadingMenu && (
+                <div className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg shadow-xl z-50 py-1 w-36 overflow-hidden">
+                  {[
+                    { level: 0, label: 'Plain Text', className: 'text-xs' },
+                    { level: 1, label: 'Heading 1', className: 'text-base font-bold' },
+                    { level: 2, label: 'Heading 2', className: 'text-sm font-bold' },
+                    { level: 3, label: 'Heading 3', className: 'text-[13px] font-semibold' },
+                    { level: 4, label: 'Heading 4', className: 'text-xs font-semibold' },
+                    { level: 5, label: 'Heading 5', className: 'text-[11px] font-semibold' },
+                  ].map(h => (
+                    <button
+                      key={h.level}
+                      onClick={(e) => { e.preventDefault(); handleHeading(h.level); }}
+                      className={`w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition ${h.className}`}
+                    >
+                      {h.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="w-px h-4 bg-slate-200 dark:bg-slate-600 mx-1" />
             {tools.map(tool =>
               tool.icon === null ? (
                 <div key={tool.label} className="w-px h-4 bg-slate-200 dark:bg-slate-600 mx-1" />

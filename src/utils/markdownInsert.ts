@@ -81,24 +81,18 @@ export function insertImage(
   };
 }
 
-export function toggleHeading(
+export function setHeading(
   value: string,
   start: number,
+  level: number, // 0 = plain text, 1-5 = H1-H5
 ): InsertResult {
   const lineStart = value.lastIndexOf('\n', start - 1) + 1;
   const lineEnd = value.indexOf('\n', start);
   const line = value.slice(lineStart, lineEnd === -1 ? undefined : lineEnd);
 
-  let newLine: string;
-  if (line.startsWith('### ')) {
-    newLine = line.slice(4); // Remove heading
-  } else if (line.startsWith('## ')) {
-    newLine = '### ' + line.slice(3);
-  } else if (line.startsWith('# ')) {
-    newLine = '## ' + line.slice(2);
-  } else {
-    newLine = '# ' + line;
-  }
+  // Strip any existing heading prefix
+  const stripped = line.replace(/^#{1,6}\s/, '');
+  const newLine = level > 0 ? '#'.repeat(level) + ' ' + stripped : stripped;
 
   const newValue = value.slice(0, lineStart) + newLine + value.slice(lineEnd === -1 ? value.length : lineEnd);
   return {
