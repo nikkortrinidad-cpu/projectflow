@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { Card, Priority } from '../types';
 import { useBoard } from '../store/useStore';
 import { store } from '../store/boardStore';
@@ -68,6 +68,15 @@ export function CardDetailPanel({ card, onClose }: Props) {
 
   // Refs for scrolling
   const checklistRef = useRef<HTMLDivElement>(null);
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   const toggleLabel = (labelId: string) => {
     setSelectedLabels(prev =>
