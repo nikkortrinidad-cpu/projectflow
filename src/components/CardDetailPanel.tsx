@@ -36,7 +36,9 @@ export function CardDetailPanel({ card, onClose }: Props) {
   const [showCardMenu, setShowCardMenu] = useState(false);
   const [activityTab, setActivityTab] = useState<'comments' | 'activity'>('comments');
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
-  const [collapsedComments, setCollapsedComments] = useState<Set<string>>(new Set());
+  const [collapsedComments, setCollapsedComments] = useState<Set<string>>(
+    () => new Set(card.comments.filter(c => c.replies && c.replies.length > 0).map(c => c.id))
+  );
 
   const toggleCollapse = (commentId: string) => {
     setCollapsedComments(prev => {
