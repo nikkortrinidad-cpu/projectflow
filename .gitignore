@@ -1,0 +1,7 @@
+node_modules
+dist
+.DS_Store
+*.local
+start-dev.sh
+dev-server.mjs
+.claude/
