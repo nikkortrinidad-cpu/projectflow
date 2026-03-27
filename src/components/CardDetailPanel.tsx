@@ -655,7 +655,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
                 </label>
                 {(card.checklist || []).length > 0 && (
                   <span className="text-[10px] text-slate-400 dark:text-slate-500">
-                    {(card.checklist || []).filter(i => i.checked).length}/{(card.checklist || []).length} done
+                    {(card.checklist || []).filter(i => i.checked).length}/{(card.checklist || []).length} done · {Math.round(((card.checklist || []).filter(i => i.checked).length / (card.checklist || []).length) * 100)}%
                   </span>
                 )}
               </div>
