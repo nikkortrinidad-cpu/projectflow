@@ -27,6 +27,7 @@ export interface ChecklistItem {
   id: string;
   text: string;
   checked: boolean;
+  assigneeId: string | null;
 }
 
 export interface Card {

@@ -53,6 +53,9 @@ function loadState(): BoardState {
       if (parsed.cards) {
         parsed.cards.forEach((c: Card) => {
           if (!c.checklist) c.checklist = [];
+          c.checklist.forEach((item: any) => {
+            if (item.assigneeId === undefined) item.assigneeId = null;
+          });
           if (c.startDate === undefined) c.startDate = null;
         });
       }
@@ -207,15 +210,25 @@ class BoardStore {
   }
 
   // --- Checklist ---
-  addChecklistItem(cardId: string, text: string) {
+  addChecklistItem(cardId: string, text: string, assigneeId: string | null = null) {
     const card = this.state.cards.find(c => c.id === cardId);
     if (!card) return;
     if (!card.checklist) card.checklist = [];
-    const item: ChecklistItem = { id: uuid(), text, checked: false };
+    const item: ChecklistItem = { id: uuid(), text, checked: false, assigneeId };
     card.checklist.push(item);
     this.logActivity(cardId, 'user-1', 'updated', `Added checklist item "${text}" to "${card.title}"`);
     this.save();
     return item;
+  }
+
+  updateChecklistItemAssignee(cardId: string, itemId: string, assigneeId: string | null) {
+    const card = this.state.cards.find(c => c.id === cardId);
+    if (!card) return;
+    const item = card.checklist?.find(i => i.id === itemId);
+    if (item) {
+      item.assigneeId = assigneeId;
+      this.save();
+    }
   }
 
   toggleChecklistItem(cardId: string, itemId: string) {
