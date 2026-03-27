@@ -2,6 +2,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Card } from '../types';
 import { useBoard } from '../store/useStore';
+import { store } from '../store/boardStore';
 
 const priorityColors: Record<string, string> = {
   low: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
@@ -33,6 +34,15 @@ export function KanbanCard({ card, onClick }: { card: Card; onClick: () => void 
   const assignee = state.members.find(m => m.id === card.assigneeId);
   const cardLabels = state.labels.filter(l => card.labels.includes(l.id));
   const isOverdue = card.dueDate && new Date(card.dueDate) < new Date();
+  const doneColumn = [...state.columns].sort((a, b) => b.order - a.order)[0];
+  const isComplete = doneColumn && card.columnId === doneColumn.id;
+
+  const handleMarkComplete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (doneColumn && !isComplete) {
+      store.moveCard(card.id, doneColumn.id, card.swimlaneId, 0);
+    }
+  };
 
   return (
     <div
@@ -44,11 +54,24 @@ export function KanbanCard({ card, onClick }: { card: Card; onClick: () => void 
       className="relative bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-600 p-3 cursor-grab active:cursor-grabbing
         hover:border-primary/40 hover:shadow-md transition-all group"
     >
-      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="absolute top-2 right-2 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
         <svg className="w-3.5 h-3.5 text-slate-300 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
         </svg>
       </div>
+      <button
+        onClick={handleMarkComplete}
+        title={isComplete ? 'Completed' : 'Mark complete'}
+        className={`absolute top-2 left-2 w-4.5 h-4.5 rounded-full border-2 flex items-center justify-center transition-all ${
+          isComplete
+            ? 'bg-green-500 border-green-500 text-white opacity-100'
+            : 'border-slate-300 dark:border-slate-500 hover:border-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 text-transparent hover:text-green-400 opacity-0 group-hover:opacity-100'
+        }`}
+      >
+        <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+      </button>
       {cardLabels.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-2">
           {cardLabels.map(l => (
