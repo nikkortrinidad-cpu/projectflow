@@ -84,14 +84,6 @@ export function KanbanColumn({ column, cards, swimlaneId, onCardClick, dragHandl
             {cards.length}{column.wipLimit > 0 ? `/${column.wipLimit}` : ''}
           </span>
         </div>
-        <button
-          onClick={() => setShowAdd(!showAdd)}
-          className="w-6 h-6 flex items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-300 transition"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-        </button>
       </div>
 
       <div
@@ -106,7 +98,7 @@ export function KanbanColumn({ column, cards, swimlaneId, onCardClick, dragHandl
           ))}
         </SortableContext>
 
-        {showAdd && (
+        {showAdd ? (
           <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-600 p-2">
             <input
               autoFocus
@@ -127,6 +119,14 @@ export function KanbanColumn({ column, cards, swimlaneId, onCardClick, dragHandl
               </button>
             </div>
           </div>
+        ) : cards.length === 0 && (
+          <button
+            onClick={() => setShowAdd(true)}
+            className="w-full flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500 hover:text-primary dark:hover:text-primary py-2 px-2 rounded-lg hover:bg-white/60 dark:hover:bg-slate-700/40 transition"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+            Add a card
+          </button>
         )}
       </div>
     </div>
