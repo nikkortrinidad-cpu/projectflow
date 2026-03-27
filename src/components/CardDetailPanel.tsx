@@ -93,9 +93,9 @@ export function CardDetailPanel({ card, onClose }: Props) {
     JSON.stringify(selectedLabels) !== JSON.stringify(card.labels);
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-lg bg-white dark:bg-slate-800 shadow-2xl overflow-y-auto animate-slide-in">
+      <div className="relative w-full max-w-lg max-h-[90vh] bg-white dark:bg-slate-800 shadow-2xl overflow-y-auto rounded-2xl">
         <div className="sticky top-0 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 px-6 py-4 flex items-center justify-between z-10">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: column?.color }} />
