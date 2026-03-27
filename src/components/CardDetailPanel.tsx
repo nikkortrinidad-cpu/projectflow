@@ -137,7 +137,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-6xl h-[95vh] bg-white dark:bg-slate-800 shadow-2xl rounded-2xl flex flex-col overflow-hidden">
+      <div className="relative w-full max-w-6xl h-[98vh] bg-white dark:bg-slate-800 shadow-2xl rounded-2xl flex flex-col overflow-hidden">
         {/* Title bar */}
         <div className="shrink-0 flex items-center justify-end gap-1 px-6 py-3 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
           <button onClick={() => setShowShareModal(true)} className="shrink-0 flex items-center gap-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 px-2.5 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition text-xs font-medium">
