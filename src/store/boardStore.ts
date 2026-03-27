@@ -49,10 +49,11 @@ function loadState(): BoardState {
       if (!parsed.theme) {
         parsed.theme = 'light';
       }
-      // Ensure checklist exists for older stored cards
+      // Ensure checklist and startDate exist for older stored cards
       if (parsed.cards) {
         parsed.cards.forEach((c: Card) => {
           if (!c.checklist) c.checklist = [];
+          if (c.startDate === undefined) c.startDate = null;
         });
       }
       return parsed;
@@ -105,6 +106,7 @@ class BoardStore {
       title: partial.title,
       description: partial.description || '',
       assigneeId: partial.assigneeId || null,
+      startDate: partial.startDate || null,
       dueDate: partial.dueDate || null,
       priority: partial.priority || 'medium',
       labels: partial.labels || [],

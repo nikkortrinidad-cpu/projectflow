@@ -34,6 +34,7 @@ export interface Card {
   title: string;
   description: string;
   assigneeId: string | null;
+  startDate: string | null;
   dueDate: string | null;
   priority: Priority;
   labels: string[];
