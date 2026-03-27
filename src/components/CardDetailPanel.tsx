@@ -75,9 +75,15 @@ export function CardDetailPanel({ card, onClose }: Props) {
 
           <div>
             <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1 block">Description</label>
-            <textarea value={description} onChange={e => setDescription(e.target.value)}
+            <textarea value={description} onChange={e => { if (e.target.value.length <= 500) setDescription(e.target.value); }}
+              maxLength={500}
               placeholder="Add a description..."
               className="w-full min-h-[80px] text-sm text-slate-600 border border-slate-200 rounded-lg p-3 outline-none focus:border-primary resize-none" />
+            <div className="flex justify-end mt-1">
+              <span className={`text-[11px] ${description.length >= 500 ? 'text-red-500 font-medium' : description.length >= 400 ? 'text-yellow-500' : 'text-slate-400'}`}>
+                {description.length}/500
+              </span>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
