@@ -420,7 +420,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
         {/* Left: Card content */}
         <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto p-6 space-y-7">
-            <div className="relative group/title">
+            <div className="relative group/title ml-5">
               <input value={title} onChange={e => setTitle(e.target.value)}
                 className="w-full text-2xl font-semibold text-slate-800 dark:text-slate-100 border border-transparent outline-none bg-transparent rounded-lg px-2 py-1 -ml-2 hover:border-slate-200 dark:hover:border-slate-600 focus:border-primary focus:bg-amber-50 dark:focus:bg-slate-700 transition" />
               <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 dark:text-slate-600 opacity-0 group-hover/title:opacity-100 transition-opacity pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
