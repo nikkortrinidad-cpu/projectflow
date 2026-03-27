@@ -32,13 +32,21 @@ function createDefaultState(): BoardState {
     columns, swimlanes, cards: [], labels, members,
     notifications: [], activityLog: [],
     filters: { search: '', assigneeIds: [], labelIds: [], priorities: [], dueDateRange: { from: null, to: null } },
+    savedColors: ['#ef4444', '#f97316', '#f59e0b', '#10b981', '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899'],
   };
 }
 
 function loadState(): BoardState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      // Ensure savedColors exists for older stored states
+      if (!parsed.savedColors) {
+        parsed.savedColors = ['#ef4444', '#f97316', '#f59e0b', '#10b981', '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899'];
+      }
+      return parsed;
+    }
   } catch { /* ignore */ }
   return createDefaultState();
 }
@@ -334,6 +342,19 @@ class BoardStore {
       return diff <= days;
     });
     return entries.length;
+  }
+
+  // --- Saved Colors ---
+  addSavedColor(color: string) {
+    if (!this.state.savedColors.includes(color)) {
+      this.state.savedColors.push(color);
+      this.save();
+    }
+  }
+
+  removeSavedColor(color: string) {
+    this.state.savedColors = this.state.savedColors.filter(c => c !== color);
+    this.save();
   }
 
   resetBoard() {

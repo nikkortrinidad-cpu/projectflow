@@ -81,6 +81,7 @@ export interface BoardState {
   notifications: Notification[];
   activityLog: ActivityEntry[];
   filters: FilterState;
+  savedColors: string[];
 }
 
 export interface FilterState {

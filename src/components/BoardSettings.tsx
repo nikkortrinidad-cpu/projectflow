@@ -8,6 +8,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useBoard } from '../store/useStore';
 import { store } from '../store/boardStore';
 import type { Column, UserRole } from '../types';
+import { ColorPicker } from './ColorPicker';
 
 function SortableColumnRow({ col, children }: { col: Column; children: React.ReactNode }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -74,10 +75,9 @@ export function BoardSettings({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[80vh] overflow-hidden"
-        onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[80vh] overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-slate-800">Board Settings</h2>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1 rounded hover:bg-slate-100 transition">
@@ -105,9 +105,8 @@ export function BoardSettings({ onClose }: { onClose: () => void }) {
                 <div className="space-y-2">
                   {sortedColumns.map(col => (
                     <SortableColumnRow key={col.id} col={col}>
-                      <input type="color" value={col.color}
-                        onChange={e => store.updateColumn(col.id, { color: e.target.value })}
-                        className="w-6 h-6 rounded cursor-pointer border-none" />
+                      <ColorPicker value={col.color}
+                        onChange={color => store.updateColumn(col.id, { color })} />
                       <div className="relative flex-1 group/colname">
                         <input value={col.title}
                           onChange={e => store.updateColumn(col.id, { title: e.target.value })}
@@ -198,8 +197,7 @@ export function BoardSettings({ onClose }: { onClose: () => void }) {
               placeholder={tab === 'members' ? 'Name' : `New ${tab.slice(0, -1)} name`}
               className="flex-1 text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-primary" />
             {tab === 'labels' && (
-              <input type="color" value={newColor} onChange={e => setNewColor(e.target.value)}
-                className="w-10 h-9 rounded-lg cursor-pointer border border-slate-200" />
+              <ColorPicker value={newColor} onChange={setNewColor} size="md" />
             )}
             {tab === 'members' && (
               <>

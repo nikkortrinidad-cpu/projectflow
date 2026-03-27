@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Card, Priority } from '../types';
 import { useBoard } from '../store/useStore';
 import { store } from '../store/boardStore';
+import { ColorPicker } from './ColorPicker';
 
 interface Props {
   card: Card;
@@ -83,10 +84,9 @@ export function CardDetailPanel({ card, onClose }: Props) {
   const activities = state.activityLog.filter(a => a.cardId === card.id).slice(0, 20);
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" />
-      <div className="relative w-full max-w-lg bg-white shadow-2xl overflow-y-auto animate-slide-in"
-        onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex justify-end">
+      <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-lg bg-white shadow-2xl overflow-y-auto animate-slide-in">
         <div className="sticky top-0 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between z-10">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: column?.color }} />
@@ -184,8 +184,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
                   <div key={l.id} className="flex items-center gap-2">
                     {editingLabelId === l.id ? (
                       <>
-                        <input type="color" value={editLabelColor} onChange={e => setEditLabelColor(e.target.value)}
-                          className="w-6 h-6 rounded cursor-pointer border-none" />
+                        <ColorPicker value={editLabelColor} onChange={setEditLabelColor} />
                         <input value={editLabelName} onChange={e => setEditLabelName(e.target.value)}
                           onKeyDown={e => { if (e.key === 'Enter') handleEditLabel(l.id); if (e.key === 'Escape') setEditingLabelId(null); }}
                           className="flex-1 text-xs bg-white border border-slate-200 rounded px-2 py-1 outline-none focus:border-primary" />
@@ -208,8 +207,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
                 ))}
 
                 <div className="flex items-center gap-2 pt-2 border-t border-slate-200">
-                  <input type="color" value={newLabelColor} onChange={e => setNewLabelColor(e.target.value)}
-                    className="w-6 h-6 rounded cursor-pointer border-none" />
+                  <ColorPicker value={newLabelColor} onChange={setNewLabelColor} />
                   <input value={newLabelName} onChange={e => setNewLabelName(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') handleCreateLabel(); }}
                     placeholder="New label name..."
