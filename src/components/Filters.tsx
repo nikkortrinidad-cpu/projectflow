@@ -34,7 +34,7 @@ export function Filters() {
       >
         <option value="">Assignee</option>
         {state.members.map(m => (
-          <option key={m.id} value={m.id}>{m.name}</option>
+          <option key={m.id} value={m.id}>{m.name}{m.id === store.getCurrentMemberId() ? ' (You)' : ''}</option>
         ))}
       </select>
 
@@ -79,7 +79,7 @@ export function Filters() {
               <span key={id}
                 onClick={() => store.setFilters({ assigneeIds: f.assigneeIds.filter(a => a !== id) })}
                 className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full cursor-pointer hover:bg-primary/20">
-                {m?.name} &times;
+                {m?.name}{m?.id === store.getCurrentMemberId() ? ' (You)' : ''} &times;
               </span>
             );
           })}

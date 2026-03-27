@@ -118,7 +118,7 @@ export function KanbanCard({ card, onClick }: { card: Card; onClick: () => void 
               )}
               {assignee && (
                 <div className="w-5 h-5 rounded-full bg-primary/20 text-primary text-[10px] font-bold flex items-center justify-center"
-                  title={assignee.name}>
+                  title={assignee.id === store.getCurrentMemberId() ? `${assignee.name} (You)` : assignee.name}>
                   {assignee.name.charAt(0).toUpperCase()}
                 </div>
               )}

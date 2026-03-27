@@ -57,12 +57,12 @@ export function BoardSettings({ onClose }: { onClose: () => void }) {
 
   const tabs = [
     { id: 'general' as const, label: 'General' },
-    { id: 'columns' as const, label: 'Columns' },
+    { id: 'columns' as const, label: 'Lists' },
     { id: 'swimlanes' as const, label: 'Swimlanes' },
     { id: 'labels' as const, label: 'Labels' },
     { id: 'members' as const, label: 'Team' },
-    { id: 'trash' as const, label: 'Trash' },
     { id: 'archive' as const, label: 'Archive' },
+    { id: 'trash' as const, label: 'Trash' },
   ];
 
   const handleAdd = () => {
@@ -169,8 +169,16 @@ export function BoardSettings({ onClose }: { onClose: () => void }) {
                           onChange={e => store.updateColumn(col.id, { wipLimit: parseInt(e.target.value) || 0 })}
                           className="w-12 text-xs text-center border border-slate-200 rounded px-1 py-0.5 outline-none" />
                       </div>
+                      <button onClick={() => store.archiveColumn(col.id)}
+                        className="text-slate-300 hover:text-amber-500 transition"
+                        title="Archive list">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                        </svg>
+                      </button>
                       <button onClick={() => store.deleteColumn(col.id)}
-                        className="text-slate-300 hover:text-red-500 transition">
+                        className="text-slate-300 hover:text-red-500 transition"
+                        title="Delete list">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
@@ -226,7 +234,7 @@ export function BoardSettings({ onClose }: { onClose: () => void }) {
                     {m.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium">{m.name}</p>
+                    <p className="text-sm font-medium">{m.name}{m.id === store.getCurrentMemberId() && <span className="text-xs text-slate-400 font-normal ml-1">(You)</span>}</p>
                     <p className="text-[10px] text-slate-400">{m.email}</p>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 font-medium">{m.role}</span>
@@ -424,7 +432,7 @@ export function BoardSettings({ onClose }: { onClose: () => void }) {
             <div className="mt-4 flex gap-2">
               <input value={newName} onChange={e => setNewName(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') handleAdd(); }}
-                placeholder={tab === 'members' ? 'Name' : `New ${tab.slice(0, -1)} name`}
+                placeholder={tab === 'members' ? 'Name' : tab === 'columns' ? 'New list name' : `New ${tab.slice(0, -1)} name`}
                 className="flex-1 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-primary" />
               {tab === 'labels' && (
                 <ColorPicker value={newColor} onChange={setNewColor} size="md" />

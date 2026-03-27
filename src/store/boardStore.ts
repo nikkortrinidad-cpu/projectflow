@@ -156,6 +156,10 @@ class BoardStore {
     }
   }
 
+  getCurrentMemberId(): string {
+    return 'user-1';
+  }
+
   private saveToFirestore() {
     if (!this.userId) return;
 

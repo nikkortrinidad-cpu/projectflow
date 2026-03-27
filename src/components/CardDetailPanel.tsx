@@ -269,7 +269,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
                       <div className="flex items-center justify-between">
                         <div className="flex -space-x-1.5">
                           {sharedMembers.map(m => (
-                            <div key={m.id} className="w-7 h-7 rounded-full bg-primary/20 text-primary text-[10px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-slate-800" title={m.name}>
+                            <div key={m.id} className="w-7 h-7 rounded-full bg-primary/20 text-primary text-[10px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-slate-800" title={m.id === store.getCurrentMemberId() ? `${m.name} (You)` : m.name}>
                               {m.name.charAt(0).toUpperCase()}
                             </div>
                           ))}
@@ -370,7 +370,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
                           <div className="w-5 h-5 rounded-full bg-primary/20 text-primary text-[9px] font-bold flex items-center justify-center">
                             {assignee.name.charAt(0).toUpperCase()}
                           </div>
-                          <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">{assignee.name}</span>
+                          <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">{assignee.name}{assignee.id === store.getCurrentMemberId() && <span className="text-[10px] text-slate-400 ml-1">(You)</span>}</span>
                           <button onClick={() => setAssigneeId('')} className="text-slate-400 hover:text-red-500 transition">
                             <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                           </button>
@@ -388,7 +388,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
                         <button key={m.id} onClick={() => setAssigneeId(m.id)}
                           className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition">
                           <div className="w-4 h-4 rounded-full bg-primary/20 text-primary text-[8px] font-bold flex items-center justify-center">{m.name.charAt(0).toUpperCase()}</div>
-                          {m.name}
+                          {m.name}{m.id === store.getCurrentMemberId() && <span className="text-[10px] text-slate-400 ml-1">(You)</span>}
                         </button>
                       ))}
                       {state.members.filter(m => m.id !== assigneeId).length === 0 && (
@@ -658,7 +658,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
                                 <div className="w-5 h-5 rounded-full bg-primary/20 text-primary text-[9px] font-bold flex items-center justify-center shrink-0">
                                   {itemAssignee.name.charAt(0).toUpperCase()}
                                 </div>
-                                <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300 truncate max-w-[60px]">{itemAssignee.name}</span>
+                                <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300 truncate max-w-[80px]">{itemAssignee.name}{itemAssignee.id === store.getCurrentMemberId() ? ' (You)' : ''}</span>
                               </>
                             ) : (
                               <div className="w-5 h-5 rounded-full border border-dashed border-slate-300 dark:border-slate-500 flex items-center justify-center text-slate-400">
@@ -692,7 +692,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
                                 <div className="w-5 h-5 rounded-full bg-primary/20 text-primary text-[9px] font-bold flex items-center justify-center shrink-0">
                                   {m.name.charAt(0).toUpperCase()}
                                 </div>
-                                {m.name}
+                                {m.name}{m.id === store.getCurrentMemberId() && <span className="text-[10px] text-slate-400 ml-1">(You)</span>}
                                 {item.assigneeId === m.id && (
                                   <svg className="w-3.5 h-3.5 ml-auto text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                                 )}
