@@ -31,8 +31,6 @@ export function CardDetailPanel({ card, onClose }: Props) {
   const [showPriorityDropdown, setShowPriorityDropdown] = useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
 
-  // Section visibility toggles
-  const showChecklistSection = (card.checklist || []).length > 0;
   /* Hidden Attachment state — available if needed */
 
   // Refs for scrolling
@@ -133,10 +131,10 @@ export function CardDetailPanel({ card, onClose }: Props) {
             </div>
 
             {/* Two-column fields */}
-            <div className="grid grid-cols-2 gap-x-6 gap-y-0 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-slate-50/50 dark:bg-slate-700/20">
+            <div className="grid grid-cols-2 gap-0 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50/50 dark:bg-slate-700/20">
               {/* Status */}
-              <div className="relative flex items-center gap-3 px-4 py-2.5 border-b border-slate-200 dark:border-slate-700">
-                <span className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 w-20 shrink-0">
+              <div className="relative flex items-center gap-2 px-3 py-2.5 border-b border-r border-slate-200 dark:border-slate-700 min-w-0">
+                <span className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 shrink-0">
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
                   Status
                 </span>
@@ -148,7 +146,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
                 {showStatusDropdown && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setShowStatusDropdown(false)} />
-                    <div className="absolute top-full left-20 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg shadow-xl z-20 w-48 overflow-hidden">
+                    <div className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg shadow-xl z-20 w-48 overflow-hidden">
                       <div className="p-1.5 space-y-0.5">
                         {[...state.columns].sort((a, b) => a.order - b.order).map(c => (
                           <button key={c.id}
@@ -170,8 +168,8 @@ export function CardDetailPanel({ card, onClose }: Props) {
               </div>
 
               {/* Assignees */}
-              <div className="relative flex items-center gap-3 px-4 py-2.5 border-b border-slate-200 dark:border-slate-700">
-                <span className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 w-20 shrink-0">
+              <div className="relative flex items-center gap-2 px-3 py-2.5 border-b border-slate-200 dark:border-slate-700 min-w-0">
+                <span className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 shrink-0">
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                   Assignees
                 </span>
@@ -214,19 +212,19 @@ export function CardDetailPanel({ card, onClose }: Props) {
               </div>
 
               {/* Start Date */}
-              <div className="flex items-center gap-3 px-4 py-2.5 border-b border-slate-200 dark:border-slate-700">
-                <span className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 w-20 shrink-0">
+              <div className="flex items-center gap-2 px-3 py-2.5 border-b border-r border-slate-200 dark:border-slate-700 min-w-0">
+                <span className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 shrink-0">
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                   Start date
                 </span>
                 <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
-                  className="text-xs font-medium text-slate-700 dark:text-slate-200 bg-transparent outline-none hover:bg-slate-200 dark:hover:bg-slate-600 rounded-md px-2 py-1 transition cursor-pointer" />
-                {!startDate && <span className="text-xs text-slate-400 dark:text-slate-500 -ml-2">Empty</span>}
+                  className="text-xs font-medium text-slate-700 dark:text-slate-200 bg-transparent outline-none hover:bg-slate-200 dark:hover:bg-slate-600 rounded-md px-1 py-1 transition cursor-pointer min-w-0 max-w-[120px]" />
+                {!startDate && <span className="text-[10px] text-slate-400 dark:text-slate-500">Empty</span>}
               </div>
 
               {/* Priority */}
-              <div className="relative flex items-center gap-3 px-4 py-2.5 border-b border-slate-200 dark:border-slate-700">
-                <span className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 w-20 shrink-0">
+              <div className="relative flex items-center gap-2 px-3 py-2.5 border-b border-slate-200 dark:border-slate-700 min-w-0">
+                <span className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 shrink-0">
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" /></svg>
                   Priority
                 </span>
@@ -240,7 +238,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
                 {showPriorityDropdown && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setShowPriorityDropdown(false)} />
-                    <div className="absolute top-full left-20 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg shadow-xl z-20 w-44 overflow-hidden">
+                    <div className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg shadow-xl z-20 w-44 overflow-hidden">
                       <div className="p-1.5 space-y-0.5">
                         {([
                           { value: 'low', label: 'Low', dot: 'bg-blue-400' },
@@ -267,17 +265,17 @@ export function CardDetailPanel({ card, onClose }: Props) {
               </div>
 
               {/* Due Date */}
-              <div className="flex items-center gap-3 px-4 py-2.5 border-b border-slate-200 dark:border-slate-700">
-                <span className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 w-20 shrink-0">
+              <div className="flex items-center gap-2 px-3 py-2.5 border-r border-slate-200 dark:border-slate-700 min-w-0 overflow-hidden">
+                <span className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 shrink-0">
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                   Due date
                 </span>
                 <div className="flex items-center gap-1.5">
                   <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)}
-                    className={`text-xs font-medium bg-transparent outline-none hover:bg-slate-200 dark:hover:bg-slate-600 rounded-md px-2 py-1 transition cursor-pointer ${
+                    className={`text-xs font-medium bg-transparent outline-none hover:bg-slate-200 dark:hover:bg-slate-600 rounded-md px-1 py-1 transition cursor-pointer min-w-0 max-w-[120px] ${
                       dueDate && new Date(dueDate) < new Date() ? 'text-red-500' : 'text-slate-700 dark:text-slate-200'
                     }`} />
-                  {!dueDate && <span className="text-xs text-slate-400 dark:text-slate-500 -ml-2">Empty</span>}
+                  {!dueDate && <span className="text-[10px] text-slate-400 dark:text-slate-500">Empty</span>}
                   {dueDate && new Date(dueDate) < new Date() && (
                     <span className="text-[9px] font-semibold text-red-500 bg-red-50 dark:bg-red-900/20 px-1 py-0.5 rounded">Overdue</span>
                   )}
@@ -285,8 +283,8 @@ export function CardDetailPanel({ card, onClose }: Props) {
               </div>
 
               {/* Labels */}
-              <div className="relative flex items-center gap-3 px-4 py-2.5">
-                <span className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 w-20 shrink-0">
+              <div className="relative flex items-center gap-2 px-3 py-2.5 min-w-0">
+                <span className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 shrink-0">
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
                   Labels
                 </span>
@@ -307,7 +305,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
                 {showLabelsDropdown && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => { setShowLabelsDropdown(false); setShowLabelManager(false); }} />
-                    <div className="absolute top-full left-20 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg shadow-xl z-20 w-64 overflow-hidden">
+                    <div className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg shadow-xl z-20 w-64 overflow-hidden">
                       <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
                         <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Labels</span>
                         <button onClick={() => setShowLabelManager(!showLabelManager)}
@@ -394,26 +392,31 @@ export function CardDetailPanel({ card, onClose }: Props) {
 
 
             {/* Checklist section */}
-            {showChecklistSection && (
-              <div ref={checklistRef}>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Checklist</label>
-                  {(card.checklist || []).length > 0 && (
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500">
-                      {(card.checklist || []).filter(i => i.checked).length}/{(card.checklist || []).length} done
-                    </span>
-                  )}
-                </div>
-                {/* Progress bar */}
+            <div ref={checklistRef}>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide flex items-center gap-1.5">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                  Checklist
+                </label>
                 {(card.checklist || []).length > 0 && (
-                  <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-600 rounded-full mb-2 overflow-hidden">
-                    <div
-                      className="h-full bg-green-500 rounded-full transition-all duration-300"
-                      style={{ width: `${((card.checklist || []).filter(i => i.checked).length / (card.checklist || []).length) * 100}%` }}
-                    />
-                  </div>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                    {(card.checklist || []).filter(i => i.checked).length}/{(card.checklist || []).length} done
+                  </span>
                 )}
-                <div className="space-y-1.5">
+              </div>
+              {/* Progress bar */}
+              {(card.checklist || []).length > 0 && (
+                <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-600 rounded-full mb-2 overflow-hidden">
+                  <div
+                    className="h-full bg-green-500 rounded-full transition-all duration-300"
+                    style={{ width: `${((card.checklist || []).filter(i => i.checked).length / (card.checklist || []).length) * 100}%` }}
+                  />
+                </div>
+              )}
+              {(card.checklist || []).length > 0 && (
+                <div className="space-y-1.5 mb-2">
                   {(card.checklist || []).map(item => (
                     <div key={item.id} className="flex items-center gap-2 group/check">
                       <button
@@ -444,33 +447,33 @@ export function CardDetailPanel({ card, onClose }: Props) {
                     </div>
                   ))}
                 </div>
-                <div className="flex gap-2 mt-2">
-                  <input
-                    value={newChecklistItem}
-                    onChange={e => setNewChecklistItem(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter' && newChecklistItem.trim()) {
-                        store.addChecklistItem(card.id, newChecklistItem.trim());
-                        setNewChecklistItem('');
-                      }
-                    }}
-                    placeholder="Add an item..."
-                    className="flex-1 text-sm border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-1.5 outline-none focus:border-primary bg-white dark:bg-slate-700 dark:text-slate-200"
-                  />
-                  <button
-                    onClick={() => {
-                      if (newChecklistItem.trim()) {
-                        store.addChecklistItem(card.id, newChecklistItem.trim());
-                        setNewChecklistItem('');
-                      }
-                    }}
-                    className="text-xs bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-primary-dark transition font-medium"
-                  >
-                    Add
-                  </button>
-                </div>
+              )}
+              <div className="flex gap-2">
+                <input
+                  value={newChecklistItem}
+                  onChange={e => setNewChecklistItem(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && newChecklistItem.trim()) {
+                      store.addChecklistItem(card.id, newChecklistItem.trim());
+                      setNewChecklistItem('');
+                    }
+                  }}
+                  placeholder="Add an item..."
+                  className="flex-1 text-sm border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-1.5 outline-none focus:border-primary bg-white dark:bg-slate-700 dark:text-slate-200"
+                />
+                <button
+                  onClick={() => {
+                    if (newChecklistItem.trim()) {
+                      store.addChecklistItem(card.id, newChecklistItem.trim());
+                      setNewChecklistItem('');
+                    }
+                  }}
+                  className="text-xs bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-primary-dark transition font-medium"
+                >
+                  Add
+                </button>
               </div>
-            )}
+            </div>
 
             {/* Hidden Attachment section — available in store if needed */}
 
@@ -493,7 +496,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
         </div>
 
         {/* Right: Unified Activity sidebar */}
-        <div className="w-80 shrink-0 border-l border-slate-100 dark:border-slate-700 flex flex-col bg-slate-50 dark:bg-slate-800/50">
+        <div className="w-72 shrink-0 border-l border-slate-100 dark:border-slate-700 flex flex-col bg-slate-50 dark:bg-slate-800/50">
           <div className="shrink-0 px-4 py-3 border-b border-slate-100 dark:border-slate-700">
             <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Activity</label>
           </div>
