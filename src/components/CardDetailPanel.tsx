@@ -123,6 +123,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
   };
 
 
+  const [descriptionEditing, setDescriptionEditing] = useState(false);
   const [descriptionDirty, setDescriptionDirty] = useState(false);
   const initialDescription = useRef(card.description);
   const firstUpdate = useRef(true);
@@ -142,24 +143,18 @@ export function CardDetailPanel({ card, onClose }: Props) {
     store.updateCard(card.id, { description });
     initialDescription.current = description;
     setDescriptionDirty(false);
+    setDescriptionEditing(false);
   };
 
   const handleCancelDescription = () => {
     setDescription(initialDescription.current);
     setDescriptionDirty(false);
+    setDescriptionEditing(false);
   };
 
   const column = state.columns.find(c => c.id === card.columnId);
   const activities = state.activityLog.filter(a => a.cardId === card.id).slice(0, 20);
 
-  const hasUnsavedChanges =
-    title !== card.title ||
-    description !== card.description ||
-    priority !== card.priority ||
-    (startDate || '') !== (card.startDate || '') ||
-    (dueDate || '') !== (card.dueDate || '') ||
-    (assigneeId || '') !== (card.assigneeId || '') ||
-    JSON.stringify(selectedLabels) !== JSON.stringify(card.labels);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -680,23 +675,28 @@ export function CardDetailPanel({ card, onClose }: Props) {
               onChange={handleDescriptionChange}
               maxLength={2000}
               placeholder="Add a description... (supports markdown)"
-              headerRight={
+              editing={descriptionEditing}
+              onEditStart={() => setDescriptionEditing(true)}
+              headerRight={descriptionEditing ? (
                 <div className={`flex items-center gap-1.5 text-[11px] font-medium px-1 py-0.5 rounded-md transition-all ${
-                  hasUnsavedChanges
+                  descriptionDirty
                     ? 'text-amber-600 dark:text-amber-400'
                     : 'text-green-600 dark:text-green-400'
                 }`}>
                   <div className={`w-1.5 h-1.5 rounded-full ${
-                    hasUnsavedChanges ? 'bg-amber-500' : 'bg-green-500'
+                    descriptionDirty ? 'bg-amber-500' : 'bg-green-500'
                   }`} />
-                  {hasUnsavedChanges ? 'Unsaved changes' : 'All changes saved'}
+                  {descriptionDirty ? 'Unsaved changes' : 'All changes saved'}
                 </div>
-              }
-              footerLeft={descriptionDirty ? (
+              ) : undefined}
+              footerLeft={descriptionEditing ? (
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleSaveDescription}
-                    className="text-xs bg-primary text-white px-3 py-1 rounded-lg hover:bg-primary-dark transition font-medium"
+                    disabled={!descriptionDirty}
+                    className={`text-xs text-white px-3 py-1 rounded-lg transition font-medium ${
+                      descriptionDirty ? 'bg-primary hover:bg-primary-dark' : 'bg-primary/40 cursor-not-allowed'
+                    }`}
                   >
                     Save
                   </button>
