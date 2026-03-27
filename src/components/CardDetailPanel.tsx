@@ -122,7 +122,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
             </svg>
           </div>
 
-          <div className={`flex items-center gap-1.5 text-[11px] font-medium px-1 py-1 rounded-md transition-all ${
+          <div className={`flex items-center justify-end gap-1.5 text-[11px] font-medium px-1 py-1 rounded-md transition-all ${
             hasUnsavedChanges
               ? 'text-amber-600 dark:text-amber-400'
               : 'text-green-600 dark:text-green-400'
