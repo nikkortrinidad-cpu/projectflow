@@ -124,3 +124,12 @@ html.dark .tiptap hr { border-top-color: #475569; }
 html.dark .prose-comment code { background: #1e293b; color: #f472b6; }
 html.dark .prose-comment a { color: #818cf8; }
 html.dark .prose-comment blockquote { border-left-color: #475569; color: #94a3b8; }
+
+/* @mention styles */
+.mention, .tiptap .mention, .prose-comment .mention {
+  color: #6366f1; font-weight: 600; background: rgba(99,102,241,0.1);
+  padding: 0.1em 0.3em; border-radius: 4px; white-space: nowrap;
+}
+html.dark .mention, html.dark .tiptap .mention, html.dark .prose-comment .mention {
+  color: #818cf8; background: rgba(129,140,248,0.15);
+}

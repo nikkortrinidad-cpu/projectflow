@@ -4,6 +4,8 @@ import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import Image from '@tiptap/extension-image';
 import Placeholder from '@tiptap/extension-placeholder';
+import { useBoard } from '../store/useStore';
+import { store } from '../store/boardStore';
 
 interface Props {
   onSubmit: (html: string, scheduledAt?: string) => void;
@@ -18,9 +20,13 @@ const EMOJI_LIST = [
 ];
 
 export function CommentEditor({ onSubmit, placeholder: placeholderText, compact }: Props) {
+  const { state } = useBoard();
+  const currentMemberId = store.getCurrentMemberId();
   const [showToolbar, setShowToolbar] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showGifPicker, setShowGifPicker] = useState(false);
+  const [showMentionPicker, setShowMentionPicker] = useState(false);
+  const [mentionSearch, setMentionSearch] = useState('');
   const [showScheduleMenu, setShowScheduleMenu] = useState(false);
   const [showCustomPicker, setShowCustomPicker] = useState(false);
   const [customDateTime, setCustomDateTime] = useState('');
@@ -92,6 +98,12 @@ export function CommentEditor({ onSubmit, placeholder: placeholderText, compact 
     if (url) {
       editor.chain().focus().setImage({ src: url }).run();
     }
+  };
+
+  const insertMention = (name: string) => {
+    editor.chain().focus().insertContent(`<span class="mention" data-type="mention">@${name}</span>&nbsp;`).run();
+    setShowMentionPicker(false);
+    setMentionSearch('');
   };
 
   const insertEmoji = (emoji: string) => {
@@ -194,17 +206,65 @@ export function CommentEditor({ onSubmit, placeholder: placeholderText, compact 
         <div className="flex items-center gap-0.5">
           {/* Formatting toggle */}
           <button
-            onClick={() => { setShowToolbar(!showToolbar); setShowEmojiPicker(false); setShowGifPicker(false); }}
+            onClick={() => { setShowToolbar(!showToolbar); setShowEmojiPicker(false); setShowGifPicker(false); setShowMentionPicker(false); }}
             title="Formatting options"
             className={actionBtn(showToolbar)}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h8m-8 6h16" /></svg>
           </button>
 
+          {/* Mention */}
+          <div className="relative">
+            <button
+              onClick={() => { setShowMentionPicker(!showMentionPicker); setShowEmojiPicker(false); setShowGifPicker(false); setShowToolbar(false); }}
+              title="Mention someone"
+              className={actionBtn(showMentionPicker)}
+            >
+              <span className="text-sm font-bold leading-none w-4 h-4 flex items-center justify-center">@</span>
+            </button>
+            {showMentionPicker && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => { setShowMentionPicker(false); setMentionSearch(''); }} />
+                <div className="absolute bottom-full left-0 mb-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl shadow-xl z-20 w-[220px] overflow-hidden">
+                  <div className="px-2.5 pt-2.5 pb-1.5">
+                    <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1.5">Mention</p>
+                    <input
+                      autoFocus
+                      value={mentionSearch}
+                      onChange={e => setMentionSearch(e.target.value)}
+                      placeholder="Search members..."
+                      className="w-full text-xs border border-slate-200 dark:border-slate-600 rounded-lg px-2.5 py-1.5 outline-none focus:border-primary bg-slate-50 dark:bg-slate-700 dark:text-slate-200"
+                    />
+                  </div>
+                  <div className="max-h-[160px] overflow-y-auto py-1">
+                    {state.members
+                      .filter(m => m.name.toLowerCase().includes(mentionSearch.toLowerCase()))
+                      .map(m => (
+                        <button
+                          key={m.id}
+                          onClick={() => insertMention(m.name)}
+                          className="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
+                        >
+                          <div className="w-5 h-5 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white text-[10px] font-bold shrink-0">
+                            {m.avatar ? <img src={m.avatar} alt="" className="w-full h-full rounded-full object-cover" /> : m.name.charAt(0).toUpperCase()}
+                          </div>
+                          <span className="truncate">{m.name}</span>
+                          {m.id === currentMemberId && <span className="text-[10px] text-slate-400 dark:text-slate-500">(You)</span>}
+                        </button>
+                      ))}
+                    {state.members.filter(m => m.name.toLowerCase().includes(mentionSearch.toLowerCase())).length === 0 && (
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500 text-center py-2">No members found</p>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
           {/* Emoji */}
           <div className="relative">
             <button
-              onClick={() => { setShowEmojiPicker(!showEmojiPicker); setShowGifPicker(false); setShowToolbar(false); }}
+              onClick={() => { setShowEmojiPicker(!showEmojiPicker); setShowMentionPicker(false); setShowGifPicker(false); setShowToolbar(false); }}
               title="Add emoji"
               className={actionBtn(showEmojiPicker)}
             >
@@ -231,7 +291,7 @@ export function CommentEditor({ onSubmit, placeholder: placeholderText, compact 
           {/* GIF / Sticker */}
           <div className="relative">
             <button
-              onClick={() => { setShowGifPicker(!showGifPicker); setShowEmojiPicker(false); setShowToolbar(false); }}
+              onClick={() => { setShowGifPicker(!showGifPicker); setShowEmojiPicker(false); setShowMentionPicker(false); setShowToolbar(false); }}
               title="Add GIF or sticker"
               className={actionBtn(showGifPicker)}
             >
