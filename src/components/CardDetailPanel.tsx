@@ -31,6 +31,11 @@ export function CardDetailPanel({ card, onClose }: Props) {
   const [showPriorityDropdown, setShowPriorityDropdown] = useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [checklistAssigneeDropdown, setChecklistAssigneeDropdown] = useState<string | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareInviteEmail, setShareInviteEmail] = useState('');
+  const [sharePublicLink, setSharePublicLink] = useState(false);
+  const [sharePermission, setSharePermission] = useState<'full_edit' | 'can_comment' | 'view_only'>('full_edit');
+  const [shareLinkCopied, setShareLinkCopied] = useState(false);
 
   /* Hidden Attachment state — available if needed */
 
@@ -110,13 +115,143 @@ export function CardDetailPanel({ card, onClose }: Props) {
       <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-4xl max-h-[90vh] bg-white dark:bg-slate-800 shadow-2xl rounded-2xl flex flex-col overflow-hidden">
         {/* Title bar */}
-        <div className="shrink-0 flex items-center justify-end px-6 py-3 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
+        <div className="shrink-0 flex items-center justify-end gap-1 px-6 py-3 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
+          <button onClick={() => setShowShareModal(true)} className="shrink-0 flex items-center gap-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 px-2.5 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition text-xs font-medium">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+            Share
+          </button>
           <button onClick={onClose} className="shrink-0 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
+
+        {/* Share Modal */}
+        {showShareModal && (
+          <>
+            <div className="fixed inset-0 z-[60] bg-black/30" onClick={() => setShowShareModal(false)} />
+            <div className="fixed inset-0 z-[60] flex items-center justify-center pointer-events-none">
+              <div className="pointer-events-auto w-full max-w-md bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+                {/* Header */}
+                <div className="flex items-center justify-between px-5 pt-5 pb-2">
+                  <h3 className="text-base font-semibold text-slate-800 dark:text-slate-100">Share this task</h3>
+                  <button onClick={() => setShowShareModal(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
+                <p className="px-5 text-xs text-slate-500 dark:text-slate-400 mb-4">
+                  Sharing task <span className="inline-block w-2 h-2 rounded-sm mx-1" style={{ backgroundColor: column?.color }} /> <span className="font-semibold text-slate-700 dark:text-slate-200">{title}</span>
+                </p>
+
+                {/* Invite */}
+                <div className="px-5 mb-4">
+                  <div className="flex gap-2">
+                    <input
+                      value={shareInviteEmail}
+                      onChange={e => setShareInviteEmail(e.target.value)}
+                      placeholder="Invite by name or email"
+                      className="flex-1 text-sm border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 outline-none focus:border-primary bg-white dark:bg-slate-700 dark:text-slate-200"
+                    />
+                    <button
+                      onClick={() => {
+                        if (shareInviteEmail.trim()) {
+                          setShareInviteEmail('');
+                        }
+                      }}
+                      className="text-sm bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition font-medium shrink-0"
+                    >
+                      Invite
+                    </button>
+                  </div>
+                </div>
+
+                {/* Options */}
+                <div className="px-5 space-y-3 mb-4">
+                  {/* Share link with anyone */}
+                  <div className="flex items-center justify-between py-1">
+                    <div className="flex items-center gap-2.5">
+                      <svg className="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" /></svg>
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Share link with anyone</span>
+                    </div>
+                    <button
+                      onClick={() => setSharePublicLink(!sharePublicLink)}
+                      className={`relative w-9 h-5 rounded-full transition-colors ${sharePublicLink ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'}`}
+                    >
+                      <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${sharePublicLink ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                    </button>
+                  </div>
+
+                  {/* Private link */}
+                  <div className="flex items-center justify-between py-1">
+                    <div className="flex items-center gap-2.5">
+                      <svg className="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Private link</span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(window.location.href + '?card=' + card.id);
+                        setShareLinkCopied(true);
+                        setTimeout(() => setShareLinkCopied(false), 2000);
+                      }}
+                      className="text-xs font-medium border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 px-3 py-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition"
+                    >
+                      {shareLinkCopied ? 'Copied!' : 'Copy link'}
+                    </button>
+                  </div>
+
+                  {/* Default permission */}
+                  <div className="flex items-center justify-between py-1">
+                    <div className="flex items-center gap-2.5">
+                      <svg className="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Default permission</span>
+                    </div>
+                    <select
+                      value={sharePermission}
+                      onChange={e => setSharePermission(e.target.value as typeof sharePermission)}
+                      className="text-xs font-medium border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-700 px-3 py-1.5 rounded-lg outline-none cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-600 transition"
+                    >
+                      <option value="full_edit">Full edit</option>
+                      <option value="can_comment">Can comment</option>
+                      <option value="view_only">View only</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Shared members */}
+                {(() => {
+                  const cardAssignee = state.members.find(m => m.id === card.assigneeId);
+                  const creator = state.members.find(m => m.id === 'user-1');
+                  const sharedMembers = [creator, cardAssignee].filter((m, i, arr) => m && arr.findIndex(a => a?.id === m.id) === i) as typeof state.members;
+                  return sharedMembers.length > 0 ? (
+                    <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-700">
+                      <div className="flex items-center justify-between">
+                        <div className="flex -space-x-1.5">
+                          {sharedMembers.map(m => (
+                            <div key={m.id} className="w-7 h-7 rounded-full bg-primary/20 text-primary text-[10px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-slate-800" title={m.name}>
+                              {m.name.charAt(0).toUpperCase()}
+                            </div>
+                          ))}
+                        </div>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500">{sharedMembers.length} member{sharedMembers.length > 1 ? 's' : ''}</span>
+                      </div>
+                    </div>
+                  ) : null;
+                })()}
+
+                {/* Make Private */}
+                <div className="px-5 py-4 border-t border-slate-100 dark:border-slate-700">
+                  <button className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                    Make Private
+                  </button>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Body: left content + right sidebar */}
         <div className="flex-1 flex overflow-hidden">
