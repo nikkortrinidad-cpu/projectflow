@@ -17,11 +17,43 @@ export function CardDetailPanel({ card, onClose }: Props) {
   const [dueDate, setDueDate] = useState(card.dueDate || '');
   const [assigneeId, setAssigneeId] = useState(card.assigneeId || '');
   const [selectedLabels, setSelectedLabels] = useState<string[]>(card.labels);
+  const [showLabelManager, setShowLabelManager] = useState(false);
+  const [newLabelName, setNewLabelName] = useState('');
+  const [newLabelColor, setNewLabelColor] = useState('#6366f1');
+  const [editingLabelId, setEditingLabelId] = useState<string | null>(null);
+  const [editLabelName, setEditLabelName] = useState('');
+  const [editLabelColor, setEditLabelColor] = useState('');
 
   const toggleLabel = (labelId: string) => {
     setSelectedLabels(prev =>
       prev.includes(labelId) ? prev.filter(l => l !== labelId) : [...prev, labelId]
     );
+  };
+
+  const handleCreateLabel = () => {
+    if (newLabelName.trim()) {
+      const label = store.addLabel(newLabelName.trim(), newLabelColor);
+      setSelectedLabels(prev => [...prev, label.id]);
+      setNewLabelName('');
+      setNewLabelColor('#6366f1');
+    }
+  };
+
+  const handleEditLabel = (id: string) => {
+    if (editLabelName.trim()) {
+      const label = state.labels.find(l => l.id === id);
+      if (label) {
+        store.deleteLabel(id);
+        const updated = store.addLabel(editLabelName.trim(), editLabelColor);
+        setSelectedLabels(prev => prev.map(l => l === id ? updated.id : l));
+      }
+      setEditingLabelId(null);
+    }
+  };
+
+  const handleDeleteLabel = (id: string) => {
+    store.deleteLabel(id);
+    setSelectedLabels(prev => prev.filter(l => l !== id));
   };
 
   const handleSave = () => {
@@ -116,7 +148,13 @@ export function CardDetailPanel({ card, onClose }: Props) {
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1 block">Labels</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Labels</label>
+              <button onClick={() => setShowLabelManager(!showLabelManager)}
+                className="text-[10px] text-primary hover:text-primary-dark font-medium transition">
+                {showLabelManager ? 'Done' : 'Manage'}
+              </button>
+            </div>
             <div className="flex flex-wrap gap-1.5">
               {state.labels.map(l => (
                 <button key={l.id}
@@ -131,6 +169,50 @@ export function CardDetailPanel({ card, onClose }: Props) {
                 </button>
               ))}
             </div>
+
+            {showLabelManager && (
+              <div className="mt-3 border border-slate-200 rounded-lg p-3 space-y-2 bg-slate-50">
+                {state.labels.map(l => (
+                  <div key={l.id} className="flex items-center gap-2">
+                    {editingLabelId === l.id ? (
+                      <>
+                        <input type="color" value={editLabelColor} onChange={e => setEditLabelColor(e.target.value)}
+                          className="w-6 h-6 rounded cursor-pointer border-none" />
+                        <input value={editLabelName} onChange={e => setEditLabelName(e.target.value)}
+                          onKeyDown={e => { if (e.key === 'Enter') handleEditLabel(l.id); if (e.key === 'Escape') setEditingLabelId(null); }}
+                          className="flex-1 text-xs bg-white border border-slate-200 rounded px-2 py-1 outline-none focus:border-primary" />
+                        <button onClick={() => handleEditLabel(l.id)}
+                          className="text-[10px] text-primary hover:text-primary-dark font-medium">Save</button>
+                        <button onClick={() => setEditingLabelId(null)}
+                          className="text-[10px] text-slate-400 hover:text-slate-600">Cancel</button>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-4 h-4 rounded-full shrink-0" style={{ backgroundColor: l.color }} />
+                        <span className="flex-1 text-xs font-medium text-slate-600">{l.name}</span>
+                        <button onClick={() => { setEditingLabelId(l.id); setEditLabelName(l.name); setEditLabelColor(l.color); }}
+                          className="text-[10px] text-slate-400 hover:text-primary transition">Edit</button>
+                        <button onClick={() => handleDeleteLabel(l.id)}
+                          className="text-[10px] text-slate-400 hover:text-red-500 transition">Remove</button>
+                      </>
+                    )}
+                  </div>
+                ))}
+
+                <div className="flex items-center gap-2 pt-2 border-t border-slate-200">
+                  <input type="color" value={newLabelColor} onChange={e => setNewLabelColor(e.target.value)}
+                    className="w-6 h-6 rounded cursor-pointer border-none" />
+                  <input value={newLabelName} onChange={e => setNewLabelName(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') handleCreateLabel(); }}
+                    placeholder="New label name..."
+                    className="flex-1 text-xs bg-white border border-slate-200 rounded px-2 py-1 outline-none focus:border-primary" />
+                  <button onClick={handleCreateLabel}
+                    className="text-[10px] bg-primary text-white px-2 py-1 rounded font-medium hover:bg-primary-dark transition">
+                    Create
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div>
