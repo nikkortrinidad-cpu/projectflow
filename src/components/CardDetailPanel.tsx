@@ -34,6 +34,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
   const [checklistAssigneeDropdown, setChecklistAssigneeDropdown] = useState<string | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showCardMenu, setShowCardMenu] = useState(false);
+  const [activityTab, setActivityTab] = useState<'comments' | 'activity'>('comments');
   const [shareInviteEmail, setShareInviteEmail] = useState('');
   const [sharePublicLink, setSharePublicLink] = useState(false);
   const [sharePermission, setSharePermission] = useState<'full_edit' | 'can_comment' | 'view_only'>('full_edit');
@@ -821,79 +822,115 @@ export function CardDetailPanel({ card, onClose }: Props) {
           </div>
         </div>
 
-        {/* Right: Unified Activity sidebar */}
+        {/* Right: Activity sidebar */}
         <div className="w-96 shrink-0 border-l border-slate-100 dark:border-slate-700 flex flex-col bg-slate-50 dark:bg-slate-800/50">
-          <div className="shrink-0 px-4 py-3 border-b border-slate-100 dark:border-slate-700">
-            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Activity</label>
+          {/* Toggle header */}
+          <div className="shrink-0 px-4 py-2.5 border-b border-slate-100 dark:border-slate-700 flex items-center gap-1 bg-white dark:bg-slate-800">
+            <button
+              onClick={() => setActivityTab('comments')}
+              className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition ${
+                activityTab === 'comments'
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+              }`}
+            >
+              Comments
+              {card.comments.length > 0 && (
+                <span className={`ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                  activityTab === 'comments' ? 'bg-primary/20 text-primary' : 'bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400'
+                }`}>{card.comments.length}</span>
+              )}
+            </button>
+            <button
+              onClick={() => setActivityTab('activity')}
+              className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition ${
+                activityTab === 'activity'
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+              }`}
+            >
+              Activity Log
+              {activities.length > 0 && (
+                <span className={`ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                  activityTab === 'activity' ? 'bg-primary/20 text-primary' : 'bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400'
+                }`}>{activities.length}</span>
+              )}
+            </button>
           </div>
 
-          {/* Unified timeline */}
+          {/* Content area */}
           <div className="flex-1 overflow-y-auto px-4 py-3">
             <div className="space-y-3">
-              {(() => {
-                // Merge comments and activities into a single chronological feed
-                const feed: { type: 'comment' | 'activity'; timestamp: string; data: any }[] = [
-                  ...card.comments.map(c => ({ type: 'comment' as const, timestamp: c.createdAt, data: c })),
-                  ...activities.map(a => ({ type: 'activity' as const, timestamp: a.timestamp, data: a })),
-                ];
-                feed.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
-                if (feed.length === 0) {
-                  return <p className="text-xs text-slate-400 dark:text-slate-500 italic">No activity yet.</p>;
-                }
-
-                return feed.map((item, i) => {
-                  if (item.type === 'comment') {
-                    const c = item.data;
-                    const author = state.members.find(m => m.id === c.authorId);
-                    return (
-                      <div key={`comment-${c.id}`} className="relative pl-6">
-                        {/* Timeline line */}
-                        {i < feed.length - 1 && (
-                          <div className="absolute left-[9px] top-6 bottom-[-12px] w-px bg-slate-200 dark:bg-slate-600" />
-                        )}
-                        {/* Avatar dot */}
-                        <div className="absolute left-0 top-0.5 w-[18px] h-[18px] rounded-full bg-primary/20 text-primary text-[9px] font-bold flex items-center justify-center">
-                          {(author?.name || '?').charAt(0)}
-                        </div>
-                        <div className="bg-white dark:bg-slate-700 rounded-lg p-2.5 shadow-sm">
-                          <div className="flex items-center gap-1.5 mb-1">
-                            <span className="text-xs font-medium text-slate-700 dark:text-slate-200">{author?.name || 'Unknown'}</span>
-                            <span className="text-[10px] text-slate-400 dark:text-slate-500">commented</span>
+              {activityTab === 'comments' ? (
+                <>
+                  {card.comments.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-8 text-slate-400 dark:text-slate-500">
+                      <svg className="w-8 h-8 mb-2 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                      <p className="text-xs font-medium">No comments yet</p>
+                      <p className="text-[10px] mt-0.5">Start the conversation below</p>
+                    </div>
+                  ) : (
+                    [...card.comments].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((c, i, arr) => {
+                      const author = state.members.find(m => m.id === c.authorId);
+                      return (
+                        <div key={`comment-${c.id}`} className="relative pl-6">
+                          {i < arr.length - 1 && (
+                            <div className="absolute left-[9px] top-6 bottom-[-12px] w-px bg-slate-200 dark:bg-slate-600" />
+                          )}
+                          <div className="absolute left-0 top-0.5 w-[18px] h-[18px] rounded-full bg-primary/20 text-primary text-[9px] font-bold flex items-center justify-center">
+                            {(author?.name || '?').charAt(0)}
                           </div>
-                          <div className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed prose-comment" dangerouslySetInnerHTML={{ __html: c.text }} />
-                          <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1.5">
-                            {new Date(c.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                          </p>
+                          <div className="bg-white dark:bg-slate-700 rounded-lg p-2.5 shadow-sm">
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <span className="text-xs font-medium text-slate-700 dark:text-slate-200">{author?.name || 'Unknown'}{author?.id === store.getCurrentMemberId() && <span className="text-[10px] text-slate-400 font-normal ml-1">(You)</span>}</span>
+                            </div>
+                            <div className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed prose-comment" dangerouslySetInnerHTML={{ __html: c.text }} />
+                            <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1.5">
+                              {new Date(c.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  } else {
-                    const a = item.data;
-                    return (
+                      );
+                    })
+                  )}
+                </>
+              ) : (
+                <>
+                  {activities.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-8 text-slate-400 dark:text-slate-500">
+                      <svg className="w-8 h-8 mb-2 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <p className="text-xs font-medium">No activity yet</p>
+                      <p className="text-[10px] mt-0.5">Actions on this card will appear here</p>
+                    </div>
+                  ) : (
+                    activities.map((a, i) => (
                       <div key={`activity-${a.id}`} className="relative pl-6">
-                        {/* Timeline line */}
-                        {i < feed.length - 1 && (
+                        {i < activities.length - 1 && (
                           <div className="absolute left-[9px] top-4 bottom-[-12px] w-px bg-slate-200 dark:bg-slate-600" />
                         )}
-                        {/* Activity dot */}
                         <div className="absolute left-[5px] top-1 w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-500 ring-2 ring-slate-50 dark:ring-slate-800" />
                         <p className="text-xs text-slate-500 dark:text-slate-400">{a.detail}</p>
                         <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
                           {new Date(a.timestamp).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
-                    );
-                  }
-                });
-              })()}
+                    ))
+                  )}
+                </>
+              )}
             </div>
           </div>
 
-          {/* Comment input pinned at bottom */}
-          <div className="shrink-0 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-            <CommentEditor onSubmit={(html) => handleAddComment(html)} />
-          </div>
+          {/* Comment input pinned at bottom — only show on comments tab */}
+          {activityTab === 'comments' && (
+            <div className="shrink-0 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+              <CommentEditor onSubmit={(html) => handleAddComment(html)} />
+            </div>
+          )}
         </div>
         </div>
       </div>
