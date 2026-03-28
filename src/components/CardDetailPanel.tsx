@@ -941,12 +941,13 @@ export function CardDetailPanel({ card, onClose }: Props) {
                       const isCollapsed = collapsedComments.has(c.id);
 
                       const renderReplies = (replies: typeof card.comments, depth: number = 1) => (
-                        <div className={`mt-2 space-y-2 ${depth === 1 ? 'ml-2' : 'ml-3'} border-l-2 border-[#e8e8ed] dark:border-[#3a3a3c] pl-3`}>
+                        <div className={`mt-2 space-y-2 ${depth === 1 ? 'ml-2' : 'ml-3'} border-l-2 border-[#c7c7cc] dark:border-[#636366] pl-3`}>
                           {replies.map(reply => {
                             const replyAuthor = state.members.find(m => m.id === reply.authorId);
                             return (
                               <div key={`reply-${reply.id}`}>
                                 <div className="relative pl-5">
+                                  <div className="absolute left-[-14px] top-3 w-[14px] h-0 border-t-2 border-[#c7c7cc] dark:border-[#636366]" />
                                   <div className="absolute left-0 top-0.5 w-[14px] h-[14px] rounded-full bg-[#e8e8ed] dark:bg-[#3a3a3c] text-[#86868b] dark:text-[#86868b] text-[10px] font-bold flex items-center justify-center">
                                     {(replyAuthor?.name || '?').charAt(0)}
                                   </div>
