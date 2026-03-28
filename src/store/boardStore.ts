@@ -383,6 +383,34 @@ class BoardStore {
     this.save();
   }
 
+  toggleReaction(cardId: string, commentId: string, emoji: string) {
+    const card = this.state.cards.find(c => c.id === cardId);
+    if (!card) return;
+    const findComment = (comments: Comment[]): Comment | undefined => {
+      for (const c of comments) {
+        if (c.id === commentId) return c;
+        if (c.replies) {
+          const found = findComment(c.replies);
+          if (found) return found;
+        }
+      }
+      return undefined;
+    };
+    const comment = findComment(card.comments);
+    if (!comment) return;
+    if (!comment.reactions) comment.reactions = {};
+    const userId = this.getCurrentMemberId();
+    if (!comment.reactions[emoji]) {
+      comment.reactions[emoji] = [userId];
+    } else if (comment.reactions[emoji].includes(userId)) {
+      comment.reactions[emoji] = comment.reactions[emoji].filter(id => id !== userId);
+      if (comment.reactions[emoji].length === 0) delete comment.reactions[emoji];
+    } else {
+      comment.reactions[emoji].push(userId);
+    }
+    this.save();
+  }
+
   // --- Checklist ---
   addChecklistItem(cardId: string, text: string, assigneeId: string | null = null) {
     const card = this.state.cards.find(c => c.id === cardId);

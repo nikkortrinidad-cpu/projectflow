@@ -1,15 +1,75 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import type { Card, Priority } from '../types';
+import type { Card, Priority, Comment } from '../types';
 import { useBoard } from '../store/useStore';
 import { store } from '../store/boardStore';
 import { ColorPicker } from './ColorPicker';
 import { MarkdownEditor } from './MarkdownEditor';
 import { CommentEditor } from './CommentEditor';
+import data from '@emoji-mart/data';
+import Picker from '@emoji-mart/react';
 
 interface Props {
   card: Card;
   onClose: () => void;
+}
+
+function ReactionBar({ cardId, comment }: { cardId: string; comment: Comment }) {
+  const [showPicker, setShowPicker] = useState(false);
+  const reactions = comment.reactions || {};
+  const currentUserId = store.getCurrentMemberId();
+  const hasReactions = Object.keys(reactions).length > 0;
+
+  return (
+    <div className="flex flex-wrap items-center gap-1 mt-1">
+      {Object.entries(reactions).map(([emoji, userIds]) => (
+        <button
+          key={emoji}
+          onClick={() => store.toggleReaction(cardId, comment.id, emoji)}
+          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs border transition ${
+            userIds.includes(currentUserId)
+              ? 'bg-[#d3e3fd] border-[#007AFF]/30 text-[#007AFF]'
+              : 'bg-white dark:bg-[#2c2c2e] border-[#d2d2d7] dark:border-[#424245] text-[#1d1d1f] dark:text-[#e5e5ea] hover:bg-[#f0f0f5] dark:hover:bg-[#3a3a3c]'
+          }`}
+        >
+          <span>{emoji}</span>
+          <span className="text-[10px] font-medium">{userIds.length}</span>
+        </button>
+      ))}
+      <div className="relative">
+        <button
+          onClick={() => setShowPicker(!showPicker)}
+          className={`w-6 h-6 flex items-center justify-center rounded-full border transition ${
+            hasReactions
+              ? 'border-[#d2d2d7] dark:border-[#424245] text-[#86868b] hover:bg-[#f0f0f5] dark:hover:bg-[#3a3a3c]'
+              : 'border-transparent text-[#86868b] hover:text-[#6e6e73]'
+          }`}
+          title="Add reaction"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        </button>
+        {showPicker && (
+          <>
+            <div className="fixed inset-0 z-10" onClick={() => setShowPicker(false)} />
+            <div className="absolute bottom-full left-0 mb-2 z-20">
+              <Picker
+                data={data}
+                onEmojiSelect={(emoji: { native: string }) => {
+                  store.toggleReaction(cardId, comment.id, emoji.native);
+                  setShowPicker(false);
+                }}
+                theme="light"
+                previewPosition="none"
+                skinTonePosition="search"
+                perLine={8}
+                maxFrequentRows={2}
+              />
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export function CardDetailPanel({ card, onClose }: Props) {
@@ -1057,6 +1117,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
                                         Reply
                                       </button>
                                     </div>
+                                    <ReactionBar cardId={card.id} comment={reply} />
                                     </>
                                     )}
                                     {/* Nested replies */}
@@ -1190,6 +1251,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
                                   </button>
                                 )}
                               </div>
+                              <ReactionBar cardId={card.id} comment={c} />
                             </div>
                             )}
 
