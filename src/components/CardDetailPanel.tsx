@@ -958,43 +958,66 @@ export function CardDetailPanel({ card, onClose }: Props) {
                       const totalReplies = countAllReplies(c.replies || []);
                       const isCollapsed = collapsedComments.has(c.id);
 
-                      const CONNECTOR_OFFSET = 19; // distance from child left edge back to parent's thread line center (avatarCenter 10 + gap 8 + 1)
-                      const AVATAR_CENTER = 10; // half of 20px avatar
+                      // Connector math: avatar=20px, gap-2=8px, content starts at 28px
+                      // Parent's avatar center at x=10 in parent = x=-18 from content column
+                      // Bridge line (2px) at left=-19 in content col = x=9..11 in parent = centered on avatar
+                      const CO = 19; // connector offset from content column left to parent line center
+                      const AC = 10; // avatar center Y (half of 20px)
+                      const MT = 8;  // margin-top between sibling replies (mt-2)
 
                       const renderReplies = (replies: typeof card.comments) => {
                         return (
-                          <div>
+                          <>
                             {replies.map((reply, idx) => {
                               const replyAuthor = state.members.find(m => m.id === reply.authorId);
                               const hasNestedReplies = (reply.replies || []).length > 0;
                               const isLast = idx === replies.length - 1;
                               return (
-                                <div key={`reply-${reply.id}`} className="relative flex gap-2 mt-1.5">
-                                  {/* Facebook-style connector from parent's thread line to this avatar */}
+                                <div key={`reply-${reply.id}`} className="relative flex gap-2 mt-2">
+                                  {/* Connector from parent's bridge line to this avatar */}
                                   {isLast ? (
-                                    /* Curved elbow for last child */
-                                    <div
-                                      className="absolute border-l-2 border-b-2 border-[#d1d1d6] dark:border-[#636366] rounded-bl-[10px]"
-                                      style={{ left: -CONNECTOR_OFFSET, top: -6, width: CONNECTOR_OFFSET, height: AVATAR_CENTER + 6 + 1 }}
-                                    />
-                                  ) : (
-                                    /* Straight vertical + horizontal arm for non-last */
                                     <>
-                                      <div className="absolute w-[2px] bg-[#d1d1d6] dark:bg-[#636366]" style={{ left: -CONNECTOR_OFFSET, top: -6, bottom: 0 }} />
-                                      <div className="absolute h-[2px] bg-[#d1d1d6] dark:bg-[#636366]" style={{ left: -CONNECTOR_OFFSET, top: AVATAR_CENTER - 1, width: CONNECTOR_OFFSET }} />
+                                      {/* Curved elbow (SVG for smooth curve) */}
+                                      <svg
+                                        className="absolute text-[#d1d1d6] dark:text-[#636366]"
+                                        style={{ left: -CO, top: -MT, width: CO, height: AC + MT + 1 }}
+                                        fill="none"
+                                        overflow="visible"
+                                      >
+                                        <path
+                                          d={`M 1 0 L 1 ${AC} Q 1 ${AC + MT} ${AC + 1} ${AC + MT} L ${CO} ${AC + MT}`}
+                                          stroke="currentColor"
+                                          strokeWidth="2"
+                                        />
+                                      </svg>
+                                      {/* Mask hides parent's bridge line below the elbow */}
+                                      <div
+                                        className="absolute bg-[#f5f5f7] dark:bg-[#1c1c1e]"
+                                        style={{ left: -CO, top: AC, bottom: -300, width: 2 }}
+                                      />
                                     </>
+                                  ) : (
+                                    /* Straight horizontal arm for non-last children */
+                                    <div
+                                      className="absolute h-[2px] bg-[#d1d1d6] dark:bg-[#636366]"
+                                      style={{ left: -CO, top: AC - 1, width: CO }}
+                                    />
                                   )}
-                                  {/* Avatar column with thread line */}
-                                  <div className="flex flex-col items-center shrink-0 w-5">
-                                    <div className="w-5 h-5 rounded-full bg-[#e8e8ed] dark:bg-[#3a3a3c] text-[#86868b] text-[10px] font-bold flex items-center justify-center shrink-0">
+                                  {/* Avatar — no thread line here, bridge line handles it */}
+                                  <div className="shrink-0 w-5 flex justify-center">
+                                    <div className="w-5 h-5 rounded-full bg-[#e8e8ed] dark:bg-[#3a3a3c] text-[#86868b] text-[10px] font-bold flex items-center justify-center">
                                       {(replyAuthor?.name || '?').charAt(0)}
                                     </div>
-                                    {hasNestedReplies && (
-                                      <div className="w-[2px] flex-1 bg-[#d1d1d6] dark:bg-[#636366] mt-0.5" />
-                                    )}
                                   </div>
                                   {/* Content column */}
-                                  <div className="flex-1 min-w-0">
+                                  <div className="flex-1 min-w-0 relative">
+                                    {/* Bridge line for THIS reply's nested children */}
+                                    {hasNestedReplies && (
+                                      <div
+                                        className="absolute w-[2px] bg-[#d1d1d6] dark:bg-[#636366]"
+                                        style={{ left: -CO, top: AC, bottom: 0 }}
+                                      />
+                                    )}
                                     <div className="bg-[#f5f5f7] dark:bg-[#3a3a3c]/50 rounded-2xl px-3 py-2">
                                       <span className="text-xs font-semibold text-[#1d1d1f] dark:text-[#e5e5ea]">{replyAuthor?.name || 'Unknown'}{replyAuthor?.id === store.getCurrentMemberId() && <span className="text-[10px] text-[#86868b] font-normal ml-1">(You)</span>}</span>
                                       <div className="text-xs text-[#1d1d1f] dark:text-[#e5e5ea] leading-relaxed prose-comment" dangerouslySetInnerHTML={{ __html: reply.text }} />
@@ -1031,23 +1054,27 @@ export function CardDetailPanel({ card, onClose }: Props) {
                                 </div>
                               );
                             })}
-                          </div>
+                          </>
                         );
                       };
 
                       return (
                         <div key={`comment-${c.id}`} className="flex gap-2">
-                          {/* Avatar column with thread line */}
-                          <div className="flex flex-col items-center shrink-0 w-5">
-                            <div className="w-5 h-5 rounded-full bg-[#0071e3]/10 text-primary text-[10px] font-bold flex items-center justify-center shrink-0">
+                          {/* Avatar — no thread line, bridge line in content column handles it */}
+                          <div className="shrink-0 w-5 flex justify-center">
+                            <div className="w-5 h-5 rounded-full bg-[#0071e3]/10 text-primary text-[10px] font-bold flex items-center justify-center">
                               {(author?.name || '?').charAt(0)}
                             </div>
-                            {!isCollapsed && (c.replies || []).length > 0 && (
-                              <div className="w-[2px] flex-1 bg-[#d1d1d6] dark:bg-[#636366] mt-0.5" />
-                            )}
                           </div>
                           {/* Content column */}
-                          <div className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0 relative">
+                            {/* Bridge line from avatar center down through all replies */}
+                            {!isCollapsed && (c.replies || []).length > 0 && (
+                              <div
+                                className="absolute w-[2px] bg-[#d1d1d6] dark:bg-[#636366]"
+                                style={{ left: -CO, top: AC, bottom: 0 }}
+                              />
+                            )}
                             <div className="bg-white dark:bg-[#2c2c2e] rounded-lg p-2.5 shadow-sm">
                               <div className="flex items-center gap-1.5 mb-1">
                                 <span className="text-xs font-medium text-[#1d1d1f] dark:text-[#e5e5ea]">{author?.name || 'Unknown'}{author?.id === store.getCurrentMemberId() && <span className="text-[10px] text-[#86868b] font-normal ml-1">(You)</span>}</span>
