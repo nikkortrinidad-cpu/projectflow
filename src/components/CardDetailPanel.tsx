@@ -1241,6 +1241,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
                                             }}
                                             placeholder="Write a reply..."
                                             compact
+                                            initialContent={`<a href="#mention" data-mention="true">@${replyAuthor?.name || 'Unknown'}</a>&nbsp;`}
                                           />
                                         </div>
                                       </div>
@@ -1426,6 +1427,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
                                     }}
                                     placeholder="Write a reply..."
                                     compact
+                                    initialContent={`<a href="#mention" data-mention="true">@${author?.name || 'Unknown'}</a>&nbsp;`}
                                   />
                                 </div>
                               </div>
