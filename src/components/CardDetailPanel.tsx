@@ -1355,23 +1355,25 @@ export function CardDetailPanel({ card, onClose }: Props) {
                                     style={{ left: -CONNECTOR_OFFSET, top: -2, bottom: 0, width: 2, zIndex: 1 }}
                                   />
                                 )}
-                                {/* Curved elbow from bridge line to toggle */}
-                                <svg
-                                  className="absolute text-[#d1d1d6] dark:text-[#636366]"
-                                  style={{ left: -CONNECTOR_OFFSET, top: -2, width: CONNECTOR_OFFSET, height: AVATAR_CENTER + 3, zIndex: 2 }}
-                                  fill="none"
-                                  overflow="visible"
-                                >
-                                  <path
-                                    d={`M 1 0 Q 1 ${AVATAR_CENTER + 2} ${AVATAR_CENTER + 2} ${AVATAR_CENTER + 2} L ${CONNECTOR_OFFSET} ${AVATAR_CENTER + 2}`}
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                  />
-                                </svg>
+                                {/* Curved elbow from bridge line to toggle — only when collapsed */}
+                                {isCollapsed && (
+                                  <svg
+                                    className="absolute text-[#d1d1d6] dark:text-[#636366]"
+                                    style={{ left: -CONNECTOR_OFFSET, top: -2, width: CONNECTOR_OFFSET, height: AVATAR_CENTER + 3, zIndex: 2 }}
+                                    fill="none"
+                                    overflow="visible"
+                                  >
+                                    <path
+                                      d={`M 1 0 Q 1 ${AVATAR_CENTER + 2} ${AVATAR_CENTER + 2} ${AVATAR_CENTER + 2} L ${CONNECTOR_OFFSET} ${AVATAR_CENTER + 2}`}
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                    />
+                                  </svg>
+                                )}
                                 <button
                                   onClick={() => toggleCollapse(c.id)}
-                                  className="flex items-center gap-1 pl-1 text-[11px] font-semibold text-primary hover:text-primary-dark transition"
-                                  style={{ paddingTop: AVATAR_CENTER - 4 }}
+                                  className={`flex items-center gap-1 text-[11px] font-semibold text-primary hover:text-primary-dark transition ${isCollapsed ? 'pl-1' : ''}`}
+                                  style={isCollapsed ? { paddingTop: AVATAR_CENTER - 4 } : undefined}
                                 >
                                   <svg className={`w-3 h-3 transition-transform ${isCollapsed ? '' : 'rotate-90'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
