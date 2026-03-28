@@ -100,6 +100,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
   const [activityTab, setActivityTab] = useState<'comments' | 'activity'>('comments');
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [editingComment, setEditingComment] = useState<string | null>(null);
+  const [commentMenu, setCommentMenu] = useState<string | null>(null);
   const [collapsedComments, setCollapsedComments] = useState<Set<string>>(
     () => new Set(card.comments.filter(c => c.replies && c.replies.length > 0).map(c => c.id))
   );
@@ -1094,22 +1095,57 @@ export function CardDetailPanel({ card, onClose }: Props) {
                                       </div>
                                     ) : (
                                     <>
-                                    <div className={`rounded-2xl px-3 py-2 ${reply.authorId === store.getCurrentMemberId() ? 'bg-[#d3e3fd]' : 'bg-[#f5f5f7] dark:bg-[#3a3a3c]/50'}`}>
-                                      <span className={`text-xs font-semibold ${reply.authorId === store.getCurrentMemberId() ? 'text-[#1d1d1f]' : 'text-[#1d1d1f] dark:text-[#e5e5ea]'}`}>{replyAuthor?.name || 'Unknown'}{replyAuthor?.id === store.getCurrentMemberId() && <span className={`text-[10px] font-normal ml-1 ${reply.authorId === store.getCurrentMemberId() ? 'text-[#5f6368]' : 'text-[#86868b]'}`}>(You)</span>}</span>
-                                      <div className={`text-xs leading-relaxed prose-comment ${reply.authorId === store.getCurrentMemberId() ? 'text-[#1d1d1f]' : 'text-[#1d1d1f] dark:text-[#e5e5ea]'}`} dangerouslySetInnerHTML={{ __html: reply.text }} />
+                                    <div className="group/reply flex items-start gap-1">
+                                      <div className={`flex-1 min-w-0 rounded-2xl px-3 py-2 ${reply.authorId === store.getCurrentMemberId() ? 'bg-[#d3e3fd]' : 'bg-[#f5f5f7] dark:bg-[#3a3a3c]/50'}`}>
+                                        <span className={`text-xs font-semibold ${reply.authorId === store.getCurrentMemberId() ? 'text-[#1d1d1f]' : 'text-[#1d1d1f] dark:text-[#e5e5ea]'}`}>{replyAuthor?.name || 'Unknown'}{replyAuthor?.id === store.getCurrentMemberId() && <span className={`text-[10px] font-normal ml-1 ${reply.authorId === store.getCurrentMemberId() ? 'text-[#5f6368]' : 'text-[#86868b]'}`}>(You)</span>}</span>
+                                        <div className={`text-xs leading-relaxed prose-comment ${reply.authorId === store.getCurrentMemberId() ? 'text-[#1d1d1f]' : 'text-[#1d1d1f] dark:text-[#e5e5ea]'}`} dangerouslySetInnerHTML={{ __html: reply.text }} />
+                                      </div>
+                                      {/* 3-dot menu */}
+                                      <div className="relative shrink-0">
+                                        <button
+                                          onClick={() => setCommentMenu(commentMenu === reply.id ? null : reply.id)}
+                                          className="w-5 h-5 flex items-center justify-center rounded-full text-[#86868b] hover:bg-black/5 dark:hover:bg-white/10 opacity-0 group-hover/reply:opacity-100 transition"
+                                        >
+                                          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+                                        </button>
+                                        {commentMenu === reply.id && (
+                                          <>
+                                            <div className="fixed inset-0 z-10" onClick={() => setCommentMenu(null)} />
+                                            <div className="absolute right-0 top-full mt-1 bg-white dark:bg-[#2c2c2e] border border-[#d2d2d7] dark:border-[#424245] rounded-lg shadow-lg shadow-black/10 z-20 py-1 min-w-[140px]">
+                                              {reply.authorId === store.getCurrentMemberId() && (
+                                                <button
+                                                  onClick={() => { setEditingComment(reply.id); setReplyingTo(null); setCommentMenu(null); }}
+                                                  className="w-full text-left px-3 py-1.5 text-xs text-[#1d1d1f] dark:text-[#e5e5ea] hover:bg-[#f0f0f5] dark:hover:bg-[#3a3a3c] flex items-center gap-2"
+                                                >
+                                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                                  Edit
+                                                </button>
+                                              )}
+                                              <button
+                                                onClick={() => { navigator.clipboard.writeText(reply.text.replace(/<[^>]*>/g, '')); setCommentMenu(null); }}
+                                                className="w-full text-left px-3 py-1.5 text-xs text-[#1d1d1f] dark:text-[#e5e5ea] hover:bg-[#f0f0f5] dark:hover:bg-[#3a3a3c] flex items-center gap-2"
+                                              >
+                                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                                                Copy text
+                                              </button>
+                                              {reply.authorId === store.getCurrentMemberId() && (
+                                                <button
+                                                  onClick={() => { store.deleteComment(card.id, reply.id); setCommentMenu(null); }}
+                                                  className="w-full text-left px-3 py-1.5 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 flex items-center gap-2"
+                                                >
+                                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                  Delete
+                                                </button>
+                                              )}
+                                            </div>
+                                          </>
+                                        )}
+                                      </div>
                                     </div>
                                     <div className="flex items-center gap-3 mt-0.5 mb-0.5">
                                       <p className="text-[10px] text-[#86868b]">
                                         {new Date(reply.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                       </p>
-                                      {reply.authorId === store.getCurrentMemberId() && (
-                                        <button
-                                          onClick={() => { setEditingComment(reply.id); setReplyingTo(null); }}
-                                          className="text-[10px] font-semibold text-[#86868b] hover:text-primary transition"
-                                        >
-                                          Edit
-                                        </button>
-                                      )}
                                       <button
                                         onClick={() => setReplyingTo(replyingTo === reply.id ? null : reply.id)}
                                         className="text-[10px] font-semibold text-[#86868b] hover:text-primary transition"
@@ -1210,49 +1246,86 @@ export function CardDetailPanel({ card, onClose }: Props) {
                                 </button>
                               </div>
                             ) : (
-                            <div className={`rounded-lg p-2.5 shadow-sm ${c.authorId === store.getCurrentMemberId() ? 'bg-[#d3e3fd]' : 'bg-white dark:bg-[#2c2c2e]'}`}>
-                              <div className="flex items-center gap-1.5 mb-1">
-                                <span className={`text-xs font-medium ${c.authorId === store.getCurrentMemberId() ? 'text-[#1d1d1f]' : 'text-[#1d1d1f] dark:text-[#e5e5ea]'}`}>{author?.name || 'Unknown'}{author?.id === store.getCurrentMemberId() && <span className={`text-[10px] font-normal ml-1 ${c.authorId === store.getCurrentMemberId() ? 'text-[#5f6368]' : 'text-[#86868b]'}`}>(You)</span>}</span>
+                            <>
+                            <div className="group/comment flex items-start gap-1">
+                              <div className={`flex-1 min-w-0 rounded-lg p-2.5 shadow-sm ${c.authorId === store.getCurrentMemberId() ? 'bg-[#d3e3fd]' : 'bg-white dark:bg-[#2c2c2e]'}`}>
+                                <div className="flex items-center gap-1.5 mb-1">
+                                  <span className={`text-xs font-medium ${c.authorId === store.getCurrentMemberId() ? 'text-[#1d1d1f]' : 'text-[#1d1d1f] dark:text-[#e5e5ea]'}`}>{author?.name || 'Unknown'}{author?.id === store.getCurrentMemberId() && <span className={`text-[10px] font-normal ml-1 ${c.authorId === store.getCurrentMemberId() ? 'text-[#5f6368]' : 'text-[#86868b]'}`}>(You)</span>}</span>
+                                </div>
+                                <div className={`text-xs leading-relaxed prose-comment ${c.authorId === store.getCurrentMemberId() ? 'text-[#1d1d1f]' : 'text-[#6e6e73] dark:text-[#aeaeb2]'}`} dangerouslySetInnerHTML={{ __html: c.text }} />
                               </div>
-                              <div className={`text-xs leading-relaxed prose-comment ${c.authorId === store.getCurrentMemberId() ? 'text-[#1d1d1f]' : 'text-[#6e6e73] dark:text-[#aeaeb2]'}`} dangerouslySetInnerHTML={{ __html: c.text }} />
-                              <div className="flex items-center gap-3 mt-1.5">
-                                <p className={`text-[10px] ${c.authorId === store.getCurrentMemberId() ? 'text-[#5f6368]' : 'text-[#86868b] dark:text-[#86868b]'}`}>
-                                  {new Date(c.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                </p>
-                                {c.scheduledAt && new Date(c.scheduledAt) > new Date() && (
-                                  <span className={`text-[10px] font-medium flex items-center gap-0.5 ${c.authorId === store.getCurrentMemberId() ? 'text-[#5f6368]' : 'text-amber-500 dark:text-[#ff9f0a]'}`}>
-                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                    Scheduled {new Date(c.scheduledAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                  </span>
-                                )}
-                                {c.authorId === store.getCurrentMemberId() && (
-                                  <button
-                                    onClick={() => { setEditingComment(c.id); setReplyingTo(null); }}
-                                    className={`text-[10px] font-medium transition ${c.authorId === store.getCurrentMemberId() ? 'text-[#5f6368] hover:text-[#1d1d1f]' : 'text-[#86868b] hover:text-primary'}`}
-                                  >
-                                    Edit
-                                  </button>
-                                )}
+                              {/* 3-dot menu */}
+                              <div className="relative shrink-0">
                                 <button
-                                  onClick={() => setReplyingTo(replyingTo === c.id ? null : c.id)}
-                                  className={`text-[10px] font-medium transition ${c.authorId === store.getCurrentMemberId() ? 'text-[#5f6368] hover:text-[#1d1d1f]' : 'text-[#86868b] hover:text-primary'}`}
+                                  onClick={() => setCommentMenu(commentMenu === c.id ? null : c.id)}
+                                  className="w-6 h-6 flex items-center justify-center rounded-full text-[#86868b] hover:bg-black/5 dark:hover:bg-white/10 opacity-0 group-hover/comment:opacity-100 transition"
                                 >
-                                  Reply
+                                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
                                 </button>
-                                {totalReplies > 0 && (
-                                  <button
-                                    onClick={() => toggleCollapse(c.id)}
-                                    className="text-[10px] font-medium text-primary hover:text-primary-dark transition flex items-center gap-0.5"
-                                  >
-                                    <svg className={`w-3 h-3 transition-transform ${isCollapsed ? '' : 'rotate-90'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                    </svg>
-                                    {totalReplies} {totalReplies === 1 ? 'reply' : 'replies'}
-                                  </button>
+                                {commentMenu === c.id && (
+                                  <>
+                                    <div className="fixed inset-0 z-10" onClick={() => setCommentMenu(null)} />
+                                    <div className="absolute right-0 top-full mt-1 bg-white dark:bg-[#2c2c2e] border border-[#d2d2d7] dark:border-[#424245] rounded-lg shadow-lg shadow-black/10 z-20 py-1 min-w-[140px]">
+                                      {c.authorId === store.getCurrentMemberId() && (
+                                        <button
+                                          onClick={() => { setEditingComment(c.id); setReplyingTo(null); setCommentMenu(null); }}
+                                          className="w-full text-left px-3 py-1.5 text-xs text-[#1d1d1f] dark:text-[#e5e5ea] hover:bg-[#f0f0f5] dark:hover:bg-[#3a3a3c] flex items-center gap-2"
+                                        >
+                                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                          Edit
+                                        </button>
+                                      )}
+                                      <button
+                                        onClick={() => { navigator.clipboard.writeText(c.text.replace(/<[^>]*>/g, '')); setCommentMenu(null); }}
+                                        className="w-full text-left px-3 py-1.5 text-xs text-[#1d1d1f] dark:text-[#e5e5ea] hover:bg-[#f0f0f5] dark:hover:bg-[#3a3a3c] flex items-center gap-2"
+                                      >
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                                        Copy text
+                                      </button>
+                                      {c.authorId === store.getCurrentMemberId() && (
+                                        <button
+                                          onClick={() => { store.deleteComment(card.id, c.id); setCommentMenu(null); }}
+                                          className="w-full text-left px-3 py-1.5 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 flex items-center gap-2"
+                                        >
+                                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                          Delete
+                                        </button>
+                                      )}
+                                    </div>
+                                  </>
                                 )}
                               </div>
-                              <ReactionBar cardId={card.id} comment={c} />
                             </div>
+                            <div className="flex items-center gap-3 mt-1.5">
+                              <p className={`text-[10px] ${c.authorId === store.getCurrentMemberId() ? 'text-[#5f6368]' : 'text-[#86868b] dark:text-[#86868b]'}`}>
+                                {new Date(c.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                              </p>
+                              {c.scheduledAt && new Date(c.scheduledAt) > new Date() && (
+                                <span className={`text-[10px] font-medium flex items-center gap-0.5 ${c.authorId === store.getCurrentMemberId() ? 'text-[#5f6368]' : 'text-amber-500 dark:text-[#ff9f0a]'}`}>
+                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                  Scheduled {new Date(c.scheduledAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              )}
+                              <button
+                                onClick={() => setReplyingTo(replyingTo === c.id ? null : c.id)}
+                                className={`text-[10px] font-medium transition ${c.authorId === store.getCurrentMemberId() ? 'text-[#5f6368] hover:text-[#1d1d1f]' : 'text-[#86868b] hover:text-primary'}`}
+                              >
+                                Reply
+                              </button>
+                              {totalReplies > 0 && (
+                                <button
+                                  onClick={() => toggleCollapse(c.id)}
+                                  className="text-[10px] font-medium text-primary hover:text-primary-dark transition flex items-center gap-0.5"
+                                >
+                                  <svg className={`w-3 h-3 transition-transform ${isCollapsed ? '' : 'rotate-90'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                  </svg>
+                                  {totalReplies} {totalReplies === 1 ? 'reply' : 'replies'}
+                                </button>
+                              )}
+                            </div>
+                            <ReactionBar cardId={card.id} comment={c} />
+                            </>
                             )}
 
                             {/* Replies — collapsible */}

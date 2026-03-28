@@ -411,6 +411,25 @@ class BoardStore {
     this.save();
   }
 
+  deleteComment(cardId: string, commentId: string) {
+    const card = this.state.cards.find(c => c.id === cardId);
+    if (!card) return;
+    const removeFromList = (comments: Comment[]): boolean => {
+      const idx = comments.findIndex(c => c.id === commentId);
+      if (idx !== -1) {
+        comments.splice(idx, 1);
+        return true;
+      }
+      for (const c of comments) {
+        if (c.replies && removeFromList(c.replies)) return true;
+      }
+      return false;
+    };
+    removeFromList(card.comments);
+    this.logActivity(cardId, 'user-1', 'updated', `Deleted a comment on "${card.title}"`);
+    this.save();
+  }
+
   // --- Checklist ---
   addChecklistItem(cardId: string, text: string, assigneeId: string | null = null) {
     const card = this.state.cards.find(c => c.id === cardId);
