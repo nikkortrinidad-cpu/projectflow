@@ -1034,9 +1034,9 @@ export function CardDetailPanel({ card, onClose }: Props) {
                                       </div>
                                     ) : (
                                     <>
-                                    <div className="bg-[#f5f5f7] dark:bg-[#3a3a3c]/50 rounded-2xl px-3 py-2">
-                                      <span className="text-xs font-semibold text-[#1d1d1f] dark:text-[#e5e5ea]">{replyAuthor?.name || 'Unknown'}{replyAuthor?.id === store.getCurrentMemberId() && <span className="text-[10px] text-[#86868b] font-normal ml-1">(You)</span>}</span>
-                                      <div className="text-xs text-[#1d1d1f] dark:text-[#e5e5ea] leading-relaxed prose-comment" dangerouslySetInnerHTML={{ __html: reply.text }} />
+                                    <div className={`rounded-2xl px-3 py-2 ${reply.authorId === store.getCurrentMemberId() ? 'bg-[#007AFF] text-white' : 'bg-[#f5f5f7] dark:bg-[#3a3a3c]/50'}`}>
+                                      <span className={`text-xs font-semibold ${reply.authorId === store.getCurrentMemberId() ? 'text-white' : 'text-[#1d1d1f] dark:text-[#e5e5ea]'}`}>{replyAuthor?.name || 'Unknown'}{replyAuthor?.id === store.getCurrentMemberId() && <span className={`text-[10px] font-normal ml-1 ${reply.authorId === store.getCurrentMemberId() ? 'text-white/70' : 'text-[#86868b]'}`}>(You)</span>}</span>
+                                      <div className={`text-xs leading-relaxed prose-comment ${reply.authorId === store.getCurrentMemberId() ? 'text-white' : 'text-[#1d1d1f] dark:text-[#e5e5ea]'}`} dangerouslySetInnerHTML={{ __html: reply.text }} />
                                     </div>
                                     <div className="flex items-center gap-3 mt-0.5 mb-0.5">
                                       <p className="text-[10px] text-[#86868b]">
@@ -1149,17 +1149,17 @@ export function CardDetailPanel({ card, onClose }: Props) {
                                 </button>
                               </div>
                             ) : (
-                            <div className="bg-white dark:bg-[#2c2c2e] rounded-lg p-2.5 shadow-sm">
+                            <div className={`rounded-lg p-2.5 shadow-sm ${c.authorId === store.getCurrentMemberId() ? 'bg-[#007AFF] text-white' : 'bg-white dark:bg-[#2c2c2e]'}`}>
                               <div className="flex items-center gap-1.5 mb-1">
-                                <span className="text-xs font-medium text-[#1d1d1f] dark:text-[#e5e5ea]">{author?.name || 'Unknown'}{author?.id === store.getCurrentMemberId() && <span className="text-[10px] text-[#86868b] font-normal ml-1">(You)</span>}</span>
+                                <span className={`text-xs font-medium ${c.authorId === store.getCurrentMemberId() ? 'text-white' : 'text-[#1d1d1f] dark:text-[#e5e5ea]'}`}>{author?.name || 'Unknown'}{author?.id === store.getCurrentMemberId() && <span className={`text-[10px] font-normal ml-1 ${c.authorId === store.getCurrentMemberId() ? 'text-white/70' : 'text-[#86868b]'}`}>(You)</span>}</span>
                               </div>
-                              <div className="text-xs text-[#6e6e73] dark:text-[#aeaeb2] leading-relaxed prose-comment" dangerouslySetInnerHTML={{ __html: c.text }} />
+                              <div className={`text-xs leading-relaxed prose-comment ${c.authorId === store.getCurrentMemberId() ? 'text-white' : 'text-[#6e6e73] dark:text-[#aeaeb2]'}`} dangerouslySetInnerHTML={{ __html: c.text }} />
                               <div className="flex items-center gap-3 mt-1.5">
-                                <p className="text-[10px] text-[#86868b] dark:text-[#86868b]">
+                                <p className={`text-[10px] ${c.authorId === store.getCurrentMemberId() ? 'text-white/60' : 'text-[#86868b] dark:text-[#86868b]'}`}>
                                   {new Date(c.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                 </p>
                                 {c.scheduledAt && new Date(c.scheduledAt) > new Date() && (
-                                  <span className="text-[10px] font-medium text-amber-500 dark:text-[#ff9f0a] flex items-center gap-0.5">
+                                  <span className={`text-[10px] font-medium flex items-center gap-0.5 ${c.authorId === store.getCurrentMemberId() ? 'text-white/70' : 'text-amber-500 dark:text-[#ff9f0a]'}`}>
                                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                     Scheduled {new Date(c.scheduledAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                   </span>
@@ -1167,14 +1167,14 @@ export function CardDetailPanel({ card, onClose }: Props) {
                                 {c.authorId === store.getCurrentMemberId() && (
                                   <button
                                     onClick={() => { setEditingComment(c.id); setReplyingTo(null); }}
-                                    className="text-[10px] font-medium text-[#86868b] hover:text-primary transition"
+                                    className={`text-[10px] font-medium transition ${c.authorId === store.getCurrentMemberId() ? 'text-white/70 hover:text-white' : 'text-[#86868b] hover:text-primary'}`}
                                   >
                                     Edit
                                   </button>
                                 )}
                                 <button
                                   onClick={() => setReplyingTo(replyingTo === c.id ? null : c.id)}
-                                  className="text-[10px] font-medium text-[#86868b] hover:text-primary transition"
+                                  className={`text-[10px] font-medium transition ${c.authorId === store.getCurrentMemberId() ? 'text-white/70 hover:text-white' : 'text-[#86868b] hover:text-primary'}`}
                                 >
                                   Reply
                                 </button>
