@@ -964,7 +964,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
                       const CO = 19; // connector offset from content column left to parent line center
                       const AC = 10; // avatar center Y (half of 20px)
                       const AV = 20; // full avatar diameter
-                      const MT = 8;  // margin-top between sibling replies (mt-2)
+
 
                       const renderReplies = (replies: typeof card.comments) => {
                         return (
@@ -1004,7 +1004,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
                                   {/* Content column */}
                                   <div className="flex-1 min-w-0 relative">
                                     {/* Bridge line for THIS reply's nested children — starts below avatar */}
-                                    {hasNestedReplies && (
+                                    {(hasNestedReplies || replyingTo === reply.id) && (
                                       <div
                                         className="absolute w-[2px] bg-[#d1d1d6] dark:bg-[#636366]"
                                         style={{ left: -CO, top: AV, bottom: 0 }}
@@ -1027,19 +1027,42 @@ export function CardDetailPanel({ card, onClose }: Props) {
                                     </div>
                                     {/* Nested replies */}
                                     {hasNestedReplies && renderReplies(reply.replies!)}
-                                    {/* Reply input */}
+                                    {/* Reply input with curved elbow connector */}
                                     {replyingTo === reply.id && (
-                                      <div className="mb-2">
-                                        <CommentEditor
-                                          onSubmit={(html) => {
-                                            if (html) {
-                                              store.addReply(card.id, reply.id, html);
-                                              setReplyingTo(null);
-                                            }
-                                          }}
-                                          placeholder="Write a reply..."
-                                          compact
+                                      <div className="relative flex gap-2 mt-2 mb-2">
+                                        {/* Mask to hide bridge line below this elbow */}
+                                        <div
+                                          className="absolute bg-[#f5f5f7] dark:bg-[#1c1c1e]"
+                                          style={{ left: -CO, top: -2, bottom: 0, width: 2, zIndex: 1 }}
                                         />
+                                        {/* Curved elbow connector */}
+                                        <svg
+                                          className="absolute text-[#d1d1d6] dark:text-[#636366]"
+                                          style={{ left: -CO, top: -2, width: CO, height: AC + 3, zIndex: 2 }}
+                                          fill="none"
+                                          overflow="visible"
+                                        >
+                                          <path
+                                            d={`M 1 0 Q 1 ${AC + 2} ${AC + 2} ${AC + 2} L ${CO} ${AC + 2}`}
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                          />
+                                        </svg>
+                                        {/* Avatar spacer to align with reply items */}
+                                        <div className="shrink-0 w-5" />
+                                        {/* Editor */}
+                                        <div className="flex-1 min-w-0">
+                                          <CommentEditor
+                                            onSubmit={(html) => {
+                                              if (html) {
+                                                store.addReply(card.id, reply.id, html);
+                                                setReplyingTo(null);
+                                              }
+                                            }}
+                                            placeholder="Write a reply..."
+                                            compact
+                                          />
+                                        </div>
                                       </div>
                                     )}
                                   </div>
@@ -1061,7 +1084,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
                           {/* Content column */}
                           <div className="flex-1 min-w-0 relative">
                             {/* Bridge line from below avatar down through all replies */}
-                            {!isCollapsed && (c.replies || []).length > 0 && (
+                            {(!isCollapsed && (c.replies || []).length > 0 || replyingTo === c.id) && (
                               <div
                                 className="absolute w-[2px] bg-[#d1d1d6] dark:bg-[#636366]"
                                 style={{ left: -CO, top: AV, bottom: 0 }}
@@ -1105,19 +1128,42 @@ export function CardDetailPanel({ card, onClose }: Props) {
                             {/* Replies — collapsible */}
                             {!isCollapsed && (c.replies || []).length > 0 && renderReplies(c.replies!)}
 
-                            {/* Reply input */}
+                            {/* Reply input with curved elbow connector */}
                             {replyingTo === c.id && (
-                              <div className="mt-2">
-                                <CommentEditor
-                                  onSubmit={(html) => {
-                                    if (html) {
-                                      store.addReply(card.id, c.id, html);
-                                      setReplyingTo(null);
-                                    }
-                                  }}
-                                  placeholder="Write a reply..."
-                                  compact
+                              <div className="relative flex gap-2 mt-2">
+                                {/* Mask to hide bridge line below this elbow */}
+                                <div
+                                  className="absolute bg-[#f5f5f7] dark:bg-[#1c1c1e]"
+                                  style={{ left: -CO, top: -2, bottom: 0, width: 2, zIndex: 1 }}
                                 />
+                                {/* Curved elbow connector */}
+                                <svg
+                                  className="absolute text-[#d1d1d6] dark:text-[#636366]"
+                                  style={{ left: -CO, top: -2, width: CO, height: AC + 3, zIndex: 2 }}
+                                  fill="none"
+                                  overflow="visible"
+                                >
+                                  <path
+                                    d={`M 1 0 Q 1 ${AC + 2} ${AC + 2} ${AC + 2} L ${CO} ${AC + 2}`}
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                  />
+                                </svg>
+                                {/* Avatar spacer to align with reply items */}
+                                <div className="shrink-0 w-5" />
+                                {/* Editor */}
+                                <div className="flex-1 min-w-0">
+                                  <CommentEditor
+                                    onSubmit={(html) => {
+                                      if (html) {
+                                        store.addReply(card.id, c.id, html);
+                                        setReplyingTo(null);
+                                      }
+                                    }}
+                                    placeholder="Write a reply..."
+                                    compact
+                                  />
+                                </div>
                               </div>
                             )}
                           </div>
