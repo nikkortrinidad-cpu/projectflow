@@ -960,24 +960,21 @@ export function CardDetailPanel({ card, onClose }: Props) {
 
                       const renderReplies = (replies: typeof card.comments, depth: number = 1) => (
                         <div className={`relative ${depth === 1 ? 'ml-[9px]' : 'ml-[17px]'}`}>
-                          {/* Vertical thread line */}
-                          <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-[#c7c7cc] dark:bg-[#636366]" />
                           {replies.map((reply, idx) => {
                             const replyAuthor = state.members.find(m => m.id === reply.authorId);
                             const isLast = idx === replies.length - 1;
+                            const hasMoreSiblings = !isLast;
                             return (
                               <div key={`reply-${reply.id}`} className="relative">
-                                {/* Elbow connector: vertical segment + horizontal segment */}
-                                <div className="absolute left-0 top-0 w-[18px] h-[18px]">
-                                  {/* Vertical part down to the bend */}
-                                  <div className="absolute left-0 top-0 w-[2px] h-[10px] bg-[#c7c7cc] dark:bg-[#636366]" />
-                                  {/* Horizontal part from bend to avatar */}
-                                  <div className="absolute left-0 top-[10px] w-[18px] h-[2px] bg-[#c7c7cc] dark:bg-[#636366] rounded-bl-lg" />
-                                  {/* Rounded corner overlay */}
-                                  <div className="absolute left-0 top-[2px] w-[10px] h-[10px] border-l-2 border-b-2 border-[#c7c7cc] dark:border-[#636366] rounded-bl-lg bg-transparent" style={{ borderRight: 'none', borderTop: 'none' }} />
+                                {/* Vertical line connecting to next sibling (only if there are more) */}
+                                {hasMoreSiblings && (
+                                  <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-[#c7c7cc] dark:bg-[#636366]" />
+                                )}
+                                {/* Elbow connector └─ */}
+                                <div className="absolute left-0 top-0 w-[18px] h-[12px] overflow-hidden">
+                                  <div className="absolute left-0 top-0 w-[10px] h-[12px] border-l-2 border-b-2 border-[#c7c7cc] dark:border-[#636366] rounded-bl-lg" />
                                 </div>
-                                {/* Hide vertical line after last reply */}
-                                {isLast && <div className="absolute left-0 top-[12px] bottom-0 w-[2px] bg-white dark:bg-[#1c1c1e]" style={{ zIndex: 1 }} />}
+                                <div className="absolute left-[8px] top-[10px] w-[10px] h-[2px] bg-[#c7c7cc] dark:bg-[#636366]" />
 
                                 <div className="relative pl-[26px] pt-2 pb-1">
                                   <div className="absolute left-[18px] top-[8px] w-[18px] h-[18px] rounded-full bg-[#e8e8ed] dark:bg-[#3a3a3c] text-[#86868b] text-[10px] font-bold flex items-center justify-center">
