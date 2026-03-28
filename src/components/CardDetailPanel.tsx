@@ -120,7 +120,7 @@ function AddReactionButton({ cardId, comment }: { cardId: string; comment: Comme
       {showFullPicker && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => { setShowFullPicker(false); setShowQuick(false); }} />
-          <div className="absolute bottom-full left-0 mb-2 z-20">
+          <div className="absolute bottom-full left-0 mb-2 z-20 [&_em-emoji-picker]:!h-[280px]">
             <Picker
               data={data}
               onEmojiSelect={(emoji: { native: string }) => {
@@ -131,8 +131,11 @@ function AddReactionButton({ cardId, comment }: { cardId: string; comment: Comme
               theme="light"
               previewPosition="none"
               skinTonePosition="search"
-              perLine={8}
-              maxFrequentRows={2}
+              perLine={6}
+              maxFrequentRows={1}
+              navPosition="none"
+              emojiSize={22}
+              emojiButtonSize={30}
             />
           </div>
         </>
