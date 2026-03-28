@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import type { Card, Priority } from '../types';
 import { useBoard } from '../store/useStore';
 import { store } from '../store/boardStore';
@@ -35,6 +36,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showCardMenu, setShowCardMenu] = useState(false);
   const cardMenuRef = useRef<HTMLDivElement>(null);
+  const cardMenuBtnRef = useRef<HTMLButtonElement>(null);
   const [activityTab, setActivityTab] = useState<'comments' | 'activity'>('comments');
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [collapsedComments, setCollapsedComments] = useState<Set<string>>(
@@ -190,65 +192,71 @@ export function CardDetailPanel({ card, onClose }: Props) {
 
           {/* 3-dot settings menu */}
           <div className="relative">
-            <button onClick={() => setShowCardMenu(!showCardMenu)} className="shrink-0 text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-[#f5f5f7] p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 transition">
+            <button ref={cardMenuBtnRef} onClick={() => setShowCardMenu(!showCardMenu)} className="shrink-0 text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-[#f5f5f7] p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 transition">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
               </svg>
             </button>
-            {showCardMenu && (
-                <div ref={cardMenuRef} className="absolute right-0 top-full mt-1 bg-white dark:bg-[#1c1c1e] border border-[#d2d2d7] dark:border-[#424245] rounded-xl shadow-lg shadow-black/10 z-40 py-1.5 w-48">
-                  {/* Duplicate */}
-                  <button
-                    onClick={() => {
-                      store.addCard({ title: card.title + ' (copy)', columnId: card.columnId, swimlaneId: card.swimlaneId });
-                      setShowCardMenu(false);
-                    }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-[#6e6e73] dark:text-[#aeaeb2] hover:bg-black/5 dark:hover:bg-white/10 transition"
-                  >
-                    <svg className="w-3.5 h-3.5 text-[#86868b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                    Duplicate card
-                  </button>
+            {showCardMenu && createPortal(
+              <div ref={cardMenuRef} className="fixed bg-white dark:bg-[#1c1c1e] border border-[#d2d2d7] dark:border-[#424245] rounded-xl shadow-lg shadow-black/10 z-[400] py-1.5 w-48"
+                style={(() => {
+                  const rect = cardMenuBtnRef.current?.getBoundingClientRect();
+                  return rect ? { top: rect.bottom + 4, left: rect.right - 192 } : {};
+                })()}
+              >
+                {/* Duplicate */}
+                <button
+                  onClick={() => {
+                    store.addCard({ title: card.title + ' (copy)', columnId: card.columnId, swimlaneId: card.swimlaneId });
+                    setShowCardMenu(false);
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-[#6e6e73] dark:text-[#aeaeb2] hover:bg-black/5 dark:hover:bg-white/10 transition"
+                >
+                  <svg className="w-3.5 h-3.5 text-[#86868b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                  Duplicate card
+                </button>
 
-                  {/* Copy link */}
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(`${window.location.origin}?card=${card.id}`);
-                      setShowCardMenu(false);
-                    }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-[#6e6e73] dark:text-[#aeaeb2] hover:bg-black/5 dark:hover:bg-white/10 transition"
-                  >
-                    <svg className="w-3.5 h-3.5 text-[#86868b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
-                    Copy link
-                  </button>
+                {/* Copy link */}
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}?card=${card.id}`);
+                    setShowCardMenu(false);
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-[#6e6e73] dark:text-[#aeaeb2] hover:bg-black/5 dark:hover:bg-white/10 transition"
+                >
+                  <svg className="w-3.5 h-3.5 text-[#86868b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                  Copy link
+                </button>
 
-                  <div className="border-t border-[#e8e8ed] dark:border-[#38383a] my-1" />
+                <div className="border-t border-[#e8e8ed] dark:border-[#38383a] my-1" />
 
-                  {/* Archive */}
-                  <button
-                    onClick={() => {
-                      store.archiveCard(card.id);
-                      setShowCardMenu(false);
-                      onClose();
-                    }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-[#6e6e73] dark:text-[#aeaeb2] hover:bg-black/5 dark:hover:bg-white/10 transition"
-                  >
-                    <svg className="w-3.5 h-3.5 text-[#ff9f0a]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
-                    Archive card
-                  </button>
+                {/* Archive */}
+                <button
+                  onClick={() => {
+                    store.archiveCard(card.id);
+                    setShowCardMenu(false);
+                    onClose();
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-[#6e6e73] dark:text-[#aeaeb2] hover:bg-black/5 dark:hover:bg-white/10 transition"
+                >
+                  <svg className="w-3.5 h-3.5 text-[#ff9f0a]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
+                  Archive card
+                </button>
 
-                  {/* Delete */}
-                  <button
-                    onClick={() => {
-                      store.deleteCard(card.id);
-                      setShowCardMenu(false);
-                      onClose();
-                    }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-[#ff3b30] hover:bg-[#ff3b30]/5 dark:hover:bg-[#ff3b30]/10 transition"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                    Delete card
-                  </button>
-                </div>
+                {/* Delete */}
+                <button
+                  onClick={() => {
+                    store.deleteCard(card.id);
+                    setShowCardMenu(false);
+                    onClose();
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-[#ff3b30] hover:bg-[#ff3b30]/5 dark:hover:bg-[#ff3b30]/10 transition"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                  Delete card
+                </button>
+              </div>,
+              document.body
             )}
           </div>
 
