@@ -134,7 +134,6 @@ function AddReactionButton({ cardId, comment }: { cardId: string; comment: Comme
           <div className="absolute bottom-full left-0 mb-2 z-20">
             <Picker
               data={data}
-              set="google"
               onEmojiSelect={(emoji: { native: string }) => {
                 store.toggleReaction(cardId, comment.id, emoji.native);
                 setShowFullPicker(false);

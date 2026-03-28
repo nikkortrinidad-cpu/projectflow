@@ -286,7 +286,6 @@ export function CommentEditor({ onSubmit, placeholder: placeholderText, compact,
                 <div className="absolute bottom-full left-0 mb-2 z-20">
                   <Picker
                     data={data}
-                    set="google"
                     onEmojiSelect={(emoji: { native: string }) => {
                       insertEmoji(emoji.native);
                       setShowEmojiPicker(false);
