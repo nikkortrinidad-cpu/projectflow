@@ -1023,10 +1023,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
 
                       return (
                         <div key={`comment-${c.id}`} className="relative pl-6">
-                          {/* Vertical line from avatar down to replies */}
-                          {!isCollapsed && (c.replies || []).length > 0 && (
-                            <div className="absolute left-[8px] top-[20px] w-[2px] bg-[#c7c7cc] dark:bg-[#636366]" style={{ height: 'calc(100% - 20px)' }} />
-                          )}
+                          {/* No standalone parent line — reply structure handles all connectors */}
                           <div className="absolute left-0 top-0.5 w-[18px] h-[18px] rounded-full bg-[#0071e3]/10 text-primary text-[10px] font-bold flex items-center justify-center" style={{ zIndex: 2 }}>
                             {(author?.name || '?').charAt(0)}
                           </div>
