@@ -19,7 +19,7 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo and title */}
         <div className="text-center mb-12">
@@ -28,12 +28,12 @@ export function LoginPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
             </svg>
           </div>
-          <h1 className="text-4xl font-semibold font-serif tracking-tight text-[#1d1d1f] mb-2">Kanban Board</h1>
+          <h1 className="text-4xl font-semibold tracking-tight text-[#1d1d1f] mb-2">Kanban Board</h1>
           <p className="text-lg text-[#86868b] font-normal">Project Management</p>
         </div>
 
         {/* Sign in card */}
-        <div className="bg-white rounded-2xl p-10">
+        <div className="bg-white rounded-2xl shadow-sm p-10">
           <h2 className="text-[17px] font-medium text-[#1d1d1f] text-center mb-8">Sign in to continue</h2>
 
           {error && (

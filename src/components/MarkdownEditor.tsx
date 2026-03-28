@@ -203,7 +203,7 @@ export function MarkdownEditor({ value, onChange, maxLength, placeholder, header
       ) : (
         <>
           <div className="ml-5">
-            <div className="flex items-center gap-1 border border-[#d2d2d7] dark:border-[#424245] border-b-0 rounded-t-xl bg-[#fafafa] dark:bg-[#2c2c2e] px-2 py-1.5">
+            <div className="flex items-center gap-1 border border-[#d2d2d7] dark:border-[#424245] border-b-0 rounded-t-xl bg-[#f5f5f7] dark:bg-[#2c2c2e] px-2 py-1.5">
               {/* Heading dropdown */}
               <div className="relative" ref={headingMenuRef}>
                 <button

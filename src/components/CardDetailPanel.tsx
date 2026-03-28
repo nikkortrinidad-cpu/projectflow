@@ -159,7 +159,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-6xl h-[98vh] bg-white dark:bg-[#1c1c1e] shadow-xl shadow-black/20 rounded-2xl flex flex-col overflow-hidden animate-fade-in">
+      <div className="relative w-full max-w-6xl h-[98vh] bg-white dark:bg-[#1c1c1e] shadow-2xl shadow-black/20 rounded-2xl flex flex-col overflow-hidden animate-fade-in">
         {/* Title bar */}
         <div className="shrink-0 flex items-center justify-end gap-1 px-6 py-1.5 border-b border-[#e8e8ed] dark:border-[#38383a] bg-white/80 dark:bg-[#1c1c1e]/80 backdrop-blur-xl">
           <span className="flex items-center gap-1.5 text-[11px] text-[#86868b] dark:text-[#86868b] mr-1">
@@ -254,10 +254,10 @@ export function CardDetailPanel({ card, onClose }: Props) {
           <>
             <div className="fixed inset-0 z-[60] bg-black/30" onClick={() => setShowShareModal(false)} />
             <div className="fixed inset-0 z-[60] flex items-center justify-center pointer-events-none">
-              <div className="pointer-events-auto w-full max-w-md bg-white dark:bg-[#1c1c1e] rounded-2xl shadow-xl shadow-black/20 overflow-hidden" onClick={e => e.stopPropagation()}>
+              <div className="pointer-events-auto w-full max-w-md bg-white dark:bg-[#1c1c1e] rounded-2xl shadow-2xl shadow-black/20 overflow-hidden" onClick={e => e.stopPropagation()}>
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 pt-5 pb-2">
-                  <h3 className="text-base font-semibold font-serif text-[#1d1d1f] dark:text-[#f5f5f7]">Share this task</h3>
+                  <h3 className="text-base font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">Share this task</h3>
                   <button onClick={() => setShowShareModal(false)} className="text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-[#f5f5f7] p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 transition">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                   </button>
@@ -303,7 +303,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
                   {sharedInvites.length > 0 && (
                     <div className="mt-3 space-y-1.5">
                       {sharedInvites.map((inv, i) => (
-                        <div key={i} className="flex items-center justify-between bg-[#fafafa] dark:bg-[#2c2c2e]/60 rounded-lg px-3 py-2">
+                        <div key={i} className="flex items-center justify-between bg-[#f5f5f7] dark:bg-[#2c2c2e]/60 rounded-lg px-3 py-2">
                           <div className="flex items-center gap-2">
                             <div className="w-6 h-6 rounded-full bg-[#0071e3]/10 text-primary text-[10px] font-bold flex items-center justify-center shrink-0">
                               {inv.name.charAt(0).toUpperCase()}
@@ -428,14 +428,14 @@ export function CardDetailPanel({ card, onClose }: Props) {
           <div className="flex-1 overflow-y-auto p-6 space-y-7">
             <div className="relative group/title ml-5">
               <input value={title} onChange={e => setTitle(e.target.value)}
-                className="w-full text-2xl font-semibold font-serif text-[#1d1d1f] dark:text-[#f5f5f7] border border-transparent outline-none bg-transparent rounded-lg px-2 py-1 -ml-2 hover:border-[#d2d2d7] dark:hover:border-[#424245] focus:border-primary focus:bg-[#0071e3]/[0.03] dark:focus:bg-white/5 transition" />
+                className="w-full text-2xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] border border-transparent outline-none bg-transparent rounded-lg px-2 py-1 -ml-2 hover:border-[#d2d2d7] dark:hover:border-[#424245] focus:border-primary focus:bg-[#0071e3]/[0.03] dark:focus:bg-white/5 transition" />
               <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-[#aeaeb2] dark:text-[#6e6e73] opacity-0 group-hover/title:opacity-100 transition-opacity pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
               </svg>
             </div>
 
             {/* Two-column fields */}
-            <div className="ml-5 grid grid-cols-2 gap-0 border border-[#d2d2d7] dark:border-[#38383a] rounded-xl bg-[#fafafa]/50 dark:bg-[#2c2c2e]/30">
+            <div className="ml-5 grid grid-cols-2 gap-0 border border-[#d2d2d7] dark:border-[#38383a] rounded-xl bg-[#f5f5f7]/50 dark:bg-[#2c2c2e]/30">
               {/* Status */}
               <div className="relative flex items-center gap-2 px-3 py-2.5 border-b border-r border-[#d2d2d7] dark:border-[#38383a] min-w-0">
                 <span className="flex items-center gap-1.5 text-xs text-[#86868b] dark:text-[#86868b] shrink-0">
@@ -456,7 +456,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
                           <button key={c.id}
                             onClick={() => { store.moveCard(card.id, c.id, card.swimlaneId, 0); setShowStatusDropdown(false); }}
                             className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-xs font-medium transition hover:bg-black/5 dark:hover:bg-white/10 ${
-                              card.columnId === c.id ? 'bg-[#fafafa] dark:bg-[#2c2c2e] text-[#1d1d1f] dark:text-[#f5f5f7]' : 'text-[#6e6e73] dark:text-[#aeaeb2]'
+                              card.columnId === c.id ? 'bg-[#f5f5f7] dark:bg-[#2c2c2e] text-[#1d1d1f] dark:text-[#f5f5f7]' : 'text-[#6e6e73] dark:text-[#aeaeb2]'
                             }`}>
                             <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: c.color }} />
                             {c.title}
@@ -553,7 +553,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
                           <button key={p.value}
                             onClick={() => { setPriority(p.value); setShowPriorityDropdown(false); }}
                             className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-xs font-medium transition hover:bg-black/5 dark:hover:bg-white/10 ${
-                              priority === p.value ? 'bg-[#fafafa] dark:bg-[#2c2c2e] text-[#1d1d1f] dark:text-[#f5f5f7]' : 'text-[#6e6e73] dark:text-[#aeaeb2]'
+                              priority === p.value ? 'bg-[#f5f5f7] dark:bg-[#2c2c2e] text-[#1d1d1f] dark:text-[#f5f5f7]' : 'text-[#6e6e73] dark:text-[#aeaeb2]'
                             }`}>
                             <span className={`w-2 h-2 rounded-full ${p.dot}`} />
                             {p.label}
@@ -758,7 +758,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
               {/* Table */}
               <div className="ml-5 border border-[#d2d2d7] dark:border-[#38383a] rounded-xl overflow-hidden">
                 {/* Table header */}
-                <div className="flex items-center bg-[#fafafa] dark:bg-[#2c2c2e]/60 border-b border-[#d2d2d7] dark:border-[#38383a] px-6 py-2">
+                <div className="flex items-center bg-[#f5f5f7] dark:bg-[#2c2c2e]/60 border-b border-[#d2d2d7] dark:border-[#38383a] px-6 py-2">
                   <span className="flex-1 text-[11px] font-semibold text-[#86868b] dark:text-[#86868b] uppercase tracking-wide">Name</span>
                   <span className="w-44 text-left pl-2 text-[11px] font-semibold text-[#86868b] dark:text-[#86868b] uppercase tracking-wide">Assignee</span>
                 </div>
@@ -884,7 +884,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
         </div>
 
         {/* Right: Activity sidebar */}
-        <div className="w-[420px] shrink-0 border-l border-[#e8e8ed] dark:border-[#38383a] flex flex-col bg-[#fafafa] dark:bg-[#1c1c1e]/50">
+        <div className="w-[420px] shrink-0 border-l border-[#e8e8ed] dark:border-[#38383a] flex flex-col bg-[#f5f5f7] dark:bg-[#1c1c1e]/50">
           {/* Toggle header */}
           <div className="shrink-0 px-4 py-2.5 border-b border-[#e8e8ed] dark:border-[#38383a] flex items-center gap-1 bg-white dark:bg-[#1c1c1e]">
             <button
@@ -948,7 +948,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
                                   <div className="absolute left-0 top-0.5 w-[14px] h-[14px] rounded-full bg-[#e8e8ed] dark:bg-[#3a3a3c] text-[#86868b] dark:text-[#86868b] text-[7px] font-bold flex items-center justify-center">
                                     {(replyAuthor?.name || '?').charAt(0)}
                                   </div>
-                                  <div className="bg-[#fafafa] dark:bg-[#3a3a3c]/50 rounded-lg p-2 shadow-sm">
+                                  <div className="bg-[#f5f5f7] dark:bg-[#3a3a3c]/50 rounded-lg p-2 shadow-sm">
                                     <div className="flex items-center gap-1.5 mb-0.5">
                                       <span className="text-[11px] font-medium text-[#1d1d1f] dark:text-[#e5e5ea]">{replyAuthor?.name || 'Unknown'}{replyAuthor?.id === store.getCurrentMemberId() && <span className="text-[10px] text-[#86868b] font-normal ml-1">(You)</span>}</span>
                                     </div>

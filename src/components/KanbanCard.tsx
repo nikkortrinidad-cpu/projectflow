@@ -5,10 +5,10 @@ import { useBoard } from '../store/useStore';
 import { store } from '../store/boardStore';
 
 const priorityColors: Record<string, string> = {
-  low: 'bg-[#007aff]/5 text-[#007aff]/70',
-  medium: 'bg-[#ff9f0a]/5 text-[#ff9500]/70',
-  high: 'bg-[#ff6b00]/5 text-[#ff6b00]/70',
-  urgent: 'bg-[#ff3b30]/5 text-[#ff3b30]/70',
+  low: 'bg-[#007aff]/10 text-[#007aff]',
+  medium: 'bg-[#ff9f0a]/10 text-[#ff9500]',
+  high: 'bg-[#ff6b00]/10 text-[#ff6b00]',
+  urgent: 'bg-[#ff3b30]/10 text-[#ff3b30]',
 };
 
 const priorityDots: Record<string, string> = {
@@ -51,8 +51,8 @@ export function KanbanCard({ card, onClick }: { card: Card; onClick: () => void 
       {...attributes}
       {...listeners}
       onClick={onClick}
-      className="relative bg-white dark:bg-[#111111] rounded-lg border border-[#f0f0f0] dark:border-[#1c1c1e] p-3 cursor-grab active:cursor-grabbing
-        hover:border-[#d2d2d7] dark:hover:border-[#38383a] transition-all duration-200 group overflow-hidden"
+      className="relative bg-white dark:bg-[#1c1c1e] rounded-xl shadow-sm shadow-black/[0.04] border border-[#e8e8ed] dark:border-[#38383a] p-3 cursor-grab active:cursor-grabbing
+        hover:shadow-md hover:shadow-black/[0.08] transition-all duration-200 group overflow-hidden"
     >
       {/* Edit icon - top right */}
       <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -86,13 +86,13 @@ export function KanbanCard({ card, onClick }: { card: Card; onClick: () => void 
           {cardLabels.length > 0 && (
             <div className="flex flex-wrap gap-1 mb-2">
               {cardLabels.map(l => (
-                <span key={l.id} className="text-[9px] font-medium px-1.5 py-px rounded-full text-white/90"
-                  style={{ backgroundColor: l.color, opacity: 0.75 }}>{l.name}</span>
+                <span key={l.id} className="text-[10px] font-medium px-1.5 py-0.5 rounded-full text-white"
+                  style={{ backgroundColor: l.color }}>{l.name}</span>
               ))}
             </div>
           )}
 
-          <h4 className="font-serif text-sm font-medium text-[#1d1d1f] dark:text-[#f5f5f7] mb-1.5 leading-snug">{card.title}</h4>
+          <h4 className="text-sm font-medium text-[#1d1d1f] dark:text-[#f5f5f7] mb-1.5 leading-snug">{card.title}</h4>
 
           <div className="flex items-center justify-between mt-2">
             <div className="flex items-center gap-2">
@@ -117,7 +117,7 @@ export function KanbanCard({ card, onClick }: { card: Card; onClick: () => void 
                 </span>
               )}
               {assignee && (
-                <div className="w-5 h-5 rounded-full bg-[#0071e3]/10 text-[#0071e3]/70 text-[10px] font-bold flex items-center justify-center ring-1 ring-white dark:ring-[#111111]"
+                <div className="w-5 h-5 rounded-full bg-[#0071e3]/15 text-[#0071e3] text-[10px] font-bold flex items-center justify-center ring-1 ring-white dark:ring-[#1c1c1e]"
                   title={assignee.id === store.getCurrentMemberId() ? `${assignee.name} (You)` : assignee.name}>
                   {assignee.name.charAt(0).toUpperCase()}
                 </div>
