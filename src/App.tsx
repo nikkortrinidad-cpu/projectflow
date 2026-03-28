@@ -36,7 +36,7 @@ function App() {
   // Show loading spinner while checking auth
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-[#f5f5f7]">
+      <div className="h-screen flex items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-3 border-[#d2d2d7] border-t-[#1d1d1f] rounded-full animate-spin" />
           <p className="text-sm text-[#86868b]">Loading...</p>
@@ -51,9 +51,9 @@ function App() {
   }
 
   return (
-    <div className={`h-screen flex flex-col ${isDark ? 'bg-black text-gray-100' : 'bg-[#f5f5f7] text-[#1d1d1f]'}`}>
+    <div className={`h-screen flex flex-col ${isDark ? 'bg-black text-gray-100' : 'bg-white text-[#1d1d1f]'}`}>
       {/* Header */}
-      <header className={`${isDark ? 'bg-[#1d1d1f]/80 backdrop-blur-xl border-[#424245]' : 'bg-white/80 backdrop-blur-xl border-[#d2d2d7]'} border-b px-6 py-3.5 flex items-center justify-between shrink-0`}>
+      <header className={`${isDark ? 'bg-[#1d1d1f] border-[#2c2c2e]' : 'bg-white border-[#e8e8ed]'} border-b px-6 py-3.5 flex items-center justify-between shrink-0`}>
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-[#1d1d1f] dark:bg-white rounded-lg flex items-center justify-center">
             <svg className="w-5 h-5 text-white dark:text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,7 +61,7 @@ function App() {
             </svg>
           </div>
           <div>
-            <h1 className={`text-[15px] font-semibold leading-tight tracking-tight ${isDark ? 'text-gray-100' : 'text-[#1d1d1f]'}`}>Kanban Board</h1>
+            <h1 className={`text-base font-semibold font-serif leading-tight tracking-tight ${isDark ? 'text-gray-100' : 'text-[#1d1d1f]'}`}>Kanban Board</h1>
             <p className={`text-[11px] ${isDark ? 'text-[#86868b]' : 'text-[#86868b]'}`}>Project Management</p>
           </div>
         </div>
@@ -137,7 +137,7 @@ function App() {
       </header>
 
       {/* Filters bar */}
-      <div className={`${isDark ? 'bg-[#1d1d1f]/60 backdrop-blur-xl border-[#424245]' : 'bg-white/60 backdrop-blur-xl border-[#d2d2d7]'} border-b px-6 py-2.5 shrink-0`}>
+      <div className={`${isDark ? 'bg-[#1d1d1f] border-[#2c2c2e]' : 'bg-white border-[#e8e8ed]'} border-b px-6 py-2.5 shrink-0`}>
         <Filters />
       </div>
 

@@ -43,7 +43,7 @@ export function KanbanColumn({ column, cards, swimlaneId, onCardClick, dragHandl
   };
 
   return (
-    <div className="flex-shrink-0 w-64 bg-white/60 dark:bg-[#1c1c1e]/60 backdrop-blur-sm rounded-2xl overflow-hidden border border-[#e8e8ed]/60 dark:border-[#424245]/60">
+    <div className="flex-shrink-0 w-64 bg-white dark:bg-[#111111] rounded-xl overflow-hidden border border-[#f0f0f0] dark:border-[#1c1c1e]">
       <div className="flex items-center justify-between py-2.5 px-3">
         <div className="flex items-center gap-2">
           {dragHandleProps && (
@@ -53,8 +53,6 @@ export function KanbanColumn({ column, cards, swimlaneId, onCardClick, dragHandl
               </svg>
             </button>
           )}
-          {/* Color dot */}
-          <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: column.color }} />
           {isEditing ? (
             <input
               autoFocus
@@ -69,12 +67,12 @@ export function KanbanColumn({ column, cards, swimlaneId, onCardClick, dragHandl
                 if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
                 if (e.key === 'Escape') { setEditTitle(column.title); setIsEditing(false); }
               }}
-              className="text-[13px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] bg-white dark:bg-[#2c2c2e] border border-[#0071e3] rounded-lg px-1.5 py-0.5 outline-none w-28"
+              className="font-serif text-[13px] font-bold uppercase tracking-wider text-[#1d1d1f] dark:text-[#f5f5f7] bg-white dark:bg-[#2c2c2e] border border-[#0071e3] rounded-lg px-1.5 py-0.5 outline-none w-28"
             />
           ) : (
             <h3
               onDoubleClick={() => { setEditTitle(column.title); setIsEditing(true); }}
-              className="text-[13px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] cursor-pointer hover:text-[#0071e3] transition group/rename flex items-center gap-1"
+              className="font-serif text-[13px] font-bold uppercase tracking-wider text-[#1d1d1f] dark:text-[#f5f5f7] cursor-pointer hover:text-[#0071e3] transition group/rename flex items-center gap-1"
               title="Double-click to rename"
             >
               {column.title}
@@ -83,10 +81,10 @@ export function KanbanColumn({ column, cards, swimlaneId, onCardClick, dragHandl
               </svg>
             </h3>
           )}
-          <span className={`text-[11px] font-medium px-1.5 py-0.5 rounded-full ${
+          <span className={`text-[10px] uppercase tracking-wider font-medium px-1.5 py-0.5 rounded-full ${
             wipExceeded ? 'bg-[#ff3b30]/10 text-[#ff3b30]' :
             wipAtLimit ? 'bg-[#ff9f0a]/10 text-[#ff9500]' :
-            'text-[#86868b]'
+            'text-[#aeaeb2]'
           }`}>
             {cards.length}{column.wipLimit > 0 ? `/${column.wipLimit}` : ''}
           </span>
@@ -161,6 +159,9 @@ export function KanbanColumn({ column, cards, swimlaneId, onCardClick, dragHandl
           )}
         </div>
       </div>
+
+      {/* Colored underline */}
+      <div className="w-full h-px opacity-40" style={{ backgroundColor: column.color }} />
 
       {/* List Settings Modal */}
       {showListSettings && (
@@ -240,7 +241,7 @@ export function KanbanColumn({ column, cards, swimlaneId, onCardClick, dragHandl
 
       <div
         ref={setNodeRef}
-        className={`min-h-[60px] rounded-b-2xl p-2 space-y-2 transition-colors ${
+        className={`min-h-[60px] rounded-b-xl p-2 space-y-2 transition-colors ${
           isOver ? 'ring-2 ring-[#0071e3]/30' : ''
         } ${wipExceeded ? 'ring-2 ring-[#ff3b30]/20' : ''}`}
       >
@@ -251,22 +252,22 @@ export function KanbanColumn({ column, cards, swimlaneId, onCardClick, dragHandl
         </SortableContext>
 
         {showAdd ? (
-          <div className="bg-white dark:bg-[#2c2c2e] rounded-xl border border-[#d2d2d7] dark:border-[#424245] p-2">
+          <div className="px-1 py-1">
             <input
               autoFocus
               value={newTitle}
               onChange={e => setNewTitle(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') handleAddCard(); if (e.key === 'Escape') setShowAdd(false); }}
               placeholder="Card title..."
-              className="w-full text-sm border border-[#d2d2d7] dark:border-[#424245] rounded-xl px-3 py-2 outline-none focus:border-[#0071e3] placeholder:text-[#86868b] mb-2 bg-white dark:bg-[#1c1c1e] dark:text-[#f5f5f7]"
+              className="w-full text-sm border-0 border-b border-[#e8e8ed] dark:border-[#2c2c2e] rounded-none bg-transparent px-1 py-2 outline-none focus:border-[#1d1d1f] dark:focus:border-[#f5f5f7] placeholder:text-[#aeaeb2] mb-2 dark:text-[#f5f5f7]"
             />
-            <div className="flex gap-1">
+            <div className="flex gap-2">
               <button onClick={handleAddCard}
-                className="text-xs bg-[#0071e3] text-white px-3 py-1 rounded-full hover:bg-[#0077ed] transition">
+                className="text-xs text-[#1d1d1f] dark:text-[#f5f5f7] font-medium hover:text-[#0071e3] transition">
                 Add
               </button>
               <button onClick={() => setShowAdd(false)}
-                className="text-xs text-[#86868b] px-2 py-1 hover:text-[#1d1d1f] dark:hover:text-[#f5f5f7] transition">
+                className="text-xs text-[#aeaeb2] hover:text-[#1d1d1f] dark:hover:text-[#f5f5f7] transition">
                 Cancel
               </button>
             </div>
@@ -274,10 +275,10 @@ export function KanbanColumn({ column, cards, swimlaneId, onCardClick, dragHandl
         ) : (
           <button
             onClick={() => setShowAdd(true)}
-            className="w-full flex items-center gap-1.5 text-xs text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-[#f5f5f7] py-2 px-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition"
+            className="w-full flex items-center gap-1 text-xs text-[#aeaeb2] hover:text-[#1d1d1f] dark:hover:text-[#f5f5f7] py-2 px-2 transition"
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-            Add a card
+            <span className="text-sm leading-none">+</span>
+            Add
           </button>
         )}
       </div>

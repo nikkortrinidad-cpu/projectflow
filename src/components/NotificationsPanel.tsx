@@ -9,7 +9,7 @@ export function NotificationsPanel({ onClose: _onClose }: { onClose: () => void 
   return (
     <div className="absolute right-0 top-12 w-80 bg-white dark:bg-[#2c2c2e] rounded-2xl shadow-xl shadow-black/10 border border-[#d2d2d7] dark:border-[#424245] z-50 overflow-hidden">
       <div className="px-4 py-3 border-b border-[#e8e8ed] dark:border-[#38383a] flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-[#1d1d1f] dark:text-[#e5e5ea]">Notifications</h3>
+        <h3 className="text-sm font-semibold font-serif text-[#1d1d1f] dark:text-[#e5e5ea]">Notifications</h3>
         <div className="flex gap-2">
           <button onClick={() => store.markAllNotificationsRead()}
             className="text-[10px] text-primary hover:underline">Mark all read</button>

@@ -126,7 +126,7 @@ export function KanbanBoard() {
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex-1 overflow-x-auto overflow-y-auto p-6 bg-[#f5f5f7] dark:bg-[#1c1c1e]">
+        <div className="flex-1 overflow-x-auto overflow-y-auto p-6 bg-white dark:bg-black">
           {swimlanes.map(swimlane => (
             <div key={swimlane.id} className="mb-6">
               {swimlanes.length > 1 && (
@@ -140,7 +140,7 @@ export function KanbanBoard() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </button>
-                  <h3 className="text-xs font-semibold text-[#86868b] uppercase tracking-wider">{swimlane.title}</h3>
+                  <h3 className="text-xs font-serif font-semibold text-[#86868b] uppercase tracking-wider">{swimlane.title}</h3>
                   <span className="text-[10px] text-[#86868b]">
                     ({filteredCards.filter(c => c.swimlaneId === swimlane.id).length} cards)
                   </span>
@@ -210,9 +210,9 @@ export function KanbanBoard() {
                         ) : (
                           <button
                             onClick={() => { setShowAddColumn(true); setTimeout(() => newColumnInputRef.current?.focus(), 50); }}
-                            className="w-full flex items-center justify-start gap-2 py-3 px-4 rounded-full bg-white dark:bg-[#1c1c1e] border border-[#d2d2d7] dark:border-[#424245] text-sm font-medium text-[#86868b] hover:border-[#0071e3] hover:text-[#0071e3] hover:bg-white/80 dark:hover:bg-[#2c2c2e] transition"
+                            className="w-full flex items-center justify-start gap-1.5 py-2 px-2 text-sm text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-[#f5f5f7] transition"
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                            <span className="text-base leading-none">+</span>
                             Add another list
                           </button>
                         )}

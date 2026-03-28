@@ -21,7 +21,7 @@ function SortableColumnRow({ col, children }: { col: Column; children: React.Rea
   };
   return (
     <div ref={setNodeRef} style={style} {...attributes}
-      className="flex items-center gap-3 bg-[#f5f5f7] dark:bg-[#2c2c2e] rounded-xl p-3">
+      className="flex items-center gap-3 bg-[#fafafa] dark:bg-[#2c2c2e] rounded-xl p-3">
       <button {...listeners} className="cursor-grab active:cursor-grabbing text-[#86868b] hover:text-[#6e6e73] touch-none">
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
           <path d="M7 2a2 2 0 10.001 4.001A2 2 0 007 2zm0 6a2 2 0 10.001 4.001A2 2 0 007 8zm0 6a2 2 0 10.001 4.001A2 2 0 007 14zm6-8a2 2 0 10-.001-4.001A2 2 0 0013 6zm0 2a2 2 0 10.001 4.001A2 2 0 0013 8zm0 6a2 2 0 10.001 4.001A2 2 0 0013 14z" />
@@ -80,9 +80,9 @@ export function BoardSettings({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white dark:bg-[#1c1c1e] rounded-2xl shadow-2xl shadow-black/20 w-full max-w-2xl max-h-[80vh] overflow-hidden">
+      <div className="relative bg-white dark:bg-[#1c1c1e] rounded-2xl shadow-xl shadow-black/20 w-full max-w-2xl max-h-[80vh] overflow-hidden">
         <div className="px-6 py-4 border-b border-[#e8e8ed] dark:border-[#38383a] flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">Board Settings</h2>
+          <h2 className="text-lg font-semibold font-serif text-[#1d1d1f] dark:text-[#f5f5f7]">Board Settings</h2>
           <button onClick={onClose} className="text-[#86868b] hover:text-[#6e6e73] dark:hover:text-[#aeaeb2] p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -109,7 +109,7 @@ export function BoardSettings({ onClose }: { onClose: () => void }) {
             <div className="space-y-6">
               <div>
                 <h3 className="text-sm font-semibold text-[#1d1d1f] dark:text-[#e5e5ea] mb-3">Appearance</h3>
-                <div className="flex items-center justify-between bg-[#f5f5f7] dark:bg-[#2c2c2e] rounded-2xl p-4">
+                <div className="flex items-center justify-between bg-[#fafafa] dark:bg-[#2c2c2e] rounded-2xl p-4">
                   <div>
                     <p className="text-sm font-medium dark:text-[#e5e5ea]">Theme</p>
                     <p className="text-xs text-[#86868b] dark:text-[#86868b] mt-0.5">Choose light or dark mode</p>
@@ -193,7 +193,7 @@ export function BoardSettings({ onClose }: { onClose: () => void }) {
           {tab === 'swimlanes' && (
             <div className="space-y-2">
               {state.swimlanes.sort((a, b) => a.order - b.order).map(s => (
-                <div key={s.id} className="flex items-center gap-3 bg-[#f5f5f7] dark:bg-[#2c2c2e] rounded-xl p-3">
+                <div key={s.id} className="flex items-center gap-3 bg-[#fafafa] dark:bg-[#2c2c2e] rounded-xl p-3">
                   <div className="relative flex-1 group/swimname">
                     <input value={s.title}
                       onChange={e => store.updateSwimlane(s.id, { title: e.target.value })}
@@ -214,7 +214,7 @@ export function BoardSettings({ onClose }: { onClose: () => void }) {
           {tab === 'labels' && (
             <div className="space-y-2">
               {state.labels.map(l => (
-                <div key={l.id} className="flex items-center gap-3 bg-[#f5f5f7] dark:bg-[#2c2c2e] rounded-xl p-3">
+                <div key={l.id} className="flex items-center gap-3 bg-[#fafafa] dark:bg-[#2c2c2e] rounded-xl p-3">
                   <div className="w-4 h-4 rounded-full" style={{ backgroundColor: l.color }} />
                   <span className="flex-1 text-sm font-medium">{l.name}</span>
                   <button onClick={() => store.deleteLabel(l.id)}
@@ -229,7 +229,7 @@ export function BoardSettings({ onClose }: { onClose: () => void }) {
           {tab === 'members' && (
             <div className="space-y-2">
               {state.members.map(m => (
-                <div key={m.id} className="flex items-center gap-3 bg-[#f5f5f7] dark:bg-[#2c2c2e] rounded-xl p-3">
+                <div key={m.id} className="flex items-center gap-3 bg-[#fafafa] dark:bg-[#2c2c2e] rounded-xl p-3">
                   <div className="w-7 h-7 rounded-full bg-primary/20 text-primary text-xs font-bold flex items-center justify-center">
                     {m.name.charAt(0).toUpperCase()}
                   </div>
@@ -289,7 +289,7 @@ export function BoardSettings({ onClose }: { onClose: () => void }) {
                       const deletedDate = new Date(item.deletedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
                       return (
-                        <div key={item.id} className="flex items-center gap-3 bg-[#f5f5f7] dark:bg-[#2c2c2e] rounded-xl p-3">
+                        <div key={item.id} className="flex items-center gap-3 bg-[#fafafa] dark:bg-[#2c2c2e] rounded-xl p-3">
                           {/* Icon */}
                           <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isCard ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-500' : 'bg-purple-50 dark:bg-purple-900/30 text-purple-500'}`}>
                             {isCard ? (
@@ -374,7 +374,7 @@ export function BoardSettings({ onClose }: { onClose: () => void }) {
                       const archivedDate = new Date(item.archivedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
                       return (
-                        <div key={item.id} className="flex items-center gap-3 bg-[#f5f5f7] dark:bg-[#2c2c2e] rounded-xl p-3">
+                        <div key={item.id} className="flex items-center gap-3 bg-[#fafafa] dark:bg-[#2c2c2e] rounded-xl p-3">
                           {/* Icon */}
                           <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isCard ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-500' : 'bg-purple-50 dark:bg-purple-900/30 text-purple-500'}`}>
                             {isCard ? (
