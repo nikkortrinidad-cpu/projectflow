@@ -152,7 +152,7 @@ function ReactionPills({ cardId, comment }: { cardId: string; comment: Comment }
   if (!hasReactions) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-1 mt-1">
+    <div className="flex flex-wrap items-center gap-1 ml-auto">
       {Object.entries(reactions).map(([emoji, userIds]) => (
         <button
           key={emoji}
@@ -1228,8 +1228,8 @@ export function CardDetailPanel({ card, onClose }: Props) {
                                       >
                                         Reply
                                       </button>
+                                      <ReactionPills cardId={card.id} comment={reply} />
                                     </div>
-                                    <ReactionPills cardId={card.id} comment={reply} />
                                     </>
                                     )}
                                     {/* Nested replies */}
@@ -1376,8 +1376,8 @@ export function CardDetailPanel({ card, onClose }: Props) {
                               >
                                 Reply
                               </button>
+                              <ReactionPills cardId={card.id} comment={c} />
                             </div>
-                            <ReactionPills cardId={card.id} comment={c} />
                             {totalReplies > 0 && (
                               <div className="relative mt-1">
                                 {/* Mask to stop bridge line at the elbow when collapsed */}
