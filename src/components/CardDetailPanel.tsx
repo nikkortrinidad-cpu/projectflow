@@ -975,35 +975,26 @@ export function CardDetailPanel({ card, onClose }: Props) {
                               const isLast = idx === replies.length - 1;
                               return (
                                 <div key={`reply-${reply.id}`} className="relative flex gap-2 mt-2">
-                                  {/* Connector from parent's bridge line to this avatar */}
-                                  {isLast ? (
-                                    <>
-                                      {/* Mask hides parent's bridge line where SVG curve takes over (renders first, below SVG) */}
-                                      <div
-                                        className="absolute bg-[#f5f5f7] dark:bg-[#1c1c1e]"
-                                        style={{ left: -CO, top: -2, bottom: 0, width: 2, zIndex: 1 }}
-                                      />
-                                      {/* Curved elbow (SVG for smooth curve) — renders above the mask */}
-                                      <svg
-                                        className="absolute text-[#d1d1d6] dark:text-[#636366]"
-                                        style={{ left: -CO, top: -2, width: CO, height: AC + 3, zIndex: 2 }}
-                                        fill="none"
-                                        overflow="visible"
-                                      >
-                                        <path
-                                          d={`M 1 0 Q 1 ${AC + 2} ${AC + 1} ${AC + 2} L ${CO} ${AC + 2}`}
-                                          stroke="currentColor"
-                                          strokeWidth="2"
-                                        />
-                                      </svg>
-                                    </>
-                                  ) : (
-                                    /* Straight horizontal arm for non-last children */
+                                  {/* Curved elbow connector from parent's bridge line to this avatar */}
+                                  {isLast && (
+                                    /* Mask hides parent's bridge line below the last elbow */
                                     <div
-                                      className="absolute h-[2px] bg-[#d1d1d6] dark:bg-[#636366]"
-                                      style={{ left: -CO, top: AC - 1, width: CO }}
+                                      className="absolute bg-[#f5f5f7] dark:bg-[#1c1c1e]"
+                                      style={{ left: -CO, top: -2, bottom: 0, width: 2, zIndex: 1 }}
                                     />
                                   )}
+                                  <svg
+                                    className="absolute text-[#d1d1d6] dark:text-[#636366]"
+                                    style={{ left: -CO, top: -2, width: CO, height: AC + 3, zIndex: 2 }}
+                                    fill="none"
+                                    overflow="visible"
+                                  >
+                                    <path
+                                      d={`M 1 0 Q 1 ${AC + 2} ${AC + 1} ${AC + 2} L ${CO} ${AC + 2}`}
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                    />
+                                  </svg>
                                   {/* Avatar — z-10 to stay above connector lines */}
                                   <div className="shrink-0 w-5 flex justify-center relative z-10">
                                     <div className="w-5 h-5 rounded-full bg-[#e8e8ed] dark:bg-[#3a3a3c] text-[#86868b] text-[10px] font-bold flex items-center justify-center">
