@@ -157,7 +157,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
 
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-[300] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-6xl h-[98vh] bg-white dark:bg-[#1c1c1e] shadow-2xl shadow-black/20 rounded-2xl flex flex-col overflow-hidden animate-fade-in">
         {/* Title bar */}
@@ -941,7 +941,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
                       const isCollapsed = collapsedComments.has(c.id);
 
                       const renderReplies = (replies: typeof card.comments, depth: number = 1) => (
-                        <div className={`mt-2 space-y-2 ${depth === 1 ? 'ml-2' : 'ml-3'}`}>
+                        <div className={`mt-2 space-y-2 ${depth === 1 ? 'ml-2' : 'ml-3'} border-l-2 border-[#e8e8ed] dark:border-[#3a3a3c] pl-3`}>
                           {replies.map(reply => {
                             const replyAuthor = state.members.find(m => m.id === reply.authorId);
                             return (

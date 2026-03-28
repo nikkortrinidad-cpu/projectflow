@@ -13,7 +13,7 @@ export function Analytics({ onClose }: { onClose: () => void }) {
   const overdueCards = state.cards.filter(c => c.dueDate && new Date(c.dueDate) < new Date()).length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-[300] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={onClose} />
       <div className="relative bg-white dark:bg-[#1c1c1e] rounded-2xl shadow-2xl shadow-black/20 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white dark:bg-[#1c1c1e] border-b border-[#e8e8ed] dark:border-[#38383a] px-6 py-4 flex items-center justify-between z-10 rounded-t-2xl">

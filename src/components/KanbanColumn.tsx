@@ -165,8 +165,8 @@ export function KanbanColumn({ column, cards, swimlaneId, onCardClick, dragHandl
       {/* List Settings Modal */}
       {showListSettings && (
         <>
-          <div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm" onClick={() => setShowListSettings(false)} />
-          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+          <div className="fixed inset-0 z-[300] bg-black/20 backdrop-blur-sm" onClick={() => setShowListSettings(false)} />
+          <div className="fixed inset-0 z-[300] flex items-center justify-center pointer-events-none">
             <div className="pointer-events-auto w-full max-w-sm bg-white dark:bg-[#2c2c2e] rounded-2xl shadow-2xl shadow-black/15 overflow-hidden border border-[#d2d2d7] dark:border-[#424245]" onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between px-5 pt-4 pb-2">
                 <h3 className="text-sm font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">List Settings</h3>

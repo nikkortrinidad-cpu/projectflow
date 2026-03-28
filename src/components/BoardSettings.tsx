@@ -78,7 +78,7 @@ export function BoardSettings({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-[300] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={onClose} />
       <div className="relative bg-white dark:bg-[#1c1c1e] rounded-2xl shadow-2xl shadow-black/20 w-full max-w-2xl max-h-[80vh] overflow-hidden">
         <div className="px-6 py-4 border-b border-[#e8e8ed] dark:border-[#38383a] flex items-center justify-between">
