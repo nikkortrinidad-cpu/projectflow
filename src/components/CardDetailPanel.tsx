@@ -1002,14 +1002,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
                                     </div>
                                   </div>
                                   {/* Content column */}
-                                  <div className="flex-1 min-w-0 relative">
-                                    {/* Bridge line for THIS reply's nested children — starts below avatar */}
-                                    {hasNestedReplies && (
-                                      <div
-                                        className="absolute w-[2px] bg-[#d1d1d6] dark:bg-[#636366]"
-                                        style={{ left: -CO, top: AV, bottom: 0 }}
-                                      />
-                                    )}
+                                  <div className="flex-1 min-w-0">
                                     <div className="bg-[#f5f5f7] dark:bg-[#3a3a3c]/50 rounded-2xl px-3 py-2">
                                       <span className="text-xs font-semibold text-[#1d1d1f] dark:text-[#e5e5ea]">{replyAuthor?.name || 'Unknown'}{replyAuthor?.id === store.getCurrentMemberId() && <span className="text-[10px] text-[#86868b] font-normal ml-1">(You)</span>}</span>
                                       <div className="text-xs text-[#1d1d1f] dark:text-[#e5e5ea] leading-relaxed prose-comment" dangerouslySetInnerHTML={{ __html: reply.text }} />
@@ -1025,8 +1018,16 @@ export function CardDetailPanel({ card, onClose }: Props) {
                                         Reply
                                       </button>
                                     </div>
-                                    {/* Nested replies */}
-                                    {hasNestedReplies && renderReplies(reply.replies!)}
+                                    {/* Nested replies — wrapped with bridge line */}
+                                    {hasNestedReplies && (
+                                      <div className="relative">
+                                        <div
+                                          className="absolute w-[2px] bg-[#d1d1d6] dark:bg-[#636366]"
+                                          style={{ left: -CO, top: 0, bottom: 0 }}
+                                        />
+                                        {renderReplies(reply.replies!)}
+                                      </div>
+                                    )}
                                     {/* Reply input */}
                                     {replyingTo === reply.id && (
                                       <div className="mb-2">
@@ -1059,14 +1060,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
                             </div>
                           </div>
                           {/* Content column */}
-                          <div className="flex-1 min-w-0 relative">
-                            {/* Bridge line from below avatar down through all replies */}
-                            {!isCollapsed && (c.replies || []).length > 0 && (
-                              <div
-                                className="absolute w-[2px] bg-[#d1d1d6] dark:bg-[#636366]"
-                                style={{ left: -CO, top: AV, bottom: 0 }}
-                              />
-                            )}
+                          <div className="flex-1 min-w-0">
                             <div className="bg-white dark:bg-[#2c2c2e] rounded-lg p-2.5 shadow-sm">
                               <div className="flex items-center gap-1.5 mb-1">
                                 <span className="text-xs font-medium text-[#1d1d1f] dark:text-[#e5e5ea]">{author?.name || 'Unknown'}{author?.id === store.getCurrentMemberId() && <span className="text-[10px] text-[#86868b] font-normal ml-1">(You)</span>}</span>
@@ -1102,8 +1096,16 @@ export function CardDetailPanel({ card, onClose }: Props) {
                               </div>
                             </div>
 
-                            {/* Replies — collapsible */}
-                            {!isCollapsed && (c.replies || []).length > 0 && renderReplies(c.replies!)}
+                            {/* Replies — collapsible, wrapped with bridge line */}
+                            {!isCollapsed && (c.replies || []).length > 0 && (
+                              <div className="relative">
+                                <div
+                                  className="absolute w-[2px] bg-[#d1d1d6] dark:bg-[#636366]"
+                                  style={{ left: -CO, top: 0, bottom: 0 }}
+                                />
+                                {renderReplies(c.replies!)}
+                              </div>
+                            )}
 
                             {/* Reply input */}
                             {replyingTo === c.id && (
