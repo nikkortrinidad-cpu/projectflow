@@ -963,6 +963,7 @@ export function CardDetailPanel({ card, onClose }: Props) {
                       // Bridge line (2px) at left=-19 in content col = x=9..11 in parent = centered on avatar
                       const CO = 19; // connector offset from content column left to parent line center
                       const AC = 10; // avatar center Y (half of 20px)
+                      const AV = 20; // full avatar diameter
                       const MT = 8;  // margin-top between sibling replies (mt-2)
 
                       const renderReplies = (replies: typeof card.comments) => {
@@ -1003,19 +1004,19 @@ export function CardDetailPanel({ card, onClose }: Props) {
                                       style={{ left: -CO, top: AC - 1, width: CO }}
                                     />
                                   )}
-                                  {/* Avatar — no thread line here, bridge line handles it */}
-                                  <div className="shrink-0 w-5 flex justify-center">
+                                  {/* Avatar — z-10 to stay above connector lines */}
+                                  <div className="shrink-0 w-5 flex justify-center relative z-10">
                                     <div className="w-5 h-5 rounded-full bg-[#e8e8ed] dark:bg-[#3a3a3c] text-[#86868b] text-[10px] font-bold flex items-center justify-center">
                                       {(replyAuthor?.name || '?').charAt(0)}
                                     </div>
                                   </div>
                                   {/* Content column */}
                                   <div className="flex-1 min-w-0 relative">
-                                    {/* Bridge line for THIS reply's nested children */}
+                                    {/* Bridge line for THIS reply's nested children — starts below avatar */}
                                     {hasNestedReplies && (
                                       <div
                                         className="absolute w-[2px] bg-[#d1d1d6] dark:bg-[#636366]"
-                                        style={{ left: -CO, top: AC, bottom: 0 }}
+                                        style={{ left: -CO, top: AV, bottom: 0 }}
                                       />
                                     )}
                                     <div className="bg-[#f5f5f7] dark:bg-[#3a3a3c]/50 rounded-2xl px-3 py-2">
@@ -1060,19 +1061,19 @@ export function CardDetailPanel({ card, onClose }: Props) {
 
                       return (
                         <div key={`comment-${c.id}`} className="flex gap-2">
-                          {/* Avatar — no thread line, bridge line in content column handles it */}
-                          <div className="shrink-0 w-5 flex justify-center">
+                          {/* Avatar — z-10 to stay above connector lines */}
+                          <div className="shrink-0 w-5 flex justify-center relative z-10">
                             <div className="w-5 h-5 rounded-full bg-[#0071e3]/10 text-primary text-[10px] font-bold flex items-center justify-center">
                               {(author?.name || '?').charAt(0)}
                             </div>
                           </div>
                           {/* Content column */}
                           <div className="flex-1 min-w-0 relative">
-                            {/* Bridge line from avatar center down through all replies */}
+                            {/* Bridge line from below avatar down through all replies */}
                             {!isCollapsed && (c.replies || []).length > 0 && (
                               <div
                                 className="absolute w-[2px] bg-[#d1d1d6] dark:bg-[#636366]"
-                                style={{ left: -CO, top: AC, bottom: 0 }}
+                                style={{ left: -CO, top: AV, bottom: 0 }}
                               />
                             )}
                             <div className="bg-white dark:bg-[#2c2c2e] rounded-lg p-2.5 shadow-sm">
