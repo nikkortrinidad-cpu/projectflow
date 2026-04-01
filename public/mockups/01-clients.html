@@ -8,134 +8,108 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; background: #f5f5f7; color: #1d1d1f; }
 
-  /* Header */
-  .header {
-    background: rgba(255,255,255,0.72);
-    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(0,0,0,0.08);
-    padding: 0 32px; height: 56px;
-    display: flex; align-items: center; justify-content: space-between;
-    position: sticky; top: 0; z-index: 100;
-  }
+  .header { background: rgba(255,255,255,0.72); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid rgba(0,0,0,0.08); padding: 0 32px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
   .header-left { display: flex; align-items: center; gap: 12px; }
-  .header-logo { font-size: 18px; font-weight: 700; color: #1d1d1f; }
+  .header-logo { font-size: 18px; font-weight: 700; }
   .header-right { display: flex; align-items: center; gap: 16px; }
   .header-icon { width: 36px; height: 36px; border-radius: 50%; background: #e8e8ed; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; color: #636366; }
   .avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #0071e3, #40a0ff); color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; }
 
   .page { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
-  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
-  .page-title { font-size: 28px; font-weight: 700; color: #1d1d1f; }
-  .page-subtitle { font-size: 15px; color: #86868b; margin-top: 4px; }
+  .page-title { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+  .page-subtitle { font-size: 15px; color: #86868b; margin-bottom: 28px; }
 
-  /* Toolbar */
   .toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
-  .search-box {
-    flex: 1; max-width: 360px; padding: 10px 16px 10px 40px;
-    border: 1px solid #d2d2d7; border-radius: 10px; font-size: 14px;
-    background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2386868b' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242.656a5 5 0 1 1 0-10 5 5 0 0 1 0 10z'/%3E%3C/svg%3E") 14px center no-repeat;
-    outline: none;
-  }
+  .search-box { flex: 1; max-width: 360px; padding: 10px 16px 10px 40px; border: 1px solid #d2d2d7; border-radius: 10px; font-size: 14px; background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2386868b' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242.656a5 5 0 1 1 0-10 5 5 0 0 1 0 10z'/%3E%3C/svg%3E") 14px center no-repeat; outline: none; }
   .search-box:focus { border-color: #0071e3; box-shadow: 0 0 0 3px rgba(0,113,227,0.15); }
-  .btn-primary { padding: 10px 20px; background: #0071e3; color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .btn-primary { padding: 10px 20px; background: #0071e3; color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; }
   .btn-primary:hover { background: #0077ed; }
-  .filter-btn { padding: 10px 16px; background: white; border: 1px solid #d2d2d7; border-radius: 10px; font-size: 14px; color: #1d1d1f; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .filter-btn { padding: 10px 16px; background: white; border: 1px solid #d2d2d7; border-radius: 10px; font-size: 14px; color: #1d1d1f; cursor: pointer; }
   .filter-btn:hover { background: #f5f5f7; }
 
-  /* Service Filter Chips */
   .service-filters { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
   .service-filters-label { font-size: 13px; font-weight: 600; color: #86868b; margin-right: 4px; }
-  .service-filter-chip { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 500; border: 1px solid #d2d2d7; background: white; color: #636366; cursor: pointer; }
-  .service-filter-chip:hover { border-color: #aeaeb2; background: #f5f5f7; }
-  .service-filter-chip.active { background: #0071e3; color: white; border-color: #0071e3; }
-  .chip-count { margin-left: 4px; opacity: 0.7; }
+  .sf-chip { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 500; border: 1px solid #d2d2d7; background: white; color: #636366; cursor: pointer; }
+  .sf-chip:hover { border-color: #aeaeb2; background: #f5f5f7; }
+  .sf-chip.on { background: #0071e3; color: white; border-color: #0071e3; }
 
-  /* Tabs */
-  .tabs { display: flex; gap: 0; margin-bottom: 24px; border-bottom: 2px solid #e8e8ed; }
+  .tabs { display: flex; margin-bottom: 24px; border-bottom: 2px solid #e8e8ed; }
   .tab { padding: 10px 20px; font-size: 14px; font-weight: 500; color: #86868b; cursor: pointer; border: none; border-bottom: 2px solid transparent; margin-bottom: -2px; background: none; display: flex; align-items: center; gap: 6px; }
   .tab:hover { color: #1d1d1f; }
-  .tab.active { color: #0071e3; border-bottom-color: #0071e3; font-weight: 600; }
+  .tab.on { color: #0071e3; border-bottom-color: #0071e3; font-weight: 600; }
   .tab-count { padding: 1px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; background: #e8e8ed; color: #636366; }
-  .tab.active .tab-count { background: #e8f0ff; color: #0071e3; }
+  .tab.on .tab-count { background: #e8f0ff; color: #0071e3; }
 
-  /* Tab Content */
-  .tab-content { display: none; }
-  .tab-content.active { display: block; }
+  .tp { display: none; }
+  .tp.on { display: block; }
 
-  /* Client Cards Grid */
-  .clients-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
 
-  .client-card {
+  /* Card is a div, not an anchor */
+  .card {
     background: white; border-radius: 16px; padding: 20px;
-    cursor: pointer; transition: all 0.2s ease;
     border: 1px solid rgba(0,0,0,0.04); box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    text-decoration: none; color: inherit; display: block;
-    overflow: hidden;
+    cursor: pointer; transition: all 0.2s;
   }
-  .client-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); transform: translateY(-2px); border-color: #0071e3; }
+  .card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); transform: translateY(-2px); border-color: #0071e3; }
 
-  /* Card Header: avatar+name on left, status+menu on right */
-  .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
-  .client-avatar { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: white; flex-shrink: 0; }
-  .card-header-info { flex: 1; min-width: 0; }
-  .client-name { font-size: 16px; font-weight: 600; color: #1d1d1f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .client-company { font-size: 12px; color: #86868b; margin-top: 1px; }
-  .card-header-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .card-av { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: white; flex-shrink: 0; }
+  .card-info { flex: 1; min-width: 0; }
+  .card-name { font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-sub { font-size: 12px; color: #86868b; margin-top: 1px; }
+  .card-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 
-  /* Status badge */
-  .status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 6px; font-size: 11px; font-weight: 600; }
-  .status-active { background: #e8f8ee; color: #1a8d44; }
-  .status-paused { background: #fff4e5; color: #b35c00; }
-  .status-archived { background: #f0f0f2; color: #86868b; }
-  .status-dot { width: 6px; height: 6px; border-radius: 50%; }
-  .status-active .status-dot { background: #34c759; }
-  .status-paused .status-dot { background: #ff9500; }
-  .status-archived .status-dot { background: #aeaeb2; }
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+  .b-active { background: #e8f8ee; color: #1a8d44; }
+  .b-paused { background: #fff4e5; color: #b35c00; }
+  .b-archived { background: #f0f0f2; color: #86868b; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+  .b-active .dot { background: #34c759; }
+  .b-paused .dot { background: #ff9500; }
+  .b-archived .dot { background: #aeaeb2; }
 
-  /* 3-dot menu button */
-  .menu-btn {
-    width: 28px; height: 28px; border-radius: 6px; border: none; background: transparent;
-    cursor: pointer; font-size: 18px; color: #aeaeb2; display: flex; align-items: center; justify-content: center;
-    position: relative;
-  }
-  .menu-btn:hover { background: #f0f0f2; color: #636366; }
-
-  /* Dropdown */
-  .dropdown {
-    display: none; position: absolute; top: 30px; right: 0; z-index: 50;
+  /* 3-dot menu - uses a wrapper div to contain the dropdown */
+  .menu-wrap { position: relative; display: inline-flex; }
+  .menu-trigger { width: 28px; height: 28px; border-radius: 6px; border: none; background: transparent; cursor: pointer; font-size: 18px; color: #aeaeb2; display: flex; align-items: center; justify-content: center; }
+  .menu-trigger:hover { background: #f0f0f2; color: #636366; }
+  .menu-drop {
+    display: none; position: absolute; top: 32px; right: 0; z-index: 999;
     background: white; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     border: 1px solid rgba(0,0,0,0.08); min-width: 170px; padding: 4px;
+    white-space: nowrap;
   }
-  .dropdown.show { display: block; }
-  .dd-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 6px; font-size: 13px; color: #1d1d1f; cursor: pointer; border: none; background: none; width: 100%; text-align: left; }
-  .dd-item:hover { background: #f5f5f7; }
-  .dd-item.checked { color: #0071e3; font-weight: 600; }
-  .dd-item.muted { color: #86868b; }
-  .dd-divider { height: 1px; background: #f0f0f2; margin: 4px 0; }
+  .menu-drop.open { display: block; }
+  .menu-drop div {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border-radius: 6px; font-size: 13px; color: #1d1d1f;
+    cursor: pointer;
+  }
+  .menu-drop div:hover { background: #f5f5f7; }
+  .menu-drop div.ck { color: #0071e3; font-weight: 600; }
+  .menu-drop div.mt { color: #86868b; }
+  .menu-drop hr { border: none; height: 1px; background: #f0f0f2; margin: 4px 0; }
 
-  /* Stats */
-  .client-stats { display: flex; gap: 20px; padding-top: 12px; border-top: 1px solid #f0f0f2; }
-  .stat-value { font-size: 18px; font-weight: 700; color: #1d1d1f; }
-  .stat-label { font-size: 11px; color: #86868b; margin-top: 1px; }
+  .card-stats { display: flex; gap: 20px; padding-top: 12px; border-top: 1px solid #f0f0f2; }
+  .sv { font-size: 18px; font-weight: 700; }
+  .sl { font-size: 11px; color: #86868b; margin-top: 1px; }
 
-  /* Service Tags */
-  .client-services { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; }
-  .service-tag { padding: 2px 8px; border-radius: 5px; font-size: 11px; font-weight: 500; }
-  .tag-web { background: #e8f0ff; color: #0055b3; }
-  .tag-mobile { background: #f0e8ff; color: #5856d6; }
-  .tag-seo { background: #e8f8ee; color: #1a8d44; }
-  .tag-cloud { background: #fff4e5; color: #b35c00; }
-  .tag-design { background: #ffe5e5; color: #d63030; }
-  .tag-content { background: #fdf2e9; color: #9a5c2e; }
-  .tag-social { background: #e8f8f5; color: #0e7c6b; }
-  .tag-branding { background: #fce8f3; color: #a3366b; }
+  .tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; }
+  .tg { padding: 2px 8px; border-radius: 5px; font-size: 11px; font-weight: 500; }
+  .tg-web { background: #e8f0ff; color: #0055b3; }
+  .tg-mobile { background: #f0e8ff; color: #5856d6; }
+  .tg-seo { background: #e8f8ee; color: #1a8d44; }
+  .tg-cloud { background: #fff4e5; color: #b35c00; }
+  .tg-design { background: #ffe5e5; color: #d63030; }
+  .tg-content { background: #fdf2e9; color: #9a5c2e; }
+  .tg-social { background: #e8f8f5; color: #0e7c6b; }
+  .tg-branding { background: #fce8f3; color: #a3366b; }
 
-  /* Archived */
-  .client-card.archived { opacity: 0.6; }
-  .client-card.archived:hover { opacity: 0.85; border-color: #aeaeb2; }
-  .archived-date { font-size: 11px; color: #aeaeb2; margin-top: 10px; }
-  .restore-btn { padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 500; border: 1px solid #d2d2d7; background: white; color: #0071e3; cursor: pointer; margin-top: 10px; display: inline-flex; align-items: center; gap: 4px; }
-  .restore-btn:hover { background: #e8f0ff; border-color: #0071e3; }
+  .card.dim { opacity: 0.6; }
+  .card.dim:hover { opacity: 0.85; border-color: #aeaeb2; }
+  .arch-date { font-size: 11px; color: #aeaeb2; margin-top: 10px; }
+  .restore { padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 500; border: 1px solid #d2d2d7; background: white; color: #0071e3; cursor: pointer; margin-top: 10px; }
+  .restore:hover { background: #e8f0ff; border-color: #0071e3; }
 
   .nav-hint { text-align: center; padding: 40px 20px; color: #86868b; font-size: 14px; }
   .nav-hint a { color: #0071e3; text-decoration: none; font-weight: 500; }
@@ -145,19 +119,12 @@
 
 <div class="header">
   <div class="header-left"><div class="header-logo">ProjectFlow</div></div>
-  <div class="header-right">
-    <div class="header-icon">🔔</div>
-    <div class="avatar">NT</div>
-  </div>
+  <div class="header-right"><div class="header-icon">🔔</div><div class="avatar">NT</div></div>
 </div>
 
 <div class="page">
-  <div class="page-header">
-    <div>
-      <div class="page-title">Clients</div>
-      <div class="page-subtitle">6 active clients</div>
-    </div>
-  </div>
+  <div class="page-title">Clients</div>
+  <div class="page-subtitle">6 active clients</div>
 
   <div class="toolbar">
     <input type="text" class="search-box" placeholder="Search clients...">
@@ -168,290 +135,246 @@
 
   <div class="service-filters">
     <span class="service-filters-label">Filter by service:</span>
-    <button class="service-filter-chip active" onclick="filterService(this,'all')">All</button>
-    <button class="service-filter-chip" onclick="filterService(this,'web')">🌐 Web<span class="chip-count">(4)</span></button>
-    <button class="service-filter-chip" onclick="filterService(this,'mobile')">📱 Mobile<span class="chip-count">(2)</span></button>
-    <button class="service-filter-chip" onclick="filterService(this,'seo')">📊 SEO<span class="chip-count">(3)</span></button>
-    <button class="service-filter-chip" onclick="filterService(this,'cloud')">🛡️ Cloud<span class="chip-count">(2)</span></button>
-    <button class="service-filter-chip" onclick="filterService(this,'design')">🎨 Design<span class="chip-count">(3)</span></button>
-    <button class="service-filter-chip" onclick="filterService(this,'content')">✏️ Content<span class="chip-count">(2)</span></button>
-    <button class="service-filter-chip" onclick="filterService(this,'social')">📣 Social<span class="chip-count">(1)</span></button>
-    <button class="service-filter-chip" onclick="filterService(this,'branding')">🏷️ Branding<span class="chip-count">(2)</span></button>
+    <button class="sf-chip on" onclick="doFilter(this,'all')">All</button>
+    <button class="sf-chip" onclick="doFilter(this,'web')">🌐 Web (4)</button>
+    <button class="sf-chip" onclick="doFilter(this,'mobile')">📱 Mobile (2)</button>
+    <button class="sf-chip" onclick="doFilter(this,'seo')">📊 SEO (3)</button>
+    <button class="sf-chip" onclick="doFilter(this,'cloud')">🛡️ Cloud (2)</button>
+    <button class="sf-chip" onclick="doFilter(this,'design')">🎨 Design (3)</button>
+    <button class="sf-chip" onclick="doFilter(this,'content')">✏️ Content (2)</button>
+    <button class="sf-chip" onclick="doFilter(this,'social')">📣 Social (1)</button>
+    <button class="sf-chip" onclick="doFilter(this,'branding')">🏷️ Branding (2)</button>
   </div>
 
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('active',this)">Active Clients <span class="tab-count">6</span></button>
-    <button class="tab" onclick="switchTab('archived',this)">Archived <span class="tab-count">2</span></button>
+    <button class="tab on" onclick="doTab('active',this)">Active Clients <span class="tab-count">6</span></button>
+    <button class="tab" onclick="doTab('archived',this)">Archived <span class="tab-count">2</span></button>
   </div>
 
-  <!-- ACTIVE -->
-  <div class="tab-content active" id="tab-active">
-    <div class="clients-grid">
+  <!-- ACTIVE TAB -->
+  <div class="tp on" id="tp-active">
+    <div class="grid">
 
-      <a href="02-services.html" class="client-card" data-services="web,mobile,seo,cloud">
-        <div class="card-header">
-          <div class="client-avatar" style="background:linear-gradient(135deg,#0071e3,#40a0ff);">AC</div>
-          <div class="card-header-info">
-            <div class="client-name">Acme Corporation</div>
-            <div class="client-company">Technology · San Francisco</div>
-          </div>
-          <div class="card-header-right">
-            <div class="status-badge status-active"><div class="status-dot"></div>Active</div>
-            <button class="menu-btn" onclick="event.preventDefault();event.stopPropagation();toggleMenu(this);">⋯
-              <div class="dropdown">
-                <button class="dd-item checked" onclick="event.stopPropagation();">✓ Active</button>
-                <button class="dd-item" onclick="event.stopPropagation();">⏸ Paused</button>
-                <div class="dd-divider"></div>
-                <button class="dd-item muted" onclick="event.stopPropagation();">📦 Archive Client</button>
+      <div class="card" data-s="web,mobile,seo,cloud" onclick="location.href='02-services.html'">
+        <div class="card-head">
+          <div class="card-av" style="background:linear-gradient(135deg,#0071e3,#40a0ff)">AC</div>
+          <div class="card-info"><div class="card-name">Acme Corporation</div><div class="card-sub">Technology · San Francisco</div></div>
+          <div class="card-right">
+            <span class="badge b-active"><span class="dot"></span>Active</span>
+            <div class="menu-wrap">
+              <div class="menu-trigger" onclick="event.stopPropagation();openMenu(this)">⋯</div>
+              <div class="menu-drop">
+                <div class="ck" onclick="event.stopPropagation()">✓ Active</div>
+                <div onclick="event.stopPropagation()">⏸ Paused</div>
+                <hr>
+                <div class="mt" onclick="event.stopPropagation()">📦 Archive Client</div>
               </div>
-            </button>
+            </div>
           </div>
         </div>
-        <div class="client-stats">
-          <div><div class="stat-value">4</div><div class="stat-label">Services</div></div>
-          <div><div class="stat-value">23</div><div class="stat-label">Active Tasks</div></div>
+        <div class="card-stats">
+          <div><div class="sv">4</div><div class="sl">Services</div></div>
+          <div><div class="sv">23</div><div class="sl">Active Tasks</div></div>
         </div>
-        <div class="client-services">
-          <span class="service-tag tag-web">🌐 Web</span>
-          <span class="service-tag tag-mobile">📱 Mobile</span>
-          <span class="service-tag tag-seo">📊 SEO</span>
-          <span class="service-tag tag-cloud">🛡️ Cloud</span>
+        <div class="tags">
+          <span class="tg tg-web">🌐 Web</span><span class="tg tg-mobile">📱 Mobile</span><span class="tg tg-seo">📊 SEO</span><span class="tg tg-cloud">🛡️ Cloud</span>
         </div>
-      </a>
-
-      <a href="02-services.html" class="client-card" data-services="design,branding">
-        <div class="card-header">
-          <div class="client-avatar" style="background:linear-gradient(135deg,#ff6b6b,#ff8e8e);">GL</div>
-          <div class="card-header-info">
-            <div class="client-name">GreenLeaf Studios</div>
-            <div class="client-company">Design Agency · Austin</div>
-          </div>
-          <div class="card-header-right">
-            <div class="status-badge status-active"><div class="status-dot"></div>Active</div>
-            <button class="menu-btn" onclick="event.preventDefault();event.stopPropagation();toggleMenu(this);">⋯
-              <div class="dropdown">
-                <button class="dd-item checked" onclick="event.stopPropagation();">✓ Active</button>
-                <button class="dd-item" onclick="event.stopPropagation();">⏸ Paused</button>
-                <div class="dd-divider"></div>
-                <button class="dd-item muted" onclick="event.stopPropagation();">📦 Archive Client</button>
-              </div>
-            </button>
-          </div>
-        </div>
-        <div class="client-stats">
-          <div><div class="stat-value">2</div><div class="stat-label">Services</div></div>
-          <div><div class="stat-value">11</div><div class="stat-label">Active Tasks</div></div>
-        </div>
-        <div class="client-services">
-          <span class="service-tag tag-design">🎨 Design</span>
-          <span class="service-tag tag-branding">🏷️ Branding</span>
-        </div>
-      </a>
-
-      <a href="02-services.html" class="client-card" data-services="web,seo,content">
-        <div class="card-header">
-          <div class="client-avatar" style="background:linear-gradient(135deg,#5856d6,#7a79e0);">NV</div>
-          <div class="card-header-info">
-            <div class="client-name">Nova Ventures</div>
-            <div class="client-company">Finance · New York</div>
-          </div>
-          <div class="card-header-right">
-            <div class="status-badge status-active"><div class="status-dot"></div>Active</div>
-            <button class="menu-btn" onclick="event.preventDefault();event.stopPropagation();toggleMenu(this);">⋯
-              <div class="dropdown">
-                <button class="dd-item checked" onclick="event.stopPropagation();">✓ Active</button>
-                <button class="dd-item" onclick="event.stopPropagation();">⏸ Paused</button>
-                <div class="dd-divider"></div>
-                <button class="dd-item muted" onclick="event.stopPropagation();">📦 Archive Client</button>
-              </div>
-            </button>
-          </div>
-        </div>
-        <div class="client-stats">
-          <div><div class="stat-value">3</div><div class="stat-label">Services</div></div>
-          <div><div class="stat-value">18</div><div class="stat-label">Active Tasks</div></div>
-        </div>
-        <div class="client-services">
-          <span class="service-tag tag-web">🌐 Web</span>
-          <span class="service-tag tag-seo">📊 SEO</span>
-          <span class="service-tag tag-content">✏️ Content</span>
-        </div>
-      </a>
-
-      <a href="02-services.html" class="client-card" data-services="web,content">
-        <div class="card-header">
-          <div class="client-avatar" style="background:linear-gradient(135deg,#ff9500,#ffb340);">BR</div>
-          <div class="card-header-info">
-            <div class="client-name">BrightPath Education</div>
-            <div class="client-company">EdTech · Seattle</div>
-          </div>
-          <div class="card-header-right">
-            <div class="status-badge status-paused"><div class="status-dot"></div>Paused</div>
-            <button class="menu-btn" onclick="event.preventDefault();event.stopPropagation();toggleMenu(this);">⋯
-              <div class="dropdown">
-                <button class="dd-item" onclick="event.stopPropagation();">✓ Active</button>
-                <button class="dd-item checked" onclick="event.stopPropagation();">⏸ Paused</button>
-                <div class="dd-divider"></div>
-                <button class="dd-item muted" onclick="event.stopPropagation();">📦 Archive Client</button>
-              </div>
-            </button>
-          </div>
-        </div>
-        <div class="client-stats">
-          <div><div class="stat-value">1</div><div class="stat-label">Services</div></div>
-          <div><div class="stat-value">7</div><div class="stat-label">Active Tasks</div></div>
-        </div>
-        <div class="client-services">
-          <span class="service-tag tag-web">🌐 Web</span>
-          <span class="service-tag tag-content">✏️ Content</span>
-        </div>
-      </a>
-
-      <a href="02-services.html" class="client-card" data-services="design,mobile,cloud">
-        <div class="card-header">
-          <div class="client-avatar" style="background:linear-gradient(135deg,#34c759,#5dd87a);">SP</div>
-          <div class="card-header-info">
-            <div class="client-name">SpringBoard Health</div>
-            <div class="client-company">Healthcare · Chicago</div>
-          </div>
-          <div class="card-header-right">
-            <div class="status-badge status-active"><div class="status-dot"></div>Active</div>
-            <button class="menu-btn" onclick="event.preventDefault();event.stopPropagation();toggleMenu(this);">⋯
-              <div class="dropdown">
-                <button class="dd-item checked" onclick="event.stopPropagation();">✓ Active</button>
-                <button class="dd-item" onclick="event.stopPropagation();">⏸ Paused</button>
-                <div class="dd-divider"></div>
-                <button class="dd-item muted" onclick="event.stopPropagation();">📦 Archive Client</button>
-              </div>
-            </button>
-          </div>
-        </div>
-        <div class="client-stats">
-          <div><div class="stat-value">3</div><div class="stat-label">Services</div></div>
-          <div><div class="stat-value">14</div><div class="stat-label">Active Tasks</div></div>
-        </div>
-        <div class="client-services">
-          <span class="service-tag tag-design">🎨 Design</span>
-          <span class="service-tag tag-mobile">📱 Mobile</span>
-          <span class="service-tag tag-cloud">🛡️ Cloud</span>
-        </div>
-      </a>
-
-      <a href="02-services.html" class="client-card" data-services="design,branding,social,seo">
-        <div class="card-header">
-          <div class="client-avatar" style="background:linear-gradient(135deg,#af52de,#c77dea);">LX</div>
-          <div class="card-header-info">
-            <div class="client-name">Luxe Interiors</div>
-            <div class="client-company">Interior Design · Miami</div>
-          </div>
-          <div class="card-header-right">
-            <div class="status-badge status-active"><div class="status-dot"></div>Active</div>
-            <button class="menu-btn" onclick="event.preventDefault();event.stopPropagation();toggleMenu(this);">⋯
-              <div class="dropdown">
-                <button class="dd-item checked" onclick="event.stopPropagation();">✓ Active</button>
-                <button class="dd-item" onclick="event.stopPropagation();">⏸ Paused</button>
-                <div class="dd-divider"></div>
-                <button class="dd-item muted" onclick="event.stopPropagation();">📦 Archive Client</button>
-              </div>
-            </button>
-          </div>
-        </div>
-        <div class="client-stats">
-          <div><div class="stat-value">2</div><div class="stat-label">Services</div></div>
-          <div><div class="stat-value">9</div><div class="stat-label">Active Tasks</div></div>
-        </div>
-        <div class="client-services">
-          <span class="service-tag tag-design">🎨 Design</span>
-          <span class="service-tag tag-branding">🏷️ Branding</span>
-          <span class="service-tag tag-social">📣 Social</span>
-          <span class="service-tag tag-seo">📊 SEO</span>
-        </div>
-      </a>
-
-    </div>
-  </div>
-
-  <!-- ARCHIVED -->
-  <div class="tab-content" id="tab-archived">
-    <div class="clients-grid">
-
-      <div class="client-card archived">
-        <div class="card-header">
-          <div class="client-avatar" style="background:linear-gradient(135deg,#8e8e93,#aeaeb2);">ZP</div>
-          <div class="card-header-info">
-            <div class="client-name">Zenith Properties</div>
-            <div class="client-company">Real Estate · Denver</div>
-          </div>
-          <div class="card-header-right">
-            <div class="status-badge status-archived"><div class="status-dot"></div>Archived</div>
-          </div>
-        </div>
-        <div class="client-stats">
-          <div><div class="stat-value">2</div><div class="stat-label">Services</div></div>
-          <div><div class="stat-value">0</div><div class="stat-label">Active Tasks</div></div>
-        </div>
-        <div class="archived-date">Archived Dec 2025</div>
-        <button class="restore-btn">↩ Restore</button>
       </div>
 
-      <div class="client-card archived">
-        <div class="card-header">
-          <div class="client-avatar" style="background:linear-gradient(135deg,#8e8e93,#aeaeb2);">CT</div>
-          <div class="card-header-info">
-            <div class="client-name">ClearTrack Logistics</div>
-            <div class="client-company">Logistics · Portland</div>
-          </div>
-          <div class="card-header-right">
-            <div class="status-badge status-archived"><div class="status-dot"></div>Archived</div>
+      <div class="card" data-s="design,branding" onclick="location.href='02-services.html'">
+        <div class="card-head">
+          <div class="card-av" style="background:linear-gradient(135deg,#ff6b6b,#ff8e8e)">GL</div>
+          <div class="card-info"><div class="card-name">GreenLeaf Studios</div><div class="card-sub">Design Agency · Austin</div></div>
+          <div class="card-right">
+            <span class="badge b-active"><span class="dot"></span>Active</span>
+            <div class="menu-wrap">
+              <div class="menu-trigger" onclick="event.stopPropagation();openMenu(this)">⋯</div>
+              <div class="menu-drop">
+                <div class="ck" onclick="event.stopPropagation()">✓ Active</div>
+                <div onclick="event.stopPropagation()">⏸ Paused</div>
+                <hr>
+                <div class="mt" onclick="event.stopPropagation()">📦 Archive Client</div>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="client-stats">
-          <div><div class="stat-value">1</div><div class="stat-label">Services</div></div>
-          <div><div class="stat-value">0</div><div class="stat-label">Active Tasks</div></div>
+        <div class="card-stats">
+          <div><div class="sv">2</div><div class="sl">Services</div></div>
+          <div><div class="sv">11</div><div class="sl">Active Tasks</div></div>
         </div>
-        <div class="archived-date">Archived Oct 2025</div>
-        <button class="restore-btn">↩ Restore</button>
+        <div class="tags">
+          <span class="tg tg-design">🎨 Design</span><span class="tg tg-branding">🏷️ Branding</span>
+        </div>
+      </div>
+
+      <div class="card" data-s="web,seo,content" onclick="location.href='02-services.html'">
+        <div class="card-head">
+          <div class="card-av" style="background:linear-gradient(135deg,#5856d6,#7a79e0)">NV</div>
+          <div class="card-info"><div class="card-name">Nova Ventures</div><div class="card-sub">Finance · New York</div></div>
+          <div class="card-right">
+            <span class="badge b-active"><span class="dot"></span>Active</span>
+            <div class="menu-wrap">
+              <div class="menu-trigger" onclick="event.stopPropagation();openMenu(this)">⋯</div>
+              <div class="menu-drop">
+                <div class="ck" onclick="event.stopPropagation()">✓ Active</div>
+                <div onclick="event.stopPropagation()">⏸ Paused</div>
+                <hr>
+                <div class="mt" onclick="event.stopPropagation()">📦 Archive Client</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-stats">
+          <div><div class="sv">3</div><div class="sl">Services</div></div>
+          <div><div class="sv">18</div><div class="sl">Active Tasks</div></div>
+        </div>
+        <div class="tags">
+          <span class="tg tg-web">🌐 Web</span><span class="tg tg-seo">📊 SEO</span><span class="tg tg-content">✏️ Content</span>
+        </div>
+      </div>
+
+      <div class="card" data-s="web,content" onclick="location.href='02-services.html'">
+        <div class="card-head">
+          <div class="card-av" style="background:linear-gradient(135deg,#ff9500,#ffb340)">BR</div>
+          <div class="card-info"><div class="card-name">BrightPath Education</div><div class="card-sub">EdTech · Seattle</div></div>
+          <div class="card-right">
+            <span class="badge b-paused"><span class="dot"></span>Paused</span>
+            <div class="menu-wrap">
+              <div class="menu-trigger" onclick="event.stopPropagation();openMenu(this)">⋯</div>
+              <div class="menu-drop">
+                <div onclick="event.stopPropagation()">✓ Active</div>
+                <div class="ck" onclick="event.stopPropagation()">⏸ Paused</div>
+                <hr>
+                <div class="mt" onclick="event.stopPropagation()">📦 Archive Client</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-stats">
+          <div><div class="sv">1</div><div class="sl">Services</div></div>
+          <div><div class="sv">7</div><div class="sl">Active Tasks</div></div>
+        </div>
+        <div class="tags">
+          <span class="tg tg-web">🌐 Web</span><span class="tg tg-content">✏️ Content</span>
+        </div>
+      </div>
+
+      <div class="card" data-s="design,mobile,cloud" onclick="location.href='02-services.html'">
+        <div class="card-head">
+          <div class="card-av" style="background:linear-gradient(135deg,#34c759,#5dd87a)">SP</div>
+          <div class="card-info"><div class="card-name">SpringBoard Health</div><div class="card-sub">Healthcare · Chicago</div></div>
+          <div class="card-right">
+            <span class="badge b-active"><span class="dot"></span>Active</span>
+            <div class="menu-wrap">
+              <div class="menu-trigger" onclick="event.stopPropagation();openMenu(this)">⋯</div>
+              <div class="menu-drop">
+                <div class="ck" onclick="event.stopPropagation()">✓ Active</div>
+                <div onclick="event.stopPropagation()">⏸ Paused</div>
+                <hr>
+                <div class="mt" onclick="event.stopPropagation()">📦 Archive Client</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-stats">
+          <div><div class="sv">3</div><div class="sl">Services</div></div>
+          <div><div class="sv">14</div><div class="sl">Active Tasks</div></div>
+        </div>
+        <div class="tags">
+          <span class="tg tg-design">🎨 Design</span><span class="tg tg-mobile">📱 Mobile</span><span class="tg tg-cloud">🛡️ Cloud</span>
+        </div>
+      </div>
+
+      <div class="card" data-s="design,branding,social,seo" onclick="location.href='02-services.html'">
+        <div class="card-head">
+          <div class="card-av" style="background:linear-gradient(135deg,#af52de,#c77dea)">LX</div>
+          <div class="card-info"><div class="card-name">Luxe Interiors</div><div class="card-sub">Interior Design · Miami</div></div>
+          <div class="card-right">
+            <span class="badge b-active"><span class="dot"></span>Active</span>
+            <div class="menu-wrap">
+              <div class="menu-trigger" onclick="event.stopPropagation();openMenu(this)">⋯</div>
+              <div class="menu-drop">
+                <div class="ck" onclick="event.stopPropagation()">✓ Active</div>
+                <div onclick="event.stopPropagation()">⏸ Paused</div>
+                <hr>
+                <div class="mt" onclick="event.stopPropagation()">📦 Archive Client</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-stats">
+          <div><div class="sv">2</div><div class="sl">Services</div></div>
+          <div><div class="sv">9</div><div class="sl">Active Tasks</div></div>
+        </div>
+        <div class="tags">
+          <span class="tg tg-design">🎨 Design</span><span class="tg tg-branding">🏷️ Branding</span><span class="tg tg-social">📣 Social</span><span class="tg tg-seo">📊 SEO</span>
+        </div>
       </div>
 
     </div>
   </div>
 
-  <div class="nav-hint">
-    Click any client to see their services → <a href="02-services.html">Next: Services View</a>
+  <!-- ARCHIVED TAB -->
+  <div class="tp" id="tp-archived">
+    <div class="grid">
+
+      <div class="card dim">
+        <div class="card-head">
+          <div class="card-av" style="background:linear-gradient(135deg,#8e8e93,#aeaeb2)">ZP</div>
+          <div class="card-info"><div class="card-name">Zenith Properties</div><div class="card-sub">Real Estate · Denver</div></div>
+          <div class="card-right"><span class="badge b-archived"><span class="dot"></span>Archived</span></div>
+        </div>
+        <div class="card-stats">
+          <div><div class="sv">2</div><div class="sl">Services</div></div>
+          <div><div class="sv">0</div><div class="sl">Active Tasks</div></div>
+        </div>
+        <div class="arch-date">Archived Dec 2025</div>
+        <button class="restore" onclick="event.stopPropagation()">↩ Restore</button>
+      </div>
+
+      <div class="card dim">
+        <div class="card-head">
+          <div class="card-av" style="background:linear-gradient(135deg,#8e8e93,#aeaeb2)">CT</div>
+          <div class="card-info"><div class="card-name">ClearTrack Logistics</div><div class="card-sub">Logistics · Portland</div></div>
+          <div class="card-right"><span class="badge b-archived"><span class="dot"></span>Archived</span></div>
+        </div>
+        <div class="card-stats">
+          <div><div class="sv">1</div><div class="sl">Services</div></div>
+          <div><div class="sv">0</div><div class="sl">Active Tasks</div></div>
+        </div>
+        <div class="arch-date">Archived Oct 2025</div>
+        <button class="restore" onclick="event.stopPropagation()">↩ Restore</button>
+      </div>
+
+    </div>
   </div>
+
+  <div class="nav-hint">Click any client to see their services → <a href="02-services.html">Next: Services View</a></div>
 </div>
 
 <script>
-function switchTab(tab, btn) {
-  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
-  document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
-  document.getElementById('tab-' + tab).classList.add('active');
-  btn.classList.add('active');
+function doTab(id, btn) {
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on')});
+  document.querySelectorAll('.tp').forEach(function(t){t.classList.remove('on')});
+  btn.classList.add('on');
+  document.getElementById('tp-'+id).classList.add('on');
 }
-
-function filterService(btn, service) {
-  document.querySelectorAll('.service-filter-chip').forEach(function(c) { c.classList.remove('active'); });
-  btn.classList.add('active');
-  var cards = document.querySelectorAll('#tab-active .client-card');
-  cards.forEach(function(card) {
-    if (service === 'all') {
-      card.style.display = '';
-    } else {
-      var s = card.getAttribute('data-services') || '';
-      card.style.display = s.split(',').indexOf(service) >= 0 ? '' : 'none';
-    }
+function doFilter(btn, svc) {
+  document.querySelectorAll('.sf-chip').forEach(function(c){c.classList.remove('on')});
+  btn.classList.add('on');
+  document.querySelectorAll('#tp-active .card').forEach(function(c){
+    if(svc==='all'){c.style.display=''}
+    else{var s=c.getAttribute('data-s')||'';c.style.display=s.split(',').indexOf(svc)>=0?'':'none'}
   });
 }
-
-function toggleMenu(btn) {
-  var dd = btn.querySelector('.dropdown');
-  var wasOpen = dd.classList.contains('show');
-  document.querySelectorAll('.dropdown.show').forEach(function(d) { d.classList.remove('show'); });
-  if (!wasOpen) dd.classList.add('show');
+function openMenu(trigger) {
+  var drop = trigger.nextElementSibling;
+  var wasOpen = drop.classList.contains('open');
+  document.querySelectorAll('.menu-drop.open').forEach(function(d){d.classList.remove('open')});
+  if(!wasOpen) drop.classList.add('open');
 }
-
-document.addEventListener('click', function() {
-  document.querySelectorAll('.dropdown.show').forEach(function(d) { d.classList.remove('show'); });
+document.addEventListener('click', function(){
+  document.querySelectorAll('.menu-drop.open').forEach(function(d){d.classList.remove('open')});
 });
 </script>
 
