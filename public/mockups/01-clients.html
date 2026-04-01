@@ -153,7 +153,7 @@
     border-color: #0071e3;
   }
 
-  .client-top { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; flex: 1; }
+  .client-top { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; }
   .client-avatar {
     width: 48px; height: 48px; border-radius: 12px;
     display: flex; align-items: center; justify-content: center;
@@ -556,54 +556,46 @@
     <div class="clients-grid">
 
       <div class="client-card archived">
-        <div class="client-top">
-          <div class="client-avatar" style="background: linear-gradient(135deg, #8e8e93, #aeaeb2);">ZP</div>
-          <div>
-            <div class="client-name">Zenith Properties</div>
-            <div class="client-company">Real Estate · Denver</div>
+        <div class="card-top-row">
+          <div class="client-top">
+            <div class="client-avatar" style="background: linear-gradient(135deg, #8e8e93, #aeaeb2);">ZP</div>
+            <div>
+              <div class="client-name">Zenith Properties</div>
+              <div class="client-company">Real Estate · Denver</div>
+            </div>
+          </div>
+          <div class="card-top-right">
+            <div class="client-status-sm status-archived"><div class="status-dot"></div> Archived</div>
           </div>
         </div>
         <div class="client-stats">
-          <div class="stat">
-            <div class="stat-value">2</div>
-            <div class="stat-label">Services</div>
-          </div>
-          <div class="stat">
-            <div class="stat-value">0</div>
-            <div class="stat-label">Active Tasks</div>
-          </div>
+          <div class="stat"><div class="stat-value">2</div><div class="stat-label">Services</div></div>
+          <div class="stat"><div class="stat-value">0</div><div class="stat-label">Active Tasks</div></div>
         </div>
-        <div class="client-status status-archived">
-          <div class="status-dot"></div>
-          Archived · Dec 2025
-        </div>
+        <div style="font-size: 12px; color: #aeaeb2; margin-top: 10px;">Archived Dec 2025</div>
         <div class="card-actions-archived">
           <button class="restore-btn" onclick="event.preventDefault(); event.stopPropagation();">↩ Restore</button>
         </div>
       </div>
 
       <div class="client-card archived">
-        <div class="client-top">
-          <div class="client-avatar" style="background: linear-gradient(135deg, #8e8e93, #aeaeb2);">CT</div>
-          <div>
-            <div class="client-name">ClearTrack Logistics</div>
-            <div class="client-company">Logistics · Portland</div>
+        <div class="card-top-row">
+          <div class="client-top">
+            <div class="client-avatar" style="background: linear-gradient(135deg, #8e8e93, #aeaeb2);">CT</div>
+            <div>
+              <div class="client-name">ClearTrack Logistics</div>
+              <div class="client-company">Logistics · Portland</div>
+            </div>
+          </div>
+          <div class="card-top-right">
+            <div class="client-status-sm status-archived"><div class="status-dot"></div> Archived</div>
           </div>
         </div>
         <div class="client-stats">
-          <div class="stat">
-            <div class="stat-value">1</div>
-            <div class="stat-label">Services</div>
-          </div>
-          <div class="stat">
-            <div class="stat-value">0</div>
-            <div class="stat-label">Active Tasks</div>
-          </div>
+          <div class="stat"><div class="stat-value">1</div><div class="stat-label">Services</div></div>
+          <div class="stat"><div class="stat-value">0</div><div class="stat-label">Active Tasks</div></div>
         </div>
-        <div class="client-status status-archived">
-          <div class="status-dot"></div>
-          Archived · Oct 2025
-        </div>
+        <div style="font-size: 12px; color: #aeaeb2; margin-top: 10px;">Archived Oct 2025</div>
         <div class="card-actions-archived">
           <button class="restore-btn" onclick="event.preventDefault(); event.stopPropagation();">↩ Restore</button>
         </div>
