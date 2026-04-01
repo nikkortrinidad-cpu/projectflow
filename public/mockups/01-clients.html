@@ -152,7 +152,7 @@
     transform: translateY(-2px);
   }
 
-  .client-top { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+  .client-top { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; flex: 1; }
   .client-avatar {
     width: 48px; height: 48px; border-radius: 12px;
     display: flex; align-items: center; justify-content: center;
@@ -161,6 +161,57 @@
   }
   .client-name { font-size: 17px; font-weight: 600; color: #1d1d1f; }
   .client-company { font-size: 13px; color: #86868b; margin-top: 2px; }
+
+  /* Card Top Row (avatar + status + menu) */
+  .card-top-row {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .card-top-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+  /* Status badge (top right) */
+  .client-status-sm {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 6px;
+    font-size: 11px; font-weight: 600;
+  }
+
+  /* 3-dot menu */
+  .card-menu-btn {
+    width: 28px; height: 28px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent; border: none;
+    cursor: pointer; font-size: 16px; color: #aeaeb2;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .card-menu-btn:hover { background: #f0f0f2; color: #636366; }
+
+  /* Dropdown menu */
+  .card-dropdown {
+    display: none;
+    position: absolute; top: 32px; right: 0;
+    background: white; border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    border: 1px solid rgba(0,0,0,0.06);
+    min-width: 180px; z-index: 50;
+    padding: 6px;
+    overflow: hidden;
+  }
+  .card-dropdown.open { display: block; }
+  .dropdown-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border-radius: 6px;
+    font-size: 13px; color: #1d1d1f;
+    cursor: pointer; transition: background 0.1s;
+    border: none; background: none; width: 100%; text-align: left;
+  }
+  .dropdown-item:hover { background: #f5f5f7; }
+  .dropdown-item-icon { font-size: 14px; width: 20px; text-align: center; }
+  .dropdown-divider { height: 1px; background: #f0f0f2; margin: 4px 0; }
+  .dropdown-item.active-check { color: #0071e3; font-weight: 600; }
+  .dropdown-item.archive-item { color: #86868b; }
+  .dropdown-item.archive-item:hover { color: #1d1d1f; }
 
   .client-stats {
     display: flex; gap: 20px;
@@ -214,21 +265,10 @@
   }
   .tab.active .tab-count { background: #e8f0ff; color: #0071e3; }
 
-  /* Archive button on card */
-  .card-actions {
+  /* Restore button (archived cards) */
+  .card-actions-archived {
     display: flex; justify-content: flex-end; margin-top: 14px;
-    opacity: 0; transition: opacity 0.15s;
   }
-  .client-card:hover .card-actions { opacity: 1; }
-  .archive-btn {
-    padding: 5px 12px; border-radius: 6px;
-    font-size: 12px; font-weight: 500;
-    border: 1px solid #d2d2d7; background: white;
-    color: #86868b; cursor: pointer;
-    display: flex; align-items: center; gap: 4px;
-    transition: all 0.15s;
-  }
-  .archive-btn:hover { background: #f5f5f7; color: #1d1d1f; border-color: #aeaeb2; }
   .restore-btn {
     padding: 5px 12px; border-radius: 6px;
     font-size: 12px; font-weight: 500;
@@ -316,22 +356,29 @@
     <div class="clients-grid">
 
       <a href="02-services.html" class="client-card" data-services="web,mobile,seo,cloud">
-        <div class="client-top">
-          <div class="client-avatar" style="background: linear-gradient(135deg, #0071e3, #40a0ff);">AC</div>
-          <div>
-            <div class="client-name">Acme Corporation</div>
-            <div class="client-company">Technology · San Francisco</div>
+        <div class="card-top-row">
+          <div class="client-top">
+            <div class="client-avatar" style="background: linear-gradient(135deg, #0071e3, #40a0ff);">AC</div>
+            <div>
+              <div class="client-name">Acme Corporation</div>
+              <div class="client-company">Technology · San Francisco</div>
+            </div>
+          </div>
+          <div class="card-top-right">
+            <div class="client-status-sm status-active"><div class="status-dot"></div> Active</div>
+            <button class="card-menu-btn" onclick="event.preventDefault(); event.stopPropagation(); toggleMenu(this);">⋯
+              <div class="card-dropdown">
+                <button class="dropdown-item active-check" onclick="event.stopPropagation();"><span class="dropdown-item-icon">✓</span> Active</button>
+                <button class="dropdown-item" onclick="event.stopPropagation();"><span class="dropdown-item-icon">⏸</span> Paused</button>
+                <div class="dropdown-divider"></div>
+                <button class="dropdown-item archive-item" onclick="event.stopPropagation();"><span class="dropdown-item-icon">📦</span> Archive Client</button>
+              </div>
+            </button>
           </div>
         </div>
         <div class="client-stats">
-          <div class="stat">
-            <div class="stat-value">4</div>
-            <div class="stat-label">Services</div>
-          </div>
-          <div class="stat">
-            <div class="stat-value">23</div>
-            <div class="stat-label">Active Tasks</div>
-          </div>
+          <div class="stat"><div class="stat-value">4</div><div class="stat-label">Services</div></div>
+          <div class="stat"><div class="stat-value">23</div><div class="stat-label">Active Tasks</div></div>
         </div>
         <div class="client-services">
           <span class="service-tag tag-web">🌐 Web</span>
@@ -339,171 +386,164 @@
           <span class="service-tag tag-seo">📊 SEO</span>
           <span class="service-tag tag-cloud">🛡️ Cloud</span>
         </div>
-        <div class="client-status status-active">
-          <div class="status-dot"></div>
-          Active
-        </div>
-        <div class="card-actions">
-          <button class="archive-btn" onclick="event.preventDefault(); event.stopPropagation();">📦 Archive</button>
-        </div>
       </a>
 
       <a href="02-services.html" class="client-card" data-services="design,branding">
-        <div class="client-top">
-          <div class="client-avatar" style="background: linear-gradient(135deg, #ff6b6b, #ff8e8e);">GL</div>
-          <div>
-            <div class="client-name">GreenLeaf Studios</div>
-            <div class="client-company">Design Agency · Austin</div>
+        <div class="card-top-row">
+          <div class="client-top">
+            <div class="client-avatar" style="background: linear-gradient(135deg, #ff6b6b, #ff8e8e);">GL</div>
+            <div>
+              <div class="client-name">GreenLeaf Studios</div>
+              <div class="client-company">Design Agency · Austin</div>
+            </div>
+          </div>
+          <div class="card-top-right">
+            <div class="client-status-sm status-active"><div class="status-dot"></div> Active</div>
+            <button class="card-menu-btn" onclick="event.preventDefault(); event.stopPropagation(); toggleMenu(this);">⋯
+              <div class="card-dropdown">
+                <button class="dropdown-item active-check" onclick="event.stopPropagation();"><span class="dropdown-item-icon">✓</span> Active</button>
+                <button class="dropdown-item" onclick="event.stopPropagation();"><span class="dropdown-item-icon">⏸</span> Paused</button>
+                <div class="dropdown-divider"></div>
+                <button class="dropdown-item archive-item" onclick="event.stopPropagation();"><span class="dropdown-item-icon">📦</span> Archive Client</button>
+              </div>
+            </button>
           </div>
         </div>
         <div class="client-stats">
-          <div class="stat">
-            <div class="stat-value">2</div>
-            <div class="stat-label">Services</div>
-          </div>
-          <div class="stat">
-            <div class="stat-value">11</div>
-            <div class="stat-label">Active Tasks</div>
-          </div>
+          <div class="stat"><div class="stat-value">2</div><div class="stat-label">Services</div></div>
+          <div class="stat"><div class="stat-value">11</div><div class="stat-label">Active Tasks</div></div>
         </div>
         <div class="client-services">
           <span class="service-tag tag-design">🎨 Design</span>
           <span class="service-tag tag-branding">🏷️ Branding</span>
         </div>
-        <div class="client-status status-active">
-          <div class="status-dot"></div>
-          Active
-        </div>
-        <div class="card-actions">
-          <button class="archive-btn" onclick="event.preventDefault(); event.stopPropagation();">📦 Archive</button>
-        </div>
       </a>
 
       <a href="02-services.html" class="client-card" data-services="web,seo,content">
-        <div class="client-top">
-          <div class="client-avatar" style="background: linear-gradient(135deg, #5856d6, #7a79e0);">NV</div>
-          <div>
-            <div class="client-name">Nova Ventures</div>
-            <div class="client-company">Finance · New York</div>
+        <div class="card-top-row">
+          <div class="client-top">
+            <div class="client-avatar" style="background: linear-gradient(135deg, #5856d6, #7a79e0);">NV</div>
+            <div>
+              <div class="client-name">Nova Ventures</div>
+              <div class="client-company">Finance · New York</div>
+            </div>
+          </div>
+          <div class="card-top-right">
+            <div class="client-status-sm status-active"><div class="status-dot"></div> Active</div>
+            <button class="card-menu-btn" onclick="event.preventDefault(); event.stopPropagation(); toggleMenu(this);">⋯
+              <div class="card-dropdown">
+                <button class="dropdown-item active-check" onclick="event.stopPropagation();"><span class="dropdown-item-icon">✓</span> Active</button>
+                <button class="dropdown-item" onclick="event.stopPropagation();"><span class="dropdown-item-icon">⏸</span> Paused</button>
+                <div class="dropdown-divider"></div>
+                <button class="dropdown-item archive-item" onclick="event.stopPropagation();"><span class="dropdown-item-icon">📦</span> Archive Client</button>
+              </div>
+            </button>
           </div>
         </div>
         <div class="client-stats">
-          <div class="stat">
-            <div class="stat-value">3</div>
-            <div class="stat-label">Services</div>
-          </div>
-          <div class="stat">
-            <div class="stat-value">18</div>
-            <div class="stat-label">Active Tasks</div>
-          </div>
+          <div class="stat"><div class="stat-value">3</div><div class="stat-label">Services</div></div>
+          <div class="stat"><div class="stat-value">18</div><div class="stat-label">Active Tasks</div></div>
         </div>
         <div class="client-services">
           <span class="service-tag tag-web">🌐 Web</span>
           <span class="service-tag tag-seo">📊 SEO</span>
           <span class="service-tag tag-content">✏️ Content</span>
         </div>
-        <div class="client-status status-active">
-          <div class="status-dot"></div>
-          Active
-        </div>
-        <div class="card-actions">
-          <button class="archive-btn" onclick="event.preventDefault(); event.stopPropagation();">📦 Archive</button>
-        </div>
       </a>
 
       <a href="02-services.html" class="client-card" data-services="web,content">
-        <div class="client-top">
-          <div class="client-avatar" style="background: linear-gradient(135deg, #ff9500, #ffb340);">BR</div>
-          <div>
-            <div class="client-name">BrightPath Education</div>
-            <div class="client-company">EdTech · Seattle</div>
+        <div class="card-top-row">
+          <div class="client-top">
+            <div class="client-avatar" style="background: linear-gradient(135deg, #ff9500, #ffb340);">BR</div>
+            <div>
+              <div class="client-name">BrightPath Education</div>
+              <div class="client-company">EdTech · Seattle</div>
+            </div>
+          </div>
+          <div class="card-top-right">
+            <div class="client-status-sm status-paused"><div class="status-dot"></div> Paused</div>
+            <button class="card-menu-btn" onclick="event.preventDefault(); event.stopPropagation(); toggleMenu(this);">⋯
+              <div class="card-dropdown">
+                <button class="dropdown-item" onclick="event.stopPropagation();"><span class="dropdown-item-icon">✓</span> Active</button>
+                <button class="dropdown-item active-check" onclick="event.stopPropagation();"><span class="dropdown-item-icon">⏸</span> Paused</button>
+                <div class="dropdown-divider"></div>
+                <button class="dropdown-item archive-item" onclick="event.stopPropagation();"><span class="dropdown-item-icon">📦</span> Archive Client</button>
+              </div>
+            </button>
           </div>
         </div>
         <div class="client-stats">
-          <div class="stat">
-            <div class="stat-value">1</div>
-            <div class="stat-label">Services</div>
-          </div>
-          <div class="stat">
-            <div class="stat-value">7</div>
-            <div class="stat-label">Active Tasks</div>
-          </div>
+          <div class="stat"><div class="stat-value">1</div><div class="stat-label">Services</div></div>
+          <div class="stat"><div class="stat-value">7</div><div class="stat-label">Active Tasks</div></div>
         </div>
         <div class="client-services">
           <span class="service-tag tag-web">🌐 Web</span>
           <span class="service-tag tag-content">✏️ Content</span>
         </div>
-        <div class="client-status status-paused">
-          <div class="status-dot"></div>
-          Paused
-        </div>
-        <div class="card-actions">
-          <button class="archive-btn" onclick="event.preventDefault(); event.stopPropagation();">📦 Archive</button>
-        </div>
       </a>
 
       <a href="02-services.html" class="client-card" data-services="design,mobile,cloud">
-        <div class="client-top">
-          <div class="client-avatar" style="background: linear-gradient(135deg, #34c759, #5dd87a);">SP</div>
-          <div>
-            <div class="client-name">SpringBoard Health</div>
-            <div class="client-company">Healthcare · Chicago</div>
+        <div class="card-top-row">
+          <div class="client-top">
+            <div class="client-avatar" style="background: linear-gradient(135deg, #34c759, #5dd87a);">SP</div>
+            <div>
+              <div class="client-name">SpringBoard Health</div>
+              <div class="client-company">Healthcare · Chicago</div>
+            </div>
+          </div>
+          <div class="card-top-right">
+            <div class="client-status-sm status-active"><div class="status-dot"></div> Active</div>
+            <button class="card-menu-btn" onclick="event.preventDefault(); event.stopPropagation(); toggleMenu(this);">⋯
+              <div class="card-dropdown">
+                <button class="dropdown-item active-check" onclick="event.stopPropagation();"><span class="dropdown-item-icon">✓</span> Active</button>
+                <button class="dropdown-item" onclick="event.stopPropagation();"><span class="dropdown-item-icon">⏸</span> Paused</button>
+                <div class="dropdown-divider"></div>
+                <button class="dropdown-item archive-item" onclick="event.stopPropagation();"><span class="dropdown-item-icon">📦</span> Archive Client</button>
+              </div>
+            </button>
           </div>
         </div>
         <div class="client-stats">
-          <div class="stat">
-            <div class="stat-value">3</div>
-            <div class="stat-label">Services</div>
-          </div>
-          <div class="stat">
-            <div class="stat-value">14</div>
-            <div class="stat-label">Active Tasks</div>
-          </div>
+          <div class="stat"><div class="stat-value">3</div><div class="stat-label">Services</div></div>
+          <div class="stat"><div class="stat-value">14</div><div class="stat-label">Active Tasks</div></div>
         </div>
         <div class="client-services">
           <span class="service-tag tag-design">🎨 Design</span>
           <span class="service-tag tag-mobile">📱 Mobile</span>
           <span class="service-tag tag-cloud">🛡️ Cloud</span>
         </div>
-        <div class="client-status status-active">
-          <div class="status-dot"></div>
-          Active
-        </div>
-        <div class="card-actions">
-          <button class="archive-btn" onclick="event.preventDefault(); event.stopPropagation();">📦 Archive</button>
-        </div>
       </a>
 
       <a href="02-services.html" class="client-card" data-services="design,branding,social,seo">
-        <div class="client-top">
-          <div class="client-avatar" style="background: linear-gradient(135deg, #af52de, #c77dea);">LX</div>
-          <div>
-            <div class="client-name">Luxe Interiors</div>
-            <div class="client-company">Interior Design · Miami</div>
+        <div class="card-top-row">
+          <div class="client-top">
+            <div class="client-avatar" style="background: linear-gradient(135deg, #af52de, #c77dea);">LX</div>
+            <div>
+              <div class="client-name">Luxe Interiors</div>
+              <div class="client-company">Interior Design · Miami</div>
+            </div>
+          </div>
+          <div class="card-top-right">
+            <div class="client-status-sm status-active"><div class="status-dot"></div> Active</div>
+            <button class="card-menu-btn" onclick="event.preventDefault(); event.stopPropagation(); toggleMenu(this);">⋯
+              <div class="card-dropdown">
+                <button class="dropdown-item active-check" onclick="event.stopPropagation();"><span class="dropdown-item-icon">✓</span> Active</button>
+                <button class="dropdown-item" onclick="event.stopPropagation();"><span class="dropdown-item-icon">⏸</span> Paused</button>
+                <div class="dropdown-divider"></div>
+                <button class="dropdown-item archive-item" onclick="event.stopPropagation();"><span class="dropdown-item-icon">📦</span> Archive Client</button>
+              </div>
+            </button>
           </div>
         </div>
         <div class="client-stats">
-          <div class="stat">
-            <div class="stat-value">2</div>
-            <div class="stat-label">Services</div>
-          </div>
-          <div class="stat">
-            <div class="stat-value">9</div>
-            <div class="stat-label">Active Tasks</div>
-          </div>
+          <div class="stat"><div class="stat-value">2</div><div class="stat-label">Services</div></div>
+          <div class="stat"><div class="stat-value">9</div><div class="stat-label">Active Tasks</div></div>
         </div>
         <div class="client-services">
           <span class="service-tag tag-design">🎨 Design</span>
           <span class="service-tag tag-branding">🏷️ Branding</span>
           <span class="service-tag tag-social">📣 Social</span>
           <span class="service-tag tag-seo">📊 SEO</span>
-        </div>
-        <div class="client-status status-active">
-          <div class="status-dot"></div>
-          Active
-        </div>
-        <div class="card-actions">
-          <button class="archive-btn" onclick="event.preventDefault(); event.stopPropagation();">📦 Archive</button>
         </div>
       </a>
 
@@ -536,7 +576,7 @@
           <div class="status-dot"></div>
           Archived · Dec 2025
         </div>
-        <div class="card-actions" style="opacity: 1;">
+        <div class="card-actions-archived">
           <button class="restore-btn" onclick="event.preventDefault(); event.stopPropagation();">↩ Restore</button>
         </div>
       </div>
@@ -563,7 +603,7 @@
           <div class="status-dot"></div>
           Archived · Oct 2025
         </div>
-        <div class="card-actions" style="opacity: 1;">
+        <div class="card-actions-archived">
           <button class="restore-btn" onclick="event.preventDefault(); event.stopPropagation();">↩ Restore</button>
         </div>
       </div>
@@ -585,25 +625,31 @@
   }
 
   function filterService(btn, service) {
-    // Update active chip
     document.querySelectorAll('.service-filter-chip').forEach(c => c.classList.remove('active'));
     btn.classList.add('active');
-
-    // Filter cards in the active tab
     const cards = document.querySelectorAll('#tab-active .client-card');
     cards.forEach(card => {
       if (service === 'all') {
         card.style.display = '';
       } else {
         const services = card.getAttribute('data-services') || '';
-        if (services.split(',').includes(service)) {
-          card.style.display = '';
-        } else {
-          card.style.display = 'none';
-        }
+        card.style.display = services.split(',').includes(service) ? '' : 'none';
       }
     });
   }
+
+  function toggleMenu(btn) {
+    const dropdown = btn.querySelector('.card-dropdown');
+    const wasOpen = dropdown.classList.contains('open');
+    // Close all open menus first
+    document.querySelectorAll('.card-dropdown.open').forEach(d => d.classList.remove('open'));
+    if (!wasOpen) dropdown.classList.add('open');
+  }
+
+  // Close menus when clicking outside
+  document.addEventListener('click', function() {
+    document.querySelectorAll('.card-dropdown.open').forEach(d => d.classList.remove('open'));
+  });
 </script>
 
 </body>
