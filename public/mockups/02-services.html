@@ -36,7 +36,9 @@
     margin-bottom: 16px; padding: 24px;
     background: white; border-radius: 16px;
     border: 1px solid rgba(0,0,0,0.04); box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    transition: all 0.2s;
   }
+  .client-header:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); border-color: #0071e3; }
   .client-avatar-lg {
     width: 64px; height: 64px; border-radius: 16px;
     display: flex; align-items: center; justify-content: center;
@@ -47,14 +49,14 @@
   .health-dot {
     position: absolute; bottom: -3px; right: -3px;
     width: 18px; height: 18px; border-radius: 50%;
-    border: 3px solid white; display: flex; align-items: center; justify-content: center;
+    border: 3px solid white; display: none; align-items: center; justify-content: center;
   }
   .health-green { background: #34c759; }
   .health-yellow { background: #ff9500; }
   .health-red { background: #ff3b30; }
   .client-info { flex: 1; }
   .client-info h1 { font-size: 24px; font-weight: 700; color: #1d1d1f; display: flex; align-items: center; gap: 8px; line-height: 1.2; }
-  .health-badge { padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+  .health-badge { padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; display: none; }
   .health-badge-green { background: #e8f8ee; color: #1a8d44; }
   .health-badge-yellow { background: #fff4e5; color: #b35c00; }
   .health-badge-red { background: #ffe5e5; color: #d63030; }
@@ -86,7 +88,7 @@
     transition: all 0.15s;
     text-decoration: none;
   }
-  .quick-action:hover { background: #e8e8ed; border-color: #d2d2d7; }
+  .quick-action:hover { background: #e8e8ed; border-color: #0071e3; color: #0071e3; }
   .quick-action-icon { font-size: 16px; }
 
   /* Section Title */
@@ -106,7 +108,9 @@
   .overview-card {
     background: white; border-radius: 16px; padding: 20px;
     border: 1px solid rgba(0,0,0,0.04); box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    transition: all 0.2s;
   }
+  .overview-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); border-color: #0071e3; }
   .overview-card-header {
     display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
   }
@@ -129,7 +133,7 @@
   .team-member-role-tag { font-size: 10px; color: #86868b; background: #f5f5f7; padding: 2px 6px; border-radius: 4px; }
   .team-contact-icons { display: flex; gap: 4px; margin-left: auto; }
   .team-contact-icon { width: 22px; height: 22px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 11px; cursor: pointer; background: #f5f5f7; transition: background 0.15s; }
-  .team-contact-icon:hover { background: #e8e8ed; }
+  .team-contact-icon:hover { background: #e8f0ff; }
 
   /* Meetings Card */
   .meeting-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f5f5f7; }
@@ -143,7 +147,7 @@
   .meeting-att { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 600; color: white; border: 2px solid white; margin-left: -4px; }
   .meeting-att:first-child { margin-left: 0; }
   .btn-sm-action { padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; border: 1px solid #d2d2d7; background: white; color: #1d1d1f; cursor: pointer; margin-top: 8px; transition: all 0.15s; }
-  .btn-sm-action:hover { background: #f5f5f7; }
+  .btn-sm-action:hover { background: #e8f0ff; border-color: #0071e3; color: #0071e3; }
 
   /* Documents Card */
   .doc-checklist { list-style: none; }
@@ -160,7 +164,7 @@
   .doc-status-pending { color: #b35c00; }
   .doc-status-not-started { color: #aeaeb2; }
   .drive-link { display: flex; align-items: center; gap: 8px; padding: 12px 16px; margin-top: 12px; background: #f5f5f7; border-radius: 10px; text-decoration: none; color: #1d1d1f; font-size: 14px; font-weight: 500; transition: background 0.15s; cursor: pointer; line-height: 1.5; }
-  .drive-link:hover { background: #e8e8ed; }
+  .drive-link:hover { background: #e8f0ff; color: #0071e3; }
   .doc-actions { display: flex; gap: 6px; margin-top: 8px; }
 
   /* Billing Card */
@@ -183,7 +187,8 @@
 
   /* Key Contacts Card */
   .contact-list { display: flex; flex-direction: column; gap: 12px; }
-  .contact-row { display: flex; align-items: center; gap: 12px; padding: 12px; background: #fafafa; border-radius: 10px; }
+  .contact-row { display: flex; align-items: center; gap: 12px; padding: 12px; background: #fafafa; border-radius: 10px; transition: all 0.15s; }
+  .contact-row:hover { background: #e8f0ff; }
   .contact-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: white; flex-shrink: 0; }
   .contact-info { flex: 1; }
   .contact-name { font-size: 14px; font-weight: 500; color: #1d1d1f; line-height: 1.5; }
@@ -191,7 +196,7 @@
   .contact-details { font-size: 11px; color: #aeaeb2; margin-top: 2px; }
   .contact-actions { display: flex; gap: 6px; }
   .contact-action-btn { width: 30px; height: 30px; border-radius: 8px; background: white; border: 1px solid #e8e8ed; display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; transition: all 0.15s; }
-  .contact-action-btn:hover { background: #f5f5f7; border-color: #d2d2d7; }
+  .contact-action-btn:hover { background: #e8f0ff; border-color: #0071e3; }
 
   /* Contract Card */
   .contract-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f5f5f7; }
@@ -210,16 +215,18 @@
     margin-bottom: 24px;
   }
   .notes-body { font-size: 14px; color: #1d1d1f; line-height: 1.6; }
-  .note-entry { padding: 12px 0; border-bottom: 1px solid #f5f5f7; }
+  .note-entry { padding: 12px; border-bottom: 1px solid #f5f5f7; border-radius: 8px; transition: background 0.15s; }
+  .note-entry:hover { background: #f5f5f7; }
   .note-entry:last-child { border-bottom: none; }
   .note-meta { font-size: 11px; color: #aeaeb2; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
   .note-text { font-size: 14px; color: #1d1d1f; line-height: 1.5; }
   .note-add { display: flex; align-items: center; gap: 8px; padding: 12px; margin-top: 8px; background: #f5f5f7; border-radius: 8px; cursor: pointer; font-size: 14px; color: #86868b; transition: background 0.15s; line-height: 1.5; }
-  .note-add:hover { background: #e8e8ed; }
+  .note-add:hover { background: #e8f0ff; color: #0071e3; }
 
   /* Communication Log */
   .comms-list { display: flex; flex-direction: column; gap: 0; }
-  .comm-entry { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f5f5f7; }
+  .comm-entry { display: flex; align-items: flex-start; gap: 12px; padding: 12px; border-bottom: 1px solid #f5f5f7; border-radius: 8px; transition: background 0.15s; }
+  .comm-entry:hover { background: #f5f5f7; }
   .comm-entry:last-child { border-bottom: none; }
   .comm-icon-wrap { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
   .comm-content { flex: 1; }
@@ -230,7 +237,7 @@
   /* Services Grid */
   .services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
   .service-card { background: white; border-radius: 16px; padding: 24px; cursor: pointer; transition: all 0.2s ease; border: 1px solid rgba(0,0,0,0.04); box-shadow: 0 1px 3px rgba(0,0,0,0.04); text-decoration: none; color: inherit; display: block; }
-  .service-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); transform: translateY(-2px); }
+  .service-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); transform: translateY(-2px); border-color: #0071e3; }
   .service-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
   .service-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
   .service-status { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; }

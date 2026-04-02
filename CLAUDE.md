@@ -297,8 +297,14 @@ git push origin main
 ## Design Standards
 
 Before creating or modifying any UI layout, mockup, or component, always read and follow the design skill file:
-- **`~/.claude/skills/grids-and-layout-design.md`** — Grid systems, typography, composition (Golden Ratio, Rule of Thirds, Gestalt principles), line length rules (45–70 cpl), spacing, and a pre-flight checklist.
-- **`~/.claude/skills/coding-best-practices.md`** — Code quality, readability, and maintainability standards.
+- **`~/Documents/Claude/skills/grids-and-layout-design.md`** — Grid systems, typography, composition (Golden Ratio, Rule of Thirds, Gestalt principles), line length rules (45–70 cpl), spacing, and a pre-flight checklist.
+- **`~/Documents/Claude/skills/coding-best-practices.md`** — Code quality, readability, and maintainability standards.
+
+## Copywriting & Voice
+
+Before writing any copy, content, or text on behalf of Nikko, always read and follow:
+- **`~/Documents/Claude/about me/About Me - Nikko Trinidad.md`** — Background, context, and personal details to inform tone and content.
+- **`~/Documents/Claude/about me/Anti AI Writing Style.md`** — Writing style guidelines to ensure copy sounds natural and human, not AI-generated.
 
 ---
 
