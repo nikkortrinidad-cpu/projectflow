@@ -78,12 +78,23 @@
   .tp.on { display: block; }
 
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  .list-header { display: none; padding: 8px 20px; font-size: 11px; font-weight: 600; color: #86868b; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #e8e8ed; margin-bottom: 4px; align-items: center; gap: 16px; }
+  .list-header .lh-name { flex: 1; min-width: 0; padding-left: 48px; }
+  .list-header .lh-status { width: 90px; text-align: center; }
+  .list-header .lh-stats { display: flex; gap: 24px; flex-shrink: 0; }
+  .list-header .lh-stats span { width: 50px; text-align: center; }
+  .list-header .lh-activity { width: 90px; text-align: right; }
+
   .grid.list-view { grid-template-columns: 1fr; gap: 8px; }
   .grid.list-view .card { padding: 14px 20px; border-radius: 12px; display: flex; align-items: center; gap: 16px; }
+  .grid.list-view .card:hover { transform: none; }
   .grid.list-view .card-head { margin-bottom: 0; flex: 1; min-width: 0; }
   .grid.list-view .card-stats { border-top: none; padding-top: 0; gap: 24px; flex-shrink: 0; }
   .grid.list-view .tags { margin-top: 0; flex-shrink: 0; }
   .grid.list-view .card-av { width: 36px; height: 36px; border-radius: 10px; font-size: 14px; }
+  .grid.list-view .card-footer { margin-top: 0; flex-shrink: 0; }
+  .grid.list-view .card-footer .tags { display: none; }
+  .grid.list-view .last-active { margin-left: 0; }
 
   /* Card is a div, not an anchor */
   .card {
@@ -134,7 +145,11 @@
   .sv { font-size: 18px; font-weight: 700; }
   .sl { font-size: 11px; color: #86868b; margin-top: 1px; }
 
-  .tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; }
+  .card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
+  .last-active { font-size: 11px; color: #aeaeb2; display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+  .last-active svg { opacity: 0.6; }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 5px; }
   .tg { padding: 2px 8px; border-radius: 5px; font-size: 11px; font-weight: 500; }
   .tg-web { background: #e8f0ff; color: #0055b3; }
   .tg-mobile { background: #f0e8ff; color: #5856d6; }
@@ -151,8 +166,6 @@
   .restore { padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 500; border: 1px solid #d2d2d7; background: white; color: #0071e3; cursor: pointer; margin-top: 10px; }
   .restore:hover { background: #e8f0ff; border-color: #0071e3; }
 
-  .nav-hint { text-align: center; padding: 40px 20px; color: #86868b; font-size: 14px; }
-  .nav-hint a { color: #0071e3; text-decoration: none; font-weight: 500; }
 </style>
 </head>
 <body>
@@ -217,6 +230,12 @@
 
   <!-- ACTIVE TAB -->
   <div class="tp on" id="tp-active">
+    <div class="list-header" id="listHeader">
+      <span class="lh-name">Client</span>
+      <span class="lh-status">Status</span>
+      <div class="lh-stats"><span>Services</span><span>Tasks</span></div>
+      <span class="lh-activity">Activity</span>
+    </div>
     <div class="grid">
 
       <div class="card" data-s="web,mobile,seo,cloud" data-name="Acme Corporation" data-tasks="23" data-services="4" data-revenue="48500" data-order="0" onclick="location.href='02-services.html'">
@@ -240,8 +259,11 @@
           <div><div class="sv">4</div><div class="sl">Services</div></div>
           <div><div class="sv">23</div><div class="sl">Active Tasks</div></div>
         </div>
-        <div class="tags">
-          <span class="tg tg-web">🌐 Web</span><span class="tg tg-mobile">📱 Mobile</span><span class="tg tg-seo">📊 SEO</span><span class="tg tg-cloud">🛡️ Cloud</span>
+        <div class="card-footer">
+          <div class="tags">
+            <span class="tg tg-web">🌐 Web</span><span class="tg tg-mobile">📱 Mobile</span><span class="tg tg-seo">📊 SEO</span><span class="tg tg-cloud">🛡️ Cloud</span>
+          </div>
+          <span class="last-active"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>2h ago</span>
         </div>
       </div>
 
@@ -266,8 +288,11 @@
           <div><div class="sv">2</div><div class="sl">Services</div></div>
           <div><div class="sv">11</div><div class="sl">Active Tasks</div></div>
         </div>
-        <div class="tags">
-          <span class="tg tg-design">🎨 Design</span><span class="tg tg-branding">🏷️ Branding</span>
+        <div class="card-footer">
+          <div class="tags">
+            <span class="tg tg-design">🎨 Design</span><span class="tg tg-branding">🏷️ Branding</span>
+          </div>
+          <span class="last-active"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>5h ago</span>
         </div>
       </div>
 
@@ -292,8 +317,11 @@
           <div><div class="sv">3</div><div class="sl">Services</div></div>
           <div><div class="sv">18</div><div class="sl">Active Tasks</div></div>
         </div>
-        <div class="tags">
-          <span class="tg tg-web">🌐 Web</span><span class="tg tg-seo">📊 SEO</span><span class="tg tg-content">✏️ Content</span>
+        <div class="card-footer">
+          <div class="tags">
+            <span class="tg tg-web">🌐 Web</span><span class="tg tg-seo">📊 SEO</span><span class="tg tg-content">✏️ Content</span>
+          </div>
+          <span class="last-active"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>1d ago</span>
         </div>
       </div>
 
@@ -318,8 +346,11 @@
           <div><div class="sv">1</div><div class="sl">Services</div></div>
           <div><div class="sv">7</div><div class="sl">Active Tasks</div></div>
         </div>
-        <div class="tags">
-          <span class="tg tg-web">🌐 Web</span><span class="tg tg-content">✏️ Content</span>
+        <div class="card-footer">
+          <div class="tags">
+            <span class="tg tg-web">🌐 Web</span><span class="tg tg-content">✏️ Content</span>
+          </div>
+          <span class="last-active"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>5d ago</span>
         </div>
       </div>
 
@@ -344,8 +375,11 @@
           <div><div class="sv">3</div><div class="sl">Services</div></div>
           <div><div class="sv">14</div><div class="sl">Active Tasks</div></div>
         </div>
-        <div class="tags">
-          <span class="tg tg-design">🎨 Design</span><span class="tg tg-mobile">📱 Mobile</span><span class="tg tg-cloud">🛡️ Cloud</span>
+        <div class="card-footer">
+          <div class="tags">
+            <span class="tg tg-design">🎨 Design</span><span class="tg tg-mobile">📱 Mobile</span><span class="tg tg-cloud">🛡️ Cloud</span>
+          </div>
+          <span class="last-active"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>12h ago</span>
         </div>
       </div>
 
@@ -370,8 +404,11 @@
           <div><div class="sv">2</div><div class="sl">Services</div></div>
           <div><div class="sv">9</div><div class="sl">Active Tasks</div></div>
         </div>
-        <div class="tags">
-          <span class="tg tg-design">🎨 Design</span><span class="tg tg-branding">🏷️ Branding</span><span class="tg tg-social">📣 Social</span><span class="tg tg-seo">📊 SEO</span>
+        <div class="card-footer">
+          <div class="tags">
+            <span class="tg tg-design">🎨 Design</span><span class="tg tg-branding">🏷️ Branding</span><span class="tg tg-social">📣 Social</span><span class="tg tg-seo">📊 SEO</span>
+          </div>
+          <span class="last-active"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>3d ago</span>
         </div>
       </div>
 
@@ -413,7 +450,6 @@
     </div>
   </div>
 
-  <div class="nav-hint">Click any client to see their services → <a href="02-services.html">Next: Services View</a></div>
 </div>
 
 <script>
@@ -430,6 +466,8 @@ function setView(mode, btn) {
     if(mode==='list') g.classList.add('list-view');
     else g.classList.remove('list-view');
   });
+  var lh = document.getElementById('listHeader');
+  if(lh) lh.style.display = mode==='list' ? 'flex' : 'none';
 }
 function toggleFilter(e) {
   e.stopPropagation();
