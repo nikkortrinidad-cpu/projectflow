@@ -258,6 +258,30 @@
   .service-stat strong { color: #1d1d1f; font-weight: 600; }
   .service-updated { font-size: 12px; color: #aeaeb2; }
 
+  /* Lifecycle Progress */
+  .lifecycle { margin-bottom: 16px; }
+  .lifecycle-bar { display: flex; align-items: center; gap: 1px; margin-bottom: 8px; }
+  .lifecycle-seg { flex: 1; height: 4px; }
+  .lifecycle-seg:first-child { border-radius: 3px 0 0 3px; }
+  .lifecycle-seg:last-child { border-radius: 0 3px 3px 0; }
+  .lifecycle-seg.done { background: #34c759; }
+  .lifecycle-seg.upcoming { background: #e8e8ed; }
+  .lifecycle-seg.current { position: relative; background: linear-gradient(90deg, #007AFF, #5AC8FA); }
+  .lifecycle-seg.current::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px; height: 10px;
+    background: #007AFF;
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px rgba(0,122,255,0.2);
+  }
+  .lifecycle-label { display: flex; align-items: center; justify-content: space-between; }
+  .lifecycle-phase { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #1d1d1f; }
+  .lifecycle-phase-dot { width: 6px; height: 6px; border-radius: 50%; background: #007AFF; }
+  .lifecycle-count { font-size: 11px; color: #86868b; font-weight: 500; }
+
   .nav-hint { text-align: center; padding: 40px 20px; color: #86868b; font-size: 14px; }
   .nav-hint a { color: #0071e3; text-decoration: none; font-weight: 500; }
   .nav-hint a:hover { text-decoration: underline; }
@@ -332,6 +356,26 @@
         <div class="progress-header"><span>Progress</span><span>68%</span></div>
         <div class="progress-bar"><div class="progress-fill" style="width: 68%; background: linear-gradient(90deg, #0071e3, #40a0ff);"></div></div>
       </div>
+      <div class="lifecycle">
+        <div class="lifecycle-bar">
+          <div class="lifecycle-seg done"></div>
+          <div class="lifecycle-seg done"></div>
+          <div class="lifecycle-seg done"></div>
+          <div class="lifecycle-seg done"></div>
+          <div class="lifecycle-seg done"></div>
+          <div class="lifecycle-seg done"></div>
+          <div class="lifecycle-seg current"></div>
+          <div class="lifecycle-seg upcoming"></div>
+          <div class="lifecycle-seg upcoming"></div>
+          <div class="lifecycle-seg upcoming"></div>
+          <div class="lifecycle-seg upcoming"></div>
+          <div class="lifecycle-seg upcoming"></div>
+        </div>
+        <div class="lifecycle-label">
+          <div class="lifecycle-phase"><div class="lifecycle-phase-dot"></div> Setup & Build</div>
+          <div class="lifecycle-count">Phase 7 of 12</div>
+        </div>
+      </div>
       <div class="service-footer">
         <div class="service-stats">
           <div class="service-stat"><strong>8</strong> tasks</div>
@@ -350,6 +394,26 @@
       <div class="service-progress">
         <div class="progress-header"><span>Progress</span><span>35%</span></div>
         <div class="progress-bar"><div class="progress-fill" style="width: 35%; background: linear-gradient(90deg, #5856d6, #7a79e0);"></div></div>
+      </div>
+      <div class="lifecycle">
+        <div class="lifecycle-bar">
+          <div class="lifecycle-seg done"></div>
+          <div class="lifecycle-seg done"></div>
+          <div class="lifecycle-seg done"></div>
+          <div class="lifecycle-seg done"></div>
+          <div class="lifecycle-seg current"></div>
+          <div class="lifecycle-seg upcoming"></div>
+          <div class="lifecycle-seg upcoming"></div>
+          <div class="lifecycle-seg upcoming"></div>
+          <div class="lifecycle-seg upcoming"></div>
+          <div class="lifecycle-seg upcoming"></div>
+          <div class="lifecycle-seg upcoming"></div>
+          <div class="lifecycle-seg upcoming"></div>
+        </div>
+        <div class="lifecycle-label">
+          <div class="lifecycle-phase"><div class="lifecycle-phase-dot"></div> Onboarding & Kickoff</div>
+          <div class="lifecycle-count">Phase 5 of 12</div>
+        </div>
       </div>
       <div class="service-footer">
         <div class="service-stats">
@@ -370,6 +434,26 @@
         <div class="progress-header"><span>Progress</span><span>90%</span></div>
         <div class="progress-bar"><div class="progress-fill" style="width: 90%; background: linear-gradient(90deg, #34c759, #5dd87a);"></div></div>
       </div>
+      <div class="lifecycle">
+        <div class="lifecycle-bar">
+          <div class="lifecycle-seg done"></div>
+          <div class="lifecycle-seg done"></div>
+          <div class="lifecycle-seg done"></div>
+          <div class="lifecycle-seg done"></div>
+          <div class="lifecycle-seg done"></div>
+          <div class="lifecycle-seg done"></div>
+          <div class="lifecycle-seg done"></div>
+          <div class="lifecycle-seg done"></div>
+          <div class="lifecycle-seg done"></div>
+          <div class="lifecycle-seg current"></div>
+          <div class="lifecycle-seg upcoming"></div>
+          <div class="lifecycle-seg upcoming"></div>
+        </div>
+        <div class="lifecycle-label">
+          <div class="lifecycle-phase"><div class="lifecycle-phase-dot"></div> Reporting & Review</div>
+          <div class="lifecycle-count">Phase 10 of 12</div>
+        </div>
+      </div>
       <div class="service-footer">
         <div class="service-stats">
           <div class="service-stat"><strong>2</strong> tasks</div>
@@ -388,6 +472,26 @@
       <div class="service-progress">
         <div class="progress-header"><span>Progress</span><span>15%</span></div>
         <div class="progress-bar"><div class="progress-fill" style="width: 15%; background: linear-gradient(90deg, #ff9500, #ffb340);"></div></div>
+      </div>
+      <div class="lifecycle">
+        <div class="lifecycle-bar">
+          <div class="lifecycle-seg done"></div>
+          <div class="lifecycle-seg done"></div>
+          <div class="lifecycle-seg current"></div>
+          <div class="lifecycle-seg upcoming"></div>
+          <div class="lifecycle-seg upcoming"></div>
+          <div class="lifecycle-seg upcoming"></div>
+          <div class="lifecycle-seg upcoming"></div>
+          <div class="lifecycle-seg upcoming"></div>
+          <div class="lifecycle-seg upcoming"></div>
+          <div class="lifecycle-seg upcoming"></div>
+          <div class="lifecycle-seg upcoming"></div>
+          <div class="lifecycle-seg upcoming"></div>
+        </div>
+        <div class="lifecycle-label">
+          <div class="lifecycle-phase"><div class="lifecycle-phase-dot"></div> Proposal & Pitch</div>
+          <div class="lifecycle-count">Phase 3 of 12</div>
+        </div>
       </div>
       <div class="service-footer">
         <div class="service-stats">
