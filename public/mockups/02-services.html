@@ -95,7 +95,7 @@
   /* Overview Grid */
   .overview-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 16px; margin-bottom: 24px;
   }
   .overview-grid-2col {
@@ -334,6 +334,7 @@
   <div class="tab-bar">
     <button class="tab-btn active" onclick="switchTab('services')">Services</button>
     <button class="tab-btn" onclick="switchTab('overview')">Overview</button>
+    <button class="tab-btn" onclick="switchTab('documents')">Documents</button>
     <button class="tab-btn" onclick="switchTab('notes')">Notes & Comms</button>
   </div>
 
@@ -515,7 +516,59 @@
       <button class="btn-sm-action" style="width: 100%; justify-content: center; display: flex; align-items: center; gap: 6px;">📅 Schedule Next Meeting</button>
     </div>
 
-    <!-- CARD 3: Documents (Enhanced) -->
+    <!-- Key Contacts (Client-Side) -->
+    <div class="overview-card" style="grid-column: 1 / -1;">
+      <div class="overview-card-header">
+        <div class="overview-card-title">Key Contacts (Client)</div>
+        <a class="overview-card-action" href="#" onclick="return false;">+ Add</a>
+      </div>
+      <div class="contact-list">
+        <div class="contact-row">
+          <div class="contact-avatar" style="background: linear-gradient(135deg, #636366, #8e8e93);">JD</div>
+          <div class="contact-info">
+            <div class="contact-name">John Davidson</div>
+            <div class="contact-role">CTO · Decision Maker</div>
+            <div class="contact-details">john@acmecorp.com · (415) 555-0101</div>
+          </div>
+          <div class="contact-actions">
+            <div class="contact-action-btn">✉️</div>
+            <div class="contact-action-btn">📞</div>
+          </div>
+        </div>
+        <div class="contact-row">
+          <div class="contact-avatar" style="background: linear-gradient(135deg, #af52de, #c77dea);">SL</div>
+          <div class="contact-info">
+            <div class="contact-name">Sarah Lee</div>
+            <div class="contact-role">Project Manager</div>
+            <div class="contact-details">sarah@acmecorp.com · (415) 555-0102</div>
+          </div>
+          <div class="contact-actions">
+            <div class="contact-action-btn">✉️</div>
+            <div class="contact-action-btn">📞</div>
+          </div>
+        </div>
+        <div class="contact-row">
+          <div class="contact-avatar" style="background: linear-gradient(135deg, #ff9500, #ffb340);">MR</div>
+          <div class="contact-info">
+            <div class="contact-name">Mike Roberts</div>
+            <div class="contact-role">Marketing Director</div>
+            <div class="contact-details">mike@acmecorp.com · (415) 555-0103</div>
+          </div>
+          <div class="contact-actions">
+            <div class="contact-action-btn">✉️</div>
+            <div class="contact-action-btn">📞</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  </div><!-- /tab-overview -->
+
+  <!-- ===== TAB: DOCUMENTS ===== -->
+  <div class="tab-panel" id="tab-documents">
+
     <div class="overview-card">
       <div class="overview-card-header">
         <div class="overview-card-title">Documents</div>
@@ -568,56 +621,7 @@
       </a>
     </div>
 
-
-    <!-- Key Contacts (Client-Side) -->
-    <div class="overview-card" style="grid-column: 1 / -1;">
-      <div class="overview-card-header">
-        <div class="overview-card-title">Key Contacts (Client)</div>
-        <a class="overview-card-action" href="#" onclick="return false;">+ Add</a>
-      </div>
-      <div class="contact-list">
-        <div class="contact-row">
-          <div class="contact-avatar" style="background: linear-gradient(135deg, #636366, #8e8e93);">JD</div>
-          <div class="contact-info">
-            <div class="contact-name">John Davidson</div>
-            <div class="contact-role">CTO · Decision Maker</div>
-            <div class="contact-details">john@acmecorp.com · (415) 555-0101</div>
-          </div>
-          <div class="contact-actions">
-            <div class="contact-action-btn">✉️</div>
-            <div class="contact-action-btn">📞</div>
-          </div>
-        </div>
-        <div class="contact-row">
-          <div class="contact-avatar" style="background: linear-gradient(135deg, #af52de, #c77dea);">SL</div>
-          <div class="contact-info">
-            <div class="contact-name">Sarah Lee</div>
-            <div class="contact-role">Project Manager</div>
-            <div class="contact-details">sarah@acmecorp.com · (415) 555-0102</div>
-          </div>
-          <div class="contact-actions">
-            <div class="contact-action-btn">✉️</div>
-            <div class="contact-action-btn">📞</div>
-          </div>
-        </div>
-        <div class="contact-row">
-          <div class="contact-avatar" style="background: linear-gradient(135deg, #ff9500, #ffb340);">MR</div>
-          <div class="contact-info">
-            <div class="contact-name">Mike Roberts</div>
-            <div class="contact-role">Marketing Director</div>
-            <div class="contact-details">mike@acmecorp.com · (415) 555-0103</div>
-          </div>
-          <div class="contact-actions">
-            <div class="contact-action-btn">✉️</div>
-            <div class="contact-action-btn">📞</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  </div><!-- /tab-overview -->
+  </div><!-- /tab-documents -->
 
   <!-- ===== TAB: NOTES & COMMS ===== -->
   <div class="tab-panel" id="tab-notes">
