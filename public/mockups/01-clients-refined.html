@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup — Clients (Refined)</title>
+<script>(function(){var s=localStorage.getItem('refined-theme');if(s)document.documentElement.setAttribute('data-theme',s);})();</script>
+<style>
+  :root {
+    --bg: #fbfbfd;
+    --bg-elev: #ffffff;
+    --bg-soft: #f5f5f7;
+    --bg-faint: #fafafa;
+    --text: #1d1d1f;
+    --text-muted: #636366;
+    --text-soft: #86868b;
+    --text-faint: #aeaeb2;
+    --hairline: rgba(0,0,0,0.08);
+    --hairline-soft: rgba(0,0,0,0.04);
+    --hairline-faint: rgba(0,0,0,0.02);
+    --accent: #ff3b30;
+    --accent-soft: rgba(255,59,48,0.08);
+    --shadow: 0 1px 3px rgba(0,0,0,0.04);
+    --shadow-hover: 0 4px 16px rgba(0,0,0,0.08);
+    --avatar-bg: #1d1d1f;
+    --avatar-fg: #ffffff;
+    --kbd-bg: #ffffff;
+    --kbd-border: #d2d2d7;
+    --nav-bg: rgba(255,255,255,0.72);
+    --btn-bg: #ffffff;
+    --btn-bg-hover: #f5f5f7;
+    --tag-bg: rgba(0,0,0,0.04);
+    --tag-text: #636366;
+  }
+  :root[data-theme="dark"] {
+    --bg: #000000;
+    --bg-elev: #1c1c1e;
+    --bg-soft: #2c2c2e;
+    --bg-faint: #161618;
+    --text: #f5f5f7;
+    --text-muted: #aeaeb2;
+    --text-soft: #86868b;
+    --text-faint: #636366;
+    --hairline: rgba(255,255,255,0.1);
+    --hairline-soft: rgba(255,255,255,0.06);
+    --hairline-faint: rgba(255,255,255,0.03);
+    --accent: #ff453a;
+    --accent-soft: rgba(255,69,58,0.14);
+    --shadow: 0 1px 3px rgba(0,0,0,0.4);
+    --shadow-hover: 0 4px 16px rgba(0,0,0,0.6);
+    --avatar-bg: #f5f5f7;
+    --avatar-fg: #1d1d1f;
+    --kbd-bg: #2c2c2e;
+    --kbd-border: rgba(255,255,255,0.15);
+    --nav-bg: rgba(0,0,0,0.72);
+    --btn-bg: #1c1c1e;
+    --btn-bg-hover: #2c2c2e;
+    --tag-bg: rgba(255,255,255,0.06);
+    --tag-text: #aeaeb2;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Segoe UI', sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.5; font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "ss01", "tnum";
+    transition: background 0.3s ease, color 0.3s ease;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--nav-bg);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid var(--hairline);
+    padding: 0 32px; height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    transition: background 0.3s ease, border-color 0.3s ease;
+  }
+  .header-left { display: flex; align-items: center; gap: 24px; }
+  .header-logo { font-size: 18px; font-weight: 600; letter-spacing: -0.022em; color: var(--text); }
+  .header-nav { display: flex; gap: 4px; }
+  .header-nav a {
+    padding: 6px 12px; border-radius: 8px;
+    font-size: 13px; font-weight: 500;
+    color: var(--text-soft); text-decoration: none;
+    letter-spacing: -0.01em;
+    transition: color 0.15s;
+  }
+  .header-nav a:hover { color: var(--text); }
+  .header-nav a.on { color: var(--text); font-weight: 600; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .cmdk-trigger {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 12px;
+    background: var(--bg-soft);
+    border: 1px solid transparent;
+    border-radius: 10px;
+    font-size: 13px; color: var(--text-soft);
+    cursor: pointer; min-width: 260px;
+    transition: all 0.15s; letter-spacing: -0.01em;
+  }
+  .cmdk-trigger:hover { color: var(--text-muted); }
+  .cmdk-trigger svg { opacity: 0.6; }
+  .cmdk-trigger .cmdk-label { flex: 1; text-align: left; }
+  .cmdk-trigger .cmdk-kbd {
+    font-family: -apple-system, sans-serif;
+    font-size: 11px; font-weight: 600;
+    padding: 2px 6px;
+    background: var(--kbd-bg);
+    border: 1px solid var(--kbd-border);
+    border-radius: 4px;
+    color: var(--text-muted);
+  }
+  .header-icon {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--bg-soft);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 14px; color: var(--text-muted);
+    position: relative;
+    transition: background 0.15s;
+  }
+  .header-icon:hover { background: var(--hairline); }
+  .header-icon .notif-dot {
+    position: absolute; top: 6px; right: 6px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent); border: 2px solid var(--bg);
+  }
+  .avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--avatar-bg); color: var(--avatar-fg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .theme-toggle {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg-soft); border: none;
+    cursor: pointer; color: var(--text-muted);
+    transition: background 0.15s, color 0.15s;
+    padding: 0;
+  }
+  .theme-toggle:hover { background: var(--hairline); color: var(--text); }
+  .theme-toggle .icon-sun { display: none; }
+  :root[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+  :root[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+
+  /* PAGE */
+  .page { max-width: 1200px; margin: 0 auto; padding: 56px 32px 96px; }
+  .page-title {
+    font-size: 44px; font-weight: 600; line-height: 1.1;
+    letter-spacing: -0.022em;
+    margin-bottom: 8px; color: var(--text);
+  }
+  .page-subtitle {
+    font-size: 17px; color: var(--text-soft); margin-bottom: 40px;
+    letter-spacing: -0.01em;
+  }
+
+  /* KPI ROW */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+  .kpi-card {
+    background: var(--bg-elev);
+    border-radius: 16px;
+    padding: 24px 28px;
+    border: 1px solid var(--hairline-soft);
+    box-shadow: var(--shadow);
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .kpi-label {
+    font-size: 11px; font-weight: 600; color: var(--text-soft);
+    margin-bottom: 14px;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    line-height: 1.4;
+  }
+  .kpi-value {
+    font-size: 40px; font-weight: 600; color: var(--text);
+    line-height: 1; letter-spacing: -0.025em;
+    font-feature-settings: "tnum";
+  }
+  .kpi-change {
+    font-size: 12px; font-weight: 500;
+    margin-top: 10px;
+    color: var(--text-soft);
+    letter-spacing: -0.005em;
+  }
+  .kpi-up::before { content: "↑ "; }
+
+  /* TOOLBAR */
+  .toolbar {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 32px;
+  }
+  .filter-btn {
+    padding: 9px 18px;
+    background: var(--btn-bg);
+    border: 1px solid var(--hairline);
+    border-radius: 980px;
+    font-size: 13px; font-weight: 500;
+    color: var(--text); cursor: pointer;
+    letter-spacing: -0.01em;
+    transition: all 0.15s;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .filter-btn:hover { background: var(--btn-bg-hover); border-color: var(--text-faint); }
+  .filter-btn.active { border-color: var(--text); }
+  .filter-btn svg { width: 13px; height: 13px; }
+  .filter-count {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--text); color: var(--bg);
+    font-size: 11px; font-weight: 600;
+    width: 18px; height: 18px; border-radius: 50%;
+    margin-left: 4px;
+  }
+  .btn-primary {
+    padding: 9px 20px;
+    background: var(--text);
+    color: var(--bg);
+    border: 1px solid var(--text);
+    border-radius: 980px;
+    font-size: 13px; font-weight: 500;
+    cursor: pointer;
+    letter-spacing: -0.01em;
+    transition: opacity 0.15s;
+  }
+  .btn-primary:hover { opacity: 0.88; }
+
+  .view-toggle {
+    display: inline-flex;
+    border: 1px solid var(--hairline);
+    border-radius: 980px;
+    overflow: hidden;
+    background: var(--btn-bg);
+  }
+  .view-btn {
+    padding: 9px 14px; border: none;
+    background: transparent; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-soft);
+    transition: all 0.15s;
+  }
+  .view-btn:hover { background: var(--btn-bg-hover); color: var(--text); }
+  .view-btn.on { background: var(--text); color: var(--bg); }
+
+  .sort-wrap { position: relative; display: inline-flex; margin-left: auto; }
+  .sort-drop, .filter-drop {
+    display: none;
+    position: absolute;
+    top: 44px;
+    z-index: 999;
+    background: var(--bg-elev);
+    border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.16);
+    border: 1px solid var(--hairline);
+    padding: 8px;
+    min-width: 220px;
+  }
+  .sort-drop { left: 0; }
+  .sort-drop.open, .filter-drop.open { display: block; }
+  .sort-drop-label, .filter-drop-label {
+    font-size: 11px; font-weight: 600; color: var(--text-soft);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    padding: 10px 12px 6px;
+  }
+  .sort-opt {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: 8px;
+    font-size: 13px; color: var(--text);
+    cursor: pointer; border: none;
+    background: none; width: 100%; text-align: left;
+    letter-spacing: -0.005em;
+  }
+  .sort-opt:hover { background: var(--bg-soft); }
+  .sort-opt.on { color: var(--accent); font-weight: 600; }
+  .sort-opt .sort-icon { color: var(--text-faint); font-size: 13px; width: 18px; text-align: center; }
+  .sort-sep { border: none; height: 1px; background: var(--hairline-soft); margin: 6px 0; }
+
+  .filter-wrap { position: relative; display: inline-flex; }
+  .filter-drop { right: 0; padding: 16px; min-width: 280px; }
+  .filter-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .sf-chip {
+    padding: 7px 14px; border-radius: 980px;
+    font-size: 12px; font-weight: 500;
+    border: 1px solid var(--hairline);
+    background: var(--btn-bg);
+    color: var(--text-muted);
+    cursor: pointer;
+    letter-spacing: -0.005em;
+    transition: all 0.15s;
+  }
+  .sf-chip:hover { border-color: var(--text-faint); color: var(--text); }
+  .sf-chip.on { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+  /* TABS */
+  .tabs {
+    display: flex; gap: 4px;
+    margin-bottom: 32px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .tab {
+    padding: 14px 4px; margin-right: 28px;
+    font-size: 14px; font-weight: 500;
+    color: var(--text-soft); cursor: pointer;
+    border: none; border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    background: none;
+    display: flex; align-items: center; gap: 8px;
+    letter-spacing: -0.01em;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.on {
+    color: var(--text); font-weight: 600;
+    border-bottom-color: var(--text);
+  }
+  .tab-count {
+    padding: 1px 8px; border-radius: 980px;
+    font-size: 11px; font-weight: 600;
+    background: var(--bg-soft);
+    color: var(--text-soft);
+    font-feature-settings: "tnum";
+  }
+  .tab.on .tab-count { background: var(--text); color: var(--bg); }
+
+  .tp { display: none; }
+  .tp.on { display: block; }
+
+  /* GRID + CARDS */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 16px;
+  }
+  .list-header {
+    display: none;
+    padding: 10px 24px;
+    font-size: 11px; font-weight: 600;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-bottom: 1px solid var(--hairline-soft);
+    margin-bottom: 8px;
+    align-items: center; gap: 16px;
+  }
+  .list-header .lh-name { flex: 1; min-width: 0; padding-left: 52px; }
+  .list-header .lh-status { width: 90px; text-align: center; }
+  .list-header .lh-stats { display: flex; gap: 24px; flex-shrink: 0; }
+  .list-header .lh-stats span { width: 56px; text-align: center; }
+  .list-header .lh-activity { width: 90px; text-align: right; }
+
+  .grid.list-view { grid-template-columns: 1fr; gap: 8px; }
+  .grid.list-view .card { padding: 14px 24px; border-radius: 14px; display: flex; align-items: center; gap: 16px; }
+  .grid.list-view .card:hover { transform: none; }
+  .grid.list-view .card-head { margin-bottom: 0; flex: 1; min-width: 0; }
+  .grid.list-view .card-stats { border-top: none; padding-top: 0; gap: 24px; flex-shrink: 0; }
+  .grid.list-view .tags { margin-top: 0; flex-shrink: 0; }
+  .grid.list-view .card-av { width: 36px; height: 36px; border-radius: 10px; font-size: 13px; }
+  .grid.list-view .card-footer { margin-top: 0; flex-shrink: 0; }
+  .grid.list-view .card-footer .tags { display: none; }
+  .grid.list-view .last-active { margin-left: 0; }
+  .grid.list-view .health-strip-top { display: none; }
+
+  .card {
+    background: var(--bg-elev);
+    border-radius: 18px;
+    padding: 24px;
+    border: 1px solid var(--hairline-soft);
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
+    border-color: var(--hairline);
+  }
+  .card.has-fire {
+    border-color: var(--accent);
+  }
+  .card.has-fire::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent);
+  }
+  .health-strip-top { display: none; }
+
+  .health-dot-inline {
+    width: 8px; height: 8px; border-radius: 50%;
+    display: inline-block; flex-shrink: 0;
+    background: var(--text-faint);
+  }
+  .health-dot-inline.hd-red { background: var(--accent); }
+  .health-dot-inline.hd-orange { background: var(--text-soft); }
+  .health-dot-inline.hd-green { background: var(--text-soft); }
+  .health-dot-inline.hd-gray { background: var(--text-faint); }
+
+  .pin-btn {
+    width: 28px; height: 28px;
+    border-radius: 8px; border: none;
+    background: transparent; cursor: pointer;
+    font-size: 16px; color: var(--text-faint);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .pin-btn:hover { background: var(--bg-soft); color: var(--text-muted); }
+  .pin-btn.pinned { color: var(--text); }
+
+  .blocker-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 980px;
+    font-size: 11px; font-weight: 600;
+    background: var(--accent-soft); color: var(--accent);
+    margin-left: 8px;
+    letter-spacing: -0.005em;
+  }
+  .blocker-chip svg { width: 10px; height: 10px; }
+
+  .progress-bar-mini {
+    width: 100%; height: 3px;
+    background: var(--hairline-soft);
+    border-radius: 2px; overflow: hidden;
+    margin-top: 8px;
+  }
+  .progress-bar-mini .pbar-fill {
+    height: 100%; border-radius: 2px;
+    background: var(--text);
+  }
+  .progress-bar-mini .pbar-fill.red { background: var(--accent); }
+
+  .sv.hours-over { color: var(--accent); }
+
+  .card-head { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+  .card-av {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: var(--avatar-bg);
+    color: var(--avatar-fg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 600;
+    letter-spacing: -0.01em;
+    flex-shrink: 0;
+  }
+  .card-info { flex: 1; min-width: 0; }
+  .card-name {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 17px; font-weight: 600;
+    line-height: 1.3; flex-wrap: wrap;
+    letter-spacing: -0.015em;
+    color: var(--text);
+  }
+  .card-sub {
+    font-size: 12px; color: var(--text-soft);
+    margin-top: 5px; line-height: 1.4;
+    letter-spacing: -0.005em;
+  }
+  .card-right { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+
+  .menu-wrap { position: relative; display: inline-flex; }
+  .menu-trigger {
+    width: 28px; height: 28px;
+    border-radius: 8px; border: none;
+    background: transparent; cursor: pointer;
+    font-size: 18px; color: var(--text-faint);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .menu-trigger:hover { background: var(--bg-soft); color: var(--text-muted); }
+  .menu-drop {
+    display: none; position: absolute;
+    top: 32px; right: 0; z-index: 999;
+    background: var(--bg-elev);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.16);
+    border: 1px solid var(--hairline);
+    min-width: 180px; padding: 6px;
+    white-space: nowrap;
+  }
+  .menu-drop.open { display: block; }
+  .menu-drop div {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: 8px;
+    font-size: 13px; color: var(--text);
+    cursor: pointer;
+    letter-spacing: -0.005em;
+  }
+  .menu-drop div:hover { background: var(--bg-soft); }
+  .menu-drop div.ck { color: var(--accent); font-weight: 600; }
+  .menu-drop div.mt { color: var(--text-soft); }
+  .menu-drop hr { border: none; height: 1px; background: var(--hairline-soft); margin: 4px 0; }
+
+  .card-stats {
+    display: flex; gap: 28px;
+    padding-top: 18px;
+    border-top: 1px solid var(--hairline-soft);
+  }
+  .sv {
+    font-size: 22px; font-weight: 600;
+    line-height: 1; color: var(--text);
+    letter-spacing: -0.02em;
+    font-feature-settings: "tnum";
+  }
+  .sl {
+    font-size: 11px; color: var(--text-soft);
+    margin-top: 6px; line-height: 1.3;
+    letter-spacing: -0.005em;
+  }
+
+  .card-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 16px;
+  }
+  .last-active {
+    font-size: 11px; color: var(--text-faint);
+    display: flex; align-items: center; gap: 5px;
+    flex-shrink: 0;
+    letter-spacing: -0.005em;
+  }
+  .last-active svg { opacity: 0.6; }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 5px; }
+  .tg {
+    padding: 4px 9px; border-radius: 980px;
+    font-size: 11px; font-weight: 500;
+    line-height: 1;
+    background: var(--tag-bg);
+    color: var(--tag-text);
+    letter-spacing: -0.005em;
+  }
+
+  .card.dim { opacity: 0.65; }
+  .card.dim:hover { opacity: 0.9; }
+  .arch-date {
+    font-size: 11px; color: var(--text-faint);
+    margin-top: 12px; letter-spacing: -0.005em;
+  }
+  .restore {
+    padding: 7px 16px; border-radius: 980px;
+    font-size: 12px; font-weight: 500;
+    border: 1px solid var(--hairline);
+    background: var(--btn-bg);
+    color: var(--text);
+    cursor: pointer; margin-top: 12px;
+    letter-spacing: -0.005em;
+    transition: all 0.15s;
+  }
+  .restore:hover { background: var(--btn-bg-hover); border-color: var(--text-faint); }
+
+  /* Cmd+K modal */
+  .cmdk-overlay {
+    display: none; position: fixed; inset: 0;
+    z-index: 1000;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(4px);
+    align-items: flex-start; justify-content: center;
+    padding-top: 120px;
+  }
+  .cmdk-overlay.open { display: flex; }
+  .cmdk-modal {
+    width: 100%; max-width: 600px;
+    background: var(--bg-elev);
+    border-radius: 16px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+    overflow: hidden;
+    border: 1px solid var(--hairline);
+  }
+  .cmdk-input-wrap {
+    display: flex; align-items: center; gap: 12px;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--hairline-soft);
+  }
+  .cmdk-input-wrap svg { color: var(--text-soft); flex-shrink: 0; }
+  .cmdk-input {
+    flex: 1; border: none; outline: none;
+    font-size: 16px; color: var(--text);
+    background: transparent;
+    letter-spacing: -0.015em;
+    font-family: inherit;
+  }
+  .cmdk-input::placeholder { color: var(--text-faint); }
+  .cmdk-esc {
+    font-size: 11px; font-weight: 600;
+    padding: 3px 7px;
+    background: var(--bg-soft);
+    border-radius: 4px;
+    color: var(--text-soft);
+  }
+  .cmdk-results { max-height: 400px; overflow-y: auto; padding: 8px 0; }
+  .cmdk-group { padding: 4px 0; }
+  .cmdk-group-label {
+    font-size: 11px; font-weight: 600;
+    color: var(--text-soft);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    padding: 8px 22px;
+  }
+  .cmdk-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 22px; cursor: pointer;
+  }
+  .cmdk-item:hover, .cmdk-item.active { background: var(--bg-soft); }
+  .cmdk-icon {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: var(--bg-soft);
+    color: var(--text-muted);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600;
+    flex-shrink: 0;
+    letter-spacing: -0.01em;
+  }
+  .cmdk-item-main { flex: 1; min-width: 0; }
+  .cmdk-item-title {
+    font-size: 14px; font-weight: 500;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .cmdk-item-sub {
+    font-size: 12px; color: var(--text-soft);
+    margin-top: 2px;
+    letter-spacing: -0.005em;
+  }
+  .cmdk-item-kbd { font-size: 11px; color: var(--text-faint); }
+
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="header-logo">ProjectFlow</div>
+    <nav class="header-nav">
+      <a href="00-overview-refined.html">Overview</a>
+      <a href="01-clients-refined.html" class="on">Clients</a>
+      <a href="03-kanban-refined.html">Board</a>
+      <a href="#">Analytics</a>
+    </nav>
+  </div>
+  <div class="header-right">
+    <button class="cmdk-trigger" onclick="openCmdK()">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242.656a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/></svg>
+      <span class="cmdk-label">Search clients, tasks, people…</span>
+      <span class="cmdk-kbd">⌘K</span>
+    </button>
+    <div class="header-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="notif-dot"></span>
+    </div>
+    <button class="theme-toggle" aria-label="Toggle dark mode" onclick="toggleTheme()">
+      <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+    </button>
+    <div class="avatar">NT</div>
+  </div>
+</div>
+
+<!-- Cmd+K Modal -->
+<div class="cmdk-overlay" id="cmdkOverlay" onclick="closeCmdK(event)">
+  <div class="cmdk-modal" onclick="event.stopPropagation()">
+    <div class="cmdk-input-wrap">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242.656a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/></svg>
+      <input type="text" class="cmdk-input" placeholder="Search clients, tasks, people, or commands…">
+      <span class="cmdk-esc">ESC</span>
+    </div>
+    <div class="cmdk-results">
+      <div class="cmdk-group">
+        <div class="cmdk-group-label">Clients</div>
+        <div class="cmdk-item active"><div class="cmdk-icon">AC</div><div class="cmdk-item-main"><div class="cmdk-item-title">Acme Corporation</div><div class="cmdk-item-sub">4 services · 23 active tasks · On Fire</div></div><div class="cmdk-item-kbd">↵</div></div>
+        <div class="cmdk-item"><div class="cmdk-icon">GL</div><div class="cmdk-item-main"><div class="cmdk-item-title">GreenLeaf Studios</div><div class="cmdk-item-sub">2 services · 11 active tasks · On Track</div></div></div>
+        <div class="cmdk-item"><div class="cmdk-icon">NV</div><div class="cmdk-item-main"><div class="cmdk-item-title">Nova Ventures</div><div class="cmdk-item-sub">3 services · 18 active tasks · On Track</div></div></div>
+      </div>
+      <div class="cmdk-group">
+        <div class="cmdk-group-label">Tasks</div>
+        <div class="cmdk-item"><div class="cmdk-icon">T</div><div class="cmdk-item-main"><div class="cmdk-item-title">Homepage wireframes v3</div><div class="cmdk-item-sub">Acme Corporation · Sarah Chen · Due Apr 12</div></div></div>
+        <div class="cmdk-item"><div class="cmdk-icon">T</div><div class="cmdk-item-main"><div class="cmdk-item-title">SEO audit report</div><div class="cmdk-item-sub">TechStart Inc. · Marcus Reyes · Due Monday</div></div></div>
+      </div>
+      <div class="cmdk-group">
+        <div class="cmdk-group-label">People</div>
+        <div class="cmdk-item"><div class="cmdk-icon">SC</div><div class="cmdk-item-main"><div class="cmdk-item-title">Sarah Chen</div><div class="cmdk-item-sub">Senior Designer · 12 active tasks</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <div class="page-title">Clients</div>
+  <div class="page-subtitle">6 active · 2 archived · 8 total</div>
+
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-label">Active Tasks</div>
+      <div class="kpi-value">82</div>
+      <div class="kpi-change kpi-up">8 new this week</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Avg Tasks per Client</div>
+      <div class="kpi-value">13.7</div>
+      <div class="kpi-change">— Steady</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Completion Rate</div>
+      <div class="kpi-value">87<span style="font-size:22px;font-weight:500;color:var(--text-soft);margin-left:2px">%</span></div>
+      <div class="kpi-change kpi-up">3% vs last month</div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="sort-wrap">
+      <button class="filter-btn" id="sortToggle" onclick="toggleSort(event)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M7 12h10"/><path d="M10 18h4"/></svg>
+        Sort
+      </button>
+      <div class="sort-drop" id="sortDrop">
+        <div class="sort-drop-label">Sort by</div>
+        <button class="sort-opt on" onclick="doSort('default')"><span class="sort-icon">↕</span> Default</button>
+        <button class="sort-opt" onclick="doSort('pinned')"><span class="sort-icon">★</span> Pinned first</button>
+        <button class="sort-opt" onclick="doSort('name-az')"><span class="sort-icon">A↓</span> Name (A–Z)</button>
+        <button class="sort-opt" onclick="doSort('name-za')"><span class="sort-icon">Z↓</span> Name (Z–A)</button>
+        <hr class="sort-sep">
+        <div class="sort-drop-label">Health</div>
+        <button class="sort-opt" onclick="doSort('health-worst')"><span class="sort-icon">●</span> Worst first</button>
+        <button class="sort-opt" onclick="doSort('health-best')"><span class="sort-icon">○</span> Best first</button>
+        <hr class="sort-sep">
+        <div class="sort-drop-label">Workload</div>
+        <button class="sort-opt" onclick="doSort('tasks-desc')"><span class="sort-icon">▤</span> Most Tasks</button>
+        <button class="sort-opt" onclick="doSort('tasks-asc')"><span class="sort-icon">▥</span> Least Tasks</button>
+        <button class="sort-opt" onclick="doSort('hours-desc')"><span class="sort-icon">⏱</span> Most Hours Used</button>
+      </div>
+    </div>
+    <div class="filter-wrap">
+      <button class="filter-btn" id="filterToggle" onclick="toggleFilter(event)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        Filter
+      </button>
+      <div class="filter-drop" id="filterDrop">
+        <div class="filter-drop-label">Filter by service</div>
+        <div class="filter-chips">
+          <button class="sf-chip on" onclick="doFilter(this,'all')">All</button>
+          <button class="sf-chip" onclick="doFilter(this,'web')">Web (4)</button>
+          <button class="sf-chip" onclick="doFilter(this,'mobile')">Mobile (2)</button>
+          <button class="sf-chip" onclick="doFilter(this,'seo')">SEO (3)</button>
+          <button class="sf-chip" onclick="doFilter(this,'cloud')">Cloud (2)</button>
+          <button class="sf-chip" onclick="doFilter(this,'design')">Design (3)</button>
+          <button class="sf-chip" onclick="doFilter(this,'content')">Content (2)</button>
+          <button class="sf-chip" onclick="doFilter(this,'social')">Social (1)</button>
+          <button class="sf-chip" onclick="doFilter(this,'branding')">Branding (2)</button>
+        </div>
+      </div>
+    </div>
+    <div class="view-toggle">
+      <button class="view-btn on" onclick="setView('grid',this)" title="Grid view"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></button>
+      <button class="view-btn" onclick="setView('list',this)" title="List view"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="4" width="18" height="3" rx="1.5"/><rect x="3" y="10.5" width="18" height="3" rx="1.5"/><rect x="3" y="17" width="18" height="3" rx="1.5"/></svg></button>
+    </div>
+    <button class="btn-primary">＋ Add Client</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" onclick="doTab('active',this)">Active Clients <span class="tab-count">6</span></button>
+    <button class="tab" onclick="doTab('archived',this)">Archived <span class="tab-count">2</span></button>
+  </div>
+
+  <!-- ACTIVE TAB -->
+  <div class="tp on" id="tp-active">
+    <div class="list-header" id="listHeader">
+      <span class="lh-name">Client</span>
+      <span class="lh-status">Health</span>
+      <div class="lh-stats"><span>Progress</span><span>Tasks</span><span>Hours</span></div>
+      <span class="lh-activity">Activity</span>
+    </div>
+    <div class="grid">
+
+      <div class="card has-fire" data-s="web,mobile,seo,cloud" data-name="Acme Corporation" data-tasks="23" data-services="4" data-health="3" data-progress="52" data-hours="78" data-budget="80" data-pinned="1" data-order="0">
+        <div class="card-head">
+          <div class="card-av">AC</div>
+          <div class="card-info">
+            <div class="card-name"><span class="health-dot-inline hd-red"></span> Acme Corporation <span class="blocker-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 9v4M12 17h0"/><circle cx="12" cy="12" r="10"/></svg>2 blockers</span></div>
+            <div class="card-sub">Technology · San Francisco</div>
+          </div>
+          <div class="card-right">
+            <button class="pin-btn pinned" onclick="event.stopPropagation();togglePin(this)" title="Unpin">★</button>
+            <div class="menu-wrap">
+              <div class="menu-trigger" onclick="event.stopPropagation();openMenu(this)">⋯</div>
+              <div class="menu-drop">
+                <div class="ck">✓ Active</div>
+                <div>⏸ Paused</div>
+                <hr>
+                <div class="mt">Archive Client</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-stats">
+          <div style="flex:1">
+            <div class="sv">52%</div><div class="sl">Progress</div>
+            <div class="progress-bar-mini"><div class="pbar-fill red" style="width:52%"></div></div>
+          </div>
+          <div><div class="sv">23</div><div class="sl">Tasks</div></div>
+          <div><div class="sv hours-over">78/80h</div><div class="sl">Hours used</div></div>
+        </div>
+        <div class="card-footer">
+          <div class="tags">
+            <span class="tg">Web</span><span class="tg">Mobile</span><span class="tg">SEO</span><span class="tg">Cloud</span>
+          </div>
+          <span class="last-active"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>2h ago</span>
+        </div>
+      </div>
+
+      <div class="card" data-s="design,branding" data-name="GreenLeaf Studios" data-tasks="11" data-services="2" data-health="1" data-progress="78" data-hours="34" data-budget="50" data-pinned="0" data-order="1">
+        <div class="card-head">
+          <div class="card-av">GL</div>
+          <div class="card-info">
+            <div class="card-name"><span class="health-dot-inline hd-green"></span> GreenLeaf Studios</div>
+            <div class="card-sub">Design Agency · Austin</div>
+          </div>
+          <div class="card-right">
+            <button class="pin-btn" onclick="event.stopPropagation();togglePin(this)" title="Pin client">☆</button>
+            <div class="menu-wrap">
+              <div class="menu-trigger" onclick="event.stopPropagation();openMenu(this)">⋯</div>
+              <div class="menu-drop">
+                <div class="ck">✓ Active</div>
+                <div>⏸ Paused</div>
+                <hr>
+                <div class="mt">Archive Client</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-stats">
+          <div style="flex:1">
+            <div class="sv">78%</div><div class="sl">Progress</div>
+            <div class="progress-bar-mini"><div class="pbar-fill" style="width:78%"></div></div>
+          </div>
+          <div><div class="sv">11</div><div class="sl">Tasks</div></div>
+          <div><div class="sv">34/50h</div><div class="sl">Hours used</div></div>
+        </div>
+        <div class="card-footer">
+          <div class="tags">
+            <span class="tg">Design</span><span class="tg">Branding</span>
+          </div>
+          <span class="last-active"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>5h ago</span>
+        </div>
+      </div>
+
+      <div class="card" data-s="web,seo,content" data-name="Nova Ventures" data-tasks="18" data-services="3" data-health="2" data-progress="64" data-hours="52" data-budget="70" data-pinned="1" data-order="2">
+        <div class="card-head">
+          <div class="card-av">NV</div>
+          <div class="card-info">
+            <div class="card-name"><span class="health-dot-inline hd-orange"></span> Nova Ventures <span class="blocker-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 9v4M12 17h0"/><circle cx="12" cy="12" r="10"/></svg>1 blocker</span></div>
+            <div class="card-sub">Finance · New York</div>
+          </div>
+          <div class="card-right">
+            <button class="pin-btn pinned" onclick="event.stopPropagation();togglePin(this)" title="Unpin">★</button>
+            <div class="menu-wrap">
+              <div class="menu-trigger" onclick="event.stopPropagation();openMenu(this)">⋯</div>
+              <div class="menu-drop">
+                <div class="ck">✓ Active</div>
+                <div>⏸ Paused</div>
+                <hr>
+                <div class="mt">Archive Client</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-stats">
+          <div style="flex:1">
+            <div class="sv">64%</div><div class="sl">Progress</div>
+            <div class="progress-bar-mini"><div class="pbar-fill" style="width:64%"></div></div>
+          </div>
+          <div><div class="sv">18</div><div class="sl">Tasks</div></div>
+          <div><div class="sv">52/70h</div><div class="sl">Hours used</div></div>
+        </div>
+        <div class="card-footer">
+          <div class="tags">
+            <span class="tg">Web</span><span class="tg">SEO</span><span class="tg">Content</span>
+          </div>
+          <span class="last-active"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>1d ago</span>
+        </div>
+      </div>
+
+      <div class="card dim" data-s="web,content" data-name="BrightPath Education" data-tasks="7" data-services="1" data-health="0" data-progress="25" data-hours="8" data-budget="30" data-pinned="0" data-order="3">
+        <div class="card-head">
+          <div class="card-av">BR</div>
+          <div class="card-info">
+            <div class="card-name"><span class="health-dot-inline hd-gray"></span> BrightPath Education</div>
+            <div class="card-sub">EdTech · Seattle · Paused</div>
+          </div>
+          <div class="card-right">
+            <button class="pin-btn" onclick="event.stopPropagation();togglePin(this)" title="Pin client">☆</button>
+            <div class="menu-wrap">
+              <div class="menu-trigger" onclick="event.stopPropagation();openMenu(this)">⋯</div>
+              <div class="menu-drop">
+                <div>✓ Active</div>
+                <div class="ck">⏸ Paused</div>
+                <hr>
+                <div class="mt">Archive Client</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-stats">
+          <div style="flex:1">
+            <div class="sv">25%</div><div class="sl">Progress</div>
+            <div class="progress-bar-mini"><div class="pbar-fill" style="width:25%"></div></div>
+          </div>
+          <div><div class="sv">7</div><div class="sl">Tasks</div></div>
+          <div><div class="sv">8/30h</div><div class="sl">Hours used</div></div>
+        </div>
+        <div class="card-footer">
+          <div class="tags">
+            <span class="tg">Web</span><span class="tg">Content</span>
+          </div>
+          <span class="last-active"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>5d ago</span>
+        </div>
+      </div>
+
+      <div class="card" data-s="design,mobile,cloud" data-name="SpringBoard Health" data-tasks="14" data-services="3" data-health="1" data-progress="88" data-hours="58" data-budget="90" data-pinned="0" data-order="4">
+        <div class="card-head">
+          <div class="card-av">SP</div>
+          <div class="card-info">
+            <div class="card-name"><span class="health-dot-inline hd-green"></span> SpringBoard Health</div>
+            <div class="card-sub">Healthcare · Chicago</div>
+          </div>
+          <div class="card-right">
+            <button class="pin-btn" onclick="event.stopPropagation();togglePin(this)" title="Pin client">☆</button>
+            <div class="menu-wrap">
+              <div class="menu-trigger" onclick="event.stopPropagation();openMenu(this)">⋯</div>
+              <div class="menu-drop">
+                <div class="ck">✓ Active</div>
+                <div>⏸ Paused</div>
+                <hr>
+                <div class="mt">Archive Client</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-stats">
+          <div style="flex:1">
+            <div class="sv">88%</div><div class="sl">Progress</div>
+            <div class="progress-bar-mini"><div class="pbar-fill" style="width:88%"></div></div>
+          </div>
+          <div><div class="sv">14</div><div class="sl">Tasks</div></div>
+          <div><div class="sv">58/90h</div><div class="sl">Hours used</div></div>
+        </div>
+        <div class="card-footer">
+          <div class="tags">
+            <span class="tg">Design</span><span class="tg">Mobile</span><span class="tg">Cloud</span>
+          </div>
+          <span class="last-active"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>12h ago</span>
+        </div>
+      </div>
+
+      <div class="card" data-s="design,branding,social,seo" data-name="Luxe Interiors" data-tasks="9" data-services="2" data-health="1" data-progress="71" data-hours="28" data-budget="45" data-pinned="0" data-order="5">
+        <div class="card-head">
+          <div class="card-av">LX</div>
+          <div class="card-info">
+            <div class="card-name"><span class="health-dot-inline hd-green"></span> Luxe Interiors</div>
+            <div class="card-sub">Interior Design · Miami</div>
+          </div>
+          <div class="card-right">
+            <button class="pin-btn" onclick="event.stopPropagation();togglePin(this)" title="Pin client">☆</button>
+            <div class="menu-wrap">
+              <div class="menu-trigger" onclick="event.stopPropagation();openMenu(this)">⋯</div>
+              <div class="menu-drop">
+                <div class="ck">✓ Active</div>
+                <div>⏸ Paused</div>
+                <hr>
+                <div class="mt">Archive Client</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-stats">
+          <div style="flex:1">
+            <div class="sv">71%</div><div class="sl">Progress</div>
+            <div class="progress-bar-mini"><div class="pbar-fill" style="width:71%"></div></div>
+          </div>
+          <div><div class="sv">9</div><div class="sl">Tasks</div></div>
+          <div><div class="sv">28/45h</div><div class="sl">Hours used</div></div>
+        </div>
+        <div class="card-footer">
+          <div class="tags">
+            <span class="tg">Design</span><span class="tg">Branding</span><span class="tg">Social</span><span class="tg">SEO</span>
+          </div>
+          <span class="last-active"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>3d ago</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ARCHIVED TAB -->
+  <div class="tp" id="tp-archived">
+    <div class="grid">
+
+      <div class="card dim">
+        <div class="card-head">
+          <div class="card-av">ZP</div>
+          <div class="card-info"><div class="card-name">Zenith Properties</div><div class="card-sub">Real Estate · Denver</div></div>
+        </div>
+        <div class="card-stats">
+          <div><div class="sv">2</div><div class="sl">Services</div></div>
+          <div><div class="sv">0</div><div class="sl">Active Tasks</div></div>
+        </div>
+        <div class="arch-date">Archived Dec 2025</div>
+        <button class="restore">↩ Restore</button>
+      </div>
+
+      <div class="card dim">
+        <div class="card-head">
+          <div class="card-av">CT</div>
+          <div class="card-info"><div class="card-name">ClearTrack Logistics</div><div class="card-sub">Logistics · Portland</div></div>
+        </div>
+        <div class="card-stats">
+          <div><div class="sv">1</div><div class="sl">Services</div></div>
+          <div><div class="sv">0</div><div class="sl">Active Tasks</div></div>
+        </div>
+        <div class="arch-date">Archived Oct 2025</div>
+        <button class="restore">↩ Restore</button>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+function toggleTheme() {
+  var cur = document.documentElement.getAttribute('data-theme');
+  var next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('refined-theme', next);
+}
+function doTab(id, btn) {
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on')});
+  document.querySelectorAll('.tp').forEach(function(t){t.classList.remove('on')});
+  btn.classList.add('on');
+  document.getElementById('tp-'+id).classList.add('on');
+}
+function setView(mode, btn) {
+  document.querySelectorAll('.view-btn').forEach(function(b){b.classList.remove('on')});
+  btn.classList.add('on');
+  document.querySelectorAll('.grid').forEach(function(g){
+    if(mode==='list') g.classList.add('list-view');
+    else g.classList.remove('list-view');
+  });
+  var lh = document.getElementById('listHeader');
+  if(lh) lh.style.display = mode==='list' ? 'flex' : 'none';
+}
+function toggleFilter(e) {
+  e.stopPropagation();
+  document.getElementById('sortDrop').classList.remove('open');
+  var drop = document.getElementById('filterDrop');
+  drop.classList.toggle('open');
+}
+function doFilter(btn, svc) {
+  document.querySelectorAll('.sf-chip').forEach(function(c){c.classList.remove('on')});
+  btn.classList.add('on');
+  document.querySelectorAll('#tp-active .card').forEach(function(c){
+    if(svc==='all'){c.style.display=''}
+    else{var s=c.getAttribute('data-s')||'';c.style.display=s.split(',').indexOf(svc)>=0?'':'none'}
+  });
+}
+function toggleSort(e) {
+  e.stopPropagation();
+  document.getElementById('filterDrop').classList.remove('open');
+  document.getElementById('sortDrop').classList.toggle('open');
+}
+function doSort(mode) {
+  var grid = document.querySelector('#tp-active .grid');
+  var cards = Array.from(grid.querySelectorAll('.card'));
+  cards.sort(function(a, b) {
+    switch(mode) {
+      case 'name-az': return a.dataset.name.localeCompare(b.dataset.name);
+      case 'name-za': return b.dataset.name.localeCompare(a.dataset.name);
+      case 'tasks-desc': return parseInt(b.dataset.tasks) - parseInt(a.dataset.tasks);
+      case 'tasks-asc': return parseInt(a.dataset.tasks) - parseInt(b.dataset.tasks);
+      case 'hours-desc': return parseInt(b.dataset.hours) - parseInt(a.dataset.hours);
+      case 'health-worst': return parseInt(b.dataset.health) - parseInt(a.dataset.health);
+      case 'health-best': return parseInt(a.dataset.health) - parseInt(b.dataset.health);
+      case 'pinned': return parseInt(b.dataset.pinned) - parseInt(a.dataset.pinned);
+      default: return parseInt(a.dataset.order) - parseInt(b.dataset.order);
+    }
+  });
+  cards.forEach(function(c){ grid.appendChild(c); });
+  document.querySelectorAll('.sort-opt').forEach(function(o){o.classList.remove('on')});
+  event.target.closest('.sort-opt').classList.add('on');
+}
+function togglePin(btn) {
+  btn.classList.toggle('pinned');
+  if(btn.classList.contains('pinned')) {
+    btn.textContent = '★';
+    btn.title = 'Unpin';
+    btn.closest('.card').dataset.pinned = '1';
+  } else {
+    btn.textContent = '☆';
+    btn.title = 'Pin client';
+    btn.closest('.card').dataset.pinned = '0';
+  }
+}
+function openCmdK() {
+  document.getElementById('cmdkOverlay').classList.add('open');
+  setTimeout(function(){
+    var input = document.querySelector('.cmdk-input');
+    if(input) input.focus();
+  }, 50);
+}
+function closeCmdK(e) {
+  if(e && e.target.closest('.cmdk-modal')) return;
+  document.getElementById('cmdkOverlay').classList.remove('open');
+}
+document.addEventListener('keydown', function(e){
+  if((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault();
+    openCmdK();
+  }
+  if(e.key === 'Escape') {
+    closeCmdK();
+  }
+});
+function openMenu(trigger) {
+  var drop = trigger.nextElementSibling;
+  var wasOpen = drop.classList.contains('open');
+  document.querySelectorAll('.menu-drop.open').forEach(function(d){d.classList.remove('open')});
+  if(!wasOpen) drop.classList.add('open');
+}
+document.addEventListener('click', function(){
+  document.querySelectorAll('.menu-drop.open').forEach(function(d){d.classList.remove('open')});
+  document.getElementById('filterDrop').classList.remove('open');
+  document.getElementById('sortDrop').classList.remove('open');
+});
+</script>
+
+</body>
+</html>

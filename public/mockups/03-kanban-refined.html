@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup — Kanban Board (Refined)</title>
+<script>(function(){var s=localStorage.getItem('refined-theme');if(s)document.documentElement.setAttribute('data-theme',s);})();</script>
+<style>
+  :root {
+    --bg: #fbfbfd;
+    --bg-elev: #ffffff;
+    --bg-soft: #f5f5f7;
+    --bg-faint: #fafafa;
+    --column-bg: rgba(0,0,0,0.025);
+    --text: #1d1d1f;
+    --text-muted: #636366;
+    --text-soft: #86868b;
+    --text-faint: #aeaeb2;
+    --hairline: rgba(0,0,0,0.08);
+    --hairline-soft: rgba(0,0,0,0.04);
+    --hairline-faint: rgba(0,0,0,0.02);
+    --accent: #ff3b30;
+    --accent-soft: rgba(255,59,48,0.08);
+    --shadow: 0 1px 3px rgba(0,0,0,0.04);
+    --shadow-hover: 0 4px 16px rgba(0,0,0,0.08);
+    --avatar-bg: #1d1d1f;
+    --avatar-fg: #ffffff;
+    --kbd-bg: #ffffff;
+    --kbd-border: #d2d2d7;
+    --nav-bg: rgba(255,255,255,0.72);
+    --btn-bg: #ffffff;
+    --btn-bg-hover: #f5f5f7;
+    --tag-bg: rgba(0,0,0,0.04);
+    --tag-text: #636366;
+  }
+  :root[data-theme="dark"] {
+    --bg: #000000;
+    --bg-elev: #1c1c1e;
+    --bg-soft: #2c2c2e;
+    --bg-faint: #161618;
+    --column-bg: rgba(255,255,255,0.03);
+    --text: #f5f5f7;
+    --text-muted: #aeaeb2;
+    --text-soft: #86868b;
+    --text-faint: #636366;
+    --hairline: rgba(255,255,255,0.1);
+    --hairline-soft: rgba(255,255,255,0.06);
+    --hairline-faint: rgba(255,255,255,0.03);
+    --accent: #ff453a;
+    --accent-soft: rgba(255,69,58,0.14);
+    --shadow: 0 1px 3px rgba(0,0,0,0.4);
+    --shadow-hover: 0 4px 16px rgba(0,0,0,0.6);
+    --avatar-bg: #f5f5f7;
+    --avatar-fg: #1d1d1f;
+    --kbd-bg: #2c2c2e;
+    --kbd-border: rgba(255,255,255,0.15);
+    --nav-bg: rgba(0,0,0,0.72);
+    --btn-bg: #1c1c1e;
+    --btn-bg-hover: #2c2c2e;
+    --tag-bg: rgba(255,255,255,0.06);
+    --tag-text: #aeaeb2;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Segoe UI', sans-serif;
+    background: var(--bg); color: var(--text);
+    height: 100vh; display: flex; flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "ss01", "tnum";
+    transition: background 0.3s ease, color 0.3s ease;
+    font-size: 14px;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--nav-bg);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid var(--hairline);
+    padding: 0 32px; height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0; z-index: 100;
+    transition: background 0.3s ease, border-color 0.3s ease;
+  }
+  .header-left { display: flex; align-items: center; gap: 24px; }
+  .header-logo { font-size: 18px; font-weight: 600; letter-spacing: -0.022em; color: var(--text); }
+  .header-nav { display: flex; gap: 4px; }
+  .header-nav a {
+    padding: 6px 12px; border-radius: 8px;
+    font-size: 13px; font-weight: 500;
+    color: var(--text-soft); text-decoration: none;
+    letter-spacing: -0.01em;
+    transition: color 0.15s;
+  }
+  .header-nav a:hover { color: var(--text); }
+  .header-nav a.on { color: var(--text); font-weight: 600; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .cmdk-trigger {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 12px;
+    background: var(--bg-soft);
+    border: 1px solid transparent;
+    border-radius: 10px;
+    font-size: 13px; color: var(--text-soft);
+    cursor: pointer; min-width: 260px;
+    transition: all 0.15s; letter-spacing: -0.01em;
+  }
+  .cmdk-trigger:hover { color: var(--text-muted); }
+  .cmdk-trigger svg { opacity: 0.6; }
+  .cmdk-trigger .cmdk-label { flex: 1; text-align: left; }
+  .cmdk-trigger .cmdk-kbd {
+    font-family: -apple-system, sans-serif;
+    font-size: 11px; font-weight: 600;
+    padding: 2px 6px;
+    background: var(--kbd-bg);
+    border: 1px solid var(--kbd-border);
+    border-radius: 4px; color: var(--text-muted);
+  }
+  .header-icon {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--bg-soft);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 14px; color: var(--text-muted);
+    position: relative;
+    transition: background 0.15s;
+  }
+  .header-icon:hover { background: var(--hairline); }
+  .header-icon .notif-dot {
+    position: absolute; top: 6px; right: 6px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent); border: 2px solid var(--bg);
+  }
+  .avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--avatar-bg); color: var(--avatar-fg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .theme-toggle {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg-soft); border: none;
+    cursor: pointer; color: var(--text-muted);
+    transition: background 0.15s, color 0.15s;
+    padding: 0;
+  }
+  .theme-toggle:hover { background: var(--hairline); color: var(--text); }
+  .theme-toggle .icon-sun { display: none; }
+  :root[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+  :root[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+
+  /* Cmd+K modal */
+  .cmdk-overlay {
+    display: none; position: fixed; inset: 0;
+    z-index: 1000;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(4px);
+    align-items: flex-start; justify-content: center;
+    padding-top: 120px;
+  }
+  .cmdk-overlay.open { display: flex; }
+  .cmdk-modal {
+    width: 100%; max-width: 600px;
+    background: var(--bg-elev);
+    border-radius: 16px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+    overflow: hidden;
+    border: 1px solid var(--hairline);
+  }
+  .cmdk-input-wrap {
+    display: flex; align-items: center; gap: 12px;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--hairline-soft);
+  }
+  .cmdk-input-wrap svg { color: var(--text-soft); flex-shrink: 0; }
+  .cmdk-input {
+    flex: 1; border: none; outline: none;
+    font-size: 16px; color: var(--text);
+    background: transparent;
+    letter-spacing: -0.015em;
+    font-family: inherit;
+  }
+  .cmdk-input::placeholder { color: var(--text-faint); }
+  .cmdk-esc {
+    font-size: 11px; font-weight: 600;
+    padding: 3px 7px;
+    background: var(--bg-soft);
+    border-radius: 4px;
+    color: var(--text-soft);
+  }
+  .cmdk-results { max-height: 400px; overflow-y: auto; padding: 8px 0; }
+  .cmdk-group { padding: 4px 0; }
+  .cmdk-group-label {
+    font-size: 11px; font-weight: 600;
+    color: var(--text-soft);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    padding: 8px 22px;
+  }
+  .cmdk-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 22px; cursor: pointer;
+  }
+  .cmdk-item:hover, .cmdk-item.active { background: var(--bg-soft); }
+  .cmdk-icon {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: var(--bg-soft);
+    color: var(--text-muted);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600;
+    flex-shrink: 0;
+    letter-spacing: -0.01em;
+  }
+  .cmdk-item-main { flex: 1; min-width: 0; }
+  .cmdk-item-title {
+    font-size: 14px; font-weight: 500;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .cmdk-item-sub {
+    font-size: 12px; color: var(--text-soft);
+    margin-top: 2px;
+    letter-spacing: -0.005em;
+  }
+  .cmdk-item-kbd { font-size: 11px; color: var(--text-faint); }
+
+  /* BREADCRUMB BAR */
+  .breadcrumb-bar {
+    padding: 16px 32px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--hairline-soft);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .breadcrumb {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 14px; color: var(--text-soft);
+    letter-spacing: -0.01em;
+  }
+  .breadcrumb a {
+    color: var(--text-muted); text-decoration: none;
+    font-weight: 500;
+    transition: color 0.15s;
+  }
+  .breadcrumb a:hover { color: var(--text); }
+  .breadcrumb .sep { color: var(--text-faint); }
+  .breadcrumb .current { color: var(--text); font-weight: 600; letter-spacing: -0.015em; }
+
+  .board-actions { display: flex; gap: 8px; }
+  .btn-sm {
+    padding: 8px 16px;
+    background: var(--btn-bg);
+    border: 1px solid var(--hairline);
+    border-radius: 980px;
+    font-size: 13px; font-weight: 500;
+    color: var(--text); cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    letter-spacing: -0.01em;
+    transition: all 0.15s;
+  }
+  .btn-sm:hover { background: var(--btn-bg-hover); border-color: var(--text-faint); }
+  .btn-sm svg { width: 14px; height: 14px; }
+
+  /* KANBAN BOARD */
+  .board {
+    flex: 1;
+    display: flex;
+    gap: 20px;
+    padding: 32px;
+    overflow-x: auto;
+  }
+
+  .column {
+    min-width: 320px;
+    max-width: 320px;
+    background: var(--column-bg);
+    border-radius: 16px;
+    border: 1px solid var(--hairline-soft);
+    display: flex;
+    flex-direction: column;
+    max-height: 100%;
+    transition: background 0.3s, border-color 0.3s;
+  }
+
+  .column-header {
+    padding: 20px 20px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .column-title-group { display: flex; align-items: center; gap: 10px; }
+  .column-title {
+    font-size: 13px; font-weight: 600;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .column-count {
+    color: var(--text-faint);
+    font-size: 13px; font-weight: 500;
+    font-feature-settings: "tnum";
+  }
+  .column-menu {
+    cursor: pointer; color: var(--text-faint);
+    font-size: 18px;
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 6px;
+    transition: background 0.15s, color 0.15s;
+  }
+  .column-menu:hover { background: var(--hairline); color: var(--text-muted); }
+
+  .column-cards {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 14px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .card {
+    background: var(--bg-elev);
+    border-radius: 14px;
+    padding: 16px;
+    border: 1px solid var(--hairline-soft);
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+  }
+  .card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-1px);
+  }
+  .card.has-alert {
+    border-color: var(--accent);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), inset 3px 0 0 var(--accent);
+  }
+  :root[data-theme="dark"] .card.has-alert {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4), inset 3px 0 0 var(--accent);
+  }
+  .card.has-warn {
+    box-shadow: var(--shadow), inset 3px 0 0 var(--text-soft);
+  }
+  :root[data-theme="dark"] .card.has-warn {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4), inset 3px 0 0 var(--text-soft);
+  }
+
+  /* Status badges */
+  .card-status-row {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-bottom: 10px;
+  }
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 9px; border-radius: 980px;
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.04em;
+    line-height: 1;
+    background: var(--bg-soft);
+    color: var(--text-muted);
+  }
+  .status-badge svg { width: 10px; height: 10px; }
+  .status-overdue {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .status-blocked {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .status-waiting {
+    background: var(--bg-soft);
+    color: var(--text-muted);
+  }
+
+  .card-labels {
+    display: flex; gap: 6px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .card-label {
+    font-size: 11px; font-weight: 500;
+    padding: 3px 9px; border-radius: 980px;
+    background: var(--tag-bg);
+    color: var(--tag-text);
+    letter-spacing: -0.005em;
+  }
+
+  .card-title {
+    font-size: 14px; font-weight: 500;
+    color: var(--text);
+    margin-bottom: 14px;
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+  }
+
+  .card-footer {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .card-meta {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 12px; color: var(--text-faint);
+    letter-spacing: -0.005em;
+  }
+  .card-meta span {
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .card-meta svg { width: 12px; height: 12px; }
+  .card-assignee {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--avatar-bg);
+    color: var(--avatar-fg);
+    font-size: 10px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    letter-spacing: -0.005em;
+  }
+
+  .card-priority {
+    width: 7px; height: 7px; border-radius: 50%;
+    position: absolute; top: 14px; right: 14px;
+    background: var(--text-faint);
+  }
+  .priority-high { background: var(--accent); }
+  .priority-medium { background: var(--text-soft); }
+  .priority-low { background: var(--text-faint); }
+
+  /* Add card button */
+  .add-card-btn {
+    padding: 12px;
+    margin: 0 14px 14px;
+    border: 1px dashed var(--hairline);
+    border-radius: 12px;
+    background: transparent;
+    color: var(--text-soft);
+    font-size: 13px; font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+    letter-spacing: -0.01em;
+    transition: all 0.15s;
+  }
+  .add-card-btn:hover {
+    border-color: var(--text);
+    color: var(--text);
+    background: var(--bg-faint);
+  }
+
+  /* Add column */
+  .add-column {
+    min-width: 320px;
+    max-width: 320px;
+    border: 2px dashed var(--hairline);
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: var(--text-soft);
+    font-size: 14px; font-weight: 500;
+    letter-spacing: -0.01em;
+    transition: all 0.15s;
+  }
+  .add-column:hover {
+    border-color: var(--text);
+    color: var(--text);
+  }
+
+  .nav-hint {
+    text-align: center;
+    padding: 18px;
+    color: var(--text-soft);
+    font-size: 13px;
+    flex-shrink: 0;
+    border-top: 1px solid var(--hairline-soft);
+    background: var(--bg);
+    letter-spacing: -0.005em;
+    transition: background 0.3s, border-color 0.3s, color 0.3s;
+  }
+  .nav-hint a {
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.15s;
+  }
+  .nav-hint a:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="header-logo">ProjectFlow</div>
+    <nav class="header-nav">
+      <a href="00-overview-refined.html">Overview</a>
+      <a href="01-clients-refined.html">Clients</a>
+      <a href="03-kanban-refined.html" class="on">Board</a>
+      <a href="#">Analytics</a>
+    </nav>
+  </div>
+  <div class="header-right">
+    <button class="cmdk-trigger" onclick="openCmdK()">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242.656a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/></svg>
+      <span class="cmdk-label">Search clients, tasks, people…</span>
+      <span class="cmdk-kbd">⌘K</span>
+    </button>
+    <div class="header-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="notif-dot"></span>
+    </div>
+    <button class="theme-toggle" aria-label="Toggle dark mode" onclick="toggleTheme()">
+      <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+    </button>
+    <div class="avatar">NT</div>
+  </div>
+</div>
+
+<!-- Cmd+K Modal -->
+<div class="cmdk-overlay" id="cmdkOverlay" onclick="closeCmdK(event)">
+  <div class="cmdk-modal" onclick="event.stopPropagation()">
+    <div class="cmdk-input-wrap">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242.656a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/></svg>
+      <input type="text" class="cmdk-input" placeholder="Search clients, tasks, people, or commands…">
+      <span class="cmdk-esc">ESC</span>
+    </div>
+    <div class="cmdk-results">
+      <div class="cmdk-group">
+        <div class="cmdk-group-label">On this board</div>
+        <div class="cmdk-item active"><div class="cmdk-icon">T</div><div class="cmdk-item-main"><div class="cmdk-item-title">Implement responsive navigation menu</div><div class="cmdk-item-sub">In Progress · Nikko Trinidad · High priority</div></div><div class="cmdk-item-kbd">↵</div></div>
+        <div class="cmdk-item"><div class="cmdk-icon">T</div><div class="cmdk-item-main"><div class="cmdk-item-title">Homepage layout with CMS integration</div><div class="cmdk-item-sub">In Review · Waiting on client feedback</div></div></div>
+      </div>
+      <div class="cmdk-group">
+        <div class="cmdk-group-label">Clients</div>
+        <div class="cmdk-item"><div class="cmdk-icon">AC</div><div class="cmdk-item-main"><div class="cmdk-item-title">Acme Corporation</div><div class="cmdk-item-sub">4 services · 23 active tasks · On Fire</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="breadcrumb-bar">
+  <div class="breadcrumb">
+    <a href="01-clients-refined.html">Clients</a>
+    <span class="sep">›</span>
+    <a href="#">Acme Corporation</a>
+    <span class="sep">›</span>
+    <span class="current">Website Redesign</span>
+  </div>
+  <div class="board-actions">
+    <button class="btn-sm">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Board Settings
+    </button>
+    <button class="btn-sm">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Members
+    </button>
+    <button class="btn-sm">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Analytics
+    </button>
+  </div>
+</div>
+
+<div class="board">
+
+  <!-- To Do Column -->
+  <div class="column">
+    <div class="column-header">
+      <div class="column-title-group">
+        <div class="column-title">To Do</div>
+        <div class="column-count">3</div>
+      </div>
+      <div class="column-menu">⋯</div>
+    </div>
+    <div class="column-cards">
+      <div class="card has-alert">
+        <div class="card-priority priority-high"></div>
+        <div class="card-status-row">
+          <span class="status-badge status-overdue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Overdue 2d</span>
+        </div>
+        <div class="card-labels">
+          <span class="card-label">Design</span>
+        </div>
+        <div class="card-title">Create wireframes for contact page</div>
+        <div class="card-footer">
+          <div class="card-meta">
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>2</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>1</span>
+          </div>
+          <div class="card-assignee">JK</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-priority priority-medium"></div>
+        <div class="card-labels">
+          <span class="card-label">Content</span>
+        </div>
+        <div class="card-title">Write copy for About Us section</div>
+        <div class="card-footer">
+          <div class="card-meta">
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>0</span>
+          </div>
+          <div class="card-assignee">ML</div>
+        </div>
+      </div>
+      <div class="card has-alert">
+        <div class="card-priority priority-low"></div>
+        <div class="card-status-row">
+          <span class="status-badge status-blocked"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>Blocked</span>
+        </div>
+        <div class="card-labels">
+          <span class="card-label">Dev</span>
+        </div>
+        <div class="card-title">Set up staging environment</div>
+        <div class="card-footer">
+          <div class="card-meta">
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>1</span>
+          </div>
+          <div class="card-assignee">AS</div>
+        </div>
+      </div>
+    </div>
+    <button class="add-card-btn">＋ Add Card</button>
+  </div>
+
+  <!-- In Progress Column -->
+  <div class="column">
+    <div class="column-header">
+      <div class="column-title-group">
+        <div class="column-title">In Progress</div>
+        <div class="column-count">3</div>
+      </div>
+      <div class="column-menu">⋯</div>
+    </div>
+    <div class="column-cards">
+      <div class="card">
+        <div class="card-priority priority-high"></div>
+        <div class="card-labels">
+          <span class="card-label">Dev</span>
+          <span class="card-label">Feature</span>
+        </div>
+        <div class="card-title">Implement responsive navigation menu</div>
+        <div class="card-footer">
+          <div class="card-meta">
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>5</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>3</span>
+          </div>
+          <div class="card-assignee">NT</div>
+        </div>
+      </div>
+      <div class="card has-warn">
+        <div class="card-priority priority-medium"></div>
+        <div class="card-status-row">
+          <span class="status-badge status-waiting"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Waiting on client</span>
+        </div>
+        <div class="card-labels">
+          <span class="card-label">Design</span>
+        </div>
+        <div class="card-title">Design hero section with animations</div>
+        <div class="card-footer">
+          <div class="card-meta">
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>3</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>2</span>
+          </div>
+          <div class="card-assignee">JK</div>
+        </div>
+      </div>
+      <div class="card has-alert">
+        <div class="card-priority priority-high"></div>
+        <div class="card-status-row">
+          <span class="status-badge status-blocked"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>Blocked</span>
+          <span class="status-badge status-overdue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Overdue 1d</span>
+        </div>
+        <div class="card-labels">
+          <span class="card-label">Bug</span>
+        </div>
+        <div class="card-title">Fix image optimization pipeline</div>
+        <div class="card-footer">
+          <div class="card-meta">
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>4</span>
+          </div>
+          <div class="card-assignee">AS</div>
+        </div>
+      </div>
+    </div>
+    <button class="add-card-btn">＋ Add Card</button>
+  </div>
+
+  <!-- In Review Column -->
+  <div class="column">
+    <div class="column-header">
+      <div class="column-title-group">
+        <div class="column-title">In Review</div>
+        <div class="column-count">1</div>
+      </div>
+      <div class="column-menu">⋯</div>
+    </div>
+    <div class="column-cards">
+      <div class="card has-warn">
+        <div class="card-priority priority-medium"></div>
+        <div class="card-status-row">
+          <span class="status-badge status-waiting"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Waiting on client · 3d</span>
+        </div>
+        <div class="card-labels">
+          <span class="card-label">Dev</span>
+          <span class="card-label">Design</span>
+        </div>
+        <div class="card-title">Homepage layout with CMS integration</div>
+        <div class="card-footer">
+          <div class="card-meta">
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>8</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>4</span>
+          </div>
+          <div class="card-assignee">NT</div>
+        </div>
+      </div>
+    </div>
+    <button class="add-card-btn">＋ Add Card</button>
+  </div>
+
+  <!-- Done Column -->
+  <div class="column">
+    <div class="column-header">
+      <div class="column-title-group">
+        <div class="column-title">Done</div>
+        <div class="column-count">1</div>
+      </div>
+      <div class="column-menu">⋯</div>
+    </div>
+    <div class="column-cards">
+      <div class="card" style="opacity: 0.7;">
+        <div class="card-labels">
+          <span class="card-label">Design</span>
+        </div>
+        <div class="card-title" style="text-decoration: line-through;">Brand style guide finalization</div>
+        <div class="card-footer">
+          <div class="card-meta">
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>6</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>5</span>
+          </div>
+          <div class="card-assignee">JK</div>
+        </div>
+      </div>
+    </div>
+    <button class="add-card-btn">＋ Add Card</button>
+  </div>
+
+  <!-- Add Column -->
+  <div class="add-column">＋ Add Column</div>
+
+</div>
+
+<div class="nav-hint">
+  <a href="01-clients-refined.html">← Back to Clients</a> · This is your existing Kanban board, now scoped to a specific service
+</div>
+
+<script>
+function toggleTheme() {
+  var cur = document.documentElement.getAttribute('data-theme');
+  var next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('refined-theme', next);
+}
+function openCmdK() {
+  document.getElementById('cmdkOverlay').classList.add('open');
+  setTimeout(function(){
+    var input = document.querySelector('.cmdk-input');
+    if(input) input.focus();
+  }, 50);
+}
+function closeCmdK(e) {
+  if(e && e.target.closest('.cmdk-modal')) return;
+  document.getElementById('cmdkOverlay').classList.remove('open');
+}
+document.addEventListener('keydown', function(e){
+  if((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault();
+    openCmdK();
+  }
+  if(e.key === 'Escape') {
+    closeCmdK();
+  }
+});
+</script>
+
+</body>
+</html>

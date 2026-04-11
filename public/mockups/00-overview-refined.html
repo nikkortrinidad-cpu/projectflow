@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup — Executive Overview (Refined)</title>
+<script>(function(){var s=localStorage.getItem('refined-theme');if(s)document.documentElement.setAttribute('data-theme',s);})();</script>
+<style>
+  :root {
+    --bg: #fbfbfd;
+    --bg-elev: #ffffff;
+    --bg-soft: #f5f5f7;
+    --bg-faint: #fafafa;
+    --text: #1d1d1f;
+    --text-muted: #636366;
+    --text-soft: #86868b;
+    --text-faint: #aeaeb2;
+    --hairline: rgba(0,0,0,0.08);
+    --hairline-soft: rgba(0,0,0,0.04);
+    --hairline-faint: rgba(0,0,0,0.02);
+    --accent: #ff3b30;
+    --accent-soft: rgba(255,59,48,0.08);
+    --shadow: 0 1px 3px rgba(0,0,0,0.04);
+    --shadow-hover: 0 4px 16px rgba(0,0,0,0.08);
+    --avatar-bg: #1d1d1f;
+    --avatar-fg: #ffffff;
+    --kbd-bg: #ffffff;
+    --kbd-border: #d2d2d7;
+    --nav-bg: rgba(255,255,255,0.72);
+    --btn-bg: #ffffff;
+    --btn-bg-hover: #f5f5f7;
+  }
+  :root[data-theme="dark"] {
+    --bg: #000000;
+    --bg-elev: #1c1c1e;
+    --bg-soft: #2c2c2e;
+    --bg-faint: #161618;
+    --text: #f5f5f7;
+    --text-muted: #aeaeb2;
+    --text-soft: #86868b;
+    --text-faint: #636366;
+    --hairline: rgba(255,255,255,0.1);
+    --hairline-soft: rgba(255,255,255,0.06);
+    --hairline-faint: rgba(255,255,255,0.03);
+    --accent: #ff453a;
+    --accent-soft: rgba(255,69,58,0.14);
+    --shadow: 0 1px 3px rgba(0,0,0,0.4);
+    --shadow-hover: 0 4px 16px rgba(0,0,0,0.6);
+    --avatar-bg: #f5f5f7;
+    --avatar-fg: #1d1d1f;
+    --kbd-bg: #2c2c2e;
+    --kbd-border: rgba(255,255,255,0.15);
+    --nav-bg: rgba(0,0,0,0.72);
+    --btn-bg: #1c1c1e;
+    --btn-bg-hover: #2c2c2e;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "ss01", "tnum";
+    transition: background 0.3s ease, color 0.3s ease;
+  }
+
+  /* --- HEADER --- */
+  .header {
+    background: var(--nav-bg);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid var(--hairline);
+    padding: 0 32px;
+    height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    transition: background 0.3s ease, border-color 0.3s ease;
+  }
+  .header-left { display: flex; align-items: center; gap: 24px; }
+  .header-logo {
+    font-size: 18px; font-weight: 600;
+    letter-spacing: -0.022em;
+    color: var(--text);
+  }
+  .header-nav { display: flex; gap: 4px; }
+  .header-nav a {
+    padding: 6px 12px; border-radius: 8px;
+    font-size: 13px; font-weight: 500;
+    color: var(--text-soft);
+    text-decoration: none;
+    letter-spacing: -0.01em;
+    transition: color 0.15s, background 0.15s;
+  }
+  .header-nav a:hover { color: var(--text); }
+  .header-nav a.on { color: var(--text); font-weight: 600; }
+
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .cmdk-trigger {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 12px;
+    background: var(--bg-soft);
+    border: 1px solid transparent;
+    border-radius: 10px;
+    font-size: 13px;
+    color: var(--text-soft);
+    cursor: pointer;
+    min-width: 260px;
+    transition: all 0.15s;
+    letter-spacing: -0.01em;
+  }
+  .cmdk-trigger:hover { background: var(--bg-soft); color: var(--text-muted); }
+  .cmdk-trigger svg { opacity: 0.6; }
+  .cmdk-trigger .cmdk-label { flex: 1; text-align: left; }
+  .cmdk-trigger .cmdk-kbd {
+    font-family: -apple-system, sans-serif;
+    font-size: 11px; font-weight: 600;
+    padding: 2px 6px;
+    background: var(--kbd-bg);
+    border: 1px solid var(--kbd-border);
+    border-radius: 4px;
+    color: var(--text-muted);
+  }
+  .header-icon {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--bg-soft);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 14px; color: var(--text-muted);
+    position: relative;
+    transition: background 0.15s;
+  }
+  .header-icon:hover { background: var(--hairline); }
+  .header-icon .notif-dot {
+    position: absolute; top: 6px; right: 6px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent); border: 2px solid var(--bg);
+  }
+  .avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--avatar-bg);
+    color: var(--avatar-fg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  /* Theme toggle */
+  .theme-toggle {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg-soft); border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: background 0.15s, color 0.15s;
+    padding: 0;
+  }
+  .theme-toggle:hover { background: var(--hairline); color: var(--text); }
+  .theme-toggle .icon-sun { display: none; }
+  :root[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+  :root[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+
+  /* --- PAGE LAYOUT --- */
+  .page { max-width: 1200px; margin: 0 auto; padding: 56px 32px 96px; }
+
+  .page-header { margin-bottom: 56px; }
+  .page-greeting {
+    font-size: 13px; font-weight: 500; color: var(--text-soft);
+    text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px;
+  }
+  .page-title {
+    font-size: 44px; font-weight: 600; line-height: 1.1;
+    margin-bottom: 8px; letter-spacing: -0.022em;
+    color: var(--text);
+  }
+  .page-date { font-size: 17px; color: var(--text-soft); letter-spacing: -0.01em; }
+
+  /* --- BLOCK COMMON --- */
+  .block { margin-bottom: 48px; }
+  .block:last-child { margin-bottom: 0; }
+  .block-header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 18px;
+  }
+  .block-title {
+    font-size: 12px; font-weight: 600; color: var(--text-soft);
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .block-sub { font-size: 12px; color: var(--text-faint); letter-spacing: -0.005em; }
+  .block-link {
+    font-size: 13px; font-weight: 500;
+    color: var(--text); text-decoration: none;
+    letter-spacing: -0.01em;
+    transition: color 0.15s;
+  }
+  .block-link:hover { color: var(--accent); }
+
+  /* --- BLOCK 1: PORTFOLIO HEALTH STRIP --- */
+  .health-strip {
+    background: var(--bg-elev);
+    border-radius: 18px;
+    padding: 32px 36px;
+    border: 1px solid var(--hairline-soft);
+    box-shadow: var(--shadow);
+    display: grid;
+    grid-template-columns: 1.2fr 1px 1fr 1px 1fr 1px 1fr;
+    gap: 32px;
+    align-items: center;
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .health-divider { background: var(--hairline); height: 64px; width: 1px; }
+  .health-cell { display: flex; align-items: center; gap: 18px; }
+  .health-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    background: var(--bg-soft);
+    color: var(--text);
+    transition: background 0.3s;
+  }
+  .health-icon.alert {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .health-icon svg { width: 20px; height: 20px; }
+  .health-label {
+    font-size: 11px; font-weight: 500; color: var(--text-soft);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin-bottom: 4px;
+  }
+  .health-value {
+    font-size: 36px; font-weight: 600; line-height: 1;
+    letter-spacing: -0.025em;
+    color: var(--text);
+    font-feature-settings: "tnum";
+  }
+  .health-value.urgent { color: var(--accent); }
+  .health-value .unit { font-size: 17px; font-weight: 500; color: var(--text-soft); margin-left: 2px; }
+  .health-sub { font-size: 12px; color: var(--text-soft); margin-top: 6px; letter-spacing: -0.005em; }
+
+  /* --- BLOCK 2: NEEDS YOUR ATTENTION --- */
+  .attention-list { display: flex; flex-direction: column; gap: 12px; }
+  .attn-card {
+    background: var(--bg-elev);
+    border-radius: 16px;
+    border: 1px solid var(--hairline-soft);
+    box-shadow: var(--shadow);
+    padding: 22px 26px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 20px;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .attn-card::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 16px; bottom: 16px;
+    width: 3px;
+    background: var(--text-faint);
+    border-radius: 0 2px 2px 0;
+    opacity: 0.4;
+  }
+  .attn-card.critical::before { background: var(--accent); opacity: 1; }
+  .attn-card.warn::before { background: var(--text-soft); opacity: 0.7; }
+  .attn-card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-1px);
+  }
+
+  .attn-content { min-width: 0; padding-left: 8px; }
+  .attn-row1 {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 8px;
+  }
+  .attn-severity {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--text-soft);
+  }
+  .attn-severity .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--text-soft);
+  }
+  .attn-severity.critical { color: var(--accent); }
+  .attn-severity.critical .dot { background: var(--accent); }
+  .attn-severity.warning { color: var(--text-muted); }
+  .attn-severity.warning .dot { background: var(--text-muted); }
+  .attn-severity.info { color: var(--text-muted); }
+  .attn-severity.info .dot { background: var(--text-muted); }
+
+  .attn-client {
+    font-size: 12px; font-weight: 600; color: var(--text-muted);
+    letter-spacing: -0.005em;
+  }
+  .attn-age {
+    font-size: 11px; color: var(--text-faint); margin-left: auto;
+    letter-spacing: -0.005em;
+  }
+  .attn-title {
+    font-size: 16px; font-weight: 600; color: var(--text);
+    line-height: 1.35; margin-bottom: 5px;
+    letter-spacing: -0.015em;
+  }
+  .attn-desc {
+    font-size: 13px; color: var(--text-muted); line-height: 1.5;
+    max-width: 62ch;
+    letter-spacing: -0.005em;
+  }
+  .attn-actions {
+    display: flex; align-items: center; gap: 8px;
+    flex-shrink: 0;
+  }
+  .attn-btn {
+    padding: 8px 16px; border-radius: 980px;
+    font-size: 13px; font-weight: 500;
+    border: 1px solid var(--hairline);
+    background: var(--btn-bg);
+    color: var(--text); cursor: pointer;
+    letter-spacing: -0.01em;
+    transition: all 0.15s;
+  }
+  .attn-btn:hover { background: var(--btn-bg-hover); border-color: var(--text-faint); }
+  .attn-btn.primary {
+    background: var(--text); border-color: var(--text); color: var(--bg);
+    font-weight: 500;
+  }
+  .attn-btn.primary:hover { opacity: 0.9; }
+
+  /* --- BLOCK 3 + 4 ROW --- */
+  .lower-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 32px;
+  }
+
+  /* --- BLOCK 3: THIS WEEK'S NUMBERS --- */
+  .numbers-card {
+    background: var(--bg-elev);
+    border-radius: 18px;
+    padding: 32px 32px;
+    border: 1px solid var(--hairline-soft);
+    box-shadow: var(--shadow);
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .numbers-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px 32px;
+  }
+  .num-item {
+    padding-bottom: 22px;
+    border-bottom: 1px solid var(--hairline-soft);
+  }
+  .num-item:nth-last-child(-n+2) {
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+  .num-label {
+    font-size: 12px; color: var(--text-soft);
+    margin-bottom: 10px; line-height: 1.4;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    font-weight: 500;
+  }
+  .num-value-row {
+    display: flex; align-items: baseline; gap: 10px;
+  }
+  .num-value {
+    font-size: 36px; font-weight: 600; line-height: 1;
+    letter-spacing: -0.025em;
+    color: var(--text);
+    font-feature-settings: "tnum";
+  }
+  .num-delta {
+    font-size: 12px; font-weight: 500;
+    display: inline-flex; align-items: center; gap: 2px;
+    color: var(--text-soft);
+    letter-spacing: -0.005em;
+  }
+  .num-delta.up::before { content: "↑ "; }
+  .num-delta.down::before { content: "↓ "; }
+  .num-context {
+    font-size: 12px; color: var(--text-faint); margin-top: 6px;
+    letter-spacing: -0.005em;
+  }
+
+  /* --- BLOCK 4: WHAT CHANGED (activity feed) --- */
+  .feed-card {
+    background: var(--bg-elev);
+    border-radius: 18px;
+    border: 1px solid var(--hairline-soft);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .feed-list { padding: 8px 0; }
+  .feed-item {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    gap: 16px;
+    padding: 14px 26px;
+    align-items: flex-start;
+    border-bottom: 1px solid var(--hairline-faint);
+    transition: background 0.15s;
+  }
+  .feed-item:last-child { border-bottom: none; }
+  .feed-item:hover { background: var(--bg-faint); }
+
+  .feed-icon {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+    background: var(--bg-soft);
+    color: var(--text-muted);
+  }
+  .feed-icon svg { width: 12px; height: 12px; }
+  .feed-icon.alert {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .feed-body { min-width: 0; }
+  .feed-text {
+    font-size: 13px; color: var(--text);
+    line-height: 1.5;
+    max-width: 56ch;
+    letter-spacing: -0.005em;
+  }
+  .feed-text strong { font-weight: 600; }
+  .feed-text a {
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 500;
+    border-bottom: 1px solid var(--hairline);
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .feed-text a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  .feed-meta {
+    font-size: 12px; color: var(--text-soft);
+    margin-top: 4px;
+    letter-spacing: -0.005em;
+  }
+
+  .feed-time {
+    font-size: 12px; color: var(--text-faint);
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 3px;
+    letter-spacing: -0.005em;
+    font-feature-settings: "tnum";
+  }
+
+  .feed-footer {
+    padding: 16px 26px;
+    text-align: center;
+    border-top: 1px solid var(--hairline-soft);
+    background: var(--bg-faint);
+  }
+  .feed-footer a {
+    font-size: 13px; font-weight: 500;
+    color: var(--text); text-decoration: none;
+    letter-spacing: -0.01em;
+    transition: color 0.15s;
+  }
+  .feed-footer a:hover { color: var(--accent); }
+
+  /* Responsive */
+  @media (max-width: 960px) {
+    .health-strip {
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+    }
+    .health-divider { display: none; }
+    .lower-grid { grid-template-columns: 1fr; }
+    .page-title { font-size: 36px; }
+  }
+
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="header-logo">ProjectFlow</div>
+    <nav class="header-nav">
+      <a href="00-overview-refined.html" class="on">Overview</a>
+      <a href="01-clients-refined.html">Clients</a>
+      <a href="03-kanban-refined.html">Board</a>
+      <a href="#">Analytics</a>
+    </nav>
+  </div>
+  <div class="header-right">
+    <button class="cmdk-trigger">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242.656a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/></svg>
+      <span class="cmdk-label">Search clients, tasks, people…</span>
+      <span class="cmdk-kbd">⌘K</span>
+    </button>
+    <div class="header-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="notif-dot"></span>
+    </div>
+    <button class="theme-toggle" aria-label="Toggle dark mode" onclick="toggleTheme()">
+      <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+    </button>
+    <div class="avatar">NT</div>
+  </div>
+</div>
+
+<div class="page">
+
+  <div class="page-header">
+    <div class="page-greeting">Saturday, April 11</div>
+    <div class="page-title">Good morning, Nikko.</div>
+    <div class="page-date">Here's what needs you today.</div>
+  </div>
+
+  <!-- BLOCK 1: PORTFOLIO HEALTH STRIP -->
+  <div class="block">
+    <div class="block-header">
+      <div class="block-title">Portfolio Health</div>
+      <div class="block-sub">Across 8 active clients</div>
+    </div>
+    <div class="health-strip">
+      <div class="health-cell">
+        <div class="health-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div>
+          <div class="health-label">On Track</div>
+          <div class="health-value">5</div>
+          <div class="health-sub">clients healthy</div>
+        </div>
+      </div>
+      <div class="health-divider"></div>
+      <div class="health-cell">
+        <div class="health-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <div>
+          <div class="health-label">At Risk</div>
+          <div class="health-value">2</div>
+          <div class="health-sub">need review</div>
+        </div>
+      </div>
+      <div class="health-divider"></div>
+      <div class="health-cell">
+        <div class="health-icon alert">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+        </div>
+        <div>
+          <div class="health-label">On Fire</div>
+          <div class="health-value urgent">1</div>
+          <div class="health-sub">needs you now</div>
+        </div>
+      </div>
+      <div class="health-divider"></div>
+      <div class="health-cell">
+        <div class="health-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div>
+          <div class="health-label">Avg Delivery</div>
+          <div class="health-value">94<span class="unit">%</span></div>
+          <div class="health-sub">on schedule</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BLOCK 2: NEEDS YOUR ATTENTION -->
+  <div class="block">
+    <div class="block-header">
+      <div class="block-title">Needs Your Attention</div>
+      <a href="#" class="block-link">View all 6 →</a>
+    </div>
+    <div class="attention-list">
+
+      <div class="attn-card critical">
+        <div class="attn-content">
+          <div class="attn-row1">
+            <span class="attn-severity critical"><span class="dot"></span>On Fire</span>
+            <span class="attn-client">Acme Corporation</span>
+            <span class="attn-age">3 days overdue</span>
+          </div>
+          <div class="attn-title">Website redesign blocked waiting on client feedback</div>
+          <div class="attn-desc">Sarah Chen sent design review files April 8. No response. Launch date April 18 at risk.</div>
+        </div>
+        <div class="attn-actions">
+          <button class="attn-btn">Snooze</button>
+          <button class="attn-btn primary">Follow up</button>
+        </div>
+      </div>
+
+      <div class="attn-card warn">
+        <div class="attn-content">
+          <div class="attn-row1">
+            <span class="attn-severity warning"><span class="dot"></span>At Risk</span>
+            <span class="attn-client">TechStart Inc.</span>
+            <span class="attn-age">Due Monday</span>
+          </div>
+          <div class="attn-title">SEO audit running 2 days behind schedule</div>
+          <div class="attn-desc">Marcus flagged capacity issue yesterday. May need to pull in help or extend timeline.</div>
+        </div>
+        <div class="attn-actions">
+          <button class="attn-btn">Snooze</button>
+          <button class="attn-btn primary">Review</button>
+        </div>
+      </div>
+
+      <div class="attn-card warn">
+        <div class="attn-content">
+          <div class="attn-row1">
+            <span class="attn-severity warning"><span class="dot"></span>At Risk</span>
+            <span class="attn-client">Bloom Retail</span>
+            <span class="attn-age">5 hours left</span>
+          </div>
+          <div class="attn-title">Monthly reporting deck not started — client meeting tomorrow 9am</div>
+          <div class="attn-desc">Assigned to Elena. Last seen yesterday afternoon. No draft in shared folder yet.</div>
+        </div>
+        <div class="attn-actions">
+          <button class="attn-btn">Snooze</button>
+          <button class="attn-btn primary">Check in</button>
+        </div>
+      </div>
+
+      <div class="attn-card">
+        <div class="attn-content">
+          <div class="attn-row1">
+            <span class="attn-severity info"><span class="dot"></span>Decision</span>
+            <span class="attn-client">Northstar Logistics</span>
+            <span class="attn-age">Waiting 2 days</span>
+          </div>
+          <div class="attn-title">Scope change request — needs your approval to proceed</div>
+          <div class="attn-desc">Client added a mobile app module. +40 hours estimated. Team paused pending sign-off.</div>
+        </div>
+        <div class="attn-actions">
+          <button class="attn-btn">Defer</button>
+          <button class="attn-btn primary">Review</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- LOWER GRID: BLOCK 3 + BLOCK 4 -->
+  <div class="lower-grid">
+
+    <!-- BLOCK 3: THIS WEEK'S NUMBERS -->
+    <div class="block" style="margin-bottom:0">
+      <div class="block-header">
+        <div class="block-title">This Week</div>
+        <div class="block-sub">Apr 5 – Apr 11</div>
+      </div>
+      <div class="numbers-card">
+        <div class="numbers-grid">
+
+          <div class="num-item">
+            <div class="num-label">Tasks completed</div>
+            <div class="num-value-row">
+              <div class="num-value">47</div>
+              <div class="num-delta up">12%</div>
+            </div>
+            <div class="num-context">vs last week</div>
+          </div>
+
+          <div class="num-item">
+            <div class="num-label">New tasks added</div>
+            <div class="num-value-row">
+              <div class="num-value">31</div>
+              <div class="num-delta up">4</div>
+            </div>
+            <div class="num-context">from 4 clients</div>
+          </div>
+
+          <div class="num-item">
+            <div class="num-label">Hours logged</div>
+            <div class="num-value-row">
+              <div class="num-value">186</div>
+              <div class="num-delta">— flat</div>
+            </div>
+            <div class="num-context">across 9 team members</div>
+          </div>
+
+          <div class="num-item">
+            <div class="num-label">Blockers opened</div>
+            <div class="num-value-row">
+              <div class="num-value">3</div>
+              <div class="num-delta down">2</div>
+            </div>
+            <div class="num-context">1 resolved, 2 active</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOCK 4: WHAT CHANGED -->
+    <div class="block" style="margin-bottom:0">
+      <div class="block-header">
+        <div class="block-title">What Changed</div>
+        <a href="#" class="block-link">Full activity →</a>
+      </div>
+      <div class="feed-card">
+        <div class="feed-list">
+
+          <div class="feed-item">
+            <div class="feed-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="feed-body">
+              <div class="feed-text"><strong>Sarah Chen</strong> completed <a href="#">Homepage wireframes v3</a> for <strong>Acme Corporation</strong></div>
+              <div class="feed-meta">Milestone reached · Design phase 80% complete</div>
+            </div>
+            <div class="feed-time">14m</div>
+          </div>
+
+          <div class="feed-item">
+            <div class="feed-icon alert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+            <div class="feed-body">
+              <div class="feed-text"><strong>New blocker</strong> opened on <a href="#">API integration</a> by <strong>Marcus Reyes</strong></div>
+              <div class="feed-meta">TechStart Inc. · Needs senior eng review</div>
+            </div>
+            <div class="feed-time">1h</div>
+          </div>
+
+          <div class="feed-item">
+            <div class="feed-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+            <div class="feed-body">
+              <div class="feed-text"><strong>Northstar Logistics</strong> responded on <a href="#">Scope change thread</a> — approved budget increase</div>
+              <div class="feed-meta">Awaiting your final sign-off</div>
+            </div>
+            <div class="feed-time">2h</div>
+          </div>
+
+          <div class="feed-item">
+            <div class="feed-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+            <div class="feed-body">
+              <div class="feed-text"><strong>Elena Park</strong> mentioned you on <a href="#">Bloom Retail Q2 plan</a></div>
+              <div class="feed-meta">"Nikko — can we push the launch by a week?"</div>
+            </div>
+            <div class="feed-time">3h</div>
+          </div>
+
+          <div class="feed-item">
+            <div class="feed-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+            <div class="feed-body">
+              <div class="feed-text"><strong>8 new tasks</strong> added to <a href="#">Harbor Financial</a> onboarding</div>
+              <div class="feed-meta">Contract kickoff · Project Management team</div>
+            </div>
+            <div class="feed-time">5h</div>
+          </div>
+
+          <div class="feed-item">
+            <div class="feed-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="feed-body">
+              <div class="feed-text"><strong>Paid ads launched</strong> for <a href="#">Bloom Retail spring campaign</a></div>
+              <div class="feed-meta">SEM team · First-week performance report Friday</div>
+            </div>
+            <div class="feed-time">8h</div>
+          </div>
+
+          <div class="feed-item">
+            <div class="feed-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+            <div class="feed-body">
+              <div class="feed-text"><strong>Kickoff meeting</strong> scheduled with <a href="#">Mountain View Dental</a></div>
+              <div class="feed-meta">Tuesday 10:00 AM · New client onboarding</div>
+            </div>
+            <div class="feed-time">Yesterday</div>
+          </div>
+
+          <div class="feed-item">
+            <div class="feed-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <div class="feed-body">
+              <div class="feed-text"><strong>Content calendar approved</strong> by <a href="#">Summit Outdoor Gear</a></div>
+              <div class="feed-meta">May publishing schedule locked in</div>
+            </div>
+            <div class="feed-time">Yesterday</div>
+          </div>
+
+        </div>
+        <div class="feed-footer">
+          <a href="#">See all activity from this week →</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+function toggleTheme() {
+  var cur = document.documentElement.getAttribute('data-theme');
+  var next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('refined-theme', next);
+}
+</script>
+
+</body>
+</html>
