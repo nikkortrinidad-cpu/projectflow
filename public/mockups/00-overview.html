@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup — Executive Overview</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+    background: #f5f5f7;
+    color: #1d1d1f;
+    line-height: 1.5;
+    font-size: 14px;
+  }
+
+  /* --- HEADER --- */
+  .header {
+    background: rgba(255,255,255,0.72);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    padding: 0 32px;
+    height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-left { display: flex; align-items: center; gap: 24px; }
+  .header-logo { font-size: 18px; font-weight: 700; }
+  .header-nav { display: flex; gap: 4px; }
+  .header-nav a {
+    padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 500;
+    color: #636366; text-decoration: none;
+  }
+  .header-nav a:hover { background: #f0f0f2; color: #1d1d1f; }
+  .header-nav a.on { background: #0071e3; color: white; }
+
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .cmdk-trigger {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 12px 7px 12px;
+    background: #f0f0f2;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    font-size: 13px;
+    color: #86868b;
+    cursor: pointer;
+    min-width: 260px;
+    transition: all 0.15s;
+  }
+  .cmdk-trigger:hover { background: #e8e8ed; color: #636366; }
+  .cmdk-trigger svg { opacity: 0.6; }
+  .cmdk-trigger .cmdk-label { flex: 1; text-align: left; }
+  .cmdk-trigger .cmdk-kbd {
+    font-family: -apple-system, sans-serif;
+    font-size: 11px; font-weight: 600;
+    padding: 2px 6px;
+    background: white;
+    border: 1px solid #d2d2d7;
+    border-radius: 4px;
+    color: #636366;
+  }
+  .header-icon {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: #e8e8ed; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 16px; color: #636366;
+    position: relative;
+  }
+  .header-icon .notif-dot {
+    position: absolute; top: 6px; right: 6px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #ff3b30; border: 2px solid white;
+  }
+  .avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, #0071e3, #40a0ff);
+    color: white; display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 600;
+  }
+
+  /* --- PAGE LAYOUT (Modular grid, 1200px max, generous margins) --- */
+  .page { max-width: 1200px; margin: 0 auto; padding: 32px 32px 64px; }
+
+  .page-header { margin-bottom: 32px; }
+  .page-greeting {
+    font-size: 13px; font-weight: 500; color: #86868b;
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
+  }
+  .page-title {
+    font-size: 32px; font-weight: 700; line-height: 1.15;
+    margin-bottom: 4px; letter-spacing: -0.5px;
+  }
+  .page-date { font-size: 14px; color: #86868b; }
+
+  /* --- BLOCK COMMON --- */
+  .block { margin-bottom: 32px; }
+  .block:last-child { margin-bottom: 0; }
+  .block-header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .block-title {
+    font-size: 13px; font-weight: 600; color: #86868b;
+    text-transform: uppercase; letter-spacing: 0.6px;
+  }
+  .block-sub { font-size: 12px; color: #aeaeb2; }
+  .block-link {
+    font-size: 13px; font-weight: 500;
+    color: #0071e3; text-decoration: none;
+  }
+  .block-link:hover { text-decoration: underline; }
+
+  /* --- BLOCK 1: PORTFOLIO HEALTH STRIP --- */
+  .health-strip {
+    background: white;
+    border-radius: 16px;
+    padding: 24px 28px;
+    border: 1px solid rgba(0,0,0,0.04);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    display: grid;
+    grid-template-columns: 1.2fr 1px 1fr 1px 1fr 1px 1fr;
+    gap: 24px;
+    align-items: center;
+  }
+  .health-divider { background: #f0f0f2; height: 56px; }
+  .health-cell { display: flex; align-items: center; gap: 16px; }
+  .health-icon {
+    width: 48px; height: 48px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+  }
+  .health-icon.green { background: #e8f8ee; }
+  .health-icon.red { background: #ffe8e6; }
+  .health-icon.orange { background: #fff4e5; }
+  .health-icon.blue { background: #e8f0ff; }
+  .health-label {
+    font-size: 12px; font-weight: 500; color: #86868b;
+    text-transform: uppercase; letter-spacing: 0.4px;
+    margin-bottom: 2px;
+  }
+  .health-value {
+    font-size: 28px; font-weight: 700; line-height: 1.1;
+    letter-spacing: -0.5px;
+  }
+  .health-value.green { color: #1a8d44; }
+  .health-value.red { color: #d63030; }
+  .health-value.orange { color: #b35c00; }
+  .health-sub { font-size: 11px; color: #86868b; margin-top: 3px; }
+
+  /* --- BLOCK 2: NEEDS YOUR ATTENTION --- */
+  .attention-list { display: flex; flex-direction: column; gap: 10px; }
+  .attn-card {
+    background: white;
+    border-radius: 14px;
+    border: 1px solid rgba(0,0,0,0.04);
+    border-left: 4px solid #ff3b30;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    padding: 18px 22px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .attn-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    transform: translateY(-1px);
+  }
+  .attn-card.warn { border-left-color: #ff9500; }
+  .attn-card.info { border-left-color: #0071e3; }
+
+  .attn-content { min-width: 0; }
+  .attn-row1 {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 6px;
+  }
+  .attn-severity {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 8px; border-radius: 6px;
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.3px;
+  }
+  .attn-severity.critical { background: #ffe8e6; color: #d63030; }
+  .attn-severity.warning { background: #fff4e5; color: #b35c00; }
+  .attn-severity.info { background: #e8f0ff; color: #0055b3; }
+  .attn-severity .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+  }
+  .attn-severity.critical .dot { background: #ff3b30; }
+  .attn-severity.warning .dot { background: #ff9500; }
+  .attn-severity.info .dot { background: #0071e3; }
+
+  .attn-client {
+    font-size: 12px; font-weight: 600; color: #86868b;
+  }
+  .attn-age {
+    font-size: 11px; color: #aeaeb2; margin-left: auto;
+  }
+  .attn-title {
+    font-size: 15px; font-weight: 600; color: #1d1d1f;
+    line-height: 1.35; margin-bottom: 4px;
+  }
+  .attn-desc {
+    font-size: 13px; color: #636366; line-height: 1.45;
+    max-width: 62ch; /* line length rule: 45-70 cpl */
+  }
+  .attn-actions {
+    display: flex; align-items: center; gap: 8px;
+    flex-shrink: 0;
+  }
+  .attn-btn {
+    padding: 7px 14px; border-radius: 8px;
+    font-size: 13px; font-weight: 600;
+    border: 1px solid #d2d2d7; background: white;
+    color: #1d1d1f; cursor: pointer;
+  }
+  .attn-btn:hover { background: #f5f5f7; }
+  .attn-btn.primary {
+    background: #0071e3; border-color: #0071e3; color: white;
+  }
+  .attn-btn.primary:hover { background: #0077ed; }
+
+  .attention-empty {
+    background: white;
+    border-radius: 14px;
+    border: 1px solid rgba(0,0,0,0.04);
+    padding: 32px;
+    text-align: center;
+    color: #86868b;
+    font-size: 14px;
+  }
+
+  /* --- BLOCK 3 + 4 ROW (modular 2-col) --- */
+  .lower-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 24px;
+  }
+
+  /* --- BLOCK 3: THIS WEEK'S NUMBERS --- */
+  .numbers-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px 26px;
+    border: 1px solid rgba(0,0,0,0.04);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .numbers-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 24px;
+  }
+  .num-item {
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f0f0f2;
+  }
+  .num-item:nth-last-child(-n+2) {
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+  .num-label {
+    font-size: 12px; color: #86868b;
+    margin-bottom: 6px; line-height: 1.4;
+  }
+  .num-value-row {
+    display: flex; align-items: baseline; gap: 8px;
+  }
+  .num-value {
+    font-size: 26px; font-weight: 700; line-height: 1.1;
+    letter-spacing: -0.3px;
+  }
+  .num-delta {
+    font-size: 12px; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 2px;
+  }
+  .num-delta.up { color: #1a8d44; }
+  .num-delta.down { color: #d63030; }
+  .num-delta.flat { color: #86868b; }
+  .num-context {
+    font-size: 11px; color: #aeaeb2; margin-top: 4px;
+  }
+
+  /* --- BLOCK 4: WHAT CHANGED (activity feed) --- */
+  .feed-card {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid rgba(0,0,0,0.04);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    overflow: hidden;
+  }
+  .feed-list { padding: 8px 0; }
+  .feed-item {
+    display: grid;
+    grid-template-columns: 36px 1fr auto;
+    gap: 14px;
+    padding: 12px 22px;
+    align-items: flex-start;
+    border-bottom: 1px solid #f5f5f7;
+  }
+  .feed-item:last-child { border-bottom: none; }
+  .feed-item:hover { background: #fafafa; }
+
+  .feed-icon {
+    width: 32px; height: 32px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .feed-icon.task { background: #e8f0ff; color: #0055b3; }
+  .feed-icon.done { background: #e8f8ee; color: #1a8d44; }
+  .feed-icon.comment { background: #f0e8ff; color: #5856d6; }
+  .feed-icon.client { background: #fff4e5; color: #b35c00; }
+  .feed-icon.alert { background: #ffe8e6; color: #d63030; }
+
+  .feed-body { min-width: 0; }
+  .feed-text {
+    font-size: 13px; color: #1d1d1f;
+    line-height: 1.45;
+    max-width: 56ch;
+  }
+  .feed-text strong { font-weight: 600; }
+  .feed-text a { color: #0071e3; text-decoration: none; font-weight: 500; }
+  .feed-text a:hover { text-decoration: underline; }
+  .feed-meta {
+    font-size: 11px; color: #aeaeb2;
+    margin-top: 3px;
+  }
+
+  .feed-time {
+    font-size: 11px; color: #aeaeb2;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+
+  .feed-footer {
+    padding: 12px 22px;
+    text-align: center;
+    border-top: 1px solid #f0f0f2;
+    background: #fafafa;
+  }
+  .feed-footer a {
+    font-size: 13px; font-weight: 500;
+    color: #0071e3; text-decoration: none;
+  }
+  .feed-footer a:hover { text-decoration: underline; }
+
+  /* Responsive */
+  @media (max-width: 960px) {
+    .health-strip {
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .health-divider { display: none; }
+    .lower-grid { grid-template-columns: 1fr; }
+  }
+
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="header-logo">ProjectFlow</div>
+    <nav class="header-nav">
+      <a href="00-overview.html" class="on">Overview</a>
+      <a href="01-clients.html">Clients</a>
+      <a href="03-kanban.html">Board</a>
+      <a href="04-analytics.html">Analytics</a>
+    </nav>
+  </div>
+  <div class="header-right">
+    <button class="cmdk-trigger">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242.656a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/></svg>
+      <span class="cmdk-label">Search clients, tasks, people…</span>
+      <span class="cmdk-kbd">⌘K</span>
+    </button>
+    <div class="header-icon">🔔<span class="notif-dot"></span></div>
+    <div class="avatar">NT</div>
+  </div>
+</div>
+
+<div class="page">
+
+  <div class="page-header">
+    <div class="page-greeting">Saturday, April 11</div>
+    <div class="page-title">Good morning, Nikko.</div>
+    <div class="page-date">Here's what needs you today.</div>
+  </div>
+
+  <!-- BLOCK 1: PORTFOLIO HEALTH STRIP -->
+  <div class="block">
+    <div class="block-header">
+      <div class="block-title">Portfolio Health</div>
+      <div class="block-sub">Across 8 active clients</div>
+    </div>
+    <div class="health-strip">
+      <div class="health-cell">
+        <div class="health-icon green">✓</div>
+        <div>
+          <div class="health-label">On Track</div>
+          <div class="health-value green">5</div>
+          <div class="health-sub">clients healthy</div>
+        </div>
+      </div>
+      <div class="health-divider"></div>
+      <div class="health-cell">
+        <div class="health-icon orange">⚠</div>
+        <div>
+          <div class="health-label">At Risk</div>
+          <div class="health-value orange">2</div>
+          <div class="health-sub">need review</div>
+        </div>
+      </div>
+      <div class="health-divider"></div>
+      <div class="health-cell">
+        <div class="health-icon red">🔥</div>
+        <div>
+          <div class="health-label">On Fire</div>
+          <div class="health-value red">1</div>
+          <div class="health-sub">needs you now</div>
+        </div>
+      </div>
+      <div class="health-divider"></div>
+      <div class="health-cell">
+        <div class="health-icon blue">⏱</div>
+        <div>
+          <div class="health-label">Avg Delivery</div>
+          <div class="health-value">94<span style="font-size:15px;font-weight:500;color:#86868b"> %</span></div>
+          <div class="health-sub">on schedule</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BLOCK 2: NEEDS YOUR ATTENTION -->
+  <div class="block">
+    <div class="block-header">
+      <div class="block-title">Needs Your Attention</div>
+      <a href="#" class="block-link">View all 6 →</a>
+    </div>
+    <div class="attention-list">
+
+      <div class="attn-card" onclick="location.href='02-services.html'">
+        <div class="attn-content">
+          <div class="attn-row1">
+            <span class="attn-severity critical"><span class="dot"></span>On Fire</span>
+            <span class="attn-client">Acme Corporation</span>
+            <span class="attn-age">· 3 days overdue</span>
+          </div>
+          <div class="attn-title">Website redesign blocked waiting on client feedback</div>
+          <div class="attn-desc">Sarah Chen sent design review files April 8. No response. Launch date April 18 at risk.</div>
+        </div>
+        <div class="attn-actions">
+          <button class="attn-btn" onclick="event.stopPropagation()">Snooze</button>
+          <button class="attn-btn primary" onclick="event.stopPropagation()">Follow up</button>
+        </div>
+      </div>
+
+      <div class="attn-card warn" onclick="location.href='02-services.html'">
+        <div class="attn-content">
+          <div class="attn-row1">
+            <span class="attn-severity warning"><span class="dot"></span>At Risk</span>
+            <span class="attn-client">TechStart Inc.</span>
+            <span class="attn-age">· Due Monday</span>
+          </div>
+          <div class="attn-title">SEO audit running 2 days behind schedule</div>
+          <div class="attn-desc">Marcus flagged capacity issue yesterday. May need to pull in help or extend timeline.</div>
+        </div>
+        <div class="attn-actions">
+          <button class="attn-btn" onclick="event.stopPropagation()">Snooze</button>
+          <button class="attn-btn primary" onclick="event.stopPropagation()">Review</button>
+        </div>
+      </div>
+
+      <div class="attn-card warn" onclick="location.href='02-services.html'">
+        <div class="attn-content">
+          <div class="attn-row1">
+            <span class="attn-severity warning"><span class="dot"></span>At Risk</span>
+            <span class="attn-client">Bloom Retail</span>
+            <span class="attn-age">· 5 hours left</span>
+          </div>
+          <div class="attn-title">Monthly reporting deck not started — client meeting tomorrow 9am</div>
+          <div class="attn-desc">Assigned to Elena. Last seen yesterday afternoon. No draft in shared folder yet.</div>
+        </div>
+        <div class="attn-actions">
+          <button class="attn-btn" onclick="event.stopPropagation()">Snooze</button>
+          <button class="attn-btn primary" onclick="event.stopPropagation()">Check in</button>
+        </div>
+      </div>
+
+      <div class="attn-card info" onclick="location.href='02-services.html'">
+        <div class="attn-content">
+          <div class="attn-row1">
+            <span class="attn-severity info"><span class="dot"></span>Decision</span>
+            <span class="attn-client">Northstar Logistics</span>
+            <span class="attn-age">· Waiting 2 days</span>
+          </div>
+          <div class="attn-title">Scope change request — needs your approval to proceed</div>
+          <div class="attn-desc">Client added a mobile app module. +40 hours estimated. Team paused pending sign-off.</div>
+        </div>
+        <div class="attn-actions">
+          <button class="attn-btn" onclick="event.stopPropagation()">Defer</button>
+          <button class="attn-btn primary" onclick="event.stopPropagation()">Review</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- LOWER GRID: BLOCK 3 + BLOCK 4 -->
+  <div class="lower-grid">
+
+    <!-- BLOCK 3: THIS WEEK'S NUMBERS -->
+    <div class="block" style="margin-bottom:0">
+      <div class="block-header">
+        <div class="block-title">This Week</div>
+        <div class="block-sub">Apr 5 – Apr 11</div>
+      </div>
+      <div class="numbers-card">
+        <div class="numbers-grid">
+
+          <div class="num-item">
+            <div class="num-label">Tasks completed</div>
+            <div class="num-value-row">
+              <div class="num-value">47</div>
+              <div class="num-delta up">↑ 12%</div>
+            </div>
+            <div class="num-context">vs last week</div>
+          </div>
+
+          <div class="num-item">
+            <div class="num-label">New tasks added</div>
+            <div class="num-value-row">
+              <div class="num-value">31</div>
+              <div class="num-delta up">↑ 4</div>
+            </div>
+            <div class="num-context">from 4 clients</div>
+          </div>
+
+          <div class="num-item">
+            <div class="num-label">Hours logged</div>
+            <div class="num-value-row">
+              <div class="num-value">186</div>
+              <div class="num-delta flat">— flat</div>
+            </div>
+            <div class="num-context">across 9 team members</div>
+          </div>
+
+          <div class="num-item">
+            <div class="num-label">Blockers opened</div>
+            <div class="num-value-row">
+              <div class="num-value">3</div>
+              <div class="num-delta down">↓ 2</div>
+            </div>
+            <div class="num-context">1 resolved, 2 active</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOCK 4: WHAT CHANGED -->
+    <div class="block" style="margin-bottom:0">
+      <div class="block-header">
+        <div class="block-title">What Changed</div>
+        <a href="#" class="block-link">Full activity →</a>
+      </div>
+      <div class="feed-card">
+        <div class="feed-list">
+
+          <div class="feed-item">
+            <div class="feed-icon done">✓</div>
+            <div class="feed-body">
+              <div class="feed-text"><strong>Sarah Chen</strong> completed <a href="#">Homepage wireframes v3</a> for <strong>Acme Corporation</strong></div>
+              <div class="feed-meta">Milestone reached · Design phase 80% complete</div>
+            </div>
+            <div class="feed-time">14m</div>
+          </div>
+
+          <div class="feed-item">
+            <div class="feed-icon alert">!</div>
+            <div class="feed-body">
+              <div class="feed-text"><strong>New blocker</strong> opened on <a href="#">API integration</a> by <strong>Marcus Reyes</strong></div>
+              <div class="feed-meta">TechStart Inc. · Needs senior eng review</div>
+            </div>
+            <div class="feed-time">1h</div>
+          </div>
+
+          <div class="feed-item">
+            <div class="feed-icon client">👤</div>
+            <div class="feed-body">
+              <div class="feed-text"><strong>Northstar Logistics</strong> responded on <a href="#">Scope change thread</a> — approved budget increase</div>
+              <div class="feed-meta">Awaiting your final sign-off</div>
+            </div>
+            <div class="feed-time">2h</div>
+          </div>
+
+          <div class="feed-item">
+            <div class="feed-icon comment">💬</div>
+            <div class="feed-body">
+              <div class="feed-text"><strong>Elena Park</strong> mentioned you on <a href="#">Bloom Retail Q2 plan</a></div>
+              <div class="feed-meta">"Nikko — can we push the launch by a week?"</div>
+            </div>
+            <div class="feed-time">3h</div>
+          </div>
+
+          <div class="feed-item">
+            <div class="feed-icon task">+</div>
+            <div class="feed-body">
+              <div class="feed-text"><strong>8 new tasks</strong> added to <a href="#">Harbor Financial</a> onboarding</div>
+              <div class="feed-meta">Contract kickoff · Project Management team</div>
+            </div>
+            <div class="feed-time">5h</div>
+          </div>
+
+          <div class="feed-item">
+            <div class="feed-icon done">✓</div>
+            <div class="feed-body">
+              <div class="feed-text"><strong>Paid ads launched</strong> for <a href="#">Bloom Retail spring campaign</a></div>
+              <div class="feed-meta">SEM team · First-week performance report Friday</div>
+            </div>
+            <div class="feed-time">8h</div>
+          </div>
+
+          <div class="feed-item">
+            <div class="feed-icon client">👤</div>
+            <div class="feed-body">
+              <div class="feed-text"><strong>Kickoff meeting</strong> scheduled with <a href="#">Mountain View Dental</a></div>
+              <div class="feed-meta">Tuesday 10:00 AM · New client onboarding</div>
+            </div>
+            <div class="feed-time">Yesterday</div>
+          </div>
+
+          <div class="feed-item">
+            <div class="feed-icon task">📝</div>
+            <div class="feed-body">
+              <div class="feed-text"><strong>Content calendar approved</strong> by <a href="#">Summit Outdoor Gear</a></div>
+              <div class="feed-meta">May publishing schedule locked in</div>
+            </div>
+            <div class="feed-time">Yesterday</div>
+          </div>
+
+        </div>
+        <div class="feed-footer">
+          <a href="#">See all activity from this week →</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+</body>
+</html>
