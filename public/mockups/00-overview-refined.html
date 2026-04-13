@@ -1035,7 +1035,7 @@
   <div class="page-header">
     <div class="page-greeting" id="pageGreeting"></div>
     <div class="page-title" id="pageTitle"></div>
-    <div class="page-date">Here's what needs you today.</div>
+    <div class="page-date" id="pageTagline">Here's what needs you today.</div>
   </div>
 
   <!-- BLOCK 1: PORTFOLIO HEALTH STRIP -->
@@ -1477,7 +1477,7 @@ function toggleAttn(e) {
   }, { passive: true });
 })();
 
-/* ── Dynamic greeting based on local time ── */
+/* ── Dynamic greeting + daily tagline + weather ── */
 (function() {
   var now = new Date();
   var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -1493,6 +1493,67 @@ function toggleAttn(e) {
 
   document.getElementById('pageGreeting').textContent = dayName + ', ' + monthName + ' ' + dateNum;
   document.getElementById('pageTitle').textContent = greeting + ', Nikko.';
+
+  /* Daily rotating tagline */
+  var taglines = [
+    "Here's what needs you today.",
+    "Your projects at a glance.",
+    "Let's make today count.",
+    "Here's where things stand.",
+    "Your day, mapped out.",
+    "What's on your plate today.",
+    "The rundown for today.",
+    "Stay ahead of the curve.",
+    "Quick look at what matters.",
+    "Everything in one place.",
+    "Your priorities, front and center.",
+    "Here's the view from above.",
+    "Let's keep things moving.",
+    "Your pulse check for today."
+  ];
+  var dayOfYear = Math.floor((now - new Date(now.getFullYear(),0,0)) / 86400000);
+  document.getElementById('pageTagline').textContent = taglines[dayOfYear % taglines.length];
+
+  /* Weather-aware greeting (only when notable) */
+  if ('geolocation' in navigator) {
+    navigator.geolocation.getCurrentPosition(function(pos) {
+      var lat = pos.coords.latitude.toFixed(2);
+      var lon = pos.coords.longitude.toFixed(2);
+      var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat +
+        '&longitude=' + lon +
+        '&current=temperature_2m,weather_code&temperature_unit=celsius';
+
+      fetch(url).then(function(r) { return r.json(); }).then(function(data) {
+        if (!data.current) return;
+        var temp = data.current.temperature_2m;
+        var code = data.current.weather_code;
+        var suffix = '';
+
+        /* WMO weather codes:
+           51-67: drizzle/rain, 71-77: snow, 80-82: rain showers,
+           85-86: snow showers, 95-99: thunderstorm */
+        if (code >= 95) {
+          suffix = 'Stay safe out there — storms nearby.';
+        } else if (code >= 71 && code <= 77 || code >= 85 && code <= 86) {
+          suffix = "It's snowing outside — stay warm.";
+        } else if (code >= 51 && code <= 67 || code >= 80 && code <= 82) {
+          suffix = "It's rainy out — good day to stay focused.";
+        } else if (temp >= 38) {
+          suffix = "It's scorching out there — stay hydrated.";
+        } else if (temp >= 35) {
+          suffix = "It's really hot outside — take it easy.";
+        } else if (temp <= 0) {
+          suffix = "It's freezing out — bundle up.";
+        } else if (temp <= 5) {
+          suffix = "It's cold outside — stay warm.";
+        }
+
+        if (suffix) {
+          document.getElementById('pageTitle').textContent = greeting + ', Nikko. ' + suffix;
+        }
+      }).catch(function() { /* silently fail — greeting stays normal */ });
+    }, function() { /* permission denied — no problem */ }, { timeout: 5000 });
+  }
 })();
 
 /* ── Week board: day progression logic ── */
