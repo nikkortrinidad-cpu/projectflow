@@ -654,6 +654,113 @@
     pointer-events: auto;
   }
 
+  /* --- BLOCK 4: TEAM WORKLOAD --- */
+  .workload-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+  }
+  .wl-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 14px;
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: box-shadow 0.2s, border-color 0.2s;
+  }
+  .wl-card:hover {
+    border-color: var(--hairline);
+    box-shadow: var(--shadow-hover);
+  }
+  .wl-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .wl-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .wl-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .wl-role {
+    font-size: 12px;
+    color: var(--text-soft);
+  }
+  .wl-status {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+  .wl-status.light { background: rgba(16,185,129,0.1); color: #10b981; }
+  .wl-status.steady { background: rgba(59,130,246,0.1); color: #3b82f6; }
+  .wl-status.heavy { background: rgba(245,158,11,0.1); color: #f59e0b; }
+  .wl-status.over { background: var(--accent-soft); color: var(--accent); }
+
+  .wl-bar-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .wl-bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .wl-bar {
+    height: 6px;
+    background: var(--bg-soft);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .wl-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+  .wl-bar-fill.light { background: #10b981; }
+  .wl-bar-fill.steady { background: #3b82f6; }
+  .wl-bar-fill.heavy { background: #f59e0b; }
+  .wl-bar-fill.over { background: var(--accent); }
+
+  .wl-tasks {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .wl-task-item {
+    font-size: 13px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    line-height: 1.3;
+  }
+  .wl-task-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--text-faint);
+    flex-shrink: 0;
+  }
+  .wl-task-item.urgent .wl-task-dot { background: var(--accent); }
+
   /* Reduced motion */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
@@ -1084,6 +1191,113 @@
 
     </div>
 
+  </div>
+
+  <!-- BLOCK 4: TEAM WORKLOAD -->
+  <div class="block">
+    <div class="block-header">
+      <div class="block-title">Team Workload</div>
+      <div class="block-sub">This week's capacity</div>
+    </div>
+    <div class="workload-grid">
+
+      <div class="wl-card">
+        <div class="wl-top">
+          <div class="wl-avatar" style="background:#e0e7ff;color:#4f46e5;">SC</div>
+          <div>
+            <div class="wl-name">Sarah Chen</div>
+            <div class="wl-role">Lead Designer</div>
+          </div>
+          <span class="wl-status over">Overloaded</span>
+        </div>
+        <div class="wl-bar-wrap">
+          <div class="wl-bar-label"><span>5 of 4 tasks</span><span>125%</span></div>
+          <div class="wl-bar"><div class="wl-bar-fill over" style="width:100%"></div></div>
+        </div>
+        <div class="wl-tasks">
+          <div class="wl-task-item urgent"><span class="wl-task-dot"></span>Acme wireframes v3 — review</div>
+          <div class="wl-task-item urgent"><span class="wl-task-dot"></span>Acme stakeholder walkthrough</div>
+          <div class="wl-task-item"><span class="wl-task-dot"></span>Acme website launch prep</div>
+        </div>
+      </div>
+
+      <div class="wl-card">
+        <div class="wl-top">
+          <div class="wl-avatar" style="background:#fef3c7;color:#d97706;">MR</div>
+          <div>
+            <div class="wl-name">Marcus Reyes</div>
+            <div class="wl-role">SEO Specialist</div>
+          </div>
+          <span class="wl-status heavy">Heavy</span>
+        </div>
+        <div class="wl-bar-wrap">
+          <div class="wl-bar-label"><span>3 of 4 tasks</span><span>75%</span></div>
+          <div class="wl-bar"><div class="wl-bar-fill heavy" style="width:75%"></div></div>
+        </div>
+        <div class="wl-tasks">
+          <div class="wl-task-item urgent"><span class="wl-task-dot"></span>TechStart SEO audit — 2 days behind</div>
+          <div class="wl-task-item"><span class="wl-task-dot"></span>Bloom Retail paid ads report</div>
+          <div class="wl-task-item"><span class="wl-task-dot"></span>Summit content calendar review</div>
+        </div>
+      </div>
+
+      <div class="wl-card">
+        <div class="wl-top">
+          <div class="wl-avatar" style="background:#fce7f3;color:#db2777;">EP</div>
+          <div>
+            <div class="wl-name">Elena Park</div>
+            <div class="wl-role">Account Manager</div>
+          </div>
+          <span class="wl-status steady">Steady</span>
+        </div>
+        <div class="wl-bar-wrap">
+          <div class="wl-bar-label"><span>2 of 4 tasks</span><span>50%</span></div>
+          <div class="wl-bar"><div class="wl-bar-fill steady" style="width:50%"></div></div>
+        </div>
+        <div class="wl-tasks">
+          <div class="wl-task-item urgent"><span class="wl-task-dot"></span>Bloom reporting deck — due today</div>
+          <div class="wl-task-item"><span class="wl-task-dot"></span>Bloom Q2 plan presentation</div>
+        </div>
+      </div>
+
+      <div class="wl-card">
+        <div class="wl-top">
+          <div class="wl-avatar" style="background:#d1fae5;color:#059669;">JT</div>
+          <div>
+            <div class="wl-name">James Torres</div>
+            <div class="wl-role">Backend Developer</div>
+          </div>
+          <span class="wl-status light">Light</span>
+        </div>
+        <div class="wl-bar-wrap">
+          <div class="wl-bar-label"><span>1 of 4 tasks</span><span>25%</span></div>
+          <div class="wl-bar"><div class="wl-bar-fill light" style="width:25%"></div></div>
+        </div>
+        <div class="wl-tasks">
+          <div class="wl-task-item"><span class="wl-task-dot"></span>Nova API credentials — blocked</div>
+        </div>
+      </div>
+
+      <div class="wl-card">
+        <div class="wl-top">
+          <div class="wl-avatar" style="background:#ede9fe;color:#7c3aed;">AL</div>
+          <div>
+            <div class="wl-name">Aisha Lopez</div>
+            <div class="wl-role">Project Coordinator</div>
+          </div>
+          <span class="wl-status steady">Steady</span>
+        </div>
+        <div class="wl-bar-wrap">
+          <div class="wl-bar-label"><span>2 of 4 tasks</span><span>50%</span></div>
+          <div class="wl-bar"><div class="wl-bar-fill steady" style="width:50%"></div></div>
+        </div>
+        <div class="wl-tasks">
+          <div class="wl-task-item"><span class="wl-task-dot"></span>Harbor Financial onboarding</div>
+          <div class="wl-task-item"><span class="wl-task-dot"></span>Northstar scope change follow-up</div>
+        </div>
+      </div>
+
+    </div>
   </div>
 
 </main>
