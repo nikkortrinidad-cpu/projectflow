@@ -247,11 +247,81 @@
   }
 
   /* --- BLOCK COMMON --- */
-  .block { margin-bottom: 48px; }
+  .block {
+    margin-bottom: 48px;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
   .block:last-child { margin-bottom: 0; }
   .block-header {
     display: flex; align-items: baseline; justify-content: space-between;
     margin-bottom: 18px;
+  }
+
+  /* Drag handle */
+  .block-drag-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    margin-right: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-faint);
+    border-radius: 6px;
+    cursor: grab;
+    padding: 0;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
+  }
+  .block:hover .block-drag-handle,
+  .block-drag-handle:focus-visible {
+    opacity: 1;
+  }
+  .block-drag-handle:hover {
+    background: var(--bg-soft);
+    color: var(--text-muted);
+  }
+  .block-drag-handle:active {
+    cursor: grabbing;
+  }
+  .block-drag-handle svg {
+    width: 14px;
+    height: 14px;
+    display: block;
+  }
+
+  /* Dragging states */
+  .block.is-dragging {
+    opacity: 0.85;
+    z-index: 50;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+    border-radius: 16px;
+    background: var(--bg-elev);
+    pointer-events: none;
+  }
+  :root[data-theme="dark"] .block.is-dragging {
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  }
+
+  /* Drop placeholder */
+  .block-drop-indicator {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--accent);
+    margin: -2px 0;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    pointer-events: none;
+  }
+  .block-drop-indicator.visible {
+    opacity: 1;
+  }
+
+  /* Animate reorder */
+  .block.reorder-anim {
+    transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1);
   }
   .block-title {
     font-size: 12px; font-weight: 600; color: var(--text-soft);
@@ -948,8 +1018,9 @@
   </div>
 
   <!-- BLOCK 1: PORTFOLIO HEALTH STRIP -->
-  <div class="block">
+  <div class="block" data-block-id="health">
     <div class="block-header">
+      <button class="block-drag-handle" data-tip="Drag to reorder" aria-label="Drag to reorder"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></button>
       <div class="block-title">Portfolio Health</div>
       <div class="block-sub">Across 8 active clients</div>
     </div>
@@ -1001,8 +1072,9 @@
   </div>
 
   <!-- BLOCK 2: NEEDS YOUR ATTENTION -->
-  <div class="block">
+  <div class="block" data-block-id="attention">
     <div class="block-header">
+      <button class="block-drag-handle" data-tip="Drag to reorder" aria-label="Drag to reorder"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></button>
       <div class="block-title">Needs Your Attention</div>
       <a href="#" class="block-link" id="attnToggle" aria-expanded="false" onclick="toggleAttn(event)">View all 6 →</a>
     </div>
@@ -1108,8 +1180,9 @@
   </div>
 
   <!-- BLOCK 3: THIS WEEK + NEXT WEEK PREVIEW -->
-  <div class="block">
+  <div class="block" data-block-id="schedule">
     <div class="block-header">
+      <button class="block-drag-handle" data-tip="Drag to reorder" aria-label="Drag to reorder"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></button>
       <div class="block-title">Schedule</div>
       <div style="display:flex;align-items:center;gap:12px;">
         <div class="week-tabs" id="weekTabs">
@@ -1319,8 +1392,9 @@
   </div>
 
   <!-- BLOCK 4: TEAM WORKLOAD -->
-  <div class="block">
+  <div class="block" data-block-id="workload">
     <div class="block-header">
+      <button class="block-drag-handle" data-tip="Drag to reorder" aria-label="Drag to reorder"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></button>
       <div class="block-title">Team Workload</div>
       <div class="block-sub">This week's capacity</div>
     </div>
@@ -1679,6 +1753,195 @@ document.addEventListener('keydown', function(e) {
     clearTimeout(timer);
     bubble.classList.remove('visible');
   }, true);
+})();
+
+/* ── Block drag-and-drop reorder ── */
+(function() {
+  var STORAGE_KEY = 'overview-block-order';
+  var page = document.querySelector('.page');
+  var pageHeader = page.querySelector('.page-header');
+  var blocks = Array.from(page.querySelectorAll('.block[data-block-id]'));
+
+  /* Restore saved order */
+  var saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    try {
+      var order = JSON.parse(saved);
+      var map = {};
+      blocks.forEach(function(b) { map[b.dataset.blockId] = b; });
+      order.forEach(function(id) {
+        if (map[id]) page.appendChild(map[id]);
+      });
+      blocks = Array.from(page.querySelectorAll('.block[data-block-id]'));
+    } catch(e) {}
+  }
+
+  function saveOrder() {
+    var ids = Array.from(page.querySelectorAll('.block[data-block-id]')).map(function(b) {
+      return b.dataset.blockId;
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+  }
+
+  var dragged = null;
+  var dragClone = null;
+  var indicator = null;
+  var startY = 0;
+  var offsetY = 0;
+  var dropTarget = null;
+  var dropPos = null; /* 'before' or 'after' */
+
+  /* Create indicator element */
+  indicator = document.createElement('div');
+  indicator.className = 'block-drop-indicator';
+  page.appendChild(indicator);
+
+  function getBlockMidpoints() {
+    return Array.from(page.querySelectorAll('.block[data-block-id]')).filter(function(b) {
+      return b !== dragged;
+    }).map(function(b) {
+      var r = b.getBoundingClientRect();
+      return { el: b, top: r.top, bottom: r.bottom, mid: r.top + r.height / 2 };
+    });
+  }
+
+  function onPointerDown(e) {
+    var handle = e.target.closest('.block-drag-handle');
+    if (!handle) return;
+    e.preventDefault();
+
+    dragged = handle.closest('.block[data-block-id]');
+    var rect = dragged.getBoundingClientRect();
+    offsetY = e.clientY - rect.top;
+    startY = e.clientY;
+
+    /* Create floating clone */
+    dragClone = dragged.cloneNode(true);
+    dragClone.style.position = 'fixed';
+    dragClone.style.left = rect.left + 'px';
+    dragClone.style.top = rect.top + 'px';
+    dragClone.style.width = rect.width + 'px';
+    dragClone.style.zIndex = '200';
+    dragClone.style.pointerEvents = 'none';
+    dragClone.style.margin = '0';
+    dragClone.style.transition = 'box-shadow 0.2s ease, opacity 0.2s ease';
+    dragClone.style.boxShadow = '0 12px 40px rgba(0,0,0,0.15)';
+    dragClone.style.borderRadius = '16px';
+    dragClone.style.background = getComputedStyle(document.documentElement).getPropertyValue('--bg-elev').trim();
+    dragClone.style.padding = '20px';
+    dragClone.style.opacity = '0.92';
+    document.body.appendChild(dragClone);
+
+    /* Ghost the original */
+    dragged.style.opacity = '0.25';
+    dragged.style.transition = 'opacity 0.15s ease';
+
+    /* Hide tooltip */
+    var tipBubble = document.querySelector('.tip-bubble');
+    if (tipBubble) tipBubble.classList.remove('visible');
+
+    document.addEventListener('pointermove', onPointerMove);
+    document.addEventListener('pointerup', onPointerUp);
+  }
+
+  function onPointerMove(e) {
+    if (!dragClone) return;
+    var rect = dragged.getBoundingClientRect();
+    dragClone.style.top = (e.clientY - offsetY) + 'px';
+
+    /* Find closest drop target */
+    var mids = getBlockMidpoints();
+    var closest = null;
+    var closestDist = Infinity;
+    var pos = 'after';
+
+    mids.forEach(function(m) {
+      var distTop = Math.abs(e.clientY - m.top);
+      var distBot = Math.abs(e.clientY - m.bottom);
+      if (distTop < closestDist) {
+        closestDist = distTop;
+        closest = m.el;
+        pos = 'before';
+      }
+      if (distBot < closestDist) {
+        closestDist = distBot;
+        closest = m.el;
+        pos = 'after';
+      }
+    });
+
+    if (closest) {
+      dropTarget = closest;
+      dropPos = pos;
+      var targetRect = closest.getBoundingClientRect();
+      var pageRect = page.getBoundingClientRect();
+      indicator.classList.add('visible');
+      indicator.style.position = 'absolute';
+      indicator.style.left = '0';
+      indicator.style.right = '0';
+      if (pos === 'before') {
+        indicator.style.top = (targetRect.top - pageRect.top - 2) + 'px';
+      } else {
+        indicator.style.top = (targetRect.bottom - pageRect.top - 2) + 'px';
+      }
+    }
+
+    /* Auto-scroll near edges */
+    if (e.clientY < 80) {
+      window.scrollBy(0, -8);
+    } else if (e.clientY > window.innerHeight - 80) {
+      window.scrollBy(0, 8);
+    }
+  }
+
+  function onPointerUp(e) {
+    document.removeEventListener('pointermove', onPointerMove);
+    document.removeEventListener('pointerup', onPointerUp);
+
+    indicator.classList.remove('visible');
+
+    if (dragClone) {
+      document.body.removeChild(dragClone);
+      dragClone = null;
+    }
+
+    if (dragged) {
+      dragged.style.opacity = '';
+      dragged.style.transition = '';
+
+      /* Perform the reorder */
+      if (dropTarget && dropTarget !== dragged) {
+        if (dropPos === 'before') {
+          page.insertBefore(dragged, dropTarget);
+        } else {
+          if (dropTarget.nextSibling) {
+            page.insertBefore(dragged, dropTarget.nextSibling);
+          } else {
+            page.appendChild(dragged);
+          }
+        }
+
+        /* Animate blocks into new positions */
+        var allBlocks = page.querySelectorAll('.block[data-block-id]');
+        allBlocks.forEach(function(b) {
+          b.classList.add('reorder-anim');
+        });
+        setTimeout(function() {
+          allBlocks.forEach(function(b) {
+            b.classList.remove('reorder-anim');
+          });
+        }, 300);
+
+        saveOrder();
+      }
+
+      dragged = null;
+      dropTarget = null;
+      dropPos = null;
+    }
+  }
+
+  page.addEventListener('pointerdown', onPointerDown);
 })();
 </script>
 
