@@ -20,6 +20,8 @@
     --hairline-faint: rgba(0,0,0,0.02);
     --accent: #ff3b30;
     --accent-soft: rgba(255,59,48,0.08);
+    --highlight: #007AFF;
+    --highlight-soft: rgba(0,122,255,0.08);
     --shadow: 0 1px 3px rgba(0,0,0,0.04);
     --shadow-hover: 0 4px 16px rgba(0,0,0,0.08);
     --avatar-bg: #1d1d1f;
@@ -44,6 +46,8 @@
     --hairline-faint: rgba(255,255,255,0.03);
     --accent: #ff453a;
     --accent-soft: rgba(255,69,58,0.14);
+    --highlight: #0A84FF;
+    --highlight-soft: rgba(10,132,255,0.14);
     --shadow: 0 1px 3px rgba(0,0,0,0.4);
     --shadow-hover: 0 4px 16px rgba(0,0,0,0.6);
     --avatar-bg: #f5f5f7;
@@ -471,7 +475,7 @@
   .attn-btn:hover { background: var(--btn-bg-hover); border-color: var(--text-faint); }
   .attn-btn:active { transform: scale(0.96); }
   .attn-btn.primary {
-    background: var(--text); border-color: var(--text); color: var(--bg);
+    background: var(--highlight); border-color: var(--highlight); color: #ffffff;
     font-weight: 500;
   }
   .attn-btn.primary:hover { opacity: 0.9; }
@@ -574,21 +578,21 @@
 
   /* Today highlight */
   .week-col.is-today {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 1px var(--accent), var(--shadow);
+    border-color: var(--highlight);
+    box-shadow: 0 0 0 1px var(--highlight), var(--shadow);
   }
   .week-col.is-today .week-col-header {
-    background: var(--accent-soft);
+    background: var(--highlight-soft);
   }
   .week-col.is-today .week-col-day {
-    color: var(--accent);
+    color: var(--highlight);
   }
   .week-col.is-today::before {
     content: "";
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 3px;
-    background: var(--accent);
+    background: var(--highlight);
     border-radius: 16px 16px 0 0;
     z-index: 2;
   }
