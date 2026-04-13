@@ -471,6 +471,21 @@
   }
   .feed-footer a:hover { color: var(--accent); }
 
+  /* Hidden attention cards */
+  .attn-hidden {
+    display: none;
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: opacity 0.3s ease, max-height 0.4s ease;
+  }
+  .attention-list.expanded .attn-hidden {
+    display: grid;
+    opacity: 1;
+    max-height: 200px;
+    overflow: visible;
+  }
+
   /* Responsive */
   @media (max-width: 960px) {
     .health-strip {
@@ -579,7 +594,7 @@
   <div class="block">
     <div class="block-header">
       <div class="block-title">Needs Your Attention</div>
-      <a href="#" class="block-link">View all 6 →</a>
+      <a href="#" class="block-link" id="attnToggle" onclick="toggleAttn(event)">View all 6 →</a>
     </div>
     <div class="attention-list">
 
@@ -640,6 +655,38 @@
           </div>
           <div class="attn-title">Scope change request — needs your approval to proceed</div>
           <div class="attn-desc">Client added a mobile app module. +40 hours estimated. Team paused pending sign-off.</div>
+        </div>
+        <div class="attn-actions">
+          <button class="attn-btn">Defer</button>
+          <button class="attn-btn primary">Review</button>
+        </div>
+      </div>
+
+      <div class="attn-card attn-hidden warn">
+        <div class="attn-content">
+          <div class="attn-row1">
+            <span class="attn-severity warning"><span class="dot"></span>At Risk</span>
+            <span class="attn-client">Nova Ventures</span>
+            <span class="attn-age">Since yesterday</span>
+          </div>
+          <div class="attn-title">API integration blocker — backend team waiting on credentials</div>
+          <div class="attn-desc">Dev team can't proceed until third-party API keys are provisioned. Client IT hasn't responded.</div>
+        </div>
+        <div class="attn-actions">
+          <button class="attn-btn">Snooze</button>
+          <button class="attn-btn primary">Follow up</button>
+        </div>
+      </div>
+
+      <div class="attn-card attn-hidden">
+        <div class="attn-content">
+          <div class="attn-row1">
+            <span class="attn-severity info"><span class="dot"></span>Onboarding</span>
+            <span class="attn-client">Harbor Financial</span>
+            <span class="attn-age">Added 5h ago</span>
+          </div>
+          <div class="attn-title">New client kickoff checklist needs your sign-off before Tuesday</div>
+          <div class="attn-desc">8 onboarding tasks created. Contract signed. Kickoff scheduled Tuesday 10am — checklist must be reviewed first.</div>
         </div>
         <div class="attn-actions">
           <button class="attn-btn">Defer</button>
@@ -800,6 +847,17 @@ function toggleTheme() {
   var next = cur === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', next);
   localStorage.setItem('refined-theme', next);
+}
+function toggleAttn(e) {
+  e.preventDefault();
+  var list = document.querySelector('.attention-list');
+  var link = document.getElementById('attnToggle');
+  list.classList.toggle('expanded');
+  if (list.classList.contains('expanded')) {
+    link.textContent = 'Show less ←';
+  } else {
+    link.textContent = 'View all 6 →';
+  }
 }
 </script>
 
