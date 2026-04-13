@@ -215,6 +215,36 @@
   }
   .back-to-top:active { transform: scale(0.93); }
   .back-to-top svg { width: 18px; height: 18px; }
+  .back-to-top .btt-tooltip {
+    position: absolute;
+    right: calc(100% + 10px);
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--text);
+    color: var(--bg);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    padding: 6px 12px;
+    border-radius: 8px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  .back-to-top .btt-tooltip::after {
+    content: "";
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 5px solid transparent;
+    border-left-color: var(--text);
+  }
+  .back-to-top:hover .btt-tooltip {
+    opacity: 1;
+    transition-delay: 0.4s;
+  }
 
   /* --- BLOCK COMMON --- */
   .block { margin-bottom: 48px; }
@@ -413,11 +443,48 @@
     transition-delay: 0.6s;
   }
 
-  /* --- BLOCK 3: THIS WEEK (5-column board) --- */
+  /* --- BLOCK 3: THIS WEEK (5-column board + next week preview) --- */
+  .week-scroll {
+    position: relative;
+  }
+  .week-scroll::after {
+    content: "";
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    width: 48px;
+    background: linear-gradient(to right, transparent, var(--bg));
+    pointer-events: none;
+    z-index: 3;
+    opacity: 1;
+    transition: opacity 0.3s;
+  }
+  .week-scroll.scrolled-end::after { opacity: 0; }
   .week-board {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(5, minmax(190px, 1fr)) repeat(5, minmax(190px, 1fr));
     gap: 12px;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .week-board::-webkit-scrollbar { height: 5px; }
+  .week-board::-webkit-scrollbar-thumb {
+    background: var(--hairline);
+    border-radius: 4px;
+  }
+  .week-board::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
+
+  /* Next week divider column */
+  .week-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2px;
+    background: var(--hairline-soft);
+    border-radius: 1px;
+    margin: 24px 0;
+    grid-row: 1;
   }
 
   .week-col {
@@ -460,6 +527,30 @@
   }
   .week-col.is-past:hover {
     opacity: 0.7;
+  }
+
+  /* Next week preview */
+  .week-col.is-preview {
+    opacity: 0.38;
+  }
+  .week-col.is-preview:hover {
+    opacity: 0.6;
+  }
+  .week-col.is-preview .week-col-header {
+    position: relative;
+  }
+  .week-preview-label {
+    display: none;
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+    margin-bottom: 4px;
+  }
+  .week-col.is-preview:first-of-type .week-preview-label,
+  .week-col.is-preview[data-day="5"] .week-preview-label {
+    display: block;
   }
 
   /* Column header */
@@ -599,8 +690,9 @@
       gap: 28px;
     }
     .health-divider { display: none; }
-    .week-board { grid-template-columns: 1fr 1fr; }
+    .week-board { grid-template-columns: repeat(10, minmax(160px, 1fr)); }
     .week-col { min-height: 180px; }
+    .week-scroll::after { width: 32px; }
     .page-title { font-size: 28px; }
   }
 
@@ -804,16 +896,19 @@
     </div>
   </div>
 
-  <!-- BLOCK 3: THIS WEEK (5-column board) -->
+  <!-- BLOCK 3: THIS WEEK + NEXT WEEK PREVIEW -->
   <div class="block">
     <div class="block-header">
       <div class="block-title">This Week</div>
       <div class="block-sub" id="weekRange">Apr 13 – Apr 17</div>
     </div>
+    <div class="week-scroll" id="weekScroll">
     <div class="week-board" id="weekBoard">
 
+      <!-- ═══ THIS WEEK ═══ -->
+
       <!-- MON 13 -->
-      <div class="week-col" data-day="0" data-date="13">
+      <div class="week-col" data-day="0" data-date="13" data-week="current">
         <div class="week-col-header">
           <div class="week-col-date">Apr 13, 2026</div>
           <div class="week-col-day">Monday</div>
@@ -833,7 +928,7 @@
       </div>
 
       <!-- TUE 14 -->
-      <div class="week-col" data-day="1" data-date="14">
+      <div class="week-col" data-day="1" data-date="14" data-week="current">
         <div class="week-col-header">
           <div class="week-col-date">Apr 14, 2026</div>
           <div class="week-col-day">Tuesday</div>
@@ -848,7 +943,7 @@
       </div>
 
       <!-- WED 15 -->
-      <div class="week-col" data-day="2" data-date="15">
+      <div class="week-col" data-day="2" data-date="15" data-week="current">
         <div class="week-col-header">
           <div class="week-col-date">Apr 15, 2026</div>
           <div class="week-col-day">Wednesday</div>
@@ -888,7 +983,7 @@
       </div>
 
       <!-- THU 16 -->
-      <div class="week-col" data-day="3" data-date="16">
+      <div class="week-col" data-day="3" data-date="16" data-week="current">
         <div class="week-col-header">
           <div class="week-col-date">Apr 16, 2026</div>
           <div class="week-col-day">Thursday</div>
@@ -903,7 +998,7 @@
       </div>
 
       <!-- FRI 17 -->
-      <div class="week-col" data-day="4" data-date="17">
+      <div class="week-col" data-day="4" data-date="17" data-week="current">
         <div class="week-col-header">
           <div class="week-col-date">Apr 17, 2026</div>
           <div class="week-col-day">Friday</div>
@@ -922,6 +1017,90 @@
         </div>
       </div>
 
+      <!-- ═══ NEXT WEEK PREVIEW ═══ -->
+
+      <!-- MON 20 -->
+      <div class="week-col is-preview" data-day="5" data-date="20" data-week="next">
+        <div class="week-col-header">
+          <div class="week-preview-label">Next week</div>
+          <div class="week-col-date">Apr 20, 2026</div>
+          <div class="week-col-day">Monday</div>
+        </div>
+        <div class="week-col-body">
+          <div class="week-task" data-id="nw-bloom-retro" data-done="false">
+            <div class="week-task-title">Bloom Retail campaign retro</div>
+            <div class="week-task-meta">10:00 AM · Full team debrief</div>
+            <span class="week-task-tag meeting"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Meeting</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TUE 21 -->
+      <div class="week-col is-preview" data-day="6" data-date="21" data-week="next">
+        <div class="week-col-header">
+          <div class="week-col-date">Apr 21, 2026</div>
+          <div class="week-col-day">Tuesday</div>
+        </div>
+        <div class="week-col-body">
+          <div class="week-task" data-id="nw-harbor-checkin" data-done="false">
+            <div class="week-task-title">Harbor Financial 1-week check-in</div>
+            <div class="week-task-meta">2:00 PM · Post-kickoff progress review</div>
+            <span class="week-task-tag meeting"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Meeting</span>
+          </div>
+          <div class="week-task" data-id="nw-summit-publish" data-done="false">
+            <div class="week-task-title">Summit Outdoor May content goes live</div>
+            <div class="week-task-meta">First batch of scheduled posts</div>
+            <span class="week-task-tag milestone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>Milestone</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- WED 22 -->
+      <div class="week-col is-preview" data-day="7" data-date="22" data-week="next">
+        <div class="week-col-header">
+          <div class="week-col-date">Apr 22, 2026</div>
+          <div class="week-col-day">Wednesday</div>
+        </div>
+        <div class="week-col-body">
+          <div class="week-task" data-id="nw-acme-revisions" data-done="false">
+            <div class="week-task-title">Acme design revisions due</div>
+            <div class="week-task-meta">Sarah Chen · Based on Thu feedback</div>
+            <span class="week-task-tag deadline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Deadline</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- THU 23 -->
+      <div class="week-col is-preview" data-day="8" data-date="23" data-week="next">
+        <div class="week-col-header">
+          <div class="week-col-date">Apr 23, 2026</div>
+          <div class="week-col-day">Thursday</div>
+        </div>
+        <div class="week-col-body">
+          <div class="week-task" data-id="nw-mountain-kickoff" data-done="false">
+            <div class="week-task-title">Mountain View Dental project kickoff</div>
+            <div class="week-task-meta">11:00 AM · New client onboarding</div>
+            <span class="week-task-tag meeting"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Meeting</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- FRI 24 -->
+      <div class="week-col is-preview" data-day="9" data-date="24" data-week="next">
+        <div class="week-col-header">
+          <div class="week-col-date">Apr 24, 2026</div>
+          <div class="week-col-day">Friday</div>
+        </div>
+        <div class="week-col-body">
+          <div class="week-task" data-id="nw-northstar-delivery" data-done="false">
+            <div class="week-task-title">Northstar mobile module spec delivery</div>
+            <div class="week-task-meta">End of sprint 1 · Scope approved this week</div>
+            <span class="week-task-tag deadline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Deadline</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
     </div>
 
   </div>
@@ -931,6 +1110,7 @@
 <!-- Back to top button -->
 <button class="back-to-top" id="backToTop" aria-label="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+  <span class="btt-tooltip">Back to top</span>
 </button>
 
 <script>
@@ -988,7 +1168,7 @@ var carriedSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 /* Store the original task HTML keyed by data-id so we can rebuild */
 var originalTasks = {};
 (function() {
-  document.querySelectorAll('.week-task').forEach(function(t) {
+  document.querySelectorAll('.week-col[data-week="current"] .week-task').forEach(function(t) {
     originalTasks[t.dataset.id] = {
       html: t.innerHTML,
       done: t.dataset.done === 'true',
@@ -1001,18 +1181,18 @@ var originalTasks = {};
 function applyToday() {
   var now = new Date();
   var todayDate = now.getDate();
-  var cols = document.querySelectorAll('.week-col');
+  var currentCols = document.querySelectorAll('.week-col[data-week="current"]');
   var activeIdx = -1;
 
-  for (var i = 0; i < cols.length; i++) {
-    if (parseInt(cols[i].dataset.date) === todayDate) {
+  for (var i = 0; i < currentCols.length; i++) {
+    if (parseInt(currentCols[i].dataset.date) === todayDate) {
       activeIdx = i;
       break;
     }
   }
 
-  /* Apply today / past states */
-  cols.forEach(function(col) {
+  /* Apply today / past states to current-week columns only */
+  currentCols.forEach(function(col) {
     var dayIdx = parseInt(col.dataset.day);
     if (dayIdx === activeIdx) {
       col.classList.add('is-today');
@@ -1023,11 +1203,11 @@ function applyToday() {
 
   /* Move unfinished tasks from past days to today's column */
   if (activeIdx >= 0) {
-    var todayCol = document.querySelector('.week-col[data-day="' + activeIdx + '"]');
+    var todayCol = document.querySelector('.week-col[data-week="current"][data-day="' + activeIdx + '"]');
     if (todayCol) {
       var todayBody = todayCol.querySelector('.week-col-body');
 
-      cols.forEach(function(col) {
+      currentCols.forEach(function(col) {
         var dayIdx = parseInt(col.dataset.day);
         if (dayIdx >= activeIdx) return;
 
@@ -1050,6 +1230,22 @@ function applyToday() {
 }
 
 applyToday();
+
+/* ── Week scroll: fade gradient toggle ── */
+(function() {
+  var scrollEl = document.querySelector('.week-board');
+  var wrapper = document.getElementById('weekScroll');
+  if (!scrollEl || !wrapper) return;
+
+  function checkScroll() {
+    var atEnd = scrollEl.scrollLeft + scrollEl.clientWidth >= scrollEl.scrollWidth - 2;
+    wrapper.classList.toggle('scrolled-end', atEnd);
+  }
+
+  scrollEl.addEventListener('scroll', checkScroll);
+  window.addEventListener('resize', checkScroll);
+  checkScroll();
+})();
 </script>
 
 </body>
