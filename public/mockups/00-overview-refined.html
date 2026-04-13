@@ -599,10 +599,11 @@
     box-shadow: 0 0 0 1px var(--highlight), var(--shadow);
   }
   .week-col.is-today .week-col-header {
-    background: var(--highlight-soft);
+    background: var(--highlight);
   }
-  .week-col.is-today .week-col-day {
-    color: var(--highlight);
+  .week-col.is-today .week-col-day,
+  .week-col.is-today .week-col-date {
+    color: #fff;
   }
   .week-col.is-today::before {
     content: "";
