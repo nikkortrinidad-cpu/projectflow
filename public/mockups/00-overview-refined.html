@@ -1218,6 +1218,45 @@ applyToday();
   var board = document.getElementById('weekBoard');
   if (!tabs.length || !board) return;
 
+  /* Measure the tallest column in current week and apply as min-height to all columns */
+  function syncColumnHeights() {
+    var currentCols = board.querySelectorAll('.week-col[data-week="current"]');
+    var nextCols = board.querySelectorAll('.week-col[data-week="next"]');
+
+    /* Reset first so we measure natural heights */
+    currentCols.forEach(function(c) { c.style.minHeight = ''; });
+    nextCols.forEach(function(c) { c.style.minHeight = ''; });
+
+    /* Briefly show current-week cols to measure */
+    board.classList.remove('show-next');
+    var maxH = 0;
+    currentCols.forEach(function(c) {
+      if (c.offsetHeight > maxH) maxH = c.offsetHeight;
+    });
+
+    /* Briefly show next-week cols to measure */
+    board.classList.add('show-next');
+    nextCols.forEach(function(c) {
+      if (c.offsetHeight > maxH) maxH = c.offsetHeight;
+    });
+
+    /* Restore to whichever tab is active */
+    var activeTab = document.querySelector('#weekTabs .week-tab.active');
+    if (activeTab && activeTab.dataset.target === 'next') {
+      board.classList.add('show-next');
+    } else {
+      board.classList.remove('show-next');
+    }
+
+    /* Apply uniform height */
+    var h = maxH + 'px';
+    currentCols.forEach(function(c) { c.style.minHeight = h; });
+    nextCols.forEach(function(c) { c.style.minHeight = h; });
+  }
+
+  syncColumnHeights();
+  window.addEventListener('resize', syncColumnHeights);
+
   tabs.forEach(function(tab) {
     tab.addEventListener('click', function() {
       tabs.forEach(function(t) { t.classList.remove('active'); });
