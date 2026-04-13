@@ -765,8 +765,9 @@
     transition: box-shadow 0.2s, border-color 0.2s, transform 0.15s;
   }
   .wl-card:hover {
-    border-color: var(--hairline);
-    box-shadow: var(--shadow-hover);
+    border-color: var(--highlight);
+    box-shadow: 0 0 0 1px var(--highlight), var(--shadow-hover);
+    background: var(--highlight-soft);
     transform: translateY(-1px);
   }
   .wl-avatar {
@@ -841,7 +842,7 @@
   }
   .wl-panel {
     position: fixed;
-    top: 12px; right: 12px; bottom: 12px;
+    top: 68px; right: 12px; bottom: 12px;
     width: 400px;
     max-width: calc(90vw - 24px);
     background: var(--bg-elev);
