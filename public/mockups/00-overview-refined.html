@@ -594,8 +594,8 @@
 <div class="page">
 
   <div class="page-header">
-    <div class="page-greeting">Monday, April 13</div>
-    <div class="page-title">Good morning, Nikko.</div>
+    <div class="page-greeting" id="pageGreeting"></div>
+    <div class="page-title" id="pageTitle"></div>
     <div class="page-date">Here's what needs you today.</div>
   </div>
 
@@ -763,15 +763,15 @@
   <div class="block">
     <div class="block-header">
       <div class="block-title">This Week</div>
-      <div class="block-sub">Apr 14 – Apr 18</div>
+      <div class="block-sub" id="weekRange">Apr 13 – Apr 17</div>
     </div>
     <div class="week-board" id="weekBoard">
 
-      <!-- MON 14 -->
-      <div class="week-col" data-day="mon" data-date="14">
+      <!-- MON 13 -->
+      <div class="week-col" data-day="0" data-date="13">
         <div class="week-col-header">
           <div class="week-col-day">Mon</div>
-          <div class="week-col-num">14</div>
+          <div class="week-col-num">13</div>
         </div>
         <div class="week-col-body">
           <div class="week-task" data-id="seo-audit" data-done="false">
@@ -787,11 +787,11 @@
         </div>
       </div>
 
-      <!-- TUE 15 -->
-      <div class="week-col" data-day="tue" data-date="15">
+      <!-- TUE 14 -->
+      <div class="week-col" data-day="1" data-date="14">
         <div class="week-col-header">
           <div class="week-col-day">Tue</div>
-          <div class="week-col-num">15</div>
+          <div class="week-col-num">14</div>
         </div>
         <div class="week-col-body">
           <div class="week-task" data-id="harbor-kickoff" data-done="true">
@@ -802,11 +802,11 @@
         </div>
       </div>
 
-      <!-- WED 16 -->
-      <div class="week-col" data-day="wed" data-date="16">
+      <!-- WED 15 -->
+      <div class="week-col" data-day="2" data-date="15">
         <div class="week-col-header">
           <div class="week-col-day">Wed</div>
-          <div class="week-col-num">16</div>
+          <div class="week-col-num">15</div>
         </div>
         <div class="week-col-body">
           <div class="week-task" data-id="northstar-scope" data-done="false">
@@ -814,14 +814,39 @@
             <div class="week-task-meta">Your sign-off needed by EOD</div>
             <span class="week-task-tag deadline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Deadline</span>
           </div>
+          <div class="week-task" data-id="nova-api" data-done="false">
+            <div class="week-task-title">Nova Ventures API credentials follow-up</div>
+            <div class="week-task-meta">Client IT still hasn't responded</div>
+            <span class="week-task-tag deadline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Deadline</span>
+          </div>
+          <div class="week-task" data-id="acme-wireframes" data-done="false">
+            <div class="week-task-title">Acme wireframes v3 internal review</div>
+            <div class="week-task-meta">Sarah Chen · Prep before Thu stakeholder call</div>
+            <span class="week-task-tag meeting"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Meeting</span>
+          </div>
+          <div class="week-task" data-id="bloom-q2" data-done="false">
+            <div class="week-task-title">Bloom Retail Q2 plan — team alignment</div>
+            <div class="week-task-meta">11:00 AM · Elena Park presenting draft</div>
+            <span class="week-task-tag meeting"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Meeting</span>
+          </div>
+          <div class="week-task" data-id="summit-calendar" data-done="false">
+            <div class="week-task-title">Summit Outdoor content calendar sign-off</div>
+            <div class="week-task-meta">May publishing schedule needs approval</div>
+            <span class="week-task-tag deadline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Deadline</span>
+          </div>
+          <div class="week-task" data-id="mountain-sow" data-done="false">
+            <div class="week-task-title">Mountain View Dental SOW draft review</div>
+            <div class="week-task-meta">New client · Contract terms need your input</div>
+            <span class="week-task-tag deadline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Deadline</span>
+          </div>
         </div>
       </div>
 
-      <!-- THU 17 -->
-      <div class="week-col" data-day="thu" data-date="17">
+      <!-- THU 16 -->
+      <div class="week-col" data-day="3" data-date="16">
         <div class="week-col-header">
           <div class="week-col-day">Thu</div>
-          <div class="week-col-num">17</div>
+          <div class="week-col-num">16</div>
         </div>
         <div class="week-col-body">
           <div class="week-task" data-id="acme-review" data-done="false">
@@ -832,11 +857,11 @@
         </div>
       </div>
 
-      <!-- FRI 18 -->
-      <div class="week-col" data-day="fri" data-date="18">
+      <!-- FRI 17 -->
+      <div class="week-col" data-day="4" data-date="17">
         <div class="week-col-header">
           <div class="week-col-day">Fri</div>
-          <div class="week-col-num">18</div>
+          <div class="week-col-num">17</div>
         </div>
         <div class="week-col-body">
           <div class="week-task" data-id="acme-launch" data-done="false">
@@ -854,16 +879,17 @@
 
     </div>
 
-    <!-- Day switcher for demo -->
+    <!-- Day switcher for demo override -->
     <div class="week-demo">
       <span class="week-demo-label">Simulate day:</span>
       <div class="week-demo-btns">
-        <button class="week-demo-btn" data-sim="sun" onclick="simDay('sun')">Sun</button>
-        <button class="week-demo-btn" data-sim="mon" onclick="simDay('mon')">Mon</button>
-        <button class="week-demo-btn" data-sim="tue" onclick="simDay('tue')">Tue</button>
-        <button class="week-demo-btn active" data-sim="wed" onclick="simDay('wed')">Wed</button>
-        <button class="week-demo-btn" data-sim="thu" onclick="simDay('thu')">Thu</button>
-        <button class="week-demo-btn" data-sim="fri" onclick="simDay('fri')">Fri</button>
+        <button class="week-demo-btn" data-sim="-1" onclick="simDay(-1)">Before</button>
+        <button class="week-demo-btn" data-sim="0" onclick="simDay(0)">Mon</button>
+        <button class="week-demo-btn" data-sim="1" onclick="simDay(1)">Tue</button>
+        <button class="week-demo-btn" data-sim="2" onclick="simDay(2)">Wed</button>
+        <button class="week-demo-btn" data-sim="3" onclick="simDay(3)">Thu</button>
+        <button class="week-demo-btn" data-sim="4" onclick="simDay(4)">Fri</button>
+        <button class="week-demo-btn active" data-sim="auto" onclick="simDay('auto')">Auto</button>
       </div>
     </div>
   </div>
@@ -889,8 +915,26 @@ function toggleAttn(e) {
   }
 }
 
+/* ── Dynamic greeting based on local time ── */
+(function() {
+  var now = new Date();
+  var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var dayName = days[now.getDay()];
+  var monthName = months[now.getMonth()];
+  var dateNum = now.getDate();
+  var hour = now.getHours();
+
+  var greeting = 'Good morning';
+  if (hour >= 12 && hour < 17) greeting = 'Good afternoon';
+  else if (hour >= 17) greeting = 'Good evening';
+
+  document.getElementById('pageGreeting').textContent = dayName + ', ' + monthName + ' ' + dateNum;
+  document.getElementById('pageTitle').textContent = greeting + ', Nikko.';
+})();
+
 /* ── Week board: day progression logic ── */
-var DAY_ORDER = ['mon', 'tue', 'wed', 'thu', 'fri'];
+var DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
 var carriedSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 17 20 12 15 7"/><path d="M4 18v-1a5 5 0 0 1 5-5h11"/></svg>';
 
 /* Store the original task HTML keyed by data-id so we can rebuild */
@@ -900,32 +944,61 @@ var originalTasks = {};
     originalTasks[t.dataset.id] = {
       html: t.innerHTML,
       done: t.dataset.done === 'true',
-      origDay: t.closest('.week-col').dataset.day
+      origDayIdx: parseInt(t.closest('.week-col').dataset.day)
     };
   });
 })();
 
-function simDay(activeDay) {
+/* Detect which column index (0-4) matches today's real date */
+function getAutoDay() {
+  var now = new Date();
+  var todayDate = now.getDate();
+  var cols = document.querySelectorAll('.week-col');
+  for (var i = 0; i < cols.length; i++) {
+    if (parseInt(cols[i].dataset.date) === todayDate) {
+      return i;
+    }
+  }
+  /* If today doesn't match any column (weekend, different week), return -1 */
+  return -1;
+}
+
+function simDay(activeIdx) {
+  /* If 'auto', detect from real local date */
+  if (activeIdx === 'auto') {
+    activeIdx = getAutoDay();
+  } else {
+    activeIdx = parseInt(activeIdx);
+  }
+
   /* Update demo buttons */
   document.querySelectorAll('.week-demo-btn').forEach(function(b) {
-    b.classList.toggle('active', b.dataset.sim === activeDay);
+    var val = b.dataset.sim;
+    if (val === 'auto') {
+      b.classList.toggle('active', arguments.length === 0 || b.dataset.sim === 'auto');
+    } else {
+      b.classList.toggle('active', parseInt(val) === activeIdx);
+    }
+  });
+  /* Special handling: highlight Auto when it's the active mode */
+  var isAuto = (event && event.target && event.target.dataset.sim === 'auto');
+  document.querySelectorAll('.week-demo-btn').forEach(function(b) {
+    b.classList.remove('active');
+    if (isAuto && b.dataset.sim === 'auto') b.classList.add('active');
+    else if (!isAuto && parseInt(b.dataset.sim) === activeIdx) b.classList.add('active');
   });
 
-  var activeIdx = DAY_ORDER.indexOf(activeDay); /* -1 if sun */
-
-  /* Reset all columns to their original tasks first */
+  /* Reset all columns */
   var cols = document.querySelectorAll('.week-col');
   cols.forEach(function(col) {
     col.classList.remove('is-today', 'is-past');
     var body = col.querySelector('.week-col-body');
-    /* Clear carried tasks */
     body.querySelectorAll('.week-task.carried').forEach(function(t) { t.remove(); });
   });
 
-  /* Restore original tasks to their original columns */
+  /* Restore original tasks */
   cols.forEach(function(col) {
-    var body = col.querySelector('.week-col-body');
-    body.querySelectorAll('.week-task:not(.carried)').forEach(function(t) {
+    col.querySelectorAll('.week-task:not(.carried)').forEach(function(t) {
       var orig = originalTasks[t.dataset.id];
       if (orig) {
         t.innerHTML = orig.html;
@@ -935,10 +1008,8 @@ function simDay(activeDay) {
   });
 
   /* Apply today / past states */
-  cols.forEach(function(col, i) {
-    var dayName = col.dataset.day;
-    var dayIdx = DAY_ORDER.indexOf(dayName);
-
+  cols.forEach(function(col) {
+    var dayIdx = parseInt(col.dataset.day);
     if (dayIdx === activeIdx) {
       col.classList.add('is-today');
     } else if (activeIdx >= 0 && dayIdx < activeIdx) {
@@ -948,33 +1019,34 @@ function simDay(activeDay) {
 
   /* Move unfinished tasks from past days to today's column */
   if (activeIdx >= 0) {
-    var todayCol = document.querySelector('.week-col[data-day="' + activeDay + '"]');
-    var todayBody = todayCol.querySelector('.week-col-body');
+    var todayCol = document.querySelector('.week-col[data-day="' + activeIdx + '"]');
+    if (todayCol) {
+      var todayBody = todayCol.querySelector('.week-col-body');
 
-    cols.forEach(function(col) {
-      var dayIdx = DAY_ORDER.indexOf(col.dataset.day);
-      if (dayIdx >= activeIdx) return; /* only past columns */
+      cols.forEach(function(col) {
+        var dayIdx = parseInt(col.dataset.day);
+        if (dayIdx >= activeIdx) return;
 
-      col.querySelectorAll('.week-task').forEach(function(task) {
-        var info = originalTasks[task.dataset.id];
-        if (info && !info.done) {
-          /* Create a carried-over clone in today's column */
-          var clone = document.createElement('div');
-          clone.className = 'week-task carried';
-          clone.dataset.id = task.dataset.id + '-carried';
-          var origDayLabel = info.origDay.charAt(0).toUpperCase() + info.origDay.slice(1);
-          clone.innerHTML =
-            '<div class="carried-badge">' + carriedSvg + 'Carried from ' + origDayLabel + '</div>' +
-            info.html;
-          todayBody.insertBefore(clone, todayBody.firstChild);
-        }
+        col.querySelectorAll('.week-task:not(.carried)').forEach(function(task) {
+          var info = originalTasks[task.dataset.id];
+          if (info && !info.done) {
+            var clone = document.createElement('div');
+            clone.className = 'week-task carried';
+            clone.dataset.id = task.dataset.id + '-carried';
+            var origLabel = DAY_LABELS[info.origDayIdx] || 'Earlier';
+            clone.innerHTML =
+              '<div class="carried-badge">' + carriedSvg + 'Carried from ' + origLabel + '</div>' +
+              info.html;
+            todayBody.insertBefore(clone, todayBody.firstChild);
+          }
+        });
       });
-    });
+    }
   }
 }
 
-/* Initialize at Wed to show the feature */
-simDay('wed');
+/* Initialize from local system time */
+simDay('auto');
 </script>
 
 </body>
