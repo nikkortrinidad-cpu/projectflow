@@ -498,6 +498,144 @@
   .attn-btn.primary:hover { opacity: 0.9; }
   .attn-btn.primary:active { transform: scale(0.96); opacity: 0.85; }
 
+  /* Delegate popover */
+  .delegate-backdrop {
+    position: fixed; inset: 0; z-index: 998;
+  }
+  .delegate-pop {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    right: 0;
+    width: 340px;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+    z-index: 999;
+    padding: 20px;
+    animation: dpFadeIn 0.15s ease;
+  }
+  @keyframes dpFadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .delegate-pop h4 {
+    font-size: 15px; font-weight: 700; color: var(--text);
+    margin: 0 0 16px; letter-spacing: -0.02em;
+  }
+  .dp-label {
+    font-size: 12px; font-weight: 600; color: var(--text-muted);
+    letter-spacing: 0.02em; text-transform: uppercase;
+    margin-bottom: 6px; display: block;
+  }
+  .dp-field {
+    margin-bottom: 14px;
+  }
+  .dp-combo {
+    position: relative;
+  }
+  .dp-combo input {
+    width: 100%; padding: 9px 12px;
+    font-size: 14px; font-weight: 500; color: var(--text);
+    border: 1px solid var(--hairline); border-radius: 10px;
+    background: var(--bg-soft);
+    outline: none; transition: border-color 0.15s;
+    box-sizing: border-box;
+  }
+  .dp-combo input::placeholder { color: var(--text-faint); }
+  .dp-combo input:focus { border-color: var(--highlight); }
+  .dp-combo-list {
+    position: absolute; top: 100%; left: 0; right: 0;
+    margin-top: 4px;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    z-index: 10;
+    max-height: 180px; overflow-y: auto;
+    display: none;
+  }
+  .dp-combo-list.open { display: block; }
+  .dp-combo-item {
+    padding: 9px 12px;
+    font-size: 13px; font-weight: 500; color: var(--text);
+    cursor: pointer;
+    display: flex; align-items: center; gap: 10px;
+    transition: background 0.1s;
+  }
+  .dp-combo-item:first-child { border-radius: 10px 10px 0 0; }
+  .dp-combo-item:last-child { border-radius: 0 0 10px 10px; }
+  .dp-combo-item:hover { background: var(--highlight-soft); }
+  .dp-combo-item.selected { background: var(--highlight-soft); color: var(--highlight); }
+  .dp-combo-avatar {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--avatar-bg); color: var(--avatar-fg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; flex-shrink: 0;
+  }
+  .dp-combo-role {
+    font-size: 11px; color: var(--text-faint); margin-left: auto;
+  }
+  .dp-textarea {
+    width: 100%; padding: 9px 12px;
+    font-size: 13px; font-family: inherit; font-weight: 400;
+    color: var(--text); line-height: 1.5;
+    border: 1px solid var(--hairline); border-radius: 10px;
+    background: var(--bg-soft);
+    outline: none; resize: vertical; min-height: 60px;
+    transition: border-color 0.15s;
+    box-sizing: border-box;
+  }
+  .dp-textarea::placeholder { color: var(--text-faint); }
+  .dp-textarea:focus { border-color: var(--highlight); }
+  .dp-row {
+    display: flex; gap: 10px;
+  }
+  .dp-row .dp-field { flex: 1; }
+  .dp-select {
+    width: 100%; padding: 9px 12px;
+    font-size: 13px; font-weight: 500; color: var(--text);
+    border: 1px solid var(--hairline); border-radius: 10px;
+    background: var(--bg-soft);
+    outline: none; cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2386868b'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    box-sizing: border-box;
+  }
+  .dp-select:focus { border-color: var(--highlight); }
+  .dp-input-date {
+    width: 100%; padding: 9px 12px;
+    font-size: 13px; font-weight: 500; color: var(--text);
+    border: 1px solid var(--hairline); border-radius: 10px;
+    background: var(--bg-soft);
+    outline: none; cursor: pointer;
+    box-sizing: border-box;
+    font-family: inherit;
+  }
+  .dp-input-date:focus { border-color: var(--highlight); }
+  .dp-actions {
+    display: flex; gap: 8px; margin-top: 18px;
+    justify-content: flex-end;
+  }
+  .dp-btn {
+    padding: 9px 20px; border-radius: 980px;
+    font-size: 13px; font-weight: 600;
+    border: 1px solid var(--hairline);
+    background: var(--btn-bg); color: var(--text);
+    cursor: pointer; transition: all 0.15s;
+    letter-spacing: -0.01em;
+  }
+  .dp-btn:hover { background: var(--bg-soft); }
+  .dp-btn.dp-submit {
+    background: var(--highlight); border-color: var(--highlight); color: #fff;
+  }
+  .dp-btn.dp-submit:hover { opacity: 0.9; }
+  .dp-btn.dp-submit:disabled {
+    opacity: 0.4; cursor: not-allowed;
+  }
+
   /* Tooltip */
   .attn-btn {
     position: relative;
@@ -1124,7 +1262,7 @@
           <div class="attn-desc">Harvey San Juan sent design review files April 8. No response. Launch date April 18 at risk.</div>
         </div>
         <div class="attn-actions">
-          <button class="attn-btn" onclick="event.stopPropagation()">Delegate<span class="tooltip">Assign this to a team member who can follow up</span></button>
+          <button class="attn-btn" onclick="openDelegate(event,this)">Delegate<span class="tooltip">Assign this to a team member who can follow up</span></button>
           <button class="attn-btn primary" onclick="event.stopPropagation()">Review<span class="tooltip">Open this item and take action now</span></button>
         </div>
       </div>
@@ -1140,7 +1278,7 @@
           <div class="attn-desc">Assigned to Kate. Last seen yesterday afternoon. No draft in shared folder yet.</div>
         </div>
         <div class="attn-actions">
-          <button class="attn-btn" onclick="event.stopPropagation()">Delegate<span class="tooltip">Assign this to a team member who can follow up</span></button>
+          <button class="attn-btn" onclick="openDelegate(event,this)">Delegate<span class="tooltip">Assign this to a team member who can follow up</span></button>
           <button class="attn-btn primary" onclick="event.stopPropagation()">Review<span class="tooltip">Open this item and take action now</span></button>
         </div>
       </div>
@@ -1156,7 +1294,7 @@
           <div class="attn-desc">Chris flagged capacity issue yesterday. May need to pull in help or extend timeline.</div>
         </div>
         <div class="attn-actions">
-          <button class="attn-btn" onclick="event.stopPropagation()">Delegate<span class="tooltip">Assign this to a team member who can follow up</span></button>
+          <button class="attn-btn" onclick="openDelegate(event,this)">Delegate<span class="tooltip">Assign this to a team member who can follow up</span></button>
           <button class="attn-btn primary" onclick="event.stopPropagation()">Review<span class="tooltip">Open this item and take action now</span></button>
         </div>
       </div>
@@ -1172,7 +1310,7 @@
           <div class="attn-desc">Client added a mobile app module. +40 hours estimated. Team paused pending sign-off.</div>
         </div>
         <div class="attn-actions">
-          <button class="attn-btn" onclick="event.stopPropagation()">Delegate<span class="tooltip">Assign this to a team member who can follow up</span></button>
+          <button class="attn-btn" onclick="openDelegate(event,this)">Delegate<span class="tooltip">Assign this to a team member who can follow up</span></button>
           <button class="attn-btn primary" onclick="event.stopPropagation()">Review<span class="tooltip">Open this item and take action now</span></button>
         </div>
       </div>
@@ -1188,7 +1326,7 @@
           <div class="attn-desc">Dev team can't proceed until third-party API keys are provisioned. Client IT hasn't responded.</div>
         </div>
         <div class="attn-actions">
-          <button class="attn-btn" onclick="event.stopPropagation()">Delegate<span class="tooltip">Assign this to a team member who can follow up</span></button>
+          <button class="attn-btn" onclick="openDelegate(event,this)">Delegate<span class="tooltip">Assign this to a team member who can follow up</span></button>
           <button class="attn-btn primary" onclick="event.stopPropagation()">Review<span class="tooltip">Open this item and take action now</span></button>
         </div>
       </div>
@@ -1204,7 +1342,7 @@
           <div class="attn-desc">8 onboarding tasks created. Contract signed. Kickoff scheduled Tuesday 10am — checklist must be reviewed first.</div>
         </div>
         <div class="attn-actions">
-          <button class="attn-btn" onclick="event.stopPropagation()">Delegate<span class="tooltip">Assign this to a team member who can follow up</span></button>
+          <button class="attn-btn" onclick="openDelegate(event,this)">Delegate<span class="tooltip">Assign this to a team member who can follow up</span></button>
           <button class="attn-btn primary" onclick="event.stopPropagation()">Review<span class="tooltip">Open this item and take action now</span></button>
         </div>
       </div>
@@ -1474,6 +1612,158 @@ function toggleAttn(e) {
   var isOpen = list.classList.contains('expanded');
   link.textContent = isOpen ? 'Show less' : 'View all 6 →';
   link.setAttribute('aria-expanded', isOpen);
+}
+
+/* ── Delegate popover ── */
+var TEAM = [
+  { name: 'Roxy Calinga', initials: 'RC', role: 'Operations Manager' },
+  { name: 'Chris Castellano', initials: 'CC', role: 'Senior Growth & SEO' },
+  { name: 'Kate Lawrence', initials: 'KL', role: 'Account Manager' },
+  { name: 'Harvey San Juan', initials: 'HS', role: 'Web Designer' },
+  { name: 'Michael Potts', initials: 'MP', role: 'Paid Social Manager' }
+];
+
+var activeDelegatePop = null;
+
+function closeDelegate() {
+  if (activeDelegatePop) {
+    activeDelegatePop.pop.remove();
+    if (activeDelegatePop.backdrop) activeDelegatePop.backdrop.remove();
+    activeDelegatePop = null;
+  }
+}
+
+function openDelegate(e, btn) {
+  e.stopPropagation();
+  e.preventDefault();
+  if (activeDelegatePop) { closeDelegate(); return; }
+
+  var actions = btn.closest('.attn-actions');
+  var card = btn.closest('.attn-card');
+  var severity = card.querySelector('.attn-severity');
+  var defaultPriority = 'Medium';
+  if (severity && severity.classList.contains('critical')) defaultPriority = 'Urgent';
+  else if (severity && severity.classList.contains('warning')) defaultPriority = 'High';
+
+  var pop = document.createElement('div');
+  pop.className = 'delegate-pop';
+  pop.innerHTML =
+    '<h4>Delegate Task</h4>' +
+    '<div class="dp-field">' +
+      '<label class="dp-label">Assign to</label>' +
+      '<div class="dp-combo" id="dpCombo">' +
+        '<input type="text" id="dpAssignee" placeholder="Search team member\u2026" autocomplete="off">' +
+        '<div class="dp-combo-list" id="dpList"></div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="dp-field">' +
+      '<label class="dp-label">Note</label>' +
+      '<textarea class="dp-textarea" id="dpNote" placeholder="Quick context or instructions\u2026" rows="2"></textarea>' +
+    '</div>' +
+    '<div class="dp-row">' +
+      '<div class="dp-field">' +
+        '<label class="dp-label">Priority</label>' +
+        '<select class="dp-select" id="dpPriority">' +
+          '<option' + (defaultPriority === 'Urgent' ? ' selected' : '') + '>Urgent</option>' +
+          '<option' + (defaultPriority === 'High' ? ' selected' : '') + '>High</option>' +
+          '<option' + (defaultPriority === 'Medium' ? ' selected' : '') + '>Medium</option>' +
+          '<option>Low</option>' +
+        '</select>' +
+      '</div>' +
+      '<div class="dp-field">' +
+        '<label class="dp-label">Due by</label>' +
+        '<input type="date" class="dp-input-date" id="dpDue">' +
+      '</div>' +
+    '</div>' +
+    '<div class="dp-actions">' +
+      '<button class="dp-btn" onclick="closeDelegate()">Cancel</button>' +
+      '<button class="dp-btn dp-submit" id="dpSubmit" disabled>Delegate</button>' +
+    '</div>';
+
+  var backdrop = document.createElement('div');
+  backdrop.className = 'delegate-backdrop';
+  backdrop.addEventListener('click', closeDelegate);
+  document.body.appendChild(backdrop);
+  actions.appendChild(pop);
+
+  activeDelegatePop = { pop: pop, backdrop: backdrop };
+
+  var input = pop.querySelector('#dpAssignee');
+  var list = pop.querySelector('#dpList');
+  var submitBtn = pop.querySelector('#dpSubmit');
+  var selectedMember = null;
+
+  function renderList(filter) {
+    var q = (filter || '').toLowerCase();
+    list.innerHTML = '';
+    var matches = TEAM.filter(function(m) {
+      return !q || m.name.toLowerCase().indexOf(q) > -1 || m.role.toLowerCase().indexOf(q) > -1;
+    });
+    if (matches.length === 0) {
+      list.classList.remove('open');
+      return;
+    }
+    matches.forEach(function(m) {
+      var item = document.createElement('div');
+      item.className = 'dp-combo-item' + (selectedMember && selectedMember.name === m.name ? ' selected' : '');
+      item.innerHTML =
+        '<span class="dp-combo-avatar">' + m.initials + '</span>' +
+        '<span>' + m.name + '</span>' +
+        '<span class="dp-combo-role">' + m.role + '</span>';
+      item.addEventListener('click', function(ev) {
+        ev.stopPropagation();
+        selectedMember = m;
+        input.value = m.name;
+        list.classList.remove('open');
+        submitBtn.disabled = false;
+      });
+      list.appendChild(item);
+    });
+    list.classList.add('open');
+  }
+
+  input.addEventListener('focus', function() { renderList(input.value); });
+  input.addEventListener('input', function() {
+    selectedMember = null;
+    submitBtn.disabled = true;
+    renderList(input.value);
+    /* Auto-select if exact match */
+    var v = input.value.trim().toLowerCase();
+    TEAM.forEach(function(m) {
+      if (m.name.toLowerCase() === v) {
+        selectedMember = m;
+        submitBtn.disabled = false;
+      }
+    });
+  });
+
+  /* Close list on click outside combo */
+  pop.addEventListener('click', function(ev) {
+    if (!ev.target.closest('.dp-combo')) list.classList.remove('open');
+  });
+
+  submitBtn.addEventListener('click', function(ev) {
+    ev.stopPropagation();
+    if (!selectedMember) return;
+    var title = card.querySelector('.attn-title');
+    var msg = 'Delegated "' + (title ? title.textContent : 'task') + '" to ' + selectedMember.name;
+    closeDelegate();
+    /* Brief confirmation flash */
+    var toast = document.createElement('div');
+    toast.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:12px 24px;border-radius:980px;font-size:14px;font-weight:600;z-index:9999;animation:dpFadeIn 0.15s ease;letter-spacing:-0.01em;';
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(function() { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; }, 2000);
+    setTimeout(function() { toast.remove(); }, 2400);
+  });
+
+  /* Escape to close */
+  function onKey(ev) {
+    if (ev.key === 'Escape') { closeDelegate(); document.removeEventListener('keydown', onKey); }
+  }
+  document.addEventListener('keydown', onKey);
+
+  input.focus();
 }
 
 /* ── Back to top: show after scrolling past the fold ── */
