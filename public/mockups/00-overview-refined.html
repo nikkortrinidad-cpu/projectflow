@@ -270,7 +270,9 @@
   .attn-card:hover {
     box-shadow: var(--shadow-hover);
     transform: translateY(-1px);
+    z-index: 5;
   }
+  .attn-card { overflow: visible; }
 
   .attn-content { min-width: 0; padding-left: 8px; }
   .attn-row1 {
@@ -315,6 +317,8 @@
   .attn-actions {
     display: flex; align-items: center; gap: 8px;
     flex-shrink: 0;
+    overflow: visible;
+    position: relative;
   }
   .attn-btn {
     padding: 8px 16px; border-radius: 980px;
@@ -353,7 +357,7 @@
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.15s ease;
-    z-index: 10;
+    z-index: 100;
   }
   .attn-btn .tooltip::after {
     content: "";
