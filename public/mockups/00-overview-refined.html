@@ -826,6 +826,43 @@
     color: var(--text-soft);
     margin-top: 2px;
   }
+  .wl-block-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+    margin-top: 4px;
+  }
+  .wl-block-tag.full { background: rgba(59,130,246,0.1); color: #3b82f6; }
+  .wl-block-tag.half { background: rgba(16,185,129,0.1); color: #10b981; }
+  .wl-block-tag.quarter { background: rgba(245,158,11,0.1); color: #f59e0b; }
+  .wl-block-tag.quick { background: var(--bg-soft); color: var(--text-faint); }
+  .wl-panel-summary {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--hairline-soft);
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .wl-summary-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .wl-summary-chip .wl-sc-dot {
+    width: 8px; height: 8px;
+    border-radius: 2px;
+  }
+  .wl-sc-dot.full { background: #3b82f6; }
+  .wl-sc-dot.half { background: #10b981; }
+  .wl-sc-dot.quarter { background: #f59e0b; }
+  .wl-sc-dot.quick { background: var(--text-faint); }
 
   /* Reduced motion */
   @media (prefers-reduced-motion: reduce) {
@@ -1265,59 +1302,7 @@
       <div class="block-title">Team Workload</div>
       <div class="block-sub">This week's capacity</div>
     </div>
-    <div class="workload-grid">
-
-      <div class="wl-card" onclick="openWlPanel(0)">
-        <div class="wl-bar-ring">
-          <svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fill over" cx="26" cy="26" r="21" stroke-dasharray="132" stroke-dashoffset="0"/></svg>
-          <div class="wl-ring-label">5/4</div>
-        </div>
-        <div class="wl-avatar" style="background:#e0e7ff;color:#4f46e5;">SC</div>
-        <div class="wl-name">Sarah Chen</div>
-        <div class="wl-caption">Lead Designer</div>
-      </div>
-
-      <div class="wl-card" onclick="openWlPanel(1)">
-        <div class="wl-bar-ring">
-          <svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fill heavy" cx="26" cy="26" r="21" stroke-dasharray="132" stroke-dashoffset="33"/></svg>
-          <div class="wl-ring-label">3/4</div>
-        </div>
-        <div class="wl-avatar" style="background:#fef3c7;color:#d97706;">MR</div>
-        <div class="wl-name">Marcus Reyes</div>
-        <div class="wl-caption">SEO Specialist</div>
-      </div>
-
-      <div class="wl-card" onclick="openWlPanel(2)">
-        <div class="wl-bar-ring">
-          <svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fill steady" cx="26" cy="26" r="21" stroke-dasharray="132" stroke-dashoffset="66"/></svg>
-          <div class="wl-ring-label">2/4</div>
-        </div>
-        <div class="wl-avatar" style="background:#fce7f3;color:#db2777;">EP</div>
-        <div class="wl-name">Elena Park</div>
-        <div class="wl-caption">Account Manager</div>
-      </div>
-
-      <div class="wl-card" onclick="openWlPanel(3)">
-        <div class="wl-bar-ring">
-          <svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fill light" cx="26" cy="26" r="21" stroke-dasharray="132" stroke-dashoffset="99"/></svg>
-          <div class="wl-ring-label">1/4</div>
-        </div>
-        <div class="wl-avatar" style="background:#d1fae5;color:#059669;">JT</div>
-        <div class="wl-name">James Torres</div>
-        <div class="wl-caption">Backend Developer</div>
-      </div>
-
-      <div class="wl-card" onclick="openWlPanel(4)">
-        <div class="wl-bar-ring">
-          <svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fill steady" cx="26" cy="26" r="21" stroke-dasharray="132" stroke-dashoffset="66"/></svg>
-          <div class="wl-ring-label">2/4</div>
-        </div>
-        <div class="wl-avatar" style="background:#ede9fe;color:#7c3aed;">AL</div>
-        <div class="wl-name">Aisha Lopez</div>
-        <div class="wl-caption">Project Coordinator</div>
-      </div>
-
-    </div>
+    <div class="workload-grid" id="workloadGrid"></div>
   </div>
 
 </main>
@@ -1335,6 +1320,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
   </div>
+  <div class="wl-panel-summary" id="wlPanelSummary"></div>
   <div class="wl-panel-body" id="wlPanelBody"></div>
 </div>
 
@@ -1484,39 +1470,95 @@ applyToday();
 })();
 
 /* ── Team workload panel ── */
+/* Block types: full=1 FDE, half=0.5, quarter=0.25, quick≈0 */
+var BLOCK_VAL = { full: 1, half: 0.5, quarter: 0.25, quick: 0 };
+var BLOCK_LABEL = { full: 'Full Day', half: 'Half Day', quarter: 'Quarter Day', quick: 'Quick Task' };
+var BLOCK_SYMBOL = { full: '\u{1F7E6}', half: '\u{1F7E9}', quarter: '\u{1F7E8}', quick: '\u2B1C' };
+var CAPACITY = 4; /* Full Day equivalents per week */
+
 var wlData = [
   { name: 'Sarah Chen', role: 'Lead Designer', initials: 'SC', bg: '#e0e7ff', fg: '#4f46e5',
     tasks: [
-      { title: 'Acme wireframes v3 — internal review', meta: 'Wed · Prep before stakeholder call', urgent: true },
-      { title: 'Acme design review — stakeholder walkthrough', meta: 'Thu 2:00 PM · Presenting', urgent: true },
-      { title: 'Acme website launch prep', meta: 'Fri · At risk, waiting on feedback', urgent: false },
-      { title: 'Acme design revisions', meta: 'Next week Wed · Based on Thu feedback', urgent: false },
-      { title: 'Bloom brand refresh concepts', meta: 'Backlog · No deadline yet', urgent: false }
+      { title: 'Acme wireframes v3 — internal review', meta: 'Wed · Prep before stakeholder call', block: 'full', urgent: true },
+      { title: 'Acme design review — stakeholder walkthrough', meta: 'Thu 2:00 PM · Presenting', block: 'half', urgent: true },
+      { title: 'Acme website launch prep', meta: 'Fri · At risk, waiting on feedback', block: 'full', urgent: false },
+      { title: 'Acme design revisions', meta: 'Next week Wed · Based on Thu feedback', block: 'full', urgent: false },
+      { title: 'Bloom brand refresh concepts', meta: 'Backlog · No deadline yet', block: 'full', urgent: false }
     ]},
   { name: 'Marcus Reyes', role: 'SEO Specialist', initials: 'MR', bg: '#fef3c7', fg: '#d97706',
     tasks: [
-      { title: 'TechStart SEO audit final delivery', meta: 'Mon · Running 2 days behind', urgent: true },
-      { title: 'Bloom Retail paid ads — performance report', meta: 'Fri · First-week results', urgent: false },
-      { title: 'Summit Outdoor content calendar review', meta: 'Wed · May schedule approval', urgent: false }
+      { title: 'TechStart SEO audit final delivery', meta: 'Mon · Running 2 days behind', block: 'full', urgent: true },
+      { title: 'Bloom Retail paid ads — performance report', meta: 'Fri · First-week results', block: 'half', urgent: false },
+      { title: 'Summit Outdoor content calendar review', meta: 'Wed · May schedule approval', block: 'quarter', urgent: false },
+      { title: 'Client keyword brief updates', meta: 'Ongoing · 3 clients', block: 'quarter', urgent: false }
     ]},
   { name: 'Elena Park', role: 'Account Manager', initials: 'EP', bg: '#fce7f3', fg: '#db2777',
     tasks: [
-      { title: 'Bloom Retail reporting deck', meta: 'Today · Client meeting tomorrow 9am', urgent: true },
-      { title: 'Bloom Retail Q2 plan — team alignment', meta: 'Wed 11:00 AM · Presenting draft', urgent: false }
+      { title: 'Bloom Retail reporting deck', meta: 'Today · Client meeting tomorrow 9am', block: 'full', urgent: true },
+      { title: 'Bloom Retail Q2 plan — team alignment', meta: 'Wed 11:00 AM · Presenting draft', block: 'half', urgent: false },
+      { title: 'Harbor Financial kickoff follow-up email', meta: 'Tue · Post-meeting action items', block: 'quarter', urgent: false },
+      { title: 'Approve Northstar scope change', meta: 'Wed · Quick sign-off', block: 'quick', urgent: false }
     ]},
   { name: 'James Torres', role: 'Backend Developer', initials: 'JT', bg: '#d1fae5', fg: '#059669',
     tasks: [
-      { title: 'Nova Ventures API credentials follow-up', meta: 'Blocked · Client IT hasn\'t responded', urgent: false }
+      { title: 'Nova Ventures API credentials follow-up', meta: 'Blocked · Client IT hasn\'t responded', block: 'quarter', urgent: false },
+      { title: 'Harbor Financial dev environment setup', meta: 'Tue · New client onboarding', block: 'half', urgent: false }
     ]},
   { name: 'Aisha Lopez', role: 'Project Coordinator', initials: 'AL', bg: '#ede9fe', fg: '#7c3aed',
     tasks: [
-      { title: 'Harbor Financial onboarding checklist', meta: 'Kickoff Tue · 8 tasks created', urgent: false },
-      { title: 'Northstar scope change follow-up', meta: 'Waiting 2 days · Team paused', urgent: false }
+      { title: 'Harbor Financial onboarding checklist', meta: 'Kickoff Tue · 8 tasks created', block: 'half', urgent: false },
+      { title: 'Northstar scope change follow-up', meta: 'Waiting 2 days · Team paused', block: 'quarter', urgent: false },
+      { title: 'Weekly project status updates', meta: 'Fri · All active clients', block: 'half', urgent: false },
+      { title: 'Forward Acme invoice to finance', meta: 'Quick · Minor admin', block: 'quick', urgent: false }
     ]}
 ];
 
+function calcFDE(tasks) {
+  var total = 0;
+  tasks.forEach(function(t) { total += (BLOCK_VAL[t.block] || 0); });
+  return total;
+}
+
+function fdeStatus(fde) {
+  if (fde >= 5) return 'over';
+  if (fde >= 4) return 'heavy';
+  if (fde >= 2) return 'steady';
+  return 'light';
+}
+
+/* Render workload cards from data */
+(function() {
+  var grid = document.getElementById('workloadGrid');
+  var CIRC = 2 * Math.PI * 21; /* ~131.95 */
+
+  wlData.forEach(function(d, i) {
+    var fde = calcFDE(d.tasks);
+    var status = fdeStatus(fde);
+    var pct = Math.min(fde / CAPACITY, 1);
+    var offset = CIRC * (1 - pct);
+    var label = fde % 1 === 0 ? fde : fde.toFixed(1);
+
+    var card = document.createElement('div');
+    card.className = 'wl-card';
+    card.onclick = function() { openWlPanel(i); };
+    card.innerHTML =
+      '<div class="wl-bar-ring">' +
+        '<svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/>' +
+        '<circle class="ring-fill ' + status + '" cx="26" cy="26" r="21" stroke-dasharray="' + CIRC.toFixed(1) + '" stroke-dashoffset="' + offset.toFixed(1) + '"/></svg>' +
+        '<div class="wl-ring-label">' + label + '/' + CAPACITY + '</div>' +
+      '</div>' +
+      '<div class="wl-avatar" style="background:' + d.bg + ';color:' + d.fg + ';">' + d.initials + '</div>' +
+      '<div class="wl-name">' + d.name + '</div>' +
+      '<div class="wl-caption">' + d.role + '</div>';
+    grid.appendChild(card);
+  });
+})();
+
 function openWlPanel(idx) {
   var d = wlData[idx];
+  var fde = calcFDE(d.tasks);
+  var status = fdeStatus(fde);
+
   var avatar = document.getElementById('wlPanelAvatar');
   avatar.textContent = d.initials;
   avatar.style.background = d.bg;
@@ -1524,6 +1566,22 @@ function openWlPanel(idx) {
   document.getElementById('wlPanelName').textContent = d.name;
   document.getElementById('wlPanelRole').textContent = d.role;
 
+  /* Summary: count blocks by type */
+  var counts = { full: 0, half: 0, quarter: 0, quick: 0 };
+  d.tasks.forEach(function(t) { counts[t.block]++; });
+  var summary = document.getElementById('wlPanelSummary');
+  var statusLabel = { light: 'Healthy', steady: 'Healthy', heavy: 'Watch', over: 'Overloaded' };
+  var statusColor = { light: '#10b981', steady: '#10b981', heavy: '#f59e0b', over: 'var(--accent)' };
+  var fdeLabel = fde % 1 === 0 ? fde : fde.toFixed(1);
+  var html = '<span class="wl-summary-chip" style="font-weight:600;color:' + statusColor[status] + ';">' + statusLabel[status] + ' &middot; ' + fdeLabel + '/' + CAPACITY + ' FDE</span>';
+  ['full','half','quarter','quick'].forEach(function(type) {
+    if (counts[type] > 0) {
+      html += '<span class="wl-summary-chip"><span class="wl-sc-dot ' + type + '"></span>' + counts[type] + ' ' + BLOCK_LABEL[type] + '</span>';
+    }
+  });
+  summary.innerHTML = html;
+
+  /* Task list with block tags */
   var body = document.getElementById('wlPanelBody');
   body.innerHTML = '';
   d.tasks.forEach(function(t) {
@@ -1531,7 +1589,10 @@ function openWlPanel(idx) {
     div.className = 'wl-panel-task';
     div.innerHTML =
       '<span class="wl-pt-dot ' + (t.urgent ? 'urgent' : 'normal') + '"></span>' +
-      '<div><div>' + t.title + '</div><div class="wl-pt-meta">' + t.meta + '</div></div>';
+      '<div><div>' + t.title + '</div>' +
+      '<div class="wl-pt-meta">' + t.meta + '</div>' +
+      '<span class="wl-block-tag ' + t.block + '">' + BLOCK_SYMBOL[t.block] + ' ' + BLOCK_LABEL[t.block] + '</span>' +
+      '</div>';
     body.appendChild(div);
   });
 
