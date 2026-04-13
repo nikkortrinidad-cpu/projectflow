@@ -400,7 +400,7 @@
   .week-col.is-today .week-col-header {
     background: var(--accent-soft);
   }
-  .week-col.is-today .week-col-num {
+  .week-col.is-today .week-col-day {
     color: var(--accent);
   }
   .week-col.is-today::before {
@@ -429,15 +429,15 @@
     transition: background 0.3s;
   }
   .week-col-day {
-    font-size: 11px; font-weight: 600; color: var(--text-soft);
-    text-transform: uppercase; letter-spacing: 0.06em;
-    line-height: 1; margin-bottom: 4px;
-  }
-  .week-col-num {
-    font-size: 26px; font-weight: 600; line-height: 1.1;
+    font-size: 22px; font-weight: 600; line-height: 1.1;
     letter-spacing: -0.02em;
     color: var(--text);
-    font-feature-settings: "tnum";
+    margin-bottom: 4px;
+  }
+  .week-col-date {
+    font-size: 11px; font-weight: 500; color: var(--text-soft);
+    letter-spacing: 0.02em;
+    line-height: 1;
   }
 
   /* Task cards inside columns */
@@ -708,7 +708,7 @@
         </div>
       </div>
 
-      <div class="attn-card">
+      <div class="attn-card attn-hidden">
         <div class="attn-content">
           <div class="attn-row1">
             <span class="attn-severity info"><span class="dot"></span>Decision</span>
@@ -770,8 +770,8 @@
       <!-- MON 13 -->
       <div class="week-col" data-day="0" data-date="13">
         <div class="week-col-header">
-          <div class="week-col-day">Mon</div>
-          <div class="week-col-num">13</div>
+          <div class="week-col-day">Monday</div>
+          <div class="week-col-date">Apr 13, 2026</div>
         </div>
         <div class="week-col-body">
           <div class="week-task" data-id="seo-audit" data-done="false">
@@ -790,8 +790,8 @@
       <!-- TUE 14 -->
       <div class="week-col" data-day="1" data-date="14">
         <div class="week-col-header">
-          <div class="week-col-day">Tue</div>
-          <div class="week-col-num">14</div>
+          <div class="week-col-day">Tuesday</div>
+          <div class="week-col-date">Apr 14, 2026</div>
         </div>
         <div class="week-col-body">
           <div class="week-task" data-id="harbor-kickoff" data-done="true">
@@ -805,8 +805,8 @@
       <!-- WED 15 -->
       <div class="week-col" data-day="2" data-date="15">
         <div class="week-col-header">
-          <div class="week-col-day">Wed</div>
-          <div class="week-col-num">15</div>
+          <div class="week-col-day">Wednesday</div>
+          <div class="week-col-date">Apr 15, 2026</div>
         </div>
         <div class="week-col-body">
           <div class="week-task" data-id="northstar-scope" data-done="false">
@@ -845,8 +845,8 @@
       <!-- THU 16 -->
       <div class="week-col" data-day="3" data-date="16">
         <div class="week-col-header">
-          <div class="week-col-day">Thu</div>
-          <div class="week-col-num">16</div>
+          <div class="week-col-day">Thursday</div>
+          <div class="week-col-date">Apr 16, 2026</div>
         </div>
         <div class="week-col-body">
           <div class="week-task" data-id="acme-review" data-done="false">
@@ -860,8 +860,8 @@
       <!-- FRI 17 -->
       <div class="week-col" data-day="4" data-date="17">
         <div class="week-col-header">
-          <div class="week-col-day">Fri</div>
-          <div class="week-col-num">17</div>
+          <div class="week-col-day">Friday</div>
+          <div class="week-col-date">Apr 17, 2026</div>
         </div>
         <div class="week-col-body">
           <div class="week-task" data-id="acme-launch" data-done="false">
@@ -934,7 +934,7 @@ function toggleAttn(e) {
 })();
 
 /* ── Week board: day progression logic ── */
-var DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+var DAY_LABELS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 var carriedSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 17 20 12 15 7"/><path d="M4 18v-1a5 5 0 0 1 5-5h11"/></svg>';
 
 /* Store the original task HTML keyed by data-id so we can rebuild */
