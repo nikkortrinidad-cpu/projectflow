@@ -656,29 +656,27 @@
 
   /* --- BLOCK 4: TEAM WORKLOAD --- */
   .workload-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 12px;
+    display: flex;
+    gap: 16px;
   }
   .wl-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 12px;
     background: var(--bg-elev);
     border: 1px solid var(--hairline-soft);
     border-radius: 14px;
-    padding: 18px 20px;
     box-shadow: var(--shadow);
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    transition: box-shadow 0.2s, border-color 0.2s;
+    cursor: pointer;
+    transition: box-shadow 0.2s, border-color 0.2s, transform 0.15s;
   }
   .wl-card:hover {
     border-color: var(--hairline);
     box-shadow: var(--shadow-hover);
-  }
-  .wl-top {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    transform: translateY(-1px);
   }
   .wl-avatar {
     width: 36px; height: 36px;
@@ -686,80 +684,148 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     flex-shrink: 0;
   }
   .wl-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    text-align: center;
+    line-height: 1.2;
+  }
+  .wl-bar-ring {
+    position: relative;
+    width: 52px; height: 52px;
+  }
+  .wl-bar-ring svg {
+    width: 52px; height: 52px;
+    transform: rotate(-90deg);
+  }
+  .wl-bar-ring .ring-bg {
+    fill: none;
+    stroke: var(--bg-soft);
+    stroke-width: 5;
+  }
+  .wl-bar-ring .ring-fill {
+    fill: none;
+    stroke-width: 5;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.6s ease;
+  }
+  .wl-bar-ring .ring-fill.light { stroke: #10b981; }
+  .wl-bar-ring .ring-fill.steady { stroke: #3b82f6; }
+  .wl-bar-ring .ring-fill.heavy { stroke: #f59e0b; }
+  .wl-bar-ring .ring-fill.over { stroke: var(--accent); }
+  .wl-ring-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .wl-caption {
+    font-size: 11px;
+    color: var(--text-soft);
+    text-align: center;
+  }
+
+  /* Task detail panel */
+  .wl-panel-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.25);
+    z-index: 90;
+  }
+  .wl-panel-backdrop.open { display: block; }
+  .wl-panel {
+    display: none;
+    position: fixed;
+    top: 0; right: 0; bottom: 0;
+    width: 380px;
+    max-width: 90vw;
+    background: var(--bg-elev);
+    border-left: 1px solid var(--hairline);
+    box-shadow: -8px 0 32px rgba(0,0,0,0.1);
+    z-index: 91;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .wl-panel.open { display: flex; }
+  .wl-panel-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 24px 24px 20px;
+    border-bottom: 1px solid var(--hairline-soft);
+  }
+  .wl-panel-avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 15px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .wl-panel-name {
+    font-size: 17px;
     font-weight: 600;
     color: var(--text);
     line-height: 1.2;
   }
-  .wl-role {
-    font-size: 12px;
+  .wl-panel-role {
+    font-size: 13px;
     color: var(--text-soft);
   }
-  .wl-status {
+  .wl-panel-close {
     margin-left: auto;
-    font-size: 11px;
-    font-weight: 600;
-    padding: 3px 10px;
-    border-radius: 20px;
-    white-space: nowrap;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-soft);
+    padding: 4px;
+    border-radius: 8px;
+    transition: background 0.15s;
   }
-  .wl-status.light { background: rgba(16,185,129,0.1); color: #10b981; }
-  .wl-status.steady { background: rgba(59,130,246,0.1); color: #3b82f6; }
-  .wl-status.heavy { background: rgba(245,158,11,0.1); color: #f59e0b; }
-  .wl-status.over { background: var(--accent-soft); color: var(--accent); }
-
-  .wl-bar-wrap {
+  .wl-panel-close:hover { background: var(--bg-soft); }
+  .wl-panel-close svg { width: 20px; height: 20px; display: block; }
+  .wl-panel-body {
+    padding: 20px 24px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 12px;
   }
-  .wl-bar-label {
+  .wl-panel-task {
     display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-    color: var(--text-muted);
-  }
-  .wl-bar {
-    height: 6px;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
     background: var(--bg-soft);
-    border-radius: 3px;
-    overflow: hidden;
-  }
-  .wl-bar-fill {
-    height: 100%;
-    border-radius: 3px;
-    transition: width 0.4s ease;
-  }
-  .wl-bar-fill.light { background: #10b981; }
-  .wl-bar-fill.steady { background: #3b82f6; }
-  .wl-bar-fill.heavy { background: #f59e0b; }
-  .wl-bar-fill.over { background: var(--accent); }
-
-  .wl-tasks {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .wl-task-item {
+    border-radius: 10px;
     font-size: 13px;
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    line-height: 1.3;
+    color: var(--text);
+    line-height: 1.4;
   }
-  .wl-task-dot {
-    width: 5px; height: 5px;
+  .wl-panel-task .wl-pt-dot {
+    width: 7px; height: 7px;
     border-radius: 50%;
-    background: var(--text-faint);
     flex-shrink: 0;
+    margin-top: 5px;
   }
-  .wl-task-item.urgent .wl-task-dot { background: var(--accent); }
+  .wl-pt-dot.urgent { background: var(--accent); }
+  .wl-pt-dot.normal { background: var(--text-faint); }
+  .wl-panel-task .wl-pt-meta {
+    font-size: 12px;
+    color: var(--text-soft);
+    margin-top: 2px;
+  }
 
   /* Reduced motion */
   @media (prefers-reduced-motion: reduce) {
@@ -1201,106 +1267,76 @@
     </div>
     <div class="workload-grid">
 
-      <div class="wl-card">
-        <div class="wl-top">
-          <div class="wl-avatar" style="background:#e0e7ff;color:#4f46e5;">SC</div>
-          <div>
-            <div class="wl-name">Sarah Chen</div>
-            <div class="wl-role">Lead Designer</div>
-          </div>
-          <span class="wl-status over">Overloaded</span>
+      <div class="wl-card" onclick="openWlPanel(0)">
+        <div class="wl-bar-ring">
+          <svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fill over" cx="26" cy="26" r="21" stroke-dasharray="132" stroke-dashoffset="0"/></svg>
+          <div class="wl-ring-label">5/4</div>
         </div>
-        <div class="wl-bar-wrap">
-          <div class="wl-bar-label"><span>5 of 4 tasks</span><span>125%</span></div>
-          <div class="wl-bar"><div class="wl-bar-fill over" style="width:100%"></div></div>
-        </div>
-        <div class="wl-tasks">
-          <div class="wl-task-item urgent"><span class="wl-task-dot"></span>Acme wireframes v3 — review</div>
-          <div class="wl-task-item urgent"><span class="wl-task-dot"></span>Acme stakeholder walkthrough</div>
-          <div class="wl-task-item"><span class="wl-task-dot"></span>Acme website launch prep</div>
-        </div>
+        <div class="wl-avatar" style="background:#e0e7ff;color:#4f46e5;">SC</div>
+        <div class="wl-name">Sarah Chen</div>
+        <div class="wl-caption">Lead Designer</div>
       </div>
 
-      <div class="wl-card">
-        <div class="wl-top">
-          <div class="wl-avatar" style="background:#fef3c7;color:#d97706;">MR</div>
-          <div>
-            <div class="wl-name">Marcus Reyes</div>
-            <div class="wl-role">SEO Specialist</div>
-          </div>
-          <span class="wl-status heavy">Heavy</span>
+      <div class="wl-card" onclick="openWlPanel(1)">
+        <div class="wl-bar-ring">
+          <svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fill heavy" cx="26" cy="26" r="21" stroke-dasharray="132" stroke-dashoffset="33"/></svg>
+          <div class="wl-ring-label">3/4</div>
         </div>
-        <div class="wl-bar-wrap">
-          <div class="wl-bar-label"><span>3 of 4 tasks</span><span>75%</span></div>
-          <div class="wl-bar"><div class="wl-bar-fill heavy" style="width:75%"></div></div>
-        </div>
-        <div class="wl-tasks">
-          <div class="wl-task-item urgent"><span class="wl-task-dot"></span>TechStart SEO audit — 2 days behind</div>
-          <div class="wl-task-item"><span class="wl-task-dot"></span>Bloom Retail paid ads report</div>
-          <div class="wl-task-item"><span class="wl-task-dot"></span>Summit content calendar review</div>
-        </div>
+        <div class="wl-avatar" style="background:#fef3c7;color:#d97706;">MR</div>
+        <div class="wl-name">Marcus Reyes</div>
+        <div class="wl-caption">SEO Specialist</div>
       </div>
 
-      <div class="wl-card">
-        <div class="wl-top">
-          <div class="wl-avatar" style="background:#fce7f3;color:#db2777;">EP</div>
-          <div>
-            <div class="wl-name">Elena Park</div>
-            <div class="wl-role">Account Manager</div>
-          </div>
-          <span class="wl-status steady">Steady</span>
+      <div class="wl-card" onclick="openWlPanel(2)">
+        <div class="wl-bar-ring">
+          <svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fill steady" cx="26" cy="26" r="21" stroke-dasharray="132" stroke-dashoffset="66"/></svg>
+          <div class="wl-ring-label">2/4</div>
         </div>
-        <div class="wl-bar-wrap">
-          <div class="wl-bar-label"><span>2 of 4 tasks</span><span>50%</span></div>
-          <div class="wl-bar"><div class="wl-bar-fill steady" style="width:50%"></div></div>
-        </div>
-        <div class="wl-tasks">
-          <div class="wl-task-item urgent"><span class="wl-task-dot"></span>Bloom reporting deck — due today</div>
-          <div class="wl-task-item"><span class="wl-task-dot"></span>Bloom Q2 plan presentation</div>
-        </div>
+        <div class="wl-avatar" style="background:#fce7f3;color:#db2777;">EP</div>
+        <div class="wl-name">Elena Park</div>
+        <div class="wl-caption">Account Manager</div>
       </div>
 
-      <div class="wl-card">
-        <div class="wl-top">
-          <div class="wl-avatar" style="background:#d1fae5;color:#059669;">JT</div>
-          <div>
-            <div class="wl-name">James Torres</div>
-            <div class="wl-role">Backend Developer</div>
-          </div>
-          <span class="wl-status light">Light</span>
+      <div class="wl-card" onclick="openWlPanel(3)">
+        <div class="wl-bar-ring">
+          <svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fill light" cx="26" cy="26" r="21" stroke-dasharray="132" stroke-dashoffset="99"/></svg>
+          <div class="wl-ring-label">1/4</div>
         </div>
-        <div class="wl-bar-wrap">
-          <div class="wl-bar-label"><span>1 of 4 tasks</span><span>25%</span></div>
-          <div class="wl-bar"><div class="wl-bar-fill light" style="width:25%"></div></div>
-        </div>
-        <div class="wl-tasks">
-          <div class="wl-task-item"><span class="wl-task-dot"></span>Nova API credentials — blocked</div>
-        </div>
+        <div class="wl-avatar" style="background:#d1fae5;color:#059669;">JT</div>
+        <div class="wl-name">James Torres</div>
+        <div class="wl-caption">Backend Developer</div>
       </div>
 
-      <div class="wl-card">
-        <div class="wl-top">
-          <div class="wl-avatar" style="background:#ede9fe;color:#7c3aed;">AL</div>
-          <div>
-            <div class="wl-name">Aisha Lopez</div>
-            <div class="wl-role">Project Coordinator</div>
-          </div>
-          <span class="wl-status steady">Steady</span>
+      <div class="wl-card" onclick="openWlPanel(4)">
+        <div class="wl-bar-ring">
+          <svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fill steady" cx="26" cy="26" r="21" stroke-dasharray="132" stroke-dashoffset="66"/></svg>
+          <div class="wl-ring-label">2/4</div>
         </div>
-        <div class="wl-bar-wrap">
-          <div class="wl-bar-label"><span>2 of 4 tasks</span><span>50%</span></div>
-          <div class="wl-bar"><div class="wl-bar-fill steady" style="width:50%"></div></div>
-        </div>
-        <div class="wl-tasks">
-          <div class="wl-task-item"><span class="wl-task-dot"></span>Harbor Financial onboarding</div>
-          <div class="wl-task-item"><span class="wl-task-dot"></span>Northstar scope change follow-up</div>
-        </div>
+        <div class="wl-avatar" style="background:#ede9fe;color:#7c3aed;">AL</div>
+        <div class="wl-name">Aisha Lopez</div>
+        <div class="wl-caption">Project Coordinator</div>
       </div>
 
     </div>
   </div>
 
 </main>
+
+<!-- Team workload slide-out panel -->
+<div class="wl-panel-backdrop" id="wlBackdrop" onclick="closeWlPanel()"></div>
+<div class="wl-panel" id="wlPanel">
+  <div class="wl-panel-header">
+    <div class="wl-panel-avatar" id="wlPanelAvatar"></div>
+    <div>
+      <div class="wl-panel-name" id="wlPanelName"></div>
+      <div class="wl-panel-role" id="wlPanelRole"></div>
+    </div>
+    <button class="wl-panel-close" onclick="closeWlPanel()" aria-label="Close panel">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="wl-panel-body" id="wlPanelBody"></div>
+</div>
 
 <!-- Back to top button -->
 <button class="back-to-top" id="backToTop" aria-label="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">
@@ -1446,6 +1482,73 @@ applyToday();
     });
   });
 })();
+
+/* ── Team workload panel ── */
+var wlData = [
+  { name: 'Sarah Chen', role: 'Lead Designer', initials: 'SC', bg: '#e0e7ff', fg: '#4f46e5',
+    tasks: [
+      { title: 'Acme wireframes v3 — internal review', meta: 'Wed · Prep before stakeholder call', urgent: true },
+      { title: 'Acme design review — stakeholder walkthrough', meta: 'Thu 2:00 PM · Presenting', urgent: true },
+      { title: 'Acme website launch prep', meta: 'Fri · At risk, waiting on feedback', urgent: false },
+      { title: 'Acme design revisions', meta: 'Next week Wed · Based on Thu feedback', urgent: false },
+      { title: 'Bloom brand refresh concepts', meta: 'Backlog · No deadline yet', urgent: false }
+    ]},
+  { name: 'Marcus Reyes', role: 'SEO Specialist', initials: 'MR', bg: '#fef3c7', fg: '#d97706',
+    tasks: [
+      { title: 'TechStart SEO audit final delivery', meta: 'Mon · Running 2 days behind', urgent: true },
+      { title: 'Bloom Retail paid ads — performance report', meta: 'Fri · First-week results', urgent: false },
+      { title: 'Summit Outdoor content calendar review', meta: 'Wed · May schedule approval', urgent: false }
+    ]},
+  { name: 'Elena Park', role: 'Account Manager', initials: 'EP', bg: '#fce7f3', fg: '#db2777',
+    tasks: [
+      { title: 'Bloom Retail reporting deck', meta: 'Today · Client meeting tomorrow 9am', urgent: true },
+      { title: 'Bloom Retail Q2 plan — team alignment', meta: 'Wed 11:00 AM · Presenting draft', urgent: false }
+    ]},
+  { name: 'James Torres', role: 'Backend Developer', initials: 'JT', bg: '#d1fae5', fg: '#059669',
+    tasks: [
+      { title: 'Nova Ventures API credentials follow-up', meta: 'Blocked · Client IT hasn\'t responded', urgent: false }
+    ]},
+  { name: 'Aisha Lopez', role: 'Project Coordinator', initials: 'AL', bg: '#ede9fe', fg: '#7c3aed',
+    tasks: [
+      { title: 'Harbor Financial onboarding checklist', meta: 'Kickoff Tue · 8 tasks created', urgent: false },
+      { title: 'Northstar scope change follow-up', meta: 'Waiting 2 days · Team paused', urgent: false }
+    ]}
+];
+
+function openWlPanel(idx) {
+  var d = wlData[idx];
+  var avatar = document.getElementById('wlPanelAvatar');
+  avatar.textContent = d.initials;
+  avatar.style.background = d.bg;
+  avatar.style.color = d.fg;
+  document.getElementById('wlPanelName').textContent = d.name;
+  document.getElementById('wlPanelRole').textContent = d.role;
+
+  var body = document.getElementById('wlPanelBody');
+  body.innerHTML = '';
+  d.tasks.forEach(function(t) {
+    var div = document.createElement('div');
+    div.className = 'wl-panel-task';
+    div.innerHTML =
+      '<span class="wl-pt-dot ' + (t.urgent ? 'urgent' : 'normal') + '"></span>' +
+      '<div><div>' + t.title + '</div><div class="wl-pt-meta">' + t.meta + '</div></div>';
+    body.appendChild(div);
+  });
+
+  document.getElementById('wlBackdrop').classList.add('open');
+  document.getElementById('wlPanel').classList.add('open');
+}
+
+function closeWlPanel() {
+  document.getElementById('wlBackdrop').classList.remove('open');
+  document.getElementById('wlPanel').classList.remove('open');
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && document.getElementById('wlPanel').classList.contains('open')) {
+    closeWlPanel();
+  }
+});
 </script>
 
 </body>
