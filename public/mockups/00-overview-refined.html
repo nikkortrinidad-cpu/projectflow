@@ -563,6 +563,7 @@
     display: flex; align-items: center; gap: 10px;
     transition: background 0.15s, color 0.15s;
   }
+  .dp-combo-item * { pointer-events: none; }
   .dp-combo-item:first-child { border-radius: 10px 10px 0 0; }
   .dp-combo-item:last-child { border-radius: 0 0 10px 10px; }
   .dp-combo-item:hover { background: var(--highlight); color: #fff; }
@@ -576,9 +577,11 @@
     background: var(--avatar-bg); color: var(--avatar-fg);
     display: flex; align-items: center; justify-content: center;
     font-size: 10px; font-weight: 700; flex-shrink: 0;
+    transition: background 0.15s, color 0.15s;
   }
   .dp-combo-role {
     font-size: 11px; color: var(--text-faint); margin-left: auto;
+    transition: color 0.15s;
   }
   .dp-textarea {
     width: 100%; padding: 9px 12px;
@@ -697,13 +700,13 @@
     padding: 9px 20px; border-radius: 980px;
     font-size: 13px; font-weight: 600;
     border: 1px solid var(--hairline);
-    background: var(--btn-bg); color: var(--text);
-    cursor: default; transition: all 0.15s;
+    background-color: var(--btn-bg); color: var(--text);
+    cursor: default; transition: background-color 0.15s, border-color 0.15s, color 0.15s;
     letter-spacing: -0.01em;
   }
-  .dp-btn:not(.dp-submit):hover { background: var(--highlight) !important; border-color: var(--highlight) !important; color: #fff !important; }
+  .dp-btn.dp-cancel:hover { background-color: var(--highlight); border-color: var(--highlight); color: #fff; }
   .dp-btn.dp-submit {
-    background: var(--highlight); border-color: var(--highlight); color: #fff;
+    background-color: var(--highlight); border-color: var(--highlight); color: #fff;
   }
   .dp-btn.dp-submit:hover { opacity: 0.9; }
   .dp-btn.dp-submit:disabled {
@@ -1756,7 +1759,7 @@ function openDelegate(e, btn) {
       '</div>' +
     '</div>' +
     '<div class="dp-actions">' +
-      '<button class="dp-btn" onclick="closeDelegate()">Cancel</button>' +
+      '<button class="dp-btn dp-cancel" onclick="closeDelegate()">Cancel</button>' +
       '<button class="dp-btn dp-submit" id="dpSubmit" disabled>Delegate</button>' +
     '</div>';
 
