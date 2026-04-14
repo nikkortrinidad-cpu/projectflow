@@ -2405,14 +2405,21 @@ document.addEventListener('keydown', function(e) {
 
     /* Measure bubble to avoid overflow */
     var bw = bubble.offsetWidth;
+    var bh = bubble.offsetHeight;
     var left = rect.left;
     if (left + bw > window.innerWidth - 8) {
       left = window.innerWidth - bw - 8;
     }
     if (left < 8) left = 8;
 
+    /* Vertical: above by default; flip below if not enough room
+       (e.g. header icons near the top of the viewport) */
+    var topAbove = rect.top - bh - 6;
+    var topBelow = rect.bottom + 6;
+    var top = topAbove < 8 ? topBelow : topAbove;
+
     bubble.style.left = left + 'px';
-    bubble.style.top = (rect.top - bubble.offsetHeight - 6) + 'px';
+    bubble.style.top = top + 'px';
     bubble.style.visibility = '';
 
     /* Delay before showing */

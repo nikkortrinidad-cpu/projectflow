@@ -707,8 +707,9 @@ def build_pdf():
     story.append(Paragraph(
         "A global tooltip system uses a single floating element that repositions itself "
         "on hover over any element with a data-tip attribute. Tooltips appear after a "
-        "400ms delay, positioned above the target with automatic overflow correction "
-        "(shifts left if it would clip the viewport edge).",
+        "400ms delay, positioned above the target by default. If there isn't enough room above "
+        "(for example, header icons near the top of the viewport), the tooltip flips below. "
+        "Horizontal overflow is corrected automatically (shifts left if it would clip the viewport edge).",
         ST["body"]
     ))
     story.append(Paragraph(

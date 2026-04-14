@@ -762,8 +762,10 @@ def build_pdf():
     tip_spec = [
         "A single .tip-bubble element lives on the body. It repositions on every mouseenter "
         "event on elements with a data-tip attribute.",
-        "Show delay: 400ms. Positioned above the target, left-aligned to its left edge.",
-        "Overflow correction: if tooltip would clip the right viewport edge, shift left. Min 8px from edges.",
+        "Show delay: 400ms. Positioned above the target by default, left-aligned to its left edge.",
+        "Vertical flip: if there isn't enough room above (topAbove &lt; 8px from viewport), "
+        "the tooltip flips to below the target. Applies to header icons (notifications, theme, avatar).",
+        "Horizontal overflow: if tooltip would clip the right viewport edge, shift left. Min 8px from edges.",
         "Button-specific tooltips (on .attn-btn): separate child elements with 0.6s delay and a "
         "downward arrow. These are independent from the global system.",
         "Back-to-top tooltip: appears on hover with 0.4s delay, positioned to the left of the button.",
