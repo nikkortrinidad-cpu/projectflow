@@ -1,0 +1,2504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup — Executive Overview (Refined)</title>
+<script>(function(){var s=localStorage.getItem('refined-theme');if(s)document.documentElement.setAttribute('data-theme',s);})();</script>
+<style>
+  :root {
+    --bg: #fbfbfd;
+    --bg-elev: #ffffff;
+    --bg-soft: #f5f5f7;
+    --bg-faint: #fafafa;
+    --text: #1d1d1f;
+    --text-muted: #636366;
+    --text-soft: #86868b;
+    --text-faint: #aeaeb2;
+    --hairline: rgba(0,0,0,0.08);
+    --hairline-soft: rgba(0,0,0,0.04);
+    --hairline-faint: rgba(0,0,0,0.02);
+    --accent: #ff3b30;
+    --accent-soft: rgba(255,59,48,0.08);
+    --highlight: #007AFF;
+    --highlight-soft: rgba(0,122,255,0.08);
+    --shadow: 0 1px 3px rgba(0,0,0,0.04);
+    --shadow-hover: 0 4px 16px rgba(0,0,0,0.08);
+    --avatar-bg: #1d1d1f;
+    --avatar-fg: #ffffff;
+    --kbd-bg: #ffffff;
+    --kbd-border: #d2d2d7;
+    --nav-bg: rgba(255,255,255,0.72);
+    --btn-bg: #ffffff;
+    --btn-bg-hover: #f5f5f7;
+  }
+  :root[data-theme="dark"] {
+    --bg: #000000;
+    --bg-elev: #1c1c1e;
+    --bg-soft: #2c2c2e;
+    --bg-faint: #161618;
+    --text: #f5f5f7;
+    --text-muted: #aeaeb2;
+    --text-soft: #86868b;
+    --text-faint: #636366;
+    --hairline: rgba(255,255,255,0.1);
+    --hairline-soft: rgba(255,255,255,0.06);
+    --hairline-faint: rgba(255,255,255,0.03);
+    --accent: #ff453a;
+    --accent-soft: rgba(255,69,58,0.14);
+    --highlight: #0A84FF;
+    --highlight-soft: rgba(10,132,255,0.14);
+    --shadow: 0 1px 3px rgba(0,0,0,0.4);
+    --shadow-hover: 0 4px 16px rgba(0,0,0,0.6);
+    --avatar-bg: #f5f5f7;
+    --avatar-fg: #1d1d1f;
+    --kbd-bg: #2c2c2e;
+    --kbd-border: rgba(255,255,255,0.15);
+    --nav-bg: rgba(0,0,0,0.72);
+    --btn-bg: #1c1c1e;
+    --btn-bg-hover: #2c2c2e;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "ss01", "tnum";
+    transition: background 0.3s ease, color 0.3s ease;
+  }
+
+  /* --- HEADER --- */
+  .header {
+    background: var(--nav-bg);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid var(--hairline);
+    padding: 0 32px;
+    height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    transition: background 0.3s ease, border-color 0.3s ease;
+  }
+  .header-left { display: flex; align-items: center; gap: 24px; }
+  .header-logo {
+    font-size: 18px; font-weight: 600;
+    letter-spacing: -0.022em;
+    color: var(--text);
+  }
+  .header-nav { display: flex; gap: 4px; }
+  .header-nav a {
+    padding: 6px 12px; border-radius: 8px;
+    font-size: 13px; font-weight: 500;
+    color: var(--text-soft);
+    text-decoration: none;
+    letter-spacing: -0.01em;
+    transition: color 0.15s, background 0.15s;
+  }
+  .header-nav a:hover { color: var(--text); }
+  .header-nav a.on { color: var(--text); font-weight: 600; }
+
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .cmdk-trigger {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 12px;
+    background: var(--bg-soft);
+    border: 1px solid transparent;
+    border-radius: 10px;
+    font-size: 13px;
+    color: var(--text-soft);
+    cursor: pointer;
+    min-width: 260px;
+    transition: all 0.15s;
+    letter-spacing: -0.01em;
+  }
+  .cmdk-trigger:hover { background: var(--bg-soft); color: var(--text-muted); }
+  .cmdk-trigger svg { opacity: 0.6; }
+  .cmdk-trigger .cmdk-label { flex: 1; text-align: left; }
+  .cmdk-trigger .cmdk-kbd {
+    font-family: -apple-system, sans-serif;
+    font-size: 11px; font-weight: 600;
+    padding: 2px 6px;
+    background: var(--kbd-bg);
+    border: 1px solid var(--kbd-border);
+    border-radius: 4px;
+    color: var(--text-muted);
+  }
+  .header-icon {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--bg-soft);
+    border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 14px; color: var(--text-muted);
+    position: relative;
+    transition: background 0.15s;
+    padding: 0;
+  }
+  .header-icon:hover { background: var(--hairline); }
+  .header-icon .notif-dot {
+    position: absolute; top: 6px; right: 6px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent); border: 2px solid var(--bg);
+  }
+  .avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--avatar-bg);
+    color: var(--avatar-fg);
+    border: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    padding: 0;
+  }
+  .avatar:hover { opacity: 0.85; }
+
+  /* Theme toggle */
+  .theme-toggle {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg-soft); border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: background 0.15s, color 0.15s;
+    padding: 0;
+  }
+  .theme-toggle:hover { background: var(--hairline); color: var(--text); }
+  .theme-toggle .icon-sun { display: none; }
+  :root[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+  :root[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+
+  /* --- PAGE LAYOUT --- */
+  .page { max-width: 1200px; margin: 0 auto; padding: 36px 32px 96px; }
+
+  .page-header { margin-bottom: 40px; }
+  .page-greeting {
+    font-size: 13px; font-weight: 500; color: var(--text-soft);
+    text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px;
+  }
+  .page-title {
+    font-size: 34px; font-weight: 600; line-height: 1.15;
+    margin-bottom: 6px; letter-spacing: -0.022em;
+    color: var(--text);
+  }
+  .page-date { font-size: 15px; color: var(--text-soft); letter-spacing: -0.01em; }
+
+  /* --- BACK TO TOP --- */
+  .back-to-top {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(8px);
+    transition: opacity 0.25s ease, transform 0.25s ease, background 0.15s, color 0.15s;
+    z-index: 90;
+  }
+  .back-to-top.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+  .back-to-top:hover {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+  }
+  .back-to-top:active { transform: scale(0.93); }
+  .back-to-top svg { width: 18px; height: 18px; }
+  .back-to-top .btt-tooltip {
+    position: absolute;
+    right: calc(100% + 10px);
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--text);
+    color: var(--bg);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    padding: 6px 12px;
+    border-radius: 8px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  .back-to-top .btt-tooltip::after {
+    content: "";
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 5px solid transparent;
+    border-left-color: var(--text);
+  }
+  .back-to-top:hover .btt-tooltip {
+    opacity: 1;
+    transition-delay: 0.4s;
+  }
+
+  /* --- BLOCK COMMON --- */
+  .block {
+    margin-bottom: 48px;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  .block:last-child { margin-bottom: 0; }
+  .block-header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 18px;
+    position: relative;
+  }
+
+  /* Drag handle */
+  .block-drag-handle {
+    position: absolute;
+    left: -32px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: transparent;
+    color: var(--text-faint);
+    border-radius: 6px;
+    cursor: grab;
+    padding: 0;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
+  }
+  .block:hover .block-drag-handle,
+  .block-drag-handle:focus-visible {
+    opacity: 1;
+  }
+  .block-drag-handle:hover {
+    background: var(--bg-soft);
+    color: var(--text-muted);
+  }
+  .block-drag-handle:active {
+    cursor: grabbing;
+  }
+  .block-drag-handle svg {
+    width: 14px;
+    height: 14px;
+    display: block;
+  }
+
+  /* Dragging states */
+  .block.is-dragging {
+    opacity: 0.85;
+    z-index: 50;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+    border-radius: 16px;
+    background: var(--bg-elev);
+    pointer-events: none;
+  }
+  :root[data-theme="dark"] .block.is-dragging {
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  }
+
+  /* Drop target highlight */
+  .block.drop-above,
+  .block.drop-below {
+    position: relative;
+  }
+  .block.drop-above::before,
+  .block.drop-below::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--highlight);
+    pointer-events: none;
+    animation: dropPulse 1s ease infinite;
+  }
+  .block.drop-above::before {
+    top: -8px;
+  }
+  .block.drop-below::after {
+    bottom: -8px;
+  }
+  @keyframes dropPulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+
+  /* Animate reorder */
+  .block.reorder-anim {
+    transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1);
+  }
+  .block-title {
+    font-size: 12px; font-weight: 600; color: var(--text-soft);
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .block-sub { font-size: 12px; color: var(--text-faint); letter-spacing: -0.005em; }
+  .block-link {
+    font-size: 13px; font-weight: 500;
+    color: var(--text); text-decoration: none;
+    letter-spacing: -0.01em;
+    transition: color 0.15s;
+  }
+  .block-link:hover { color: var(--accent); }
+
+  /* --- BLOCK 1: PORTFOLIO HEALTH STRIP --- */
+  .health-strip {
+    background: var(--bg-elev);
+    border-radius: 18px;
+    padding: 32px 36px;
+    border: 1px solid var(--hairline-soft);
+    box-shadow: var(--shadow);
+    display: grid;
+    grid-template-columns: 1.2fr 1px 1fr 1px 1fr 1px 1fr;
+    gap: 32px;
+    align-items: center;
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .health-divider { background: var(--hairline); height: 64px; width: 1px; }
+  .health-cell { display: flex; align-items: center; gap: 18px; }
+  .health-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    background: var(--bg-soft);
+    color: var(--text);
+    transition: background 0.3s;
+  }
+  .health-icon.alert {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .health-icon svg { width: 20px; height: 20px; }
+  .health-label {
+    font-size: 11px; font-weight: 500; color: var(--text-soft);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin-bottom: 4px;
+  }
+  .health-value {
+    font-size: 36px; font-weight: 600; line-height: 1;
+    letter-spacing: -0.025em;
+    color: var(--text);
+    font-feature-settings: "tnum";
+  }
+  .health-value.urgent { color: var(--accent); }
+  .health-value .unit { font-size: 17px; font-weight: 500; color: var(--text-soft); margin-left: 2px; }
+  .health-sub { font-size: 12px; color: var(--text-soft); margin-top: 6px; letter-spacing: -0.005em; }
+
+  /* --- BLOCK 2: NEEDS YOUR ATTENTION --- */
+  .attention-list { display: flex; flex-direction: column; gap: 12px; }
+  .attn-card {
+    background: var(--bg-elev);
+    border-radius: 16px;
+    border: 1px solid var(--hairline-soft);
+    box-shadow: var(--shadow);
+    padding: 22px 26px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 20px;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .attn-card::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 16px; bottom: 16px;
+    width: 3px;
+    background: var(--text-faint);
+    border-radius: 0 2px 2px 0;
+    opacity: 0.4;
+  }
+  .attn-card.critical::before { background: var(--accent); opacity: 1; }
+  .attn-card.warn::before { background: var(--text-soft); opacity: 0.7; }
+  .attn-card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-1px);
+    z-index: 5;
+  }
+  .attn-card { overflow: visible; }
+
+  .attn-content { min-width: 0; padding-left: 8px; }
+  .attn-row1 {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 8px;
+  }
+  .attn-severity {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--text-soft);
+  }
+  .attn-severity .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--text-soft);
+  }
+  .attn-severity.critical { color: var(--accent); }
+  .attn-severity.critical .dot { background: var(--accent); }
+  .attn-severity.warning { color: var(--text-muted); }
+  .attn-severity.warning .dot { background: var(--text-muted); }
+  .attn-severity.info { color: var(--text-muted); }
+  .attn-severity.info .dot { background: var(--text-muted); }
+
+  .attn-client {
+    font-size: 12px; font-weight: 600; color: var(--text-muted);
+    letter-spacing: -0.005em;
+  }
+  .attn-age {
+    font-size: 11px; color: var(--text-faint); margin-left: auto;
+    letter-spacing: -0.005em;
+  }
+  .attn-title {
+    font-size: 16px; font-weight: 600; color: var(--text);
+    line-height: 1.35; margin-bottom: 5px;
+    letter-spacing: -0.015em;
+  }
+  .attn-desc {
+    font-size: 13px; color: var(--text-muted); line-height: 1.5;
+    max-width: 62ch;
+    letter-spacing: -0.005em;
+  }
+  .attn-actions {
+    display: flex; align-items: center; gap: 8px;
+    flex-shrink: 0;
+    overflow: visible;
+    position: relative;
+  }
+  .attn-btn {
+    padding: 8px 16px; border-radius: 980px;
+    font-size: 13px; font-weight: 500;
+    border: 1px solid var(--hairline);
+    background: var(--btn-bg);
+    color: var(--text); cursor: pointer;
+    letter-spacing: -0.01em;
+    transition: all 0.15s;
+  }
+  .attn-btn:hover { background: var(--highlight-soft); border-color: var(--highlight); color: var(--highlight); }
+  .attn-btn:active { transform: scale(0.96); }
+  .attn-btn.primary {
+    background: var(--highlight); border-color: var(--highlight); color: #ffffff;
+    font-weight: 500;
+  }
+  .attn-btn.primary:hover { opacity: 0.9; }
+  .attn-btn.primary:active { transform: scale(0.96); opacity: 0.85; }
+
+  /* Delegate popover */
+  .delegate-backdrop {
+    position: fixed; inset: 0; z-index: 998;
+  }
+  .delegate-pop {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    right: 0;
+    width: 340px;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+    z-index: 999;
+    padding: 20px;
+    animation: dpFadeIn 0.15s ease;
+  }
+  @keyframes dpFadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .delegate-pop h4 {
+    font-size: 15px; font-weight: 700; color: var(--text);
+    margin: 0 0 16px; letter-spacing: -0.02em;
+  }
+  .dp-label {
+    font-size: 12px; font-weight: 600; color: var(--text-muted);
+    letter-spacing: 0.02em; text-transform: uppercase;
+    margin-bottom: 6px; display: block;
+  }
+  .dp-field {
+    margin-bottom: 14px;
+  }
+  .dp-combo {
+    position: relative;
+  }
+  .dp-combo input {
+    width: 100%; padding: 9px 12px;
+    font-size: 14px; font-weight: 500; color: var(--text);
+    border: 1px solid var(--hairline); border-radius: 10px;
+    background: var(--bg-soft);
+    outline: none; transition: border-color 0.15s;
+    box-sizing: border-box;
+  }
+  .dp-combo input::placeholder { color: var(--text-faint); }
+  .dp-combo input:focus { border-color: var(--highlight); }
+  .dp-combo-list {
+    position: absolute; top: 100%; left: 0; right: 0;
+    margin-top: 4px;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    z-index: 10;
+    max-height: 180px; overflow-y: auto;
+    display: none;
+  }
+  .dp-combo-list.open { display: block; }
+  .dp-combo-item {
+    padding: 9px 12px;
+    font-size: 13px; font-weight: 500; color: var(--text);
+    cursor: default;
+    display: flex; align-items: center; gap: 10px;
+    transition: background 0.15s, color 0.15s;
+  }
+  .dp-combo-item:first-child { border-radius: 10px 10px 0 0; }
+  .dp-combo-item:last-child { border-radius: 0 0 10px 10px; }
+  .dp-combo-item:hover { background: var(--highlight-soft); color: var(--highlight); }
+  .dp-combo-item.selected { background: var(--highlight-soft); color: var(--highlight); }
+  .dp-combo-avatar {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--avatar-bg); color: var(--avatar-fg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; flex-shrink: 0;
+  }
+  .dp-combo-role {
+    font-size: 11px; color: var(--text-faint); margin-left: auto;
+  }
+  .dp-textarea {
+    width: 100%; padding: 9px 12px;
+    font-size: 13px; font-family: inherit; font-weight: 400;
+    color: var(--text); line-height: 1.5;
+    border: 1px solid var(--hairline); border-radius: 10px;
+    background: var(--bg-soft);
+    outline: none; resize: vertical; min-height: 60px;
+    transition: border-color 0.15s;
+    box-sizing: border-box;
+  }
+  .dp-textarea::placeholder { color: var(--text-faint); }
+  .dp-textarea:focus { border-color: var(--highlight); }
+  .dp-row {
+    display: flex; gap: 10px;
+  }
+  .dp-row .dp-field { flex: 1; }
+  .dp-select {
+    width: 100%; padding: 9px 12px;
+    font-size: 13px; font-weight: 500; color: var(--text);
+    border: 1px solid var(--hairline); border-radius: 10px;
+    background: var(--bg-soft);
+    outline: none; cursor: default;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2386868b'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    box-sizing: border-box;
+  }
+  .dp-select:focus { border-color: var(--highlight); }
+  .dp-input-date {
+    width: 100%; padding: 9px 12px;
+    font-size: 13px; font-weight: 500; color: var(--text);
+    border: 1px solid var(--hairline); border-radius: 10px;
+    background: var(--bg-soft);
+    outline: none; cursor: pointer;
+    box-sizing: border-box;
+    font-family: inherit;
+    -webkit-appearance: none; appearance: none;
+  }
+  .dp-input-date:focus { border-color: var(--highlight); }
+
+  /* Custom calendar picker */
+  .dp-cal-wrap { position: relative; }
+  .dp-cal-trigger {
+    width: 100%; padding: 9px 12px;
+    font-size: 13px; font-weight: 500; color: var(--text);
+    border: 1px solid var(--hairline); border-radius: 10px;
+    background: var(--bg-soft);
+    outline: none; cursor: default;
+    box-sizing: border-box;
+    font-family: inherit;
+    text-align: left;
+    display: flex; align-items: center; justify-content: space-between;
+    transition: border-color 0.15s;
+  }
+  .dp-cal-trigger:focus { border-color: var(--highlight); }
+  .dp-cal-trigger .dp-cal-placeholder { color: var(--text-faint); }
+  .dp-cal-trigger svg { width: 14px; height: 14px; color: var(--text-faint); flex-shrink: 0; }
+  .dp-cal {
+    position: absolute; bottom: calc(100% + 6px); left: 0;
+    width: 280px;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+    z-index: 20;
+    padding: 14px;
+    animation: dpFadeIn 0.15s ease;
+    display: none;
+  }
+  .dp-cal.open { display: block; }
+  .dp-cal-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .dp-cal-nav span {
+    font-size: 14px; font-weight: 700; color: var(--text);
+    letter-spacing: -0.02em;
+  }
+  .dp-cal-nav button {
+    width: 28px; height: 28px; border-radius: 8px;
+    border: none; background: transparent; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted); transition: all 0.15s;
+  }
+  .dp-cal-nav button:hover { background: var(--highlight-soft); color: var(--highlight); }
+  .dp-cal-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    gap: 2px; text-align: center;
+  }
+  .dp-cal-dow {
+    font-size: 10px; font-weight: 600; color: var(--text-faint);
+    text-transform: uppercase; letter-spacing: 0.05em;
+    padding: 4px 0;
+  }
+  .dp-cal-day {
+    width: 34px; height: 34px; margin: 0 auto;
+    border-radius: 10px; border: none; background: transparent;
+    font-size: 13px; font-weight: 500; color: var(--text);
+    cursor: default; transition: all 0.1s;
+    display: flex; align-items: center; justify-content: center;
+    font-family: inherit;
+  }
+  .dp-cal-day:hover { background: var(--highlight-soft); color: var(--highlight); }
+  .dp-cal-day.other-month { color: var(--text-faint); }
+  .dp-cal-day.today { font-weight: 700; box-shadow: inset 0 0 0 1.5px var(--highlight); color: var(--highlight); }
+  .dp-cal-day.selected { background: var(--highlight); color: #fff; font-weight: 700; }
+  .dp-cal-day.past { color: var(--text-faint); opacity: 0.5; }
+  .dp-cal-day.past:hover { background: transparent; color: var(--text-faint); }
+  .dp-actions {
+    display: flex; gap: 8px; margin-top: 18px;
+    justify-content: flex-end;
+  }
+  .dp-btn {
+    padding: 9px 20px; border-radius: 980px;
+    font-size: 13px; font-weight: 600;
+    border: 1px solid var(--hairline);
+    background: var(--btn-bg); color: var(--text);
+    cursor: default; transition: all 0.15s;
+    letter-spacing: -0.01em;
+  }
+  .dp-btn:not(.dp-submit):hover { background: var(--highlight-soft); border-color: var(--highlight); color: var(--highlight); }
+  .dp-btn.dp-submit {
+    background: var(--highlight); border-color: var(--highlight); color: #fff;
+  }
+  .dp-btn.dp-submit:hover { opacity: 0.9; }
+  .dp-btn.dp-submit:disabled {
+    opacity: 0.4;
+  }
+
+  /* Tooltip */
+  .attn-btn {
+    position: relative;
+  }
+  .attn-btn .tooltip {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    right: 0;
+    background: var(--text);
+    color: var(--bg);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    line-height: 1.4;
+    padding: 8px 14px;
+    border-radius: 10px;
+    width: 210px;
+    text-align: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    z-index: 100;
+  }
+  .attn-btn .tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    right: 24px;
+    border: 5px solid transparent;
+    border-top-color: var(--text);
+  }
+  .attn-btn:hover .tooltip {
+    opacity: 1;
+    transition-delay: 0.6s;
+  }
+
+  /* --- BLOCK 3: THIS WEEK (5-column board with week tabs) --- */
+  .week-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-soft);
+    border-radius: 10px;
+    padding: 3px;
+    width: fit-content;
+  }
+  .week-tab {
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 6px 16px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+  .week-tab:hover {
+    color: var(--text);
+  }
+  .week-tab.active {
+    background: var(--bg-elev);
+    color: var(--text);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    font-weight: 600;
+  }
+  .week-board {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+  }
+  .week-board .week-col[data-week="next"] {
+    display: none;
+  }
+  .week-board.show-next .week-col[data-week="current"] {
+    display: none;
+  }
+  .week-board.show-next .week-col[data-week="next"] {
+    display: flex;
+  }
+
+  .week-col {
+    background: var(--bg-elev);
+    border-radius: 16px;
+    border: 1px solid var(--hairline-soft);
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    height: 420px;
+    transition: background 0.3s, border-color 0.3s, opacity 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Today highlight */
+  .week-col.is-today {
+    border-color: var(--highlight);
+    box-shadow: 0 0 0 1px var(--highlight), var(--shadow);
+  }
+  .week-col.is-today .week-col-header {
+    background: var(--highlight);
+  }
+  .week-col.is-today .week-col-day,
+  .week-col.is-today .week-col-date {
+    color: #fff;
+  }
+  .week-col.is-today::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--highlight);
+    border-radius: 16px 16px 0 0;
+    z-index: 2;
+  }
+
+  /* Past days grayed */
+  .week-col.is-past {
+    opacity: 0.45;
+  }
+  .week-col.is-past:hover {
+    opacity: 0.7;
+  }
+
+  /* Next week columns (no longer need preview opacity — shown via tab switch) */
+
+  /* Column header */
+  .week-col-header {
+    padding: 16px 16px 12px;
+    text-align: center;
+    border-bottom: 1px solid var(--hairline-soft);
+    transition: background 0.3s;
+  }
+  .week-col-date {
+    font-size: 11px; font-weight: 500; color: var(--text-soft);
+    letter-spacing: 0.02em;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .week-col-day {
+    font-size: 22px; font-weight: 600; line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  /* Task cards inside columns */
+  .week-col-body {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+  }
+  .week-col-body::-webkit-scrollbar { width: 4px; }
+  .week-col-body::-webkit-scrollbar-thumb {
+    background: var(--hairline);
+    border-radius: 4px;
+  }
+  .week-col-body::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
+  .week-task {
+    background: var(--bg-soft);
+    border-radius: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: background 0.15s, box-shadow 0.15s;
+    position: relative;
+  }
+  .week-task:hover {
+    background: var(--bg-faint);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .week-task-title {
+    font-size: 13px; font-weight: 600; color: var(--text);
+    line-height: 1.4; letter-spacing: -0.01em;
+    margin-bottom: 6px;
+  }
+  .week-task-meta {
+    font-size: 11px; color: var(--text-soft);
+    letter-spacing: -0.005em;
+    line-height: 1.4;
+  }
+  .week-task-tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    padding: 2px 8px;
+    border-radius: 980px;
+    margin-top: 8px;
+    background: var(--bg-elev);
+    color: var(--text-soft);
+  }
+  .week-task-tag.deadline { background: var(--accent-soft); color: var(--accent); }
+  .week-task-tag.meeting { color: var(--text-muted); }
+  .week-task-tag.milestone { color: var(--text-muted); }
+  .week-task-tag svg { width: 9px; height: 9px; }
+
+  /* Carried-over task styling */
+  .week-task.carried {
+    border-left: 3px solid var(--accent);
+    padding-left: 11px;
+  }
+  .week-task .carried-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.02em;
+    margin-bottom: 4px;
+  }
+  .week-task .carried-badge svg { width: 10px; height: 10px; }
+
+  /* Empty column state */
+  .week-col-empty {
+    display: flex; align-items: center; justify-content: center;
+    flex: 1;
+    font-size: 12px; color: var(--text-faint);
+    letter-spacing: -0.005em;
+    padding: 20px;
+  }
+
+
+  /* Hidden attention cards — animatable without display:none */
+  .attn-hidden {
+    grid-template-columns: 1fr auto;
+    gap: 20px;
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    padding-top: 0; padding-bottom: 0;
+    margin-top: -12px;
+    border-color: transparent;
+    box-shadow: none;
+    transition: opacity 0.3s ease, max-height 0.4s ease, padding 0.3s ease, margin 0.3s ease;
+    pointer-events: none;
+  }
+  .attention-list.expanded .attn-hidden {
+    opacity: 1;
+    max-height: 220px;
+    padding-top: 22px; padding-bottom: 22px;
+    margin-top: 0;
+    border-color: var(--hairline-soft);
+    box-shadow: var(--shadow);
+    overflow: visible;
+    pointer-events: auto;
+  }
+
+  /* --- BLOCK 4: TEAM WORKLOAD --- */
+  .workload-grid {
+    display: flex;
+    gap: 16px;
+  }
+  .wl-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 12px;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: box-shadow 0.2s, border-color 0.2s, transform 0.15s;
+  }
+  .wl-card:hover {
+    border-color: var(--highlight);
+    box-shadow: 0 0 0 1px var(--highlight), var(--shadow-hover);
+    background: var(--highlight-soft);
+    transform: translateY(-1px);
+  }
+  .wl-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .wl-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    text-align: center;
+    line-height: 1.2;
+  }
+  .wl-bar-ring {
+    position: relative;
+    width: 52px; height: 52px;
+  }
+  .wl-bar-ring svg {
+    width: 52px; height: 52px;
+    transform: rotate(-90deg);
+  }
+  .wl-bar-ring .ring-bg {
+    fill: none;
+    stroke: var(--bg-soft);
+    stroke-width: 5;
+  }
+  .wl-bar-ring .ring-fill {
+    fill: none;
+    stroke-width: 5;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.6s ease;
+  }
+  .wl-bar-ring .ring-fill.light { stroke: #10b981; }
+  .wl-bar-ring .ring-fill.steady { stroke: #3b82f6; }
+  .wl-bar-ring .ring-fill.heavy { stroke: #f59e0b; }
+  .wl-bar-ring .ring-fill.over { stroke: var(--accent); }
+  .wl-ring-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .wl-caption {
+    font-size: 11px;
+    color: var(--text-soft);
+    text-align: center;
+  }
+
+  /* Task detail panel */
+  .wl-panel-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.25);
+    z-index: 90;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  .wl-panel-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .wl-panel {
+    position: fixed;
+    top: 68px; right: 12px; bottom: 12px;
+    width: 400px;
+    max-width: calc(90vw - 24px);
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 20px;
+    box-shadow: -8px 0 40px rgba(0,0,0,0.15);
+    z-index: 91;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    transform: translateX(110%);
+    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  .wl-panel.open {
+    transform: translateX(0);
+  }
+  .wl-panel-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 24px 24px 20px;
+    border-bottom: 1px solid var(--hairline-soft);
+  }
+  .wl-panel-avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .wl-panel-name {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .wl-panel-role {
+    font-size: 13px;
+    color: var(--text-soft);
+  }
+  .wl-panel-close {
+    margin-left: auto;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-soft);
+    padding: 4px;
+    border-radius: 8px;
+    transition: background 0.15s;
+  }
+  .wl-panel-close:hover { background: var(--bg-soft); }
+  .wl-panel-close svg { width: 20px; height: 20px; display: block; }
+  .wl-panel-body {
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .wl-panel-task {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--bg-soft);
+    border-radius: 10px;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.4;
+  }
+  .wl-panel-task .wl-pt-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 5px;
+  }
+  .wl-pt-dot.urgent { background: var(--accent); }
+  .wl-pt-dot.normal { background: var(--text-faint); }
+  .wl-panel-task .wl-pt-meta {
+    font-size: 12px;
+    color: var(--text-soft);
+    margin-top: 2px;
+  }
+  .wl-block-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+    margin-top: 4px;
+  }
+  .wl-block-tag.full { background: rgba(59,130,246,0.1); color: #3b82f6; }
+  .wl-block-tag.half { background: rgba(16,185,129,0.1); color: #10b981; }
+  .wl-block-tag.quarter { background: rgba(245,158,11,0.1); color: #f59e0b; }
+  .wl-block-tag.quick { background: var(--bg-soft); color: var(--text-faint); }
+  .wl-panel-summary {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--hairline-soft);
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .wl-summary-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .wl-summary-chip .wl-sc-dot {
+    width: 8px; height: 8px;
+    border-radius: 2px;
+  }
+  .wl-sc-dot.full { background: #3b82f6; }
+  .wl-sc-dot.half { background: #10b981; }
+  .wl-sc-dot.quarter { background: #f59e0b; }
+  .wl-sc-dot.quick { background: var(--text-faint); }
+
+  /* Generic tooltip — positioning handled by JS */
+  .tip-bubble {
+    position: fixed;
+    background: var(--text);
+    color: var(--bg);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    text-transform: none;
+    text-align: left;
+    padding: 6px 10px;
+    border-radius: 7px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    z-index: 9999;
+  }
+  .tip-bubble.visible {
+    opacity: 1;
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
+    .back-to-top { transition: none; }
+  }
+
+  /* Responsive */
+  @media (max-width: 960px) {
+    .health-strip {
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+    }
+    .health-divider { display: none; }
+    .week-board { grid-template-columns: repeat(5, 1fr); }
+    .week-col { height: 380px; }
+    .page-title { font-size: 28px; }
+  }
+
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <div class="header-logo">ProjectFlow</div>
+    <nav class="header-nav">
+      <a href="00-overview-refined.html" class="on">Overview</a>
+      <a href="01-clients-refined.html">Clients</a>
+      <a href="03-kanban-refined.html">Board</a>
+      <a href="#">Analytics</a>
+    </nav>
+  </div>
+  <div class="header-right">
+    <button class="cmdk-trigger">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242.656a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/></svg>
+      <span class="cmdk-label">Search clients, tasks, people…</span>
+      <span class="cmdk-kbd">⌘K</span>
+    </button>
+    <button class="header-icon" aria-label="Notifications" data-tip="Notifications">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="notif-dot"></span>
+    </button>
+    <button class="theme-toggle" aria-label="Toggle dark mode" onclick="toggleTheme()" data-tip="Toggle dark mode">
+      <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+    </button>
+    <button class="avatar" aria-label="Account menu" data-tip="Account menu">NT</button>
+  </div>
+</header>
+
+<main class="page">
+
+  <div class="page-header">
+    <div class="page-greeting" id="pageGreeting"></div>
+    <div class="page-title" id="pageTitle"></div>
+    <div class="page-date" id="pageTagline">Here's what needs you today.</div>
+  </div>
+
+  <!-- BLOCK 1: PORTFOLIO HEALTH STRIP -->
+  <div class="block" data-block-id="health">
+    <div class="block-header">
+      <button class="block-drag-handle" data-tip="Drag to reorder" aria-label="Drag to reorder"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></button>
+      <div class="block-title">Portfolio Health</div>
+      <div class="block-sub">Across 8 active clients</div>
+    </div>
+    <div class="health-strip">
+      <div class="health-cell">
+        <div class="health-icon alert" data-tip="Overdue or blocked — needs action now">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+        </div>
+        <div>
+          <div class="health-label">On Fire</div>
+          <div class="health-value urgent">1</div>
+          <div class="health-sub">needs you now</div>
+        </div>
+      </div>
+      <div class="health-divider"></div>
+      <div class="health-cell">
+        <div class="health-icon" data-tip="Behind schedule or approaching deadline">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <div>
+          <div class="health-label">At Risk</div>
+          <div class="health-value">2</div>
+          <div class="health-sub">need review</div>
+        </div>
+      </div>
+      <div class="health-divider"></div>
+      <div class="health-cell">
+        <div class="health-icon" data-tip="Delivering on time, no blockers">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div>
+          <div class="health-label">On Track</div>
+          <div class="health-value">5</div>
+          <div class="health-sub">clients healthy</div>
+        </div>
+      </div>
+      <div class="health-divider"></div>
+      <div class="health-cell">
+        <div class="health-icon" data-tip="% of tasks delivered by their due date">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div>
+          <div class="health-label">Avg Delivery</div>
+          <div class="health-value">94<span class="unit">%</span></div>
+          <div class="health-sub">on schedule</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BLOCK 2: NEEDS YOUR ATTENTION -->
+  <div class="block" data-block-id="attention">
+    <div class="block-header">
+      <button class="block-drag-handle" data-tip="Drag to reorder" aria-label="Drag to reorder"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></button>
+      <div class="block-title">Needs Your Attention</div>
+      <a href="#" class="block-link" id="attnToggle" aria-expanded="false" onclick="toggleAttn(event)">View all 6 →</a>
+    </div>
+    <div class="attention-list">
+
+      <div class="attn-card critical">
+        <div class="attn-content">
+          <div class="attn-row1">
+            <span class="attn-severity critical" data-tip="Overdue or blocked — immediate action required"><span class="dot"></span>On Fire</span>
+            <span class="attn-client">Acme Corporation</span>
+            <span class="attn-age">3 days overdue</span>
+          </div>
+          <div class="attn-title">Website redesign blocked waiting on client feedback</div>
+          <div class="attn-desc">Harvey San Juan sent design review files April 8. No response. Launch date April 18 at risk.</div>
+        </div>
+        <div class="attn-actions">
+          <button class="attn-btn" onclick="openDelegate(event,this)">Delegate<span class="tooltip">Assign this to a team member who can follow up</span></button>
+          <button class="attn-btn primary" onclick="event.stopPropagation()">Review<span class="tooltip">Open this item and take action now</span></button>
+        </div>
+      </div>
+
+      <div class="attn-card warn">
+        <div class="attn-content">
+          <div class="attn-row1">
+            <span class="attn-severity warning" data-tip="Behind schedule or at risk of missing deadline"><span class="dot"></span>At Risk</span>
+            <span class="attn-client">Bloom Retail</span>
+            <span class="attn-age">5 hours left</span>
+          </div>
+          <div class="attn-title">Monthly reporting deck not started — client meeting tomorrow 9am</div>
+          <div class="attn-desc">Assigned to Kate. Last seen yesterday afternoon. No draft in shared folder yet.</div>
+        </div>
+        <div class="attn-actions">
+          <button class="attn-btn" onclick="openDelegate(event,this)">Delegate<span class="tooltip">Assign this to a team member who can follow up</span></button>
+          <button class="attn-btn primary" onclick="event.stopPropagation()">Review<span class="tooltip">Open this item and take action now</span></button>
+        </div>
+      </div>
+
+      <div class="attn-card warn">
+        <div class="attn-content">
+          <div class="attn-row1">
+            <span class="attn-severity warning" data-tip="Behind schedule or at risk of missing deadline"><span class="dot"></span>At Risk</span>
+            <span class="attn-client">TechStart Inc.</span>
+            <span class="attn-age">Due Monday</span>
+          </div>
+          <div class="attn-title">SEO audit running 2 days behind schedule</div>
+          <div class="attn-desc">Chris flagged capacity issue yesterday. May need to pull in help or extend timeline.</div>
+        </div>
+        <div class="attn-actions">
+          <button class="attn-btn" onclick="openDelegate(event,this)">Delegate<span class="tooltip">Assign this to a team member who can follow up</span></button>
+          <button class="attn-btn primary" onclick="event.stopPropagation()">Review<span class="tooltip">Open this item and take action now</span></button>
+        </div>
+      </div>
+
+      <div class="attn-card attn-hidden">
+        <div class="attn-content">
+          <div class="attn-row1">
+            <span class="attn-severity info" data-tip="Waiting on your approval to proceed"><span class="dot"></span>Decision</span>
+            <span class="attn-client">Northstar Logistics</span>
+            <span class="attn-age">Waiting 2 days</span>
+          </div>
+          <div class="attn-title">Scope change request — needs your approval to proceed</div>
+          <div class="attn-desc">Client added a mobile app module. +40 hours estimated. Team paused pending sign-off.</div>
+        </div>
+        <div class="attn-actions">
+          <button class="attn-btn" onclick="openDelegate(event,this)">Delegate<span class="tooltip">Assign this to a team member who can follow up</span></button>
+          <button class="attn-btn primary" onclick="event.stopPropagation()">Review<span class="tooltip">Open this item and take action now</span></button>
+        </div>
+      </div>
+
+      <div class="attn-card attn-hidden warn">
+        <div class="attn-content">
+          <div class="attn-row1">
+            <span class="attn-severity warning" data-tip="Behind schedule or at risk of missing deadline"><span class="dot"></span>At Risk</span>
+            <span class="attn-client">Nova Ventures</span>
+            <span class="attn-age">Since yesterday</span>
+          </div>
+          <div class="attn-title">API integration blocker — backend team waiting on credentials</div>
+          <div class="attn-desc">Dev team can't proceed until third-party API keys are provisioned. Client IT hasn't responded.</div>
+        </div>
+        <div class="attn-actions">
+          <button class="attn-btn" onclick="openDelegate(event,this)">Delegate<span class="tooltip">Assign this to a team member who can follow up</span></button>
+          <button class="attn-btn primary" onclick="event.stopPropagation()">Review<span class="tooltip">Open this item and take action now</span></button>
+        </div>
+      </div>
+
+      <div class="attn-card attn-hidden">
+        <div class="attn-content">
+          <div class="attn-row1">
+            <span class="attn-severity info" data-tip="New client setup in progress"><span class="dot"></span>Onboarding</span>
+            <span class="attn-client">Harbor Financial</span>
+            <span class="attn-age">Added 5h ago</span>
+          </div>
+          <div class="attn-title">New client kickoff checklist needs your sign-off before Tuesday</div>
+          <div class="attn-desc">8 onboarding tasks created. Contract signed. Kickoff scheduled Tuesday 10am — checklist must be reviewed first.</div>
+        </div>
+        <div class="attn-actions">
+          <button class="attn-btn" onclick="openDelegate(event,this)">Delegate<span class="tooltip">Assign this to a team member who can follow up</span></button>
+          <button class="attn-btn primary" onclick="event.stopPropagation()">Review<span class="tooltip">Open this item and take action now</span></button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- BLOCK 3: THIS WEEK + NEXT WEEK PREVIEW -->
+  <div class="block" data-block-id="schedule">
+    <div class="block-header">
+      <button class="block-drag-handle" data-tip="Drag to reorder" aria-label="Drag to reorder"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></button>
+      <div class="block-title">Schedule</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="week-tabs" id="weekTabs">
+          <button class="week-tab active" data-target="current">This week<span style="font-weight:400;color:var(--text-soft);margin-left:6px;">Apr 13 – 17</span></button>
+          <button class="week-tab" data-target="next">Next week<span style="font-weight:400;color:var(--text-soft);margin-left:6px;">Apr 20 – 24</span></button>
+        </div>
+      </div>
+    </div>
+    <div class="week-board" id="weekBoard">
+
+      <!-- ═══ THIS WEEK ═══ -->
+
+      <!-- MON 13 -->
+      <div class="week-col" data-day="0" data-date="13" data-week="current">
+        <div class="week-col-header">
+          <div class="week-col-date">Apr 13, 2026</div>
+          <div class="week-col-day">Monday</div>
+        </div>
+        <div class="week-col-body">
+          <div class="week-task" data-id="seo-audit" data-done="false">
+            <div class="week-task-title">TechStart SEO audit final delivery</div>
+            <div class="week-task-meta">Chris Castellano · Running 2 days behind</div>
+            <span class="week-task-tag deadline" data-tip="Deliverable due on this day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Deadline</span>
+          </div>
+          <div class="week-task" data-id="bloom-deck" data-done="false">
+            <div class="week-task-title">Bloom Retail reporting deck due</div>
+            <div class="week-task-meta">Kate Lawrence · Client meeting at 9am</div>
+            <span class="week-task-tag deadline" data-tip="Deliverable due on this day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Deadline</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TUE 14 -->
+      <div class="week-col" data-day="1" data-date="14" data-week="current">
+        <div class="week-col-header">
+          <div class="week-col-date">Apr 14, 2026</div>
+          <div class="week-col-day">Tuesday</div>
+        </div>
+        <div class="week-col-body">
+          <div class="week-task" data-id="harbor-kickoff" data-done="true">
+            <div class="week-task-title">Harbor Financial kickoff meeting</div>
+            <div class="week-task-meta">10:00 AM · New client onboarding</div>
+            <span class="week-task-tag meeting" data-tip="Scheduled meeting or call"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Meeting</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- WED 15 -->
+      <div class="week-col" data-day="2" data-date="15" data-week="current">
+        <div class="week-col-header">
+          <div class="week-col-date">Apr 15, 2026</div>
+          <div class="week-col-day">Wednesday</div>
+        </div>
+        <div class="week-col-body">
+          <div class="week-task" data-id="northstar-scope" data-done="false">
+            <div class="week-task-title">Northstar scope change decision</div>
+            <div class="week-task-meta">Your sign-off needed by EOD</div>
+            <span class="week-task-tag deadline" data-tip="Deliverable due on this day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Deadline</span>
+          </div>
+          <div class="week-task" data-id="nova-api" data-done="false">
+            <div class="week-task-title">Nova Ventures API credentials follow-up</div>
+            <div class="week-task-meta">Client IT still hasn't responded</div>
+            <span class="week-task-tag deadline" data-tip="Deliverable due on this day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Deadline</span>
+          </div>
+          <div class="week-task" data-id="acme-wireframes" data-done="false">
+            <div class="week-task-title">Acme wireframes v3 internal review</div>
+            <div class="week-task-meta">Harvey San Juan · Prep before Thu stakeholder call</div>
+            <span class="week-task-tag meeting" data-tip="Scheduled meeting or call"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Meeting</span>
+          </div>
+          <div class="week-task" data-id="bloom-q2" data-done="false">
+            <div class="week-task-title">Bloom Retail Q2 plan — team alignment</div>
+            <div class="week-task-meta">11:00 AM · Kate Lawrence presenting draft</div>
+            <span class="week-task-tag meeting" data-tip="Scheduled meeting or call"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Meeting</span>
+          </div>
+          <div class="week-task" data-id="summit-calendar" data-done="false">
+            <div class="week-task-title">Summit Outdoor content calendar sign-off</div>
+            <div class="week-task-meta">May publishing schedule needs approval</div>
+            <span class="week-task-tag deadline" data-tip="Deliverable due on this day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Deadline</span>
+          </div>
+          <div class="week-task" data-id="mountain-sow" data-done="false">
+            <div class="week-task-title">Mountain View Dental SOW draft review</div>
+            <div class="week-task-meta">New client · Contract terms need your input</div>
+            <span class="week-task-tag deadline" data-tip="Deliverable due on this day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Deadline</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- THU 16 -->
+      <div class="week-col" data-day="3" data-date="16" data-week="current">
+        <div class="week-col-header">
+          <div class="week-col-date">Apr 16, 2026</div>
+          <div class="week-col-day">Thursday</div>
+        </div>
+        <div class="week-col-body">
+          <div class="week-task" data-id="acme-review" data-done="false">
+            <div class="week-task-title">Acme design review — stakeholder walkthrough</div>
+            <div class="week-task-meta">2:00 PM · Harvey San Juan presenting</div>
+            <span class="week-task-tag meeting" data-tip="Scheduled meeting or call"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Meeting</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- FRI 17 -->
+      <div class="week-col" data-day="4" data-date="17" data-week="current">
+        <div class="week-col-header">
+          <div class="week-col-date">Apr 17, 2026</div>
+          <div class="week-col-day">Friday</div>
+        </div>
+        <div class="week-col-body">
+          <div class="week-task" data-id="acme-launch" data-done="false">
+            <div class="week-task-title">Acme website launch target</div>
+            <div class="week-task-meta">At risk — waiting on client feedback</div>
+            <span class="week-task-tag milestone" data-tip="Key project milestone or launch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>Milestone</span>
+          </div>
+          <div class="week-task" data-id="bloom-ads" data-done="false">
+            <div class="week-task-title">Bloom Retail paid ads — performance report</div>
+            <div class="week-task-meta">SEM team · First-week results</div>
+            <span class="week-task-tag milestone" data-tip="Key project milestone or launch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>Milestone</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ NEXT WEEK PREVIEW ═══ -->
+
+      <!-- MON 20 -->
+      <div class="week-col" data-day="5" data-date="20" data-week="next">
+        <div class="week-col-header">
+          <div class="week-col-date">Apr 20, 2026</div>
+          <div class="week-col-day">Monday</div>
+        </div>
+        <div class="week-col-body">
+          <div class="week-task" data-id="nw-bloom-retro" data-done="false">
+            <div class="week-task-title">Bloom Retail campaign retro</div>
+            <div class="week-task-meta">10:00 AM · Full team debrief</div>
+            <span class="week-task-tag meeting" data-tip="Scheduled meeting or call"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Meeting</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TUE 21 -->
+      <div class="week-col" data-day="6" data-date="21" data-week="next">
+        <div class="week-col-header">
+          <div class="week-col-date">Apr 21, 2026</div>
+          <div class="week-col-day">Tuesday</div>
+        </div>
+        <div class="week-col-body">
+          <div class="week-task" data-id="nw-harbor-checkin" data-done="false">
+            <div class="week-task-title">Harbor Financial 1-week check-in</div>
+            <div class="week-task-meta">2:00 PM · Post-kickoff progress review</div>
+            <span class="week-task-tag meeting" data-tip="Scheduled meeting or call"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Meeting</span>
+          </div>
+          <div class="week-task" data-id="nw-summit-publish" data-done="false">
+            <div class="week-task-title">Summit Outdoor May content goes live</div>
+            <div class="week-task-meta">First batch of scheduled posts</div>
+            <span class="week-task-tag milestone" data-tip="Key project milestone or launch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>Milestone</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- WED 22 -->
+      <div class="week-col" data-day="7" data-date="22" data-week="next">
+        <div class="week-col-header">
+          <div class="week-col-date">Apr 22, 2026</div>
+          <div class="week-col-day">Wednesday</div>
+        </div>
+        <div class="week-col-body">
+          <div class="week-task" data-id="nw-acme-revisions" data-done="false">
+            <div class="week-task-title">Acme design revisions due</div>
+            <div class="week-task-meta">Harvey San Juan · Based on Thu feedback</div>
+            <span class="week-task-tag deadline" data-tip="Deliverable due on this day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Deadline</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- THU 23 -->
+      <div class="week-col" data-day="8" data-date="23" data-week="next">
+        <div class="week-col-header">
+          <div class="week-col-date">Apr 23, 2026</div>
+          <div class="week-col-day">Thursday</div>
+        </div>
+        <div class="week-col-body">
+          <div class="week-task" data-id="nw-mountain-kickoff" data-done="false">
+            <div class="week-task-title">Mountain View Dental project kickoff</div>
+            <div class="week-task-meta">11:00 AM · New client onboarding</div>
+            <span class="week-task-tag meeting" data-tip="Scheduled meeting or call"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Meeting</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- FRI 24 -->
+      <div class="week-col" data-day="9" data-date="24" data-week="next">
+        <div class="week-col-header">
+          <div class="week-col-date">Apr 24, 2026</div>
+          <div class="week-col-day">Friday</div>
+        </div>
+        <div class="week-col-body">
+          <div class="week-task" data-id="nw-northstar-delivery" data-done="false">
+            <div class="week-task-title">Northstar mobile module spec delivery</div>
+            <div class="week-task-meta">End of sprint 1 · Scope approved this week</div>
+            <span class="week-task-tag deadline" data-tip="Deliverable due on this day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Deadline</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- BLOCK 4: TEAM WORKLOAD -->
+  <div class="block" data-block-id="workload">
+    <div class="block-header">
+      <button class="block-drag-handle" data-tip="Drag to reorder" aria-label="Drag to reorder"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></button>
+      <div class="block-title">Team Workload</div>
+      <div class="block-sub">This week's capacity</div>
+    </div>
+    <div class="workload-grid" id="workloadGrid"></div>
+  </div>
+
+</main>
+
+<!-- Team workload slide-out panel -->
+<div class="wl-panel-backdrop" id="wlBackdrop" onclick="closeWlPanel()"></div>
+<div class="wl-panel" id="wlPanel">
+  <div class="wl-panel-header">
+    <div class="wl-panel-avatar" id="wlPanelAvatar"></div>
+    <div>
+      <div class="wl-panel-name" id="wlPanelName"></div>
+      <div class="wl-panel-role" id="wlPanelRole"></div>
+    </div>
+    <button class="wl-panel-close" onclick="closeWlPanel()" aria-label="Close panel">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="wl-panel-summary" id="wlPanelSummary"></div>
+  <div class="wl-panel-body" id="wlPanelBody"></div>
+</div>
+
+<!-- Back to top button -->
+<button class="back-to-top" id="backToTop" aria-label="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+  <span class="btt-tooltip">Back to top</span>
+</button>
+
+<script>
+function toggleTheme() {
+  var cur = document.documentElement.getAttribute('data-theme');
+  var next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('refined-theme', next);
+}
+function toggleAttn(e) {
+  e.preventDefault();
+  var list = document.querySelector('.attention-list');
+  var link = document.getElementById('attnToggle');
+  list.classList.toggle('expanded');
+  var isOpen = list.classList.contains('expanded');
+  link.textContent = isOpen ? 'Show less' : 'View all 6 →';
+  link.setAttribute('aria-expanded', isOpen);
+}
+
+/* ── Delegate popover ── */
+var TEAM = [
+  { name: 'Roxy Calinga', initials: 'RC', role: 'Operations Manager' },
+  { name: 'Chris Castellano', initials: 'CC', role: 'Senior Growth & SEO' },
+  { name: 'Kate Lawrence', initials: 'KL', role: 'Account Manager' },
+  { name: 'Harvey San Juan', initials: 'HS', role: 'Web Designer' },
+  { name: 'Michael Potts', initials: 'MP', role: 'Paid Social Manager' }
+];
+
+var activeDelegatePop = null;
+
+function closeDelegate() {
+  if (activeDelegatePop) {
+    activeDelegatePop.pop.remove();
+    if (activeDelegatePop.backdrop) activeDelegatePop.backdrop.remove();
+    activeDelegatePop = null;
+  }
+}
+
+function openDelegate(e, btn) {
+  e.stopPropagation();
+  e.preventDefault();
+  if (activeDelegatePop) { closeDelegate(); return; }
+
+  var actions = btn.closest('.attn-actions');
+  var card = btn.closest('.attn-card');
+  var severity = card.querySelector('.attn-severity');
+  var defaultPriority = 'Medium';
+  if (severity && severity.classList.contains('critical')) defaultPriority = 'Urgent';
+  else if (severity && severity.classList.contains('warning')) defaultPriority = 'High';
+
+  var pop = document.createElement('div');
+  pop.className = 'delegate-pop';
+  pop.innerHTML =
+    '<h4>Delegate Task</h4>' +
+    '<div class="dp-field">' +
+      '<label class="dp-label">Assign to</label>' +
+      '<div class="dp-combo" id="dpCombo">' +
+        '<input type="text" id="dpAssignee" placeholder="Search team member\u2026" autocomplete="off">' +
+        '<div class="dp-combo-list" id="dpList"></div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="dp-field">' +
+      '<label class="dp-label">Note</label>' +
+      '<textarea class="dp-textarea" id="dpNote" placeholder="Quick context or instructions\u2026" rows="2"></textarea>' +
+    '</div>' +
+    '<div class="dp-row">' +
+      '<div class="dp-field">' +
+        '<label class="dp-label">Priority</label>' +
+        '<select class="dp-select" id="dpPriority">' +
+          '<option' + (defaultPriority === 'Urgent' ? ' selected' : '') + '>Urgent</option>' +
+          '<option' + (defaultPriority === 'High' ? ' selected' : '') + '>High</option>' +
+          '<option' + (defaultPriority === 'Medium' ? ' selected' : '') + '>Medium</option>' +
+          '<option>Low</option>' +
+        '</select>' +
+      '</div>' +
+      '<div class="dp-field">' +
+        '<label class="dp-label">Due by</label>' +
+        '<div class="dp-cal-wrap" id="dpCalWrap">' +
+          '<button type="button" class="dp-cal-trigger" id="dpDueTrigger">' +
+            '<span class="dp-cal-placeholder">Pick a date\u2026</span>' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' +
+          '</button>' +
+          '<div class="dp-cal" id="dpCal"></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="dp-actions">' +
+      '<button class="dp-btn" onclick="closeDelegate()">Cancel</button>' +
+      '<button class="dp-btn dp-submit" id="dpSubmit" disabled>Delegate</button>' +
+    '</div>';
+
+  var backdrop = document.createElement('div');
+  backdrop.className = 'delegate-backdrop';
+  backdrop.addEventListener('click', closeDelegate);
+  document.body.appendChild(backdrop);
+  actions.appendChild(pop);
+
+  activeDelegatePop = { pop: pop, backdrop: backdrop };
+
+  var input = pop.querySelector('#dpAssignee');
+  var list = pop.querySelector('#dpList');
+  var submitBtn = pop.querySelector('#dpSubmit');
+  var selectedMember = null;
+
+  function renderList(filter) {
+    var q = (filter || '').toLowerCase();
+    list.innerHTML = '';
+    var matches = TEAM.filter(function(m) {
+      return !q || m.name.toLowerCase().indexOf(q) > -1 || m.role.toLowerCase().indexOf(q) > -1;
+    });
+    if (matches.length === 0) {
+      list.classList.remove('open');
+      return;
+    }
+    matches.forEach(function(m) {
+      var item = document.createElement('div');
+      item.className = 'dp-combo-item' + (selectedMember && selectedMember.name === m.name ? ' selected' : '');
+      item.innerHTML =
+        '<span class="dp-combo-avatar">' + m.initials + '</span>' +
+        '<span>' + m.name + '</span>' +
+        '<span class="dp-combo-role">' + m.role + '</span>';
+      item.addEventListener('click', function(ev) {
+        ev.stopPropagation();
+        selectedMember = m;
+        input.value = m.name;
+        list.classList.remove('open');
+        submitBtn.disabled = false;
+      });
+      list.appendChild(item);
+    });
+    list.classList.add('open');
+  }
+
+  input.addEventListener('focus', function() { renderList(input.value); });
+  input.addEventListener('input', function() {
+    selectedMember = null;
+    submitBtn.disabled = true;
+    renderList(input.value);
+    /* Auto-select if exact match */
+    var v = input.value.trim().toLowerCase();
+    TEAM.forEach(function(m) {
+      if (m.name.toLowerCase() === v) {
+        selectedMember = m;
+        submitBtn.disabled = false;
+      }
+    });
+  });
+
+  /* Close list on click outside combo */
+  pop.addEventListener('click', function(ev) {
+    if (!ev.target.closest('.dp-combo')) list.classList.remove('open');
+    if (!ev.target.closest('.dp-cal-wrap')) {
+      var cal = pop.querySelector('#dpCal');
+      if (cal) cal.classList.remove('open');
+    }
+  });
+
+  /* ── Calendar picker ── */
+  (function() {
+    var trigger = pop.querySelector('#dpDueTrigger');
+    var cal = pop.querySelector('#dpCal');
+    var selectedDate = null;
+    var viewYear, viewMonth;
+    var now = new Date();
+    viewYear = now.getFullYear();
+    viewMonth = now.getMonth();
+
+    var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    var DAYS = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+
+    function fmt(d) {
+      return MONTHS[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+    }
+
+    function isToday(y, m, d) {
+      return y === now.getFullYear() && m === now.getMonth() && d === now.getDate();
+    }
+
+    function isPast(y, m, d) {
+      var check = new Date(y, m, d);
+      var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return check < today;
+    }
+
+    function render() {
+      var first = new Date(viewYear, viewMonth, 1);
+      var startDay = first.getDay();
+      var daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+      var prevDays = new Date(viewYear, viewMonth, 0).getDate();
+
+      var html = '<div class="dp-cal-nav">' +
+        '<button type="button" onclick="event.stopPropagation()">&larr;</button>' +
+        '<span>' + MONTHS[viewMonth] + ' ' + viewYear + '</span>' +
+        '<button type="button" onclick="event.stopPropagation()">&rarr;</button>' +
+        '</div><div class="dp-cal-grid">';
+
+      DAYS.forEach(function(d) { html += '<span class="dp-cal-dow">' + d + '</span>'; });
+
+      for (var i = 0; i < startDay; i++) {
+        var pd = prevDays - startDay + 1 + i;
+        html += '<button type="button" class="dp-cal-day other-month" disabled>' + pd + '</button>';
+      }
+
+      for (var d = 1; d <= daysInMonth; d++) {
+        var cls = 'dp-cal-day';
+        if (isToday(viewYear, viewMonth, d)) cls += ' today';
+        if (isPast(viewYear, viewMonth, d)) cls += ' past';
+        if (selectedDate && selectedDate.getFullYear() === viewYear && selectedDate.getMonth() === viewMonth && selectedDate.getDate() === d) cls += ' selected';
+        html += '<button type="button" class="' + cls + '" data-day="' + d + '">' + d + '</button>';
+      }
+
+      var totalCells = startDay + daysInMonth;
+      var remaining = (7 - (totalCells % 7)) % 7;
+      for (var i = 1; i <= remaining; i++) {
+        html += '<button type="button" class="dp-cal-day other-month" disabled>' + i + '</button>';
+      }
+
+      html += '</div>';
+      cal.innerHTML = html;
+
+      /* Attach nav events */
+      var navBtns = cal.querySelectorAll('.dp-cal-nav button');
+      navBtns[0].addEventListener('click', function(ev) {
+        ev.stopPropagation();
+        viewMonth--;
+        if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+        render();
+      });
+      navBtns[1].addEventListener('click', function(ev) {
+        ev.stopPropagation();
+        viewMonth++;
+        if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+        render();
+      });
+
+      /* Attach day click events */
+      cal.querySelectorAll('.dp-cal-day:not(.other-month):not(.past)').forEach(function(btn) {
+        btn.addEventListener('click', function(ev) {
+          ev.stopPropagation();
+          var day = parseInt(btn.dataset.day);
+          selectedDate = new Date(viewYear, viewMonth, day);
+          trigger.innerHTML = '<span>' + fmt(selectedDate) + '</span>' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+          cal.classList.remove('open');
+        });
+      });
+    }
+
+    trigger.addEventListener('click', function(ev) {
+      ev.stopPropagation();
+      var isOpen = cal.classList.contains('open');
+      if (isOpen) { cal.classList.remove('open'); }
+      else { render(); cal.classList.add('open'); }
+    });
+  })();
+
+  submitBtn.addEventListener('click', function(ev) {
+    ev.stopPropagation();
+    if (!selectedMember) return;
+    var title = card.querySelector('.attn-title');
+    var msg = 'Delegated "' + (title ? title.textContent : 'task') + '" to ' + selectedMember.name;
+    closeDelegate();
+    /* Brief confirmation flash */
+    var toast = document.createElement('div');
+    toast.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:12px 24px;border-radius:980px;font-size:14px;font-weight:600;z-index:9999;animation:dpFadeIn 0.15s ease;letter-spacing:-0.01em;';
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(function() { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; }, 2000);
+    setTimeout(function() { toast.remove(); }, 2400);
+  });
+
+  /* Escape to close */
+  function onKey(ev) {
+    if (ev.key === 'Escape') { closeDelegate(); document.removeEventListener('keydown', onKey); }
+  }
+  document.addEventListener('keydown', onKey);
+
+  input.focus();
+}
+
+/* ── Back to top: show after scrolling past the fold ── */
+(function() {
+  var btn = document.getElementById('backToTop');
+  var threshold = 400;
+  window.addEventListener('scroll', function() {
+    if (window.scrollY > threshold) {
+      btn.classList.add('visible');
+    } else {
+      btn.classList.remove('visible');
+    }
+  }, { passive: true });
+})();
+
+/* ── Dynamic greeting + daily tagline + weather ── */
+(function() {
+  var now = new Date();
+  var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var dayName = days[now.getDay()];
+  var monthName = months[now.getMonth()];
+  var dateNum = now.getDate();
+  var hour = now.getHours();
+
+  var greeting = 'Good morning';
+  if (hour >= 12 && hour < 17) greeting = 'Good afternoon';
+  else if (hour >= 17) greeting = 'Good evening';
+
+  document.getElementById('pageGreeting').textContent = dayName + ', ' + monthName + ' ' + dateNum;
+  document.getElementById('pageTitle').textContent = greeting + ', Nikko.';
+
+  /* Daily rotating tagline */
+  var taglines = [
+    "Here's what needs you today.",
+    "Your projects at a glance.",
+    "Let's make today count.",
+    "Here's where things stand.",
+    "Your day, mapped out.",
+    "What's on your plate today.",
+    "The rundown for today.",
+    "Stay ahead of the curve.",
+    "Quick look at what matters.",
+    "Everything in one place.",
+    "Your priorities, front and center.",
+    "Here's the view from above.",
+    "Let's keep things moving.",
+    "Your pulse check for today."
+  ];
+  var dayOfYear = Math.floor((now - new Date(now.getFullYear(),0,0)) / 86400000);
+  document.getElementById('pageTagline').textContent = taglines[dayOfYear % taglines.length];
+
+  /* Weather-aware greeting (only when notable) */
+  if ('geolocation' in navigator) {
+    navigator.geolocation.getCurrentPosition(function(pos) {
+      var lat = pos.coords.latitude.toFixed(2);
+      var lon = pos.coords.longitude.toFixed(2);
+      var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat +
+        '&longitude=' + lon +
+        '&current=temperature_2m,weather_code&temperature_unit=celsius';
+
+      fetch(url).then(function(r) { return r.json(); }).then(function(data) {
+        if (!data.current) return;
+        var temp = data.current.temperature_2m;
+        var code = data.current.weather_code;
+        var suffix = '';
+
+        /* WMO weather codes:
+           51-67: drizzle/rain, 71-77: snow, 80-82: rain showers,
+           85-86: snow showers, 95-99: thunderstorm */
+        if (code >= 95) {
+          suffix = 'Stay safe out there — storms nearby.';
+        } else if (code >= 71 && code <= 77 || code >= 85 && code <= 86) {
+          suffix = "It's snowing outside — stay warm.";
+        } else if (code >= 51 && code <= 67 || code >= 80 && code <= 82) {
+          suffix = "It's rainy out — good day to stay focused.";
+        } else if (temp >= 38) {
+          suffix = "It's scorching out there — stay hydrated.";
+        } else if (temp >= 35) {
+          suffix = "It's really hot outside — take it easy.";
+        } else if (temp <= 0) {
+          suffix = "It's freezing out — bundle up.";
+        } else if (temp <= 5) {
+          suffix = "It's cold outside — stay warm.";
+        }
+
+        if (suffix) {
+          document.getElementById('pageTitle').textContent = greeting + ', Nikko. ' + suffix;
+        }
+      }).catch(function() { /* silently fail — greeting stays normal */ });
+    }, function() { /* permission denied — no problem */ }, { timeout: 5000 });
+  }
+})();
+
+/* ── Week board: day progression logic ── */
+var DAY_LABELS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+var carriedSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 17 20 12 15 7"/><path d="M4 18v-1a5 5 0 0 1 5-5h11"/></svg>';
+
+/* Store the original task HTML keyed by data-id so we can rebuild */
+var originalTasks = {};
+(function() {
+  document.querySelectorAll('.week-col[data-week="current"] .week-task').forEach(function(t) {
+    originalTasks[t.dataset.id] = {
+      html: t.innerHTML,
+      done: t.dataset.done === 'true',
+      origDayIdx: parseInt(t.closest('.week-col').dataset.day)
+    };
+  });
+})();
+
+/* Detect which column index (0-4) matches today's real date */
+function applyToday() {
+  var now = new Date();
+  var todayDate = now.getDate();
+  var currentCols = document.querySelectorAll('.week-col[data-week="current"]');
+  var activeIdx = -1;
+
+  for (var i = 0; i < currentCols.length; i++) {
+    if (parseInt(currentCols[i].dataset.date) === todayDate) {
+      activeIdx = i;
+      break;
+    }
+  }
+
+  /* Apply today / past states to current-week columns only */
+  currentCols.forEach(function(col) {
+    var dayIdx = parseInt(col.dataset.day);
+    if (dayIdx === activeIdx) {
+      col.classList.add('is-today');
+    } else if (activeIdx >= 0 && dayIdx < activeIdx) {
+      col.classList.add('is-past');
+    }
+  });
+
+  /* Move unfinished tasks from past days to today's column */
+  if (activeIdx >= 0) {
+    var todayCol = document.querySelector('.week-col[data-week="current"][data-day="' + activeIdx + '"]');
+    if (todayCol) {
+      var todayBody = todayCol.querySelector('.week-col-body');
+
+      currentCols.forEach(function(col) {
+        var dayIdx = parseInt(col.dataset.day);
+        if (dayIdx >= activeIdx) return;
+
+        col.querySelectorAll('.week-task').forEach(function(task) {
+          var info = originalTasks[task.dataset.id];
+          if (info && !info.done) {
+            var clone = document.createElement('div');
+            clone.className = 'week-task carried';
+            clone.dataset.id = task.dataset.id + '-carried';
+            var origLabel = DAY_LABELS[info.origDayIdx] || 'Earlier';
+            clone.innerHTML =
+              '<div class="carried-badge">' + carriedSvg + 'Carried from ' + origLabel + '</div>' +
+              info.html;
+            todayBody.insertBefore(clone, todayBody.firstChild);
+          }
+        });
+      });
+    }
+  }
+}
+
+applyToday();
+
+/* ── Week tabs: switch between this week / next week ── */
+(function() {
+  var tabs = document.querySelectorAll('#weekTabs .week-tab');
+  var board = document.getElementById('weekBoard');
+  if (!tabs.length || !board) return;
+
+
+  tabs.forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      tabs.forEach(function(t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      var target = tab.dataset.target;
+      if (target === 'next') {
+        board.classList.add('show-next');
+      } else {
+        board.classList.remove('show-next');
+      }
+    });
+  });
+})();
+
+/* ── Team workload panel ── */
+/* Block types: full=1 FDE, half=0.5, quarter=0.25, quick≈0 */
+var BLOCK_VAL = { full: 1, half: 0.5, quarter: 0.25, quick: 0 };
+var BLOCK_LABEL = { full: 'Full Day', half: 'Half Day', quarter: 'Quarter Day', quick: 'Quick Task' };
+var BLOCK_SYMBOL = { full: '\u{1F7E6}', half: '\u{1F7E9}', quarter: '\u{1F7E8}', quick: '\u2B1C' };
+var CAPACITY = 4; /* Full Day equivalents per week */
+
+var wlData = [
+  { name: 'Roxy Calinga', role: 'Operations Manager', initials: 'RC', bg: '#e0e7ff', fg: '#4f46e5',
+    tasks: [
+      { title: 'Acme wireframes v3 — internal review', meta: 'Wed · Prep before stakeholder call', block: 'full', urgent: true },
+      { title: 'Acme design review — stakeholder walkthrough', meta: 'Thu 2:00 PM · Coordinating', block: 'half', urgent: true },
+      { title: 'Acme website launch prep', meta: 'Fri · At risk, waiting on feedback', block: 'full', urgent: false },
+      { title: 'Acme design revisions', meta: 'Next week Wed · Based on Thu feedback', block: 'full', urgent: false },
+      { title: 'Bloom brand refresh concepts', meta: 'Backlog · No deadline yet', block: 'full', urgent: false }
+    ]},
+  { name: 'Chris Castellano', role: 'Senior Growth & SEO Manager', initials: 'CC', bg: '#fef3c7', fg: '#d97706',
+    tasks: [
+      { title: 'TechStart SEO audit final delivery', meta: 'Mon · Running 2 days behind', block: 'full', urgent: true },
+      { title: 'Bloom Retail paid ads — performance report', meta: 'Fri · First-week results', block: 'half', urgent: false },
+      { title: 'Summit Outdoor content calendar review', meta: 'Wed · May schedule approval', block: 'quarter', urgent: false },
+      { title: 'Client keyword brief updates', meta: 'Ongoing · 3 clients', block: 'quarter', urgent: false }
+    ]},
+  { name: 'Kate Lawrence', role: 'Account Manager', initials: 'KL', bg: '#fce7f3', fg: '#db2777',
+    tasks: [
+      { title: 'Bloom Retail reporting deck', meta: 'Today · Client meeting tomorrow 9am', block: 'full', urgent: true },
+      { title: 'Bloom Retail Q2 plan — team alignment', meta: 'Wed 11:00 AM · Presenting draft', block: 'half', urgent: false },
+      { title: 'Harbor Financial kickoff follow-up email', meta: 'Tue · Post-meeting action items', block: 'quarter', urgent: false },
+      { title: 'Approve Northstar scope change', meta: 'Wed · Quick sign-off', block: 'quick', urgent: false }
+    ]},
+  { name: 'Harvey San Juan', role: 'Web Designer', initials: 'HS', bg: '#d1fae5', fg: '#059669',
+    tasks: [
+      { title: 'Nova Ventures API credentials follow-up', meta: 'Blocked · Client IT hasn\'t responded', block: 'quarter', urgent: false },
+      { title: 'Harbor Financial dev environment setup', meta: 'Tue · New client onboarding', block: 'half', urgent: false }
+    ]},
+  { name: 'Michael Potts', role: 'Paid Social Manager', initials: 'MP', bg: '#ede9fe', fg: '#7c3aed',
+    tasks: [
+      { title: 'Harbor Financial onboarding checklist', meta: 'Kickoff Tue · 8 tasks created', block: 'half', urgent: false },
+      { title: 'Northstar scope change follow-up', meta: 'Waiting 2 days · Team paused', block: 'quarter', urgent: false },
+      { title: 'Weekly project status updates', meta: 'Fri · All active clients', block: 'half', urgent: false },
+      { title: 'Forward Acme invoice to finance', meta: 'Quick · Minor admin', block: 'quick', urgent: false }
+    ]}
+];
+
+function calcFDE(tasks) {
+  var total = 0;
+  tasks.forEach(function(t) { total += (BLOCK_VAL[t.block] || 0); });
+  return total;
+}
+
+function fdeStatus(fde) {
+  if (fde >= 5) return 'over';
+  if (fde >= 4) return 'heavy';
+  if (fde >= 2) return 'steady';
+  return 'light';
+}
+
+/* Render workload cards from data */
+(function() {
+  var grid = document.getElementById('workloadGrid');
+  var CIRC = 2 * Math.PI * 21; /* ~131.95 */
+
+  wlData.forEach(function(d, i) {
+    var fde = calcFDE(d.tasks);
+    var status = fdeStatus(fde);
+    var pct = Math.min(fde / CAPACITY, 1);
+    var offset = CIRC * (1 - pct);
+    var label = fde % 1 === 0 ? fde : fde.toFixed(1);
+
+    var card = document.createElement('div');
+    card.className = 'wl-card';
+    card.onclick = function() { openWlPanel(i); };
+    var statusTip = { light: 'Healthy', steady: 'Healthy', heavy: 'Watch — approaching capacity', over: 'Overloaded — redistribute work' };
+    card.innerHTML =
+      '<div class="wl-bar-ring" data-tip="' + label + ' of ' + CAPACITY + ' Full Day Equivalents — ' + statusTip[status] + '">' +
+        '<svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/>' +
+        '<circle class="ring-fill ' + status + '" cx="26" cy="26" r="21" stroke-dasharray="' + CIRC.toFixed(1) + '" stroke-dashoffset="' + offset.toFixed(1) + '"/></svg>' +
+        '<div class="wl-ring-label">' + label + '/' + CAPACITY + '</div>' +
+      '</div>' +
+      '<div class="wl-avatar" style="background:' + d.bg + ';color:' + d.fg + ';">' + d.initials + '</div>' +
+      '<div class="wl-name">' + d.name + '</div>' +
+      '<div class="wl-caption">' + d.role + '</div>';
+    grid.appendChild(card);
+  });
+})();
+
+function openWlPanel(idx) {
+  var d = wlData[idx];
+  var fde = calcFDE(d.tasks);
+  var status = fdeStatus(fde);
+
+  var avatar = document.getElementById('wlPanelAvatar');
+  avatar.textContent = d.initials;
+  avatar.style.background = d.bg;
+  avatar.style.color = d.fg;
+  document.getElementById('wlPanelName').textContent = d.name;
+  document.getElementById('wlPanelRole').textContent = d.role;
+
+  /* Summary: count blocks by type */
+  var counts = { full: 0, half: 0, quarter: 0, quick: 0 };
+  d.tasks.forEach(function(t) { counts[t.block]++; });
+  var summary = document.getElementById('wlPanelSummary');
+  var statusLabel = { light: 'Healthy', steady: 'Healthy', heavy: 'Watch', over: 'Overloaded' };
+  var statusColor = { light: '#10b981', steady: '#10b981', heavy: '#f59e0b', over: 'var(--accent)' };
+  var fdeLabel = fde % 1 === 0 ? fde : fde.toFixed(1);
+  var html = '<span class="wl-summary-chip" style="font-weight:600;color:' + statusColor[status] + ';">' + statusLabel[status] + ' &middot; ' + fdeLabel + '/' + CAPACITY + ' FDE</span>';
+  ['full','half','quarter','quick'].forEach(function(type) {
+    if (counts[type] > 0) {
+      html += '<span class="wl-summary-chip"><span class="wl-sc-dot ' + type + '"></span>' + counts[type] + ' ' + BLOCK_LABEL[type] + '</span>';
+    }
+  });
+  summary.innerHTML = html;
+
+  /* Task list with block tags */
+  var body = document.getElementById('wlPanelBody');
+  body.innerHTML = '';
+  d.tasks.forEach(function(t) {
+    var div = document.createElement('div');
+    div.className = 'wl-panel-task';
+    div.innerHTML =
+      '<span class="wl-pt-dot ' + (t.urgent ? 'urgent' : 'normal') + '"></span>' +
+      '<div><div>' + t.title + '</div>' +
+      '<div class="wl-pt-meta">' + t.meta + '</div>' +
+      '<span class="wl-block-tag ' + t.block + '">' + BLOCK_SYMBOL[t.block] + ' ' + BLOCK_LABEL[t.block] + '</span>' +
+      '</div>';
+    body.appendChild(div);
+  });
+
+  document.getElementById('wlBackdrop').classList.add('open');
+  document.getElementById('wlPanel').classList.add('open');
+}
+
+function closeWlPanel() {
+  document.getElementById('wlBackdrop').classList.remove('open');
+  document.getElementById('wlPanel').classList.remove('open');
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && document.getElementById('wlPanel').classList.contains('open')) {
+    closeWlPanel();
+  }
+});
+
+/* ── Generic tooltip system ── */
+(function() {
+  var bubble = document.createElement('div');
+  bubble.className = 'tip-bubble';
+  document.body.appendChild(bubble);
+
+  var timer = null;
+
+  document.addEventListener('mouseenter', function(e) {
+    var el = e.target.closest('[data-tip]');
+    if (!el) return;
+
+    clearTimeout(timer);
+    bubble.textContent = el.getAttribute('data-tip');
+
+    /* Position: above the element, left-aligned to its left edge */
+    var rect = el.getBoundingClientRect();
+    bubble.style.visibility = 'hidden';
+    bubble.classList.add('visible');
+
+    /* Measure bubble to avoid overflow */
+    var bw = bubble.offsetWidth;
+    var left = rect.left;
+    if (left + bw > window.innerWidth - 8) {
+      left = window.innerWidth - bw - 8;
+    }
+    if (left < 8) left = 8;
+
+    bubble.style.left = left + 'px';
+    bubble.style.top = (rect.top - bubble.offsetHeight - 6) + 'px';
+    bubble.style.visibility = '';
+
+    /* Delay before showing */
+    bubble.classList.remove('visible');
+    timer = setTimeout(function() {
+      bubble.classList.add('visible');
+    }, 400);
+  }, true);
+
+  document.addEventListener('mouseleave', function(e) {
+    var el = e.target.closest('[data-tip]');
+    if (!el) return;
+    clearTimeout(timer);
+    bubble.classList.remove('visible');
+  }, true);
+})();
+
+/* ── Block drag-and-drop reorder ── */
+(function() {
+  var STORAGE_KEY = 'overview-block-order';
+  var page = document.querySelector('.page');
+  var pageHeader = page.querySelector('.page-header');
+  var blocks = Array.from(page.querySelectorAll('.block[data-block-id]'));
+
+  /* Restore saved order */
+  var saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    try {
+      var order = JSON.parse(saved);
+      var map = {};
+      blocks.forEach(function(b) { map[b.dataset.blockId] = b; });
+      order.forEach(function(id) {
+        if (map[id]) page.appendChild(map[id]);
+      });
+      blocks = Array.from(page.querySelectorAll('.block[data-block-id]'));
+    } catch(e) {}
+  }
+
+  function saveOrder() {
+    var ids = Array.from(page.querySelectorAll('.block[data-block-id]')).map(function(b) {
+      return b.dataset.blockId;
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+  }
+
+  var dragged = null;
+  var dragClone = null;
+  var indicator = null;
+  var startY = 0;
+  var offsetY = 0;
+  var dropTarget = null;
+  var dropPos = null; /* 'before' or 'after' */
+
+  function clearDropClasses() {
+    page.querySelectorAll('.block.drop-above, .block.drop-below').forEach(function(b) {
+      b.classList.remove('drop-above', 'drop-below');
+    });
+  }
+
+  function getBlockMidpoints() {
+    return Array.from(page.querySelectorAll('.block[data-block-id]')).filter(function(b) {
+      return b !== dragged;
+    }).map(function(b) {
+      var r = b.getBoundingClientRect();
+      return { el: b, top: r.top, bottom: r.bottom, mid: r.top + r.height / 2 };
+    });
+  }
+
+  function onPointerDown(e) {
+    var handle = e.target.closest('.block-drag-handle');
+    if (!handle) return;
+    e.preventDefault();
+
+    dragged = handle.closest('.block[data-block-id]');
+    var rect = dragged.getBoundingClientRect();
+    offsetY = e.clientY - rect.top;
+    startY = e.clientY;
+
+    /* Create floating clone */
+    dragClone = dragged.cloneNode(true);
+    dragClone.style.position = 'fixed';
+    dragClone.style.left = rect.left + 'px';
+    dragClone.style.top = rect.top + 'px';
+    dragClone.style.width = rect.width + 'px';
+    dragClone.style.zIndex = '200';
+    dragClone.style.pointerEvents = 'none';
+    dragClone.style.margin = '0';
+    dragClone.style.transition = 'box-shadow 0.2s ease, opacity 0.2s ease';
+    dragClone.style.boxShadow = '0 12px 40px rgba(0,0,0,0.15)';
+    dragClone.style.borderRadius = '16px';
+    dragClone.style.background = getComputedStyle(document.documentElement).getPropertyValue('--bg-elev').trim();
+    dragClone.style.padding = '20px';
+    dragClone.style.opacity = '0.92';
+    document.body.appendChild(dragClone);
+
+    /* Ghost the original */
+    dragged.style.opacity = '0.25';
+    dragged.style.transition = 'opacity 0.15s ease';
+
+    /* Hide tooltip */
+    var tipBubble = document.querySelector('.tip-bubble');
+    if (tipBubble) tipBubble.classList.remove('visible');
+
+    document.addEventListener('pointermove', onPointerMove);
+    document.addEventListener('pointerup', onPointerUp);
+  }
+
+  function onPointerMove(e) {
+    if (!dragClone) return;
+    var rect = dragged.getBoundingClientRect();
+    dragClone.style.top = (e.clientY - offsetY) + 'px';
+
+    /* Find closest drop target */
+    var mids = getBlockMidpoints();
+    var closest = null;
+    var closestDist = Infinity;
+    var pos = 'after';
+
+    mids.forEach(function(m) {
+      var distTop = Math.abs(e.clientY - m.top);
+      var distBot = Math.abs(e.clientY - m.bottom);
+      if (distTop < closestDist) {
+        closestDist = distTop;
+        closest = m.el;
+        pos = 'before';
+      }
+      if (distBot < closestDist) {
+        closestDist = distBot;
+        closest = m.el;
+        pos = 'after';
+      }
+    });
+
+    clearDropClasses();
+    if (closest) {
+      dropTarget = closest;
+      dropPos = pos;
+      closest.classList.add(pos === 'before' ? 'drop-above' : 'drop-below');
+    }
+
+    /* Auto-scroll near edges */
+    if (e.clientY < 80) {
+      window.scrollBy(0, -8);
+    } else if (e.clientY > window.innerHeight - 80) {
+      window.scrollBy(0, 8);
+    }
+  }
+
+  function onPointerUp(e) {
+    document.removeEventListener('pointermove', onPointerMove);
+    document.removeEventListener('pointerup', onPointerUp);
+
+    clearDropClasses();
+
+    if (dragClone) {
+      document.body.removeChild(dragClone);
+      dragClone = null;
+    }
+
+    if (dragged) {
+      dragged.style.opacity = '';
+      dragged.style.transition = '';
+
+      /* Perform the reorder */
+      if (dropTarget && dropTarget !== dragged) {
+        if (dropPos === 'before') {
+          page.insertBefore(dragged, dropTarget);
+        } else {
+          if (dropTarget.nextSibling) {
+            page.insertBefore(dragged, dropTarget.nextSibling);
+          } else {
+            page.appendChild(dragged);
+          }
+        }
+
+        /* Animate blocks into new positions */
+        var allBlocks = page.querySelectorAll('.block[data-block-id]');
+        allBlocks.forEach(function(b) {
+          b.classList.add('reorder-anim');
+        });
+        setTimeout(function() {
+          allBlocks.forEach(function(b) {
+            b.classList.remove('reorder-anim');
+          });
+        }, 300);
+
+        saveOrder();
+      }
+
+      dragged = null;
+      dropTarget = null;
+      dropPos = null;
+    }
+  }
+
+  page.addEventListener('pointerdown', onPointerDown);
+})();
+</script>
+
+</body>
+</html>
