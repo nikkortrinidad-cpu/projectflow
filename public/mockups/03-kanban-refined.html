@@ -2717,6 +2717,59 @@
   }
   .assignee-option.is-selected .assignee-option-check { opacity: 1; }
   .assignee-empty { padding: 14px 10px; text-align: center; color: var(--text-faint); font-size: 12px; }
+
+  /* ───── Tooltips ───── */
+  [data-tip] { position: relative; }
+  [data-tip]::after {
+    content: attr(data-tip);
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 6px);
+    transform: translateX(-50%) translateY(2px);
+    padding: 5px 8px;
+    background: rgba(18, 18, 20, 0.96);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: -0.005em;
+    border-radius: 6px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+    transition: opacity 0.12s ease 0.45s, transform 0.12s ease 0.45s;
+    z-index: 100;
+  }
+  :root[data-theme="light"] [data-tip]::after {
+    background: rgba(28, 28, 30, 0.96);
+  }
+  [data-tip]:hover::after,
+  [data-tip]:focus-visible::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  [data-tip][data-tip-pos="below"]::after {
+    bottom: auto;
+    top: calc(100% + 6px);
+    transform: translateX(-50%) translateY(-2px);
+  }
+  [data-tip][data-tip-pos="below"]:hover::after,
+  [data-tip][data-tip-pos="below"]:focus-visible::after {
+    transform: translateX(-50%) translateY(0);
+  }
+  [data-tip][data-tip-pos="left"]::after {
+    bottom: 50%; left: auto;
+    right: calc(100% + 6px);
+    transform: translate(2px, 50%);
+  }
+  [data-tip][data-tip-pos="left"]:hover::after {
+    transform: translate(0, 50%);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-tip]::after { transition: opacity 0.12s ease 0.45s; transform: translateX(-50%); }
+    [data-tip][data-tip-pos="left"]::after { transform: translateY(50%); }
+  }
 </style>
 </head>
 <body>
@@ -2737,15 +2790,15 @@
       <span class="cmdk-label">Search clients, tasks, people…</span>
       <span class="cmdk-kbd">⌘K</span>
     </button>
-    <div class="header-icon">
+    <div class="header-icon" tabindex="0" role="button" aria-label="Notifications" data-tip="Notifications" data-tip-pos="below">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       <span class="notif-dot"></span>
     </div>
-    <button class="theme-toggle" aria-label="Toggle dark mode" onclick="toggleTheme()">
+    <button class="theme-toggle" aria-label="Toggle dark mode" onclick="toggleTheme()" data-tip="Toggle theme" data-tip-pos="below">
       <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
     </button>
-    <div class="avatar">NT</div>
+    <div class="avatar" tabindex="0" role="button" aria-label="Nikko Trinidad" data-tip="Nikko Trinidad (You)" data-tip-pos="below">NT</div>
   </div>
 </div>
 
@@ -2805,7 +2858,7 @@
         <div class="column-title">To Do</div>
         <div class="column-count">2</div>
       </div>
-      <div class="column-menu-wrap"><button class="column-menu" onclick="toggleColMenu(event)" aria-label="List options">⋯</button></div>
+      <div class="column-menu-wrap"><button class="column-menu" onclick="toggleColMenu(event)" aria-label="List options" data-tip="List options" data-tip-pos="below">⋯</button></div>
     </div>
     <div class="column-cards">
       <div class="card" data-priority="high" data-assignees="sc,jc">
@@ -2847,7 +2900,7 @@
         <div class="column-title">In Progress</div>
         <div class="column-count">2</div>
       </div>
-      <div class="column-menu-wrap"><button class="column-menu" onclick="toggleColMenu(event)" aria-label="List options">⋯</button></div>
+      <div class="column-menu-wrap"><button class="column-menu" onclick="toggleColMenu(event)" aria-label="List options" data-tip="List options" data-tip-pos="below">⋯</button></div>
     </div>
     <div class="column-cards">
       <div class="card" data-priority="high" data-assignees="nt,ma">
@@ -2892,7 +2945,7 @@
         <div class="column-title">Blocked</div>
         <div class="column-count">2</div>
       </div>
-      <div class="column-menu-wrap"><button class="column-menu" onclick="toggleColMenu(event)" aria-label="List options">⋯</button></div>
+      <div class="column-menu-wrap"><button class="column-menu" onclick="toggleColMenu(event)" aria-label="List options" data-tip="List options" data-tip-pos="below">⋯</button></div>
     </div>
     <div class="column-cards">
       <div class="card" data-priority="high" data-assignees="ma">
@@ -2932,7 +2985,7 @@
         <div class="column-title">Needs Review</div>
         <div class="column-count">1</div>
       </div>
-      <div class="column-menu-wrap"><button class="column-menu" onclick="toggleColMenu(event)" aria-label="List options">⋯</button></div>
+      <div class="column-menu-wrap"><button class="column-menu" onclick="toggleColMenu(event)" aria-label="List options" data-tip="List options" data-tip-pos="below">⋯</button></div>
     </div>
     <div class="column-cards">
       <div class="card" data-priority="medium" data-assignees="nt,cp,sc,jcv">
@@ -2963,7 +3016,7 @@
         <div class="column-title">Done</div>
         <div class="column-count">1</div>
       </div>
-      <div class="column-menu-wrap"><button class="column-menu" onclick="toggleColMenu(event)" aria-label="List options">⋯</button></div>
+      <div class="column-menu-wrap"><button class="column-menu" onclick="toggleColMenu(event)" aria-label="List options" data-tip="List options" data-tip-pos="below">⋯</button></div>
     </div>
     <div class="column-cards">
       <div class="card is-done" data-assignees="jc">
@@ -3002,10 +3055,10 @@
     <div class="card-modal-main">
       <div class="card-titlebar">
         <div class="titlebar-actions">
-          <button class="tb-btn" aria-label="Share">
+          <button class="tb-btn" aria-label="Share" data-tip="Share card" data-tip-pos="below">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
           </button>
-          <button class="tb-btn" onclick="toggleTbMenu(event)" aria-label="More">
+          <button class="tb-btn" onclick="toggleTbMenu(event)" aria-label="More" data-tip="More actions" data-tip-pos="below">
             <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
           </button>
           <div class="tb-menu" id="tbMenu" onclick="event.stopPropagation()">
@@ -3028,7 +3081,7 @@
             </div>
           </div>
           <span class="tb-sep" aria-hidden="true"></span>
-          <button class="tb-btn tb-close" onclick="closeCardPanel()" aria-label="Close">
+          <button class="tb-btn tb-close" onclick="closeCardPanel()" aria-label="Close" data-tip="Close (Esc)" data-tip-pos="below">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
@@ -3052,7 +3105,7 @@
             </div>
             <div class="meta-value">
               <div class="assignee-container" id="assigneeContainer">
-                <button class="assignee-add" id="assigneeAddBtn" aria-label="Add assignee" onclick="openAssigneeDropdown(event)">+</button>
+                <button class="assignee-add" id="assigneeAddBtn" aria-label="Add assignee" data-tip="Add assignee" data-tip-pos="below" onclick="openAssigneeDropdown(event)">+</button>
               </div>
             </div>
           </div>
@@ -3085,7 +3138,7 @@
             <div class="meta-value">
               <span class="label-pill label-design">Design</span>
               <span class="label-pill label-feature">Feature</span>
-              <button class="assignee-add" aria-label="Add label">+</button>
+              <button class="assignee-add" aria-label="Add label" data-tip="Add label" data-tip-pos="below">+</button>
             </div>
           </div>
         </div>
@@ -3889,7 +3942,7 @@ function addColumnCommit(){
         '<div class="column-title">' + escapeHtml(name) + '</div>' +
         '<div class="column-count">0</div>' +
       '</div>' +
-      '<div class="column-menu-wrap"><button class="column-menu" onclick="toggleColMenu(event)" aria-label="List options">⋯</button></div>' +
+      '<div class="column-menu-wrap"><button class="column-menu" onclick="toggleColMenu(event)" aria-label="List options" data-tip="List options" data-tip-pos="below">⋯</button></div>' +
     '</div>' +
     '<div class="column-cards">' +
       '<button class="add-card-btn" onclick="addCardStart(this)">＋ Add Card</button>' +
