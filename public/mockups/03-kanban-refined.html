@@ -1083,11 +1083,27 @@
   }
   .sidebar-tabs {
     display: flex;
-    padding: 10px 14px 0;
+    align-items: center;
+    padding: 10px 8px 0 14px;
     gap: 4px;
     border-bottom: 1px solid var(--hairline-soft);
     flex-shrink: 0;
   }
+  .modal-close {
+    margin-left: auto;
+    margin-bottom: 7px;
+    width: 32px; height: 32px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    flex-shrink: 0;
+  }
+  .modal-close:hover { background: var(--hover-tint); color: var(--text); }
+  .modal-close svg { width: 16px; height: 16px; }
   .sidebar-tab {
     padding: 9px 14px;
     font-size: 13px; font-weight: 500;
@@ -3080,10 +3096,6 @@
               Delete card
             </div>
           </div>
-          <span class="tb-sep" aria-hidden="true"></span>
-          <button class="tb-btn tb-close" onclick="closeCardPanel()" aria-label="Close" data-tip="Close (Esc)" data-tip-pos="below">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
         </div>
       </div>
 
@@ -3205,6 +3217,9 @@
         </button>
         <button class="sidebar-tab" data-tab="activity" onclick="switchSidebarTab('activity')">
           Activity Log <span class="tab-count">4</span>
+        </button>
+        <button class="modal-close" onclick="closeCardPanel()" aria-label="Close" data-tip="Close (Esc)" data-tip-pos="below">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
 
