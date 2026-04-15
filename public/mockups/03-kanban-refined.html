@@ -2473,6 +2473,72 @@
     .toast { animation: none; }
     .toast.leaving { animation: none; opacity: 0; }
   }
+
+  /* ───── Reply composer ───── */
+  .reply-composer {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 8px 0 4px;
+    padding: 10px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--accent) 6%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--border));
+  }
+  .reply-composer textarea {
+    width: 100%;
+    min-height: 44px;
+    max-height: 160px;
+    resize: vertical;
+    background: var(--bg-elevated, transparent);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font: inherit;
+    font-size: 13px;
+    line-height: 1.4;
+    outline: none;
+  }
+  .reply-composer textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+  }
+  .reply-composer-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+  .reply-composer-actions .reply-hint {
+    flex: 1;
+    align-self: center;
+    font-size: 11px;
+    color: var(--text-muted, #86868b);
+  }
+  .reply-composer-actions button {
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    cursor: pointer;
+  }
+  .reply-composer-actions .reply-cancel {
+    background: transparent;
+    color: var(--text-primary);
+    border-color: var(--border);
+  }
+  .reply-composer-actions .reply-cancel:hover {
+    background: color-mix(in srgb, var(--text-primary) 6%, transparent);
+  }
+  .reply-composer-actions .reply-send {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+  .reply-composer-actions .reply-send:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
 </style>
 </head>
 <body>
@@ -4115,6 +4181,134 @@ function tbDeleteCard(){
   tbCloseMenu();
   _removeCurrentCardWithUndo('Card deleted');
 }
+
+/* ───── Enter-to-send on main comment input ───── */
+(function(){
+  var input = document.getElementById('commentInput');
+  if(!input) return;
+  input.addEventListener('keydown', function(e){
+    if(e.key === 'Enter' && !e.shiftKey && !e.isComposing){
+      e.preventDefault();
+      sendComment();
+    }
+  });
+})();
+
+/* ───── Inline reply composer ───── */
+function openReplyComposer(comment){
+  var body = comment.querySelector(':scope > .comment-body');
+  if(!body) return;
+  var existing = body.querySelector(':scope > .reply-composer');
+  if(existing){
+    var ta0 = existing.querySelector('textarea');
+    if(ta0) ta0.focus();
+    return;
+  }
+  var wrap = document.createElement('div');
+  wrap.className = 'reply-composer';
+  wrap.innerHTML =
+    '<textarea placeholder="Write a reply…" rows="1"></textarea>' +
+    '<div class="reply-composer-actions">' +
+      '<span class="reply-hint">Enter to send · Shift+Enter for newline</span>' +
+      '<button class="reply-cancel" type="button">Cancel</button>' +
+      '<button class="reply-send" type="button" disabled>Send</button>' +
+    '</div>';
+  var anchor = body.querySelector(':scope > .replies-toggle')
+    || body.querySelector(':scope > .replies');
+  if(anchor) body.insertBefore(wrap, anchor);
+  else body.appendChild(wrap);
+
+  var ta = wrap.querySelector('textarea');
+  var send = wrap.querySelector('.reply-send');
+  var cancel = wrap.querySelector('.reply-cancel');
+
+  function commit(){
+    var v = ta.value.trim();
+    if(!v) return;
+    sendReply(comment, v);
+    wrap.remove();
+  }
+  ta.addEventListener('input', function(){ send.disabled = !ta.value.trim(); });
+  ta.addEventListener('keydown', function(e){
+    if(e.key === 'Enter' && !e.shiftKey && !e.isComposing){
+      e.preventDefault();
+      commit();
+    } else if(e.key === 'Escape'){
+      e.preventDefault();
+      wrap.remove();
+    }
+  });
+  send.addEventListener('click', commit);
+  cancel.addEventListener('click', function(){ wrap.remove(); });
+  ta.focus();
+}
+
+function sendReply(parentComment, text){
+  text = (text || '').trim();
+  if(!text) return;
+  var body = parentComment.querySelector(':scope > .comment-body');
+  if(!body) return;
+  var replies = body.querySelector(':scope > .replies');
+  if(!replies){
+    replies = document.createElement('div');
+    replies.className = 'replies open';
+    replies.setAttribute('data-reply-count', '0');
+    body.appendChild(replies);
+  }
+  var now = new Date();
+  var stamp = now.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  var node = document.createElement('div');
+  node.className = 'comment';
+  node.innerHTML =
+    '<div class="comment-avatar">NT</div>' +
+    '<div class="comment-body">' +
+      '<div class="comment-bubble you">' +
+        '<div class="comment-author">Nikko Trinidad <span class="you-badge">You</span></div>' +
+        '<div class="comment-text">' + escapeHtml(text).replace(/\n/g, '<br>') + '</div>' +
+      '</div>' +
+      '<div class="comment-meta"><span>' + stamp + '</span><button>Reply</button></div>' +
+    '</div>';
+  replies.appendChild(node);
+  replies.classList.add('open');
+
+  var count = (parseInt(replies.getAttribute('data-reply-count'), 10) || 0) + 1;
+  replies.setAttribute('data-reply-count', String(count));
+
+  var toggle = body.querySelector(':scope > .replies-toggle');
+  var word = count === 1 ? 'reply' : 'replies';
+  if(!toggle){
+    toggle = document.createElement('button');
+    toggle.className = 'replies-toggle expanded';
+    toggle.setAttribute('onclick', 'toggleReplies(this)');
+    toggle.innerHTML = '<span class="chev">›</span><span class="replies-toggle-text">Hide ' + count + ' ' + word + '</span>';
+    body.insertBefore(toggle, replies);
+  } else {
+    toggle.classList.add('expanded');
+    var txt = toggle.querySelector('.replies-toggle-text');
+    if(txt) txt.textContent = 'Hide ' + count + ' ' + word;
+  }
+
+  var tabCount = document.querySelector('.sidebar-tab[data-tab="comments"] .tab-count');
+  if(tabCount){
+    var n = parseInt(tabCount.textContent, 10);
+    if(!isNaN(n)) tabCount.textContent = (n + 1);
+  }
+
+  node.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+/* Reply button click → open composer (event delegation on sidebar) */
+(function(){
+  var sidebar = document.querySelector('.card-modal-sidebar');
+  if(!sidebar) return;
+  sidebar.addEventListener('click', function(e){
+    var btn = e.target.closest('.comment-meta button');
+    if(!btn) return;
+    if(btn.textContent.trim() !== 'Reply') return;
+    var comment = btn.closest('.comment');
+    if(comment) openReplyComposer(comment);
+  });
+})();
 
 /* ───── Drag & drop ───── */
 (function(){
