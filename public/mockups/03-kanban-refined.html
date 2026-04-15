@@ -2247,6 +2247,9 @@ function openColContextMenu(e, col){
   menu.className = 'col-menu open';
   menu.innerHTML = html;
   menu.style.position = 'fixed';
+  menu.style.right = 'auto';
+  menu.style.bottom = 'auto';
+  menu.style.width = 'max-content';
   menu.style.zIndex = '100';
   menu.style.visibility = 'hidden';
   document.body.appendChild(menu);
