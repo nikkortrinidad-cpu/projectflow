@@ -1210,14 +1210,16 @@
     display: inline-flex; align-items: center; gap: 6px;
     margin-top: 8px;
     font-size: 12px;
-    color: #0a84ff;
+    color: var(--text-soft);
     cursor: pointer;
-    font-weight: 600;
+    font-weight: 500;
     background: transparent; border: none;
     font-family: inherit;
     padding: 2px 0;
     letter-spacing: -0.005em;
+    transition: color 0.15s;
   }
+  .replies-toggle:hover { color: var(--text); }
   .replies-toggle .chev {
     display: inline-block;
     transition: transform 0.15s;
