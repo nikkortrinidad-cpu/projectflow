@@ -3999,6 +3999,7 @@ function startDescriptionEdit(){
 
   function finish(save){
     desc.removeAttribute('contenteditable');
+    desc.blur();
     if(!save){
       if(wasPlaceholder){
         desc.textContent = 'No description yet. Click to add one.';
