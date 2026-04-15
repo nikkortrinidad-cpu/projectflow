@@ -302,6 +302,7 @@
     font-size: 13px; font-weight: 500;
     font-feature-settings: "tnum";
   }
+  .column-menu-wrap { position: relative; }
   .column-menu {
     cursor: pointer; color: var(--text-faint);
     font-size: 18px;
@@ -309,8 +310,54 @@
     display: flex; align-items: center; justify-content: center;
     border-radius: 6px;
     transition: background 0.15s, color 0.15s;
+    background: transparent; border: none; font-family: inherit;
+    padding: 0;
   }
-  .column-menu:hover { background: var(--hairline); color: var(--text-muted); }
+  .column-menu:hover,
+  .column-menu.open { background: var(--hairline); color: var(--text-muted); }
+  .col-menu {
+    display: none;
+    position: absolute;
+    top: 30px; right: 0;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    padding: 6px;
+    min-width: 200px;
+    z-index: 20;
+  }
+  .col-menu.open { display: block; }
+  .col-menu-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    transition: background 0.12s;
+  }
+  .col-menu-item:hover { background: var(--bg-soft); }
+  .col-menu-item svg { width: 14px; height: 14px; flex-shrink: 0; }
+  .col-menu-item.warn svg { stroke: #ff9f0a; }
+  .col-menu-item.danger { color: var(--accent); }
+  .col-menu-divider { height: 1px; background: var(--hairline-soft); margin: 4px 0; }
+
+  /* collapsed column: narrow vertical strip */
+  .column.collapsed { min-width: 56px; max-width: 56px; }
+  .column.collapsed .column-header {
+    flex-direction: column; gap: 10px;
+    padding: 16px 10px; align-items: center;
+  }
+  .column.collapsed .column-title-group {
+    flex-direction: column; gap: 10px;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+  }
+  .column.collapsed .column-title { letter-spacing: 0.12em; }
+  .column.collapsed .column-cards { display: none; }
 
   .column-cards {
     flex: 1;
@@ -1361,7 +1408,7 @@
         <div class="column-title">To Do</div>
         <div class="column-count">3</div>
       </div>
-      <div class="column-menu">⋯</div>
+      <div class="column-menu-wrap"><button class="column-menu" onclick="toggleColMenu(event)" aria-label="List options">⋯</button></div>
     </div>
     <div class="column-cards">
       <div class="card" data-priority="high">
@@ -1415,7 +1462,7 @@
         <div class="column-title">In Progress</div>
         <div class="column-count">3</div>
       </div>
-      <div class="column-menu">⋯</div>
+      <div class="column-menu-wrap"><button class="column-menu" onclick="toggleColMenu(event)" aria-label="List options">⋯</button></div>
     </div>
     <div class="column-cards">
       <div class="card" data-priority="high">
@@ -1473,7 +1520,7 @@
         <div class="column-title">In Review</div>
         <div class="column-count">1</div>
       </div>
-      <div class="column-menu">⋯</div>
+      <div class="column-menu-wrap"><button class="column-menu" onclick="toggleColMenu(event)" aria-label="List options">⋯</button></div>
     </div>
     <div class="column-cards">
       <div class="card" data-priority="medium">
@@ -1504,7 +1551,7 @@
         <div class="column-title">Done</div>
         <div class="column-count">1</div>
       </div>
-      <div class="column-menu">⋯</div>
+      <div class="column-menu-wrap"><button class="column-menu" onclick="toggleColMenu(event)" aria-label="List options">⋯</button></div>
     </div>
     <div class="column-cards">
       <div class="card is-done">
@@ -1926,7 +1973,7 @@ function addColumnCommit(){
         '<div class="column-title">' + escapeHtml(name) + '</div>' +
         '<div class="column-count">0</div>' +
       '</div>' +
-      '<div class="column-menu">⋯</div>' +
+      '<div class="column-menu-wrap"><button class="column-menu" onclick="toggleColMenu(event)" aria-label="List options">⋯</button></div>' +
     '</div>' +
     '<div class="column-cards">' +
       '<button class="add-card-btn" onclick="addCardStart(this)">＋ Add Card</button>' +
@@ -2028,6 +2075,95 @@ function toggleTbMenu(e){
   e.stopPropagation();
   document.getElementById('tbMenu').classList.toggle('open');
 }
+
+/* ───── Column menu ───── */
+var COL_MENU_ITEMS = [
+  { action:'collapse', label:'Collapse list', icon:'<polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/>' },
+  { action:'duplicate', label:'Duplicate list', icon:'<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>' },
+  { divider:true },
+  { action:'archiveCards', label:'Archive all cards', cls:'warn', icon:'<polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/>' },
+  { action:'archiveList', label:'Archive list', cls:'warn', icon:'<polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/>' },
+  { divider:true },
+  { action:'delete', label:'Delete list', cls:'danger', icon:'<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/>' }
+];
+function buildColMenu(){
+  var html = '';
+  COL_MENU_ITEMS.forEach(function(it){
+    if(it.divider){ html += '<div class="col-menu-divider"></div>'; return; }
+    html +=
+      '<div class="col-menu-item ' + (it.cls||'') + '" onclick="colAction(event, \'' + it.action + '\')">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + it.icon + '</svg>' +
+        it.label +
+      '</div>';
+  });
+  return html;
+}
+function toggleColMenu(e){
+  e.stopPropagation();
+  var btn = e.currentTarget;
+  var wrap = btn.closest('.column-menu-wrap');
+  var existing = wrap.querySelector('.col-menu');
+  // close all others
+  document.querySelectorAll('.col-menu.open').forEach(function(m){
+    if(m !== existing) m.classList.remove('open');
+  });
+  document.querySelectorAll('.column-menu.open').forEach(function(b){
+    if(b !== btn) b.classList.remove('open');
+  });
+  if(!existing){
+    existing = document.createElement('div');
+    existing.className = 'col-menu';
+    existing.innerHTML = buildColMenu();
+    existing.addEventListener('click', function(ev){ ev.stopPropagation(); });
+    wrap.appendChild(existing);
+  }
+  var isOpen = existing.classList.toggle('open');
+  btn.classList.toggle('open', isOpen);
+}
+function colAction(e, action){
+  e.stopPropagation();
+  var col = e.currentTarget.closest('.column');
+  var menu = e.currentTarget.closest('.col-menu');
+  var btn = col.querySelector('.column-menu');
+  if(menu) menu.classList.remove('open');
+  if(btn) btn.classList.remove('open');
+  switch(action){
+    case 'collapse': col.classList.toggle('collapsed'); break;
+    case 'duplicate': {
+      var clone = col.cloneNode(true);
+      // reset any inline open/hidden state on the clone
+      clone.classList.remove('collapsed');
+      var titleEl = clone.querySelector('.column-title');
+      if(titleEl) titleEl.textContent = titleEl.textContent + ' (copy)';
+      // remove any attached col-menu so it rebuilds fresh
+      var m = clone.querySelector('.col-menu'); if(m) m.remove();
+      var cm = clone.querySelector('.column-menu'); if(cm) cm.classList.remove('open');
+      col.parentNode.insertBefore(clone, col.nextSibling);
+      break;
+    }
+    case 'archiveCards': {
+      var cards = col.querySelectorAll('.column-cards .card');
+      cards.forEach(function(c){ c.remove(); });
+      var countEl = col.querySelector('.column-count');
+      if(countEl) countEl.textContent = '0';
+      break;
+    }
+    case 'archiveList':
+    case 'delete': col.remove(); break;
+  }
+}
+document.addEventListener('click', function(e){
+  if(e.target.closest('.col-menu')) return;
+  if(e.target.closest('.column-menu')) return;
+  document.querySelectorAll('.col-menu.open').forEach(function(m){ m.classList.remove('open'); });
+  document.querySelectorAll('.column-menu.open').forEach(function(b){ b.classList.remove('open'); });
+});
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape'){
+    document.querySelectorAll('.col-menu.open').forEach(function(m){ m.classList.remove('open'); });
+    document.querySelectorAll('.column-menu.open').forEach(function(b){ b.classList.remove('open'); });
+  }
+});
 function switchSidebarTab(tab){
   document.querySelectorAll('.sidebar-tab').forEach(function(t){
     t.classList.toggle('active', t.dataset.tab === tab);
