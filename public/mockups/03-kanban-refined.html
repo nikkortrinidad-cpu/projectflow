@@ -1128,18 +1128,21 @@
     pointer-events: none;
   }
 
-  /* nested replies: same pattern, shifted to parent-reply avatar center */
+  /* nested replies: reuse the outer thread line — elbow just stretches further
+     to reach the indented nested avatar, so the whole sidebar reads as one
+     continuous thread instead of stacked parallel columns */
   .replies .replies {
     margin-top: 8px;
-    margin-left: -23px;  /* pull left: nested-reply body starts at +36, nested-reply-avatar center at +13 → -23 */
-    padding-left: 27px;
+    margin-left: 28px;  /* shift the nested reply block right to show hierarchy */
+    padding-left: 0;
   }
+  /* elbow spans from the outer thread (94px left of the indented nested avatar) */
   .replies .replies > .comment::before {
-    left: -27px;
-    width: 27px;
+    left: -94px;
+    width: 94px;
   }
   .replies .replies > .comment:not(:last-child)::after {
-    left: -27px;
+    left: -94px;
   }
   /* light-mode thread color */
   :root[data-theme="light"] .replies { --thread: rgba(0,0,0,0.22); }
