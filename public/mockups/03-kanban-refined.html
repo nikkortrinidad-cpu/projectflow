@@ -560,6 +560,589 @@
     transition: background 0.15s, color 0.15s;
   }
   .btn-ghost:hover { color: var(--text); background: var(--hairline); }
+
+  /* CARD DETAIL MODAL */
+  .card-modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 1000;
+    align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .card-modal-overlay.open { display: flex; }
+  .card-modal {
+    width: 100%; max-width: 1240px;
+    height: 96vh;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    border-radius: 20px;
+    display: flex;
+    overflow: hidden;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+  }
+  .card-modal-main {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column;
+    border-right: 1px solid var(--hairline);
+  }
+  .card-titlebar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 22px;
+    border-bottom: 1px solid var(--hairline-soft);
+    flex-shrink: 0;
+  }
+  .titlebar-meta {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--text-soft);
+    letter-spacing: -0.005em;
+  }
+  .titlebar-meta svg { width: 13px; height: 13px; opacity: 0.7; }
+  .titlebar-actions { display: inline-flex; align-items: center; gap: 4px; position: relative; }
+  .tb-btn {
+    height: 32px; min-width: 32px;
+    padding: 0 8px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    background: transparent; border: none;
+    border-radius: 8px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: inherit; font-size: 13px; font-weight: 500;
+    letter-spacing: -0.01em;
+    transition: background 0.15s, color 0.15s;
+  }
+  .tb-btn:hover { background: var(--bg-soft); color: var(--text); }
+  .tb-btn svg { width: 16px; height: 16px; }
+  .tb-menu {
+    display: none;
+    position: absolute; top: 38px; right: 0;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    padding: 6px;
+    min-width: 180px;
+    z-index: 10;
+  }
+  .tb-menu.open { display: block; }
+  .tb-menu-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+    letter-spacing: -0.01em;
+  }
+  .tb-menu-item:hover { background: var(--bg-soft); }
+  .tb-menu-item.danger { color: var(--accent); }
+  .tb-menu-divider { height: 1px; background: var(--hairline-soft); margin: 4px 0; }
+
+  .card-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 32px 32px;
+    display: flex; flex-direction: column;
+    gap: 26px;
+  }
+  .card-modal-title {
+    font-size: 22px; font-weight: 600;
+    color: var(--text);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 6px 10px;
+    outline: none;
+    font-family: inherit;
+    letter-spacing: -0.022em;
+    width: 100%;
+    margin-left: -10px;
+  }
+  .card-modal-title:hover { border-color: var(--hairline-soft); }
+  .card-modal-title:focus { border-color: var(--text-faint); background: var(--bg-faint); }
+
+  /* metadata table */
+  .meta-table {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .meta-row {
+    display: flex; align-items: center; gap: 18px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--hairline-soft);
+    min-height: 52px;
+  }
+  .meta-row:nth-last-child(-n+2) { border-bottom: none; }
+  .meta-row:nth-child(2n) { border-left: 1px solid var(--hairline-soft); }
+  .meta-label {
+    display: inline-flex; align-items: center; gap: 8px;
+    width: 110px; flex-shrink: 0;
+    font-size: 11px; font-weight: 600;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .meta-label svg { width: 13px; height: 13px; opacity: 0.7; }
+  .meta-value {
+    flex: 1; min-width: 0;
+    font-size: 13px; color: var(--text);
+    letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  .meta-value.empty { color: var(--text-faint); }
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    display: inline-block; flex-shrink: 0;
+  }
+  .dot-todo { background: #0a84ff; }
+  .dot-progress { background: #ff9f0a; }
+  .dot-review { background: #bf5af2; }
+  .dot-done { background: #30d158; }
+  .dot-low { background: #5e5ce6; }
+  .dot-medium { background: #ff9f0a; }
+  .dot-high { background: #ff453a; }
+  .dot-urgent { background: #ff453a; }
+
+  .assignee-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 10px 3px 3px;
+    background: var(--bg-soft);
+    border-radius: 980px;
+    font-size: 12px;
+    color: var(--text);
+  }
+  .assignee-chip-avatar {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--avatar-bg);
+    color: var(--avatar-fg);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0;
+  }
+  .you-tag {
+    font-size: 10px;
+    color: var(--text-soft);
+    margin-left: 2px;
+  }
+  .assignee-add {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 1px dashed var(--hairline);
+    background: transparent;
+    color: var(--text-soft);
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    font-family: inherit;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .assignee-add:hover { border-color: var(--text-faint); color: var(--text); }
+
+  .label-pill {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 980px;
+    font-size: 11px; font-weight: 500;
+    color: white;
+    letter-spacing: -0.005em;
+  }
+  .label-design { background: #ff2d55; }
+  .label-feature { background: #0a84ff; }
+  .label-bug { background: #ff453a; }
+  .label-content { background: #bf5af2; }
+  .label-dev { background: #30d158; color: #003311; }
+
+  .meta-date {
+    font-size: 13px; color: var(--text);
+    font-feature-settings: "tnum";
+  }
+  .meta-date.overdue { color: var(--accent); font-weight: 600; }
+
+  /* sections */
+  .section-label {
+    font-size: 11px; font-weight: 600;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .description-box {
+    background: var(--bg-faint);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 12px;
+    padding: 16px 18px;
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.6;
+    letter-spacing: -0.005em;
+    min-height: 90px;
+    cursor: text;
+  }
+
+  /* progress + checklist */
+  .progress-section { display: flex; flex-direction: column; gap: 10px; }
+  .progress-header { display: flex; justify-content: space-between; align-items: baseline; }
+  .progress-pct {
+    font-size: 13px; font-weight: 600; color: var(--text);
+    font-feature-settings: "tnum";
+  }
+  .progress-bar {
+    height: 6px;
+    background: var(--bg-soft);
+    border-radius: 980px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: #30d158;
+    border-radius: 980px;
+    transition: width 0.3s ease;
+  }
+
+  .checklist {
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .checklist-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--hairline-soft);
+    font-size: 13px;
+    transition: background 0.15s;
+  }
+  .checklist-row:last-child { border-bottom: none; }
+  .checklist-row:hover { background: var(--bg-soft); }
+  .checklist-checkbox {
+    width: 18px; height: 18px;
+    border-radius: 6px;
+    border: 1.5px solid var(--text-faint);
+    background: transparent;
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .checklist-checkbox.checked {
+    background: #30d158;
+    border-color: #30d158;
+    color: white;
+  }
+  .checklist-checkbox svg { width: 12px; height: 12px; display: none; }
+  .checklist-checkbox.checked svg { display: block; }
+  .checklist-text {
+    flex: 1;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .checklist-text.done { color: var(--text-faint); text-decoration: line-through; }
+  .checklist-assignee {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--avatar-bg);
+    color: var(--avatar-fg);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .checklist-assignee.empty {
+    background: transparent;
+    border: 1px dashed var(--hairline);
+    color: var(--text-faint);
+  }
+  .checklist-add-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 16px;
+    font-size: 13px; color: var(--text-soft);
+    cursor: pointer;
+    border-top: 1px solid var(--hairline-soft);
+    background: var(--bg-faint);
+  }
+  .checklist-add-row:hover { color: var(--text); }
+
+  /* SIDEBAR */
+  .card-modal-sidebar {
+    width: 420px; flex-shrink: 0;
+    display: flex; flex-direction: column;
+    background: var(--bg-faint);
+  }
+  .sidebar-tabs {
+    display: flex;
+    padding: 10px 14px 0;
+    gap: 4px;
+    border-bottom: 1px solid var(--hairline-soft);
+    flex-shrink: 0;
+  }
+  .sidebar-tab {
+    padding: 9px 14px;
+    font-size: 13px; font-weight: 500;
+    color: var(--text-soft);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 6px;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .sidebar-tab:hover { color: var(--text); }
+  .sidebar-tab.active { color: var(--text); font-weight: 600; border-bottom-color: var(--text); }
+  .tab-count {
+    font-size: 10px; font-weight: 700;
+    background: var(--bg-soft);
+    color: var(--text-muted);
+    padding: 1px 7px;
+    border-radius: 980px;
+    font-feature-settings: "tnum";
+  }
+  .sidebar-tab.active .tab-count { background: var(--text); color: var(--bg); }
+
+  .sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px;
+    display: none;
+  }
+  .sidebar-content.active { display: block; }
+
+  /* comments */
+  .comment { display: flex; gap: 10px; margin-bottom: 18px; }
+  .comment:last-child { margin-bottom: 6px; }
+  .comment-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--avatar-bg);
+    color: var(--avatar-fg);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .comment-body { flex: 1; min-width: 0; }
+  .comment-bubble {
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline-soft);
+    padding: 10px 14px;
+    border-radius: 14px;
+  }
+  .comment-bubble.you {
+    background: rgba(10, 132, 255, 0.08);
+    border-color: rgba(10, 132, 255, 0.18);
+  }
+  .comment-author {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+    letter-spacing: -0.005em;
+  }
+  .you-badge {
+    font-size: 9px; font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: var(--bg-soft);
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  .comment-text {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.5;
+    letter-spacing: -0.005em;
+  }
+  .comment-text .mention {
+    background: rgba(10, 132, 255, 0.18);
+    color: #0a84ff;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .comment-meta {
+    display: flex; align-items: center; gap: 12px;
+    margin: 6px 0 0 4px;
+    font-size: 11px; color: var(--text-soft);
+  }
+  .comment-meta button {
+    background: transparent; border: none; cursor: pointer;
+    font-size: 11px; color: var(--text-soft);
+    font-family: inherit; font-weight: 600;
+    padding: 0;
+    letter-spacing: -0.005em;
+  }
+  .comment-meta button:hover { color: var(--text); }
+  .reaction-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 1px 7px;
+    background: var(--bg-soft);
+    border-radius: 980px;
+    font-size: 11px;
+    color: var(--text-muted);
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+  }
+  .reaction-pill:hover { background: var(--hairline); }
+  .reaction-pill.you {
+    background: rgba(10, 132, 255, 0.15);
+    color: #0a84ff;
+    border-color: rgba(10, 132, 255, 0.25);
+  }
+  .replies-toggle {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-top: 8px;
+    font-size: 12px;
+    color: #0a84ff;
+    cursor: pointer;
+    font-weight: 600;
+    background: transparent; border: none;
+    font-family: inherit;
+    padding: 2px 0;
+    letter-spacing: -0.005em;
+  }
+  .replies-toggle .chev {
+    display: inline-block;
+    transition: transform 0.15s;
+  }
+  .replies-toggle.expanded .chev { transform: rotate(90deg); }
+  .replies {
+    display: none;
+    margin-top: 10px;
+    padding-left: 22px;
+    border-left: 1px solid var(--hairline-soft);
+    margin-left: 14px;
+  }
+  .replies.open { display: block; }
+  .replies .comment-avatar {
+    width: 26px; height: 26px;
+    font-size: 10px;
+  }
+  .replies .comment-bubble { border-radius: 12px; padding: 8px 12px; }
+
+  /* activity log */
+  .activity-list { display: flex; flex-direction: column; gap: 16px; }
+  .activity-item {
+    display: flex; gap: 12px;
+    position: relative;
+  }
+  .activity-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 5px; top: 18px; bottom: -16px;
+    width: 1px;
+    background: var(--hairline-soft);
+  }
+  .activity-dot {
+    width: 11px; height: 11px;
+    border-radius: 50%;
+    background: var(--bg-soft);
+    border: 2px solid var(--bg-faint);
+    flex-shrink: 0;
+    margin-top: 4px;
+    z-index: 1;
+  }
+  .activity-text {
+    flex: 1;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    letter-spacing: -0.005em;
+  }
+  .activity-text strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+  .activity-time {
+    font-size: 10px;
+    color: var(--text-faint);
+    margin-top: 3px;
+    font-feature-settings: "tnum";
+  }
+
+  /* comment input */
+  .comment-input-wrap {
+    border-top: 1px solid var(--hairline);
+    padding: 14px 16px;
+    background: var(--bg-faint);
+    flex-shrink: 0;
+  }
+  .comment-input-area {
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    padding: 10px 12px;
+    transition: border-color 0.15s;
+  }
+  .comment-input-area:focus-within { border-color: var(--text-faint); }
+  .comment-input-area textarea {
+    width: 100%;
+    border: none; outline: none;
+    background: transparent;
+    resize: none;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--text);
+    letter-spacing: -0.005em;
+    min-height: 36px;
+    max-height: 120px;
+  }
+  .comment-input-area textarea::placeholder { color: var(--text-faint); }
+  .comment-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 4px;
+  }
+  .toolbar-group { display: flex; align-items: center; gap: 2px; }
+  .toolbar-btn {
+    width: 26px; height: 26px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: transparent; border: none;
+    border-radius: 6px;
+    color: var(--text-soft);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .toolbar-btn:hover { background: var(--bg-soft); color: var(--text); }
+  .toolbar-btn svg { width: 14px; height: 14px; }
+  .send-group {
+    display: inline-flex;
+    border-radius: 980px;
+    overflow: hidden;
+    background: var(--text);
+    transition: opacity 0.15s;
+  }
+  .send-group.disabled { opacity: 0.35; cursor: not-allowed; }
+  .send-group:hover:not(.disabled) { opacity: 0.88; }
+  .send-btn, .schedule-btn {
+    background: transparent;
+    color: var(--bg);
+    border: none;
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: inherit;
+  }
+  .send-btn { padding: 6px 14px; font-size: 12px; font-weight: 700; gap: 6px; letter-spacing: -0.01em; }
+  .send-btn svg { width: 13px; height: 13px; }
+  .schedule-btn { padding: 6px 8px; border-left: 1px solid rgba(0,0,0,0.15); }
+  .schedule-btn svg { width: 12px; height: 12px; }
+
+  /* empty state */
+  .sidebar-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-soft);
+  }
+  .sidebar-empty svg { width: 36px; height: 36px; opacity: 0.3; margin-bottom: 12px; }
+  .sidebar-empty h4 { font-size: 14px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; letter-spacing: -0.01em; }
+  .sidebar-empty p { font-size: 12px; }
 </style>
 </head>
 <body>
@@ -838,6 +1421,306 @@
   <a href="01-clients-refined.html">← Back to Clients</a> · This is your existing Kanban board, now scoped to a specific service
 </div>
 
+<!-- Card Detail Modal -->
+<div class="card-modal-overlay" id="cardModalOverlay" onclick="closeCardPanel(event)">
+  <div class="card-modal" onclick="event.stopPropagation()">
+
+    <!-- LEFT: main content -->
+    <div class="card-modal-main">
+      <div class="card-titlebar">
+        <div class="titlebar-meta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Created Mar 1, 2026
+        </div>
+        <div class="titlebar-actions">
+          <button class="tb-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            Share
+          </button>
+          <button class="tb-btn" onclick="toggleTbMenu(event)" aria-label="More">
+            <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+          </button>
+          <div class="tb-menu" id="tbMenu" onclick="event.stopPropagation()">
+            <div class="tb-menu-item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Duplicate card
+            </div>
+            <div class="tb-menu-item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              Copy link
+            </div>
+            <div class="tb-menu-divider"></div>
+            <div class="tb-menu-item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff9f0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+              Archive card
+            </div>
+            <div class="tb-menu-item danger">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+              Delete card
+            </div>
+          </div>
+          <button class="tb-btn" onclick="closeCardPanel()" aria-label="Close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="card-modal-body">
+        <input type="text" class="card-modal-title" value="Update homepage hero section design">
+
+        <div class="meta-table">
+          <div class="meta-row">
+            <div class="meta-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              Status
+            </div>
+            <div class="meta-value"><span class="status-dot dot-progress"></span>In Progress</div>
+          </div>
+          <div class="meta-row">
+            <div class="meta-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Assignees
+            </div>
+            <div class="meta-value">
+              <span class="assignee-chip"><span class="assignee-chip-avatar">SC</span>Sarah Chen</span>
+              <span class="assignee-chip"><span class="assignee-chip-avatar">JC</span>Joshua Castilla</span>
+              <button class="assignee-add" aria-label="Add assignee">+</button>
+            </div>
+          </div>
+          <div class="meta-row">
+            <div class="meta-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Start Date
+            </div>
+            <div class="meta-value"><span class="meta-date">Mar 1, 2026</span></div>
+          </div>
+          <div class="meta-row">
+            <div class="meta-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+              Priority
+            </div>
+            <div class="meta-value"><span class="status-dot dot-high"></span>High</div>
+          </div>
+          <div class="meta-row">
+            <div class="meta-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Due Date
+            </div>
+            <div class="meta-value"><span class="meta-date">Mar 15, 2026</span></div>
+          </div>
+          <div class="meta-row">
+            <div class="meta-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+              Labels
+            </div>
+            <div class="meta-value">
+              <span class="label-pill label-design">Design</span>
+              <span class="label-pill label-feature">Feature</span>
+              <button class="assignee-add" aria-label="Add label">+</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-label"><span>Description</span></div>
+          <div class="description-box">Redesign the hero section of the homepage for Acme Corporation's website redesign project. Update heading hierarchy, color scheme, and call-to-action buttons to match new branding guidelines. Coordinate with the design team on motion choices and confirm with the client before merging.</div>
+        </div>
+
+        <div class="progress-section">
+          <div class="progress-header">
+            <span class="section-label" style="margin-bottom:0;">Progress</span>
+            <span class="progress-pct">2 of 5 · 40%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:40%"></div></div>
+        </div>
+
+        <div>
+          <div class="section-label"><span>Checklist</span><span class="progress-pct" style="font-size:11px; color: var(--text-soft);">2/5 done</span></div>
+          <div class="checklist">
+            <div class="checklist-row">
+              <button class="checklist-checkbox" onclick="toggleChecklistItem(this)" aria-label="Toggle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+              <span class="checklist-text">Research competitor hero sections</span>
+              <span class="checklist-assignee">NT</span>
+            </div>
+            <div class="checklist-row">
+              <button class="checklist-checkbox" onclick="toggleChecklistItem(this)" aria-label="Toggle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+              <span class="checklist-text">Create initial sketches</span>
+              <span class="checklist-assignee">SC</span>
+            </div>
+            <div class="checklist-row">
+              <button class="checklist-checkbox checked" onclick="toggleChecklistItem(this)" aria-label="Toggle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+              <span class="checklist-text done">Finalize color palette</span>
+              <span class="checklist-assignee">JC</span>
+            </div>
+            <div class="checklist-row">
+              <button class="checklist-checkbox checked" onclick="toggleChecklistItem(this)" aria-label="Toggle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+              <span class="checklist-text done">Update CSS and animations</span>
+              <span class="checklist-assignee">SC</span>
+            </div>
+            <div class="checklist-row">
+              <button class="checklist-checkbox" onclick="toggleChecklistItem(this)" aria-label="Toggle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+              <span class="checklist-text">Get client feedback</span>
+              <span class="checklist-assignee empty">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </span>
+            </div>
+            <div class="checklist-add-row">＋ Add Task</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: sidebar -->
+    <div class="card-modal-sidebar">
+      <div class="sidebar-tabs">
+        <button class="sidebar-tab active" data-tab="comments" onclick="switchSidebarTab('comments')">
+          Comments <span class="tab-count">3</span>
+        </button>
+        <button class="sidebar-tab" data-tab="activity" onclick="switchSidebarTab('activity')">
+          Activity Log <span class="tab-count">4</span>
+        </button>
+      </div>
+
+      <div class="sidebar-content active" data-tab="comments">
+
+        <div class="comment">
+          <div class="comment-avatar">JC</div>
+          <div class="comment-body">
+            <div class="comment-bubble">
+              <div class="comment-author">Joshua Castilla</div>
+              <div class="comment-text">I think we should use a more prominent gradient. The current design feels flat.</div>
+            </div>
+            <div class="comment-meta">
+              <span>Mar 4, 2:15 PM</span>
+              <span class="reaction-pill">👍 2</span>
+              <button>Reply</button>
+            </div>
+            <button class="replies-toggle" onclick="toggleReplies(this)">
+              <span class="chev">›</span> 1 reply
+            </button>
+            <div class="replies">
+              <div class="comment">
+                <div class="comment-avatar">SC</div>
+                <div class="comment-body">
+                  <div class="comment-bubble you">
+                    <div class="comment-author">Sarah Chen <span class="you-badge">You</span></div>
+                    <div class="comment-text"><span class="mention">@Joshua</span> Thanks for the feedback! I'll explore gradient options today.</div>
+                  </div>
+                  <div class="comment-meta">
+                    <span>Mar 4, 3:30 PM</span>
+                    <span class="reaction-pill you">👍 1</span>
+                    <button>Reply</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="comment">
+          <div class="comment-avatar">SC</div>
+          <div class="comment-body">
+            <div class="comment-bubble you">
+              <div class="comment-author">Sarah Chen <span class="you-badge">You</span></div>
+              <div class="comment-text">Just pushed the updated hero component to the dev branch. Ready for review!</div>
+            </div>
+            <div class="comment-meta">
+              <span>Mar 5, 10:45 AM</span>
+              <span class="reaction-pill">🙏 1</span>
+              <span class="reaction-pill you">👍 2</span>
+              <button>Reply</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="comment">
+          <div class="comment-avatar">NT</div>
+          <div class="comment-body">
+            <div class="comment-bubble you">
+              <div class="comment-author">Nikko Trinidad <span class="you-badge">You</span></div>
+              <div class="comment-text">Looks great! I'll schedule client review for tomorrow afternoon.</div>
+            </div>
+            <div class="comment-meta">
+              <span>Mar 5, 2:30 PM</span>
+              <button>Add reaction</button>
+              <button>Reply</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="sidebar-content" data-tab="activity">
+        <div class="activity-list">
+          <div class="activity-item">
+            <div class="activity-dot"></div>
+            <div>
+              <div class="activity-text"><strong>Joshua Castilla</strong> moved this card from <strong>To Do</strong> to <strong>In Progress</strong></div>
+              <div class="activity-time">Mar 4, 1:20 PM</div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot"></div>
+            <div>
+              <div class="activity-text"><strong>Sarah Chen</strong> added a comment</div>
+              <div class="activity-time">Mar 5, 10:45 AM</div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot"></div>
+            <div>
+              <div class="activity-text"><strong>Nikko Trinidad</strong> assigned themselves</div>
+              <div class="activity-time">Mar 5, 2:00 PM</div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot"></div>
+            <div>
+              <div class="activity-text"><strong>Nikko Trinidad</strong> added a comment</div>
+              <div class="activity-time">Mar 5, 2:30 PM</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="comment-input-wrap">
+        <div class="comment-input-area">
+          <textarea id="commentInput" placeholder="Write a comment…" rows="2" oninput="updateSendState()"></textarea>
+          <div class="comment-toolbar">
+            <div class="toolbar-group">
+              <button class="toolbar-btn" title="Format"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg></button>
+              <button class="toolbar-btn" title="Mention"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/></svg></button>
+              <button class="toolbar-btn" title="Emoji"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>
+              <button class="toolbar-btn" title="GIF"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+              <button class="toolbar-btn" title="Attach"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
+            </div>
+            <div class="send-group disabled" id="sendGroup">
+              <button class="send-btn" onclick="sendComment()">
+                Send
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              </button>
+              <button class="schedule-btn" title="Schedule send">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <script>
 function toggleTheme() {
   var cur = document.documentElement.getAttribute('data-theme');
@@ -970,6 +1853,102 @@ function addCardCancel(form){
 document.getElementById('addColumnInput').addEventListener('keydown', function(e){
   if(e.key === 'Enter'){ e.preventDefault(); addColumnCommit(); }
   else if(e.key === 'Escape'){ addColumnCancel(); }
+});
+
+/* ---------- Card Detail Panel ---------- */
+function openCardPanel(cardEl){
+  if(cardEl){
+    var titleEl = cardEl.querySelector('.card-title');
+    if(titleEl){
+      var modalTitle = document.querySelector('.card-modal-title');
+      if(modalTitle) modalTitle.value = titleEl.textContent.trim();
+    }
+  }
+  document.getElementById('cardModalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeCardPanel(e){
+  if(e && e.target && e.target.closest('.card-modal')) return;
+  document.getElementById('cardModalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  var menu = document.getElementById('tbMenu');
+  if(menu) menu.classList.remove('open');
+}
+function toggleTbMenu(e){
+  e.stopPropagation();
+  document.getElementById('tbMenu').classList.toggle('open');
+}
+function switchSidebarTab(tab){
+  document.querySelectorAll('.sidebar-tab').forEach(function(t){
+    t.classList.toggle('active', t.dataset.tab === tab);
+  });
+  document.querySelectorAll('.sidebar-content').forEach(function(c){
+    c.classList.toggle('active', c.dataset.tab === tab);
+  });
+}
+function toggleReplies(btn){
+  btn.classList.toggle('expanded');
+  var replies = btn.nextElementSibling;
+  if(replies) replies.classList.toggle('open');
+}
+function toggleChecklistItem(btn){
+  btn.classList.toggle('checked');
+  var text = btn.parentElement.querySelector('.checklist-text');
+  if(text) text.classList.toggle('done', btn.classList.contains('checked'));
+  recalcChecklistProgress();
+}
+function recalcChecklistProgress(){
+  var boxes = document.querySelectorAll('.checklist .checklist-checkbox');
+  if(!boxes.length) return;
+  var done = 0;
+  boxes.forEach(function(b){ if(b.classList.contains('checked')) done++; });
+  var total = boxes.length;
+  var pct = Math.round(done / total * 100);
+  var fill = document.querySelector('.progress-fill');
+  if(fill) fill.style.width = pct + '%';
+  var pcts = document.querySelectorAll('.progress-pct');
+  if(pcts[0]) pcts[0].textContent = done + ' of ' + total + ' · ' + pct + '%';
+  var counter = document.querySelectorAll('.section-label .progress-pct');
+  if(counter[0]) counter[0].textContent = done + '/' + total + ' done';
+}
+function updateSendState(){
+  var input = document.getElementById('commentInput');
+  var group = document.getElementById('sendGroup');
+  if(!input || !group) return;
+  group.classList.toggle('disabled', !input.value.trim());
+}
+function sendComment(){
+  var input = document.getElementById('commentInput');
+  if(!input || !input.value.trim()) return;
+  input.value = '';
+  updateSendState();
+}
+
+/* card click → open panel (event delegation, ignores clicks inside add forms) */
+document.querySelector('.board').addEventListener('click', function(e){
+  if(e.target.closest('.add-card-form')) return;
+  if(e.target.closest('.add-card-btn')) return;
+  if(e.target.closest('.card-priority')) return;
+  var card = e.target.closest('.card');
+  if(card) openCardPanel(card);
+});
+
+/* close menu when clicking elsewhere inside modal */
+document.querySelector('.card-modal').addEventListener('click', function(e){
+  var menu = document.getElementById('tbMenu');
+  if(menu && menu.classList.contains('open') && !e.target.closest('#tbMenu') && !e.target.closest('.tb-btn[onclick*="toggleTbMenu"]')){
+    menu.classList.remove('open');
+  }
+});
+
+/* Escape closes card modal (in addition to existing handlers) */
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape'){
+    var modal = document.getElementById('cardModalOverlay');
+    if(modal && modal.classList.contains('open')){
+      closeCardPanel();
+    }
+  }
 });
 </script>
 
