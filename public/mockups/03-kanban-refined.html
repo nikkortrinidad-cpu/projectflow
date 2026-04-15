@@ -1391,6 +1391,411 @@
   .sidebar-empty svg { width: 36px; height: 36px; opacity: 0.3; margin-bottom: 12px; }
   .sidebar-empty h4 { font-size: 14px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; letter-spacing: -0.01em; }
   .sidebar-empty p { font-size: 12px; }
+
+  /* ============================================================
+     Board Settings modal
+     ============================================================ */
+  .settings-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    animation: settingsFadeIn 0.15s ease-out;
+  }
+  .settings-backdrop.open { display: flex; }
+  @keyframes settingsFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  .settings-modal {
+    width: 920px;
+    max-width: 100%;
+    height: 80vh;
+    max-height: 720px;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    border-radius: 16px;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+    display: flex;
+    overflow: hidden;
+    animation: settingsPopIn 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  }
+  @keyframes settingsPopIn {
+    from { transform: scale(0.96); opacity: 0; }
+    to   { transform: scale(1);    opacity: 1; }
+  }
+
+  .settings-sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--hairline-soft);
+    padding: 24px 12px;
+    background: var(--bg-soft);
+    display: flex;
+    flex-direction: column;
+  }
+  .settings-title {
+    padding: 0 12px 18px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .settings-nav { display: flex; flex-direction: column; gap: 2px; }
+  .settings-nav-item {
+    display: flex; align-items: center; gap: 10px;
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.12s, color 0.12s;
+  }
+  .settings-nav-item:hover {
+    background: var(--hairline-soft);
+    color: var(--text-primary);
+  }
+  .settings-nav-item.active {
+    background: #0a84ff;
+    color: #fff;
+  }
+  .settings-nav-item svg {
+    width: 14px; height: 14px;
+    flex-shrink: 0;
+  }
+
+  .settings-detail {
+    flex: 1;
+    overflow-y: auto;
+    padding: 32px 40px;
+    position: relative;
+  }
+  .settings-close {
+    position: absolute;
+    top: 18px; right: 18px;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s, color 0.12s;
+    font-family: inherit;
+    z-index: 2;
+  }
+  .settings-close:hover {
+    background: var(--bg-soft);
+    color: var(--text-primary);
+  }
+  .settings-close svg { width: 16px; height: 16px; }
+
+  .settings-tab { display: none; }
+  .settings-tab.active { display: block; }
+
+  .settings-section-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+  .settings-helper {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0 0 28px;
+    max-width: 60ch;
+    line-height: 1.5;
+  }
+
+  .settings-field { margin-bottom: 22px; }
+  .settings-field-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-faint);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .settings-input,
+  .settings-textarea {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 14px;
+    transition: border-color 0.15s, background 0.15s;
+    box-sizing: border-box;
+  }
+  .settings-textarea {
+    resize: vertical;
+    min-height: 72px;
+    line-height: 1.5;
+  }
+  .settings-input:focus,
+  .settings-textarea:focus {
+    outline: none;
+    border-color: #0a84ff;
+    background: var(--bg);
+  }
+
+  .settings-breadcrumb {
+    padding: 10px 14px;
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .settings-breadcrumb a {
+    color: #6b8afd;
+    text-decoration: none;
+  }
+  .settings-breadcrumb a:hover { text-decoration: underline; }
+  .settings-breadcrumb .sep { color: var(--text-faint); }
+
+  .settings-seg {
+    display: inline-flex;
+    padding: 3px;
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 9px;
+    gap: 2px;
+  }
+  .settings-seg-opt {
+    padding: 6px 14px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .settings-seg-opt:hover { color: var(--text-primary); }
+  .settings-seg-opt.active {
+    background: var(--bg-elev);
+    color: var(--text-primary);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  }
+
+  .settings-divider {
+    height: 1px;
+    background: var(--hairline-soft);
+    margin: 36px 0 28px;
+  }
+
+  .settings-danger-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent);
+    margin: 0 0 16px;
+    letter-spacing: -0.01em;
+  }
+  .settings-danger-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0;
+    gap: 24px;
+    border-top: 1px solid var(--hairline-soft);
+  }
+  .settings-danger-row:first-of-type { border-top: none; padding-top: 0; }
+  .settings-danger-row-text strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 3px;
+  }
+  .settings-danger-row-text p {
+    margin: 0;
+    font-size: 12px;
+    color: var(--text-muted);
+    max-width: 50ch;
+    line-height: 1.4;
+  }
+
+  .btn-warn, .btn-danger-outline {
+    padding: 7px 14px;
+    background: transparent;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .btn-warn {
+    border: 1px solid rgba(255, 159, 10, 0.4);
+    color: #ff9f0a;
+  }
+  .btn-warn:hover { background: rgba(255, 159, 10, 0.1); border-color: #ff9f0a; }
+  .btn-danger-outline {
+    border: 1px solid rgba(255, 69, 58, 0.4);
+    color: var(--accent);
+  }
+  .btn-danger-outline:hover {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+  }
+
+  /* Lists tab */
+  .settings-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+  .settings-list-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px 8px 8px;
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 10px;
+    transition: border-color 0.15s;
+  }
+  .settings-list-row:hover { border-color: var(--hairline); }
+  .settings-drag-handle {
+    width: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-faint);
+    cursor: grab;
+    user-select: none;
+    flex-shrink: 0;
+  }
+  .settings-drag-handle svg { width: 14px; height: 14px; }
+  .settings-list-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .settings-list-row[data-dot="todo"]     .settings-list-dot { background: #0a84ff; }
+  .settings-list-row[data-dot="progress"] .settings-list-dot { background: #ff9f0a; }
+  .settings-list-row[data-dot="review"]   .settings-list-dot { background: #bf5af2; }
+  .settings-list-row[data-dot="done"]     .settings-list-dot { background: #30d158; }
+  .settings-list-row[data-dot="gray"]     .settings-list-dot { background: var(--text-faint); }
+  .settings-list-row .settings-row-input {
+    flex: 1;
+    padding: 6px 10px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 14px;
+    min-width: 0;
+    transition: background 0.12s, border-color 0.12s;
+  }
+  .settings-list-row .settings-row-input:hover { background: var(--bg); }
+  .settings-list-row .settings-row-input:focus {
+    background: var(--bg);
+    border-color: #0a84ff;
+    outline: none;
+  }
+  .settings-wip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 4px;
+  }
+  .settings-wip-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .settings-wip-input {
+    width: 44px;
+    padding: 5px 6px;
+    background: var(--bg);
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 13px;
+    font-feature-settings: "tnum";
+    text-align: center;
+    box-sizing: border-box;
+  }
+  .settings-wip-input:focus {
+    outline: none;
+    border-color: #0a84ff;
+  }
+  .settings-row-action {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s, color 0.12s;
+    flex-shrink: 0;
+  }
+  .settings-row-action:hover { background: var(--hairline); }
+  .settings-row-action.warn:hover { color: #ff9f0a; }
+  .settings-row-action.danger:hover { color: var(--accent); }
+  .settings-row-action svg { width: 14px; height: 14px; }
+
+  .settings-add-row {
+    width: 100%;
+    padding: 10px 14px;
+    background: transparent;
+    border: 1px dashed var(--hairline);
+    border-radius: 10px;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .settings-add-row:hover {
+    background: var(--bg-soft);
+    color: var(--text-primary);
+    border-color: var(--text-faint);
+  }
+
+  /* Labels tab */
+  .settings-label-color {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    flex-shrink: 0;
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.08);
+    transition: transform 0.1s;
+  }
+  .settings-label-color:hover { transform: scale(1.08); }
 </style>
 </head>
 <body>
@@ -1454,7 +1859,7 @@
     <span class="current">Website Redesign</span>
   </div>
   <div class="board-actions">
-    <button class="btn-sm">
+    <button class="btn-sm" onclick="openSettings()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       Board Settings
     </button>
@@ -1986,6 +2391,187 @@
   </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════
+     Board Settings Modal
+     ═══════════════════════════════════════════════════════════ -->
+<div class="settings-backdrop" id="settingsModal" role="dialog" aria-modal="true" aria-label="Board Settings">
+  <div class="settings-modal" onclick="event.stopPropagation()">
+
+    <!-- Sidebar -->
+    <aside class="settings-sidebar">
+      <div class="settings-title">Board Settings</div>
+      <nav class="settings-nav">
+        <button class="settings-nav-item active" data-tab="general" onclick="switchSettingsTab('general')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          General
+        </button>
+        <button class="settings-nav-item" data-tab="lists" onclick="switchSettingsTab('lists')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          Lists
+        </button>
+        <button class="settings-nav-item" data-tab="labels" onclick="switchSettingsTab('labels')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          Labels
+        </button>
+      </nav>
+    </aside>
+
+    <!-- Detail pane -->
+    <section class="settings-detail">
+      <button class="settings-close" onclick="closeSettings()" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+
+      <!-- General -->
+      <div class="settings-tab active" data-tab-content="general">
+        <h2 class="settings-section-title">General</h2>
+        <p class="settings-helper">How this board identifies itself and sits within your account.</p>
+
+        <div class="settings-field">
+          <label class="settings-field-label">Board name</label>
+          <input class="settings-input" type="text" value="Website Redesign">
+        </div>
+
+        <div class="settings-field">
+          <label class="settings-field-label">Description</label>
+          <textarea class="settings-textarea" placeholder="Add a short description the team can see at a glance..."></textarea>
+        </div>
+
+        <div class="settings-field">
+          <label class="settings-field-label">Context</label>
+          <div class="settings-breadcrumb">
+            <a href="#">Clients</a><span class="sep">›</span>
+            <a href="#">Acme Corporation</a><span class="sep">›</span>
+            <span>Website Redesign</span>
+          </div>
+        </div>
+
+        <div class="settings-field">
+          <label class="settings-field-label">Appearance</label>
+          <div class="settings-seg">
+            <button class="settings-seg-opt active" onclick="setSettingsTheme(event, 'dark')">Dark</button>
+            <button class="settings-seg-opt" onclick="setSettingsTheme(event, 'light')">Light</button>
+            <button class="settings-seg-opt" onclick="setSettingsTheme(event, 'system')">System</button>
+          </div>
+        </div>
+
+        <div class="settings-divider"></div>
+
+        <h3 class="settings-danger-title">Danger zone</h3>
+        <div class="settings-danger-row">
+          <div class="settings-danger-row-text">
+            <strong>Archive this board</strong>
+            <p>The board is hidden from the active list. You can restore it from the Archive tab at any time.</p>
+          </div>
+          <button class="btn-warn">Archive</button>
+        </div>
+        <div class="settings-danger-row">
+          <div class="settings-danger-row-text">
+            <strong>Reset board</strong>
+            <p>Clear all cards and restore the default columns. This action can't be undone.</p>
+          </div>
+          <button class="btn-danger-outline">Reset</button>
+        </div>
+      </div>
+
+      <!-- Lists -->
+      <div class="settings-tab" data-tab-content="lists">
+        <h2 class="settings-section-title">Lists</h2>
+        <p class="settings-helper">Reorder, rename, recolor, or set a WIP limit on each column. Drag the handle to reorder.</p>
+
+        <div class="settings-list">
+          <div class="settings-list-row" data-dot="todo">
+            <span class="settings-drag-handle" aria-label="Drag to reorder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
+            <span class="settings-list-dot" title="Color: Blue"></span>
+            <input class="settings-row-input" type="text" value="To Do">
+            <div class="settings-wip">
+              <span class="settings-wip-label">WIP</span>
+              <input class="settings-wip-input" type="number" value="5" min="0">
+            </div>
+            <button class="settings-row-action warn" title="Archive list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></button>
+            <button class="settings-row-action danger" title="Delete list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+          </div>
+          <div class="settings-list-row" data-dot="progress">
+            <span class="settings-drag-handle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
+            <span class="settings-list-dot"></span>
+            <input class="settings-row-input" type="text" value="In Progress">
+            <div class="settings-wip">
+              <span class="settings-wip-label">WIP</span>
+              <input class="settings-wip-input" type="number" value="3" min="0">
+            </div>
+            <button class="settings-row-action warn" title="Archive list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></button>
+            <button class="settings-row-action danger" title="Delete list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+          </div>
+          <div class="settings-list-row" data-dot="review">
+            <span class="settings-drag-handle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
+            <span class="settings-list-dot"></span>
+            <input class="settings-row-input" type="text" value="In Review">
+            <div class="settings-wip">
+              <span class="settings-wip-label">WIP</span>
+              <input class="settings-wip-input" type="number" value="2" min="0">
+            </div>
+            <button class="settings-row-action warn" title="Archive list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></button>
+            <button class="settings-row-action danger" title="Delete list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+          </div>
+          <div class="settings-list-row" data-dot="done">
+            <span class="settings-drag-handle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
+            <span class="settings-list-dot"></span>
+            <input class="settings-row-input" type="text" value="Done">
+            <div class="settings-wip">
+              <span class="settings-wip-label">WIP</span>
+              <input class="settings-wip-input" type="number" value="0" min="0" placeholder="—">
+            </div>
+            <button class="settings-row-action warn" title="Archive list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></button>
+            <button class="settings-row-action danger" title="Delete list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+          </div>
+        </div>
+        <button class="settings-add-row">＋ Add list</button>
+      </div>
+
+      <!-- Labels -->
+      <div class="settings-tab" data-tab-content="labels">
+        <h2 class="settings-section-title">Labels</h2>
+        <p class="settings-helper">Organize cards with color-coded tags. Click a swatch to change its color.</p>
+
+        <div class="settings-list">
+          <div class="settings-list-row">
+            <span class="settings-label-color" style="background: #ff453a" title="Change color"></span>
+            <input class="settings-row-input" type="text" value="Bug">
+            <button class="settings-row-action danger" title="Delete label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+          </div>
+          <div class="settings-list-row">
+            <span class="settings-label-color" style="background: #0a84ff" title="Change color"></span>
+            <input class="settings-row-input" type="text" value="Feature">
+            <button class="settings-row-action danger" title="Delete label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+          </div>
+          <div class="settings-list-row">
+            <span class="settings-label-color" style="background: #30d158" title="Change color"></span>
+            <input class="settings-row-input" type="text" value="Improvement">
+            <button class="settings-row-action danger" title="Delete label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+          </div>
+          <div class="settings-list-row">
+            <span class="settings-label-color" style="background: #ff9f0a" title="Change color"></span>
+            <input class="settings-row-input" type="text" value="Urgent">
+            <button class="settings-row-action danger" title="Delete label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+          </div>
+          <div class="settings-list-row">
+            <span class="settings-label-color" style="background: #ff6b9d" title="Change color"></span>
+            <input class="settings-row-input" type="text" value="Design">
+            <button class="settings-row-action danger" title="Delete label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+          </div>
+          <div class="settings-list-row">
+            <span class="settings-label-color" style="background: #bf5af2" title="Change color"></span>
+            <input class="settings-row-input" type="text" value="Research">
+            <button class="settings-row-action danger" title="Delete label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+          </div>
+        </div>
+        <button class="settings-add-row">＋ Add label</button>
+      </div>
+
+    </section>
+  </div>
+</div>
+
 <script>
 function toggleTheme() {
   var cur = document.documentElement.getAttribute('data-theme');
@@ -2386,6 +2972,47 @@ document.addEventListener('keydown', function(e){
     }
   }
 });
+
+/* Board Settings modal */
+function openSettings(){
+  var m = document.getElementById('settingsModal');
+  if(m) m.classList.add('open');
+}
+function closeSettings(){
+  var m = document.getElementById('settingsModal');
+  if(m) m.classList.remove('open');
+}
+function switchSettingsTab(tab){
+  document.querySelectorAll('.settings-nav-item').forEach(function(b){
+    b.classList.toggle('active', b.dataset.tab === tab);
+  });
+  document.querySelectorAll('.settings-tab').forEach(function(t){
+    t.classList.toggle('active', t.dataset.tabContent === tab);
+  });
+}
+function setSettingsTheme(e, theme){
+  var parent = e.currentTarget.parentElement;
+  parent.querySelectorAll('.settings-seg-opt').forEach(function(b){ b.classList.remove('active'); });
+  e.currentTarget.classList.add('active');
+  if(theme === 'dark' || theme === 'light'){
+    document.documentElement.setAttribute('data-theme', theme);
+    try { localStorage.setItem('refined-theme', theme); } catch(err){}
+  }
+}
+(function(){
+  var backdrop = document.getElementById('settingsModal');
+  if(backdrop){
+    backdrop.addEventListener('click', function(e){
+      if(e.target === backdrop) closeSettings();
+    });
+  }
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){
+      var m = document.getElementById('settingsModal');
+      if(m && m.classList.contains('open')) closeSettings();
+    }
+  });
+})();
 </script>
 
 </body>
