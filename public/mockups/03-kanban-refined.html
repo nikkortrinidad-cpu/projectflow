@@ -4021,7 +4021,7 @@ function startDescriptionEdit(){
   }
   function onKey(e){
     if(e.key === 'Escape'){ e.preventDefault(); finish(false); }
-    else if(e.key === 'Enter' && (e.metaKey || e.ctrlKey)){ e.preventDefault(); finish(true); }
+    else if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); finish(true); }
   }
   desc.addEventListener('keydown', onKey);
   actions.querySelector('.desc-save').addEventListener('click', function(){ finish(true); });
