@@ -460,11 +460,16 @@
     font-size: 14px; font-weight: 500;
     letter-spacing: -0.01em;
     transition: all 0.15s;
+    background: transparent;
+    font-family: inherit;
+    padding: 0;
+    align-self: stretch;
   }
   .add-column:hover {
     border-color: var(--text);
     color: var(--text);
   }
+  .add-column.hidden { display: none; }
 
   .nav-hint {
     text-align: center;
@@ -484,6 +489,77 @@
     transition: color 0.15s;
   }
   .nav-hint a:hover { color: var(--accent); }
+
+  /* Add forms (inline) */
+  .add-column-form {
+    min-width: 320px; max-width: 320px;
+    padding: 14px;
+    background: var(--column-bg);
+    border: 1px solid var(--hairline);
+    border-radius: 16px;
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    align-self: flex-start;
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .add-column-form.active { display: flex; }
+  .add-card-form {
+    margin: 0 14px 14px;
+    padding: 12px;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: var(--shadow);
+  }
+  .add-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    background: var(--bg-elev);
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    letter-spacing: -0.01em;
+    resize: none;
+    transition: border-color 0.15s;
+  }
+  .add-input:focus { border-color: var(--text-faint); }
+  .add-input::placeholder { color: var(--text-faint); }
+  .add-actions {
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn-primary {
+    padding: 7px 14px;
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: 980px;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    letter-spacing: -0.01em;
+    font-family: inherit;
+    transition: opacity 0.15s;
+  }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-ghost {
+    padding: 7px 10px;
+    background: transparent;
+    color: var(--text-muted);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+    letter-spacing: -0.01em;
+    transition: background 0.15s, color 0.15s;
+  }
+  .btn-ghost:hover { color: var(--text); background: var(--hairline); }
 </style>
 </head>
 <body>
@@ -621,7 +697,7 @@
         </div>
       </div>
     </div>
-    <button class="add-card-btn">＋ Add Card</button>
+    <button class="add-card-btn" onclick="addCardStart(this)">＋ Add Card</button>
   </div>
 
   <!-- In Progress Column -->
@@ -684,7 +760,7 @@
         </div>
       </div>
     </div>
-    <button class="add-card-btn">＋ Add Card</button>
+    <button class="add-card-btn" onclick="addCardStart(this)">＋ Add Card</button>
   </div>
 
   <!-- In Review Column -->
@@ -716,7 +792,7 @@
         </div>
       </div>
     </div>
-    <button class="add-card-btn">＋ Add Card</button>
+    <button class="add-card-btn" onclick="addCardStart(this)">＋ Add Card</button>
   </div>
 
   <!-- Done Column -->
@@ -743,11 +819,18 @@
         </div>
       </div>
     </div>
-    <button class="add-card-btn">＋ Add Card</button>
+    <button class="add-card-btn" onclick="addCardStart(this)">＋ Add Card</button>
   </div>
 
   <!-- Add Column -->
-  <div class="add-column">＋ Add Column</div>
+  <button class="add-column" id="addColumnBtn" onclick="addColumnStart()">＋ Add Column</button>
+  <div class="add-column-form" id="addColumnForm">
+    <input type="text" class="add-input" id="addColumnInput" placeholder="Enter column name…">
+    <div class="add-actions">
+      <button class="btn-primary" onclick="addColumnCommit()">Add Column</button>
+      <button class="btn-ghost" onclick="addColumnCancel()">Cancel</button>
+    </div>
+  </div>
 
 </div>
 
@@ -781,6 +864,112 @@ document.addEventListener('keydown', function(e){
   if(e.key === 'Escape') {
     closeCmdK();
   }
+});
+
+/* ---------- Add Column / Add Card ---------- */
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+function addColumnStart(){
+  document.getElementById('addColumnBtn').classList.add('hidden');
+  var form = document.getElementById('addColumnForm');
+  form.classList.add('active');
+  var input = document.getElementById('addColumnInput');
+  input.focus();
+}
+function addColumnCancel(){
+  document.getElementById('addColumnForm').classList.remove('active');
+  document.getElementById('addColumnBtn').classList.remove('hidden');
+  document.getElementById('addColumnInput').value = '';
+}
+function addColumnCommit(){
+  var input = document.getElementById('addColumnInput');
+  var name = input.value.trim();
+  if(!name){ addColumnCancel(); return; }
+  var board = document.querySelector('.board');
+  var addBtn = document.getElementById('addColumnBtn');
+  var col = document.createElement('div');
+  col.className = 'column';
+  col.innerHTML =
+    '<div class="column-header">' +
+      '<div class="column-title-group">' +
+        '<div class="column-title">' + escapeHtml(name) + '</div>' +
+        '<div class="column-count">0</div>' +
+      '</div>' +
+      '<div class="column-menu">⋯</div>' +
+    '</div>' +
+    '<div class="column-cards"></div>' +
+    '<button class="add-card-btn" onclick="addCardStart(this)">＋ Add Card</button>';
+  board.insertBefore(col, addBtn);
+  input.value = '';
+  input.focus();
+}
+
+function addCardStart(btn){
+  if(btn.nextElementSibling && btn.nextElementSibling.classList.contains('add-card-form')) return;
+  var form = document.createElement('div');
+  form.className = 'add-card-form';
+  form.innerHTML =
+    '<textarea class="add-input" rows="2" placeholder="Enter a title for this card…"></textarea>' +
+    '<div class="add-actions">' +
+      '<button class="btn-primary">Add Card</button>' +
+      '<button class="btn-ghost">Cancel</button>' +
+    '</div>';
+  btn.classList.add('hidden');
+  btn.style.display = 'none';
+  btn.parentNode.insertBefore(form, btn);
+  var ta = form.querySelector('textarea');
+  var primary = form.querySelector('.btn-primary');
+  var ghost = form.querySelector('.btn-ghost');
+  primary.addEventListener('click', function(){ addCardCommit(form); });
+  ghost.addEventListener('click', function(){ addCardCancel(form); });
+  ta.addEventListener('keydown', function(e){
+    if(e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      addCardCommit(form);
+    } else if(e.key === 'Escape'){
+      addCardCancel(form);
+    }
+  });
+  ta.focus();
+}
+function addCardCommit(form){
+  var ta = form.querySelector('textarea');
+  var title = ta.value.trim();
+  if(!title){ addCardCancel(form); return; }
+  var col = form.closest('.column');
+  var cards = col.querySelector('.column-cards');
+  var card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML =
+    '<div class="card-priority priority-medium"></div>' +
+    '<div class="card-title">' + escapeHtml(title) + '</div>' +
+    '<div class="card-footer">' +
+      '<div class="card-meta">' +
+        '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>0</span>' +
+      '</div>' +
+      '<div class="card-assignee">NT</div>' +
+    '</div>';
+  cards.appendChild(card);
+  cards.scrollTop = cards.scrollHeight;
+  var countEl = col.querySelector('.column-count');
+  countEl.textContent = cards.children.length;
+  ta.value = '';
+  ta.focus();
+}
+function addCardCancel(form){
+  var col = form.closest('.column');
+  var btn = col.querySelector('.add-card-btn');
+  form.remove();
+  if(btn){ btn.style.display = ''; btn.classList.remove('hidden'); }
+}
+
+document.getElementById('addColumnInput').addEventListener('keydown', function(e){
+  if(e.key === 'Enter'){ e.preventDefault(); addColumnCommit(); }
+  else if(e.key === 'Escape'){ addColumnCancel(); }
 });
 </script>
 
