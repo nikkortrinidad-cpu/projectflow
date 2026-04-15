@@ -2629,6 +2629,79 @@
   .description-actions .desc-cancel:hover {
     background: color-mix(in srgb, var(--text-primary) 6%, transparent);
   }
+
+  /* assignee row — chip remove on hover + add dropdown */
+  .assignee-container { position: relative; display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .assignee-chip { position: relative; }
+  .assignee-chip-remove {
+    width: 18px; height: 18px;
+    margin-left: 2px; margin-right: -4px;
+    background: transparent; border: 0; padding: 0;
+    border-radius: 50%;
+    display: none; align-items: center; justify-content: center;
+    color: var(--text-soft); cursor: pointer;
+    transition: background 0.12s ease, color 0.12s ease;
+  }
+  .assignee-chip:hover .assignee-chip-remove { display: inline-flex; }
+  .assignee-chip-remove:hover { color: var(--text); background: var(--hairline); }
+  .assignee-chip-remove svg { width: 10px; height: 10px; }
+  .assignee-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    width: 260px;
+    background: var(--bg-elevated, #1e1e22);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.35);
+    padding: 6px;
+    z-index: 55;
+    display: none;
+  }
+  .assignee-dropdown.open { display: block; }
+  .assignee-search {
+    width: 100%; box-sizing: border-box;
+    padding: 7px 10px;
+    background: var(--bg-faint);
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    color: var(--text); font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    margin-bottom: 4px;
+  }
+  .assignee-search:focus { border-color: var(--hover-blue); }
+  .assignee-list { max-height: 240px; overflow-y: auto; }
+  .assignee-option {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .assignee-option:hover { background: var(--hover-tint); }
+  .assignee-option-avatar {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9.5px; font-weight: 700;
+    background: var(--avatar-bg);
+    color: var(--avatar-fg);
+    flex-shrink: 0;
+  }
+  .assignee-option-name {
+    flex: 1;
+    font-size: 13px;
+    color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .assignee-option-check {
+    width: 14px; height: 14px;
+    color: var(--hover-blue);
+    opacity: 0;
+    flex-shrink: 0;
+  }
+  .assignee-option.is-selected .assignee-option-check { opacity: 1; }
+  .assignee-empty { padding: 14px 10px; text-align: center; color: var(--text-faint); font-size: 12px; }
 </style>
 </head>
 <body>
@@ -2720,7 +2793,7 @@
       <div class="column-menu-wrap"><button class="column-menu" onclick="toggleColMenu(event)" aria-label="List options">⋯</button></div>
     </div>
     <div class="column-cards">
-      <div class="card" data-priority="high">
+      <div class="card" data-priority="high" data-assignees="sc,jc">
         <div class="card-top">
           <div class="card-labels"><span class="card-label">Design</span></div>
           <div class="card-due due-overdue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Overdue 2d</div>
@@ -2731,7 +2804,7 @@
             <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>2</span>
             <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>1</span>
           </div>
-          <div class="card-assignee">JK</div>
+          <div class="card-assignee">SC</div>
         </div>
       </div>
       <div class="card" data-priority="medium">
@@ -2963,9 +3036,9 @@
               Assignees
             </div>
             <div class="meta-value">
-              <span class="assignee-chip"><span class="assignee-chip-avatar">SC</span>Sarah Chen</span>
-              <span class="assignee-chip"><span class="assignee-chip-avatar">JC</span>Joshua Castilla</span>
-              <button class="assignee-add" aria-label="Add assignee">+</button>
+              <div class="assignee-container" id="assigneeContainer">
+                <button class="assignee-add" id="assigneeAddBtn" aria-label="Add assignee" onclick="openAssigneeDropdown(event)">+</button>
+              </div>
             </div>
           </div>
           <div class="meta-row">
@@ -3935,6 +4008,9 @@ function openCardPanel(cardEl){
     var dueEl = document.getElementById('dueDateInput');
     if(startEl) startEl.value = ds.startDate || startEl.defaultValue || startEl.value;
     if(dueEl) dueEl.value = ds.dueDate || dueEl.defaultValue || dueEl.value;
+    // Assignees
+    if(typeof closeAssigneeDropdown === 'function') closeAssigneeDropdown();
+    if(typeof renderAssigneeChips === 'function') renderAssigneeChips();
   }
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -4124,6 +4200,171 @@ document.addEventListener('keydown', function(e){
     });
   }
 })();
+
+/* ───── Assignees ───── */
+var BOARD_MEMBERS = [
+  { id: 'nt',  initials: 'NT', name: 'Nikko Trinidad',    you: true  },
+  { id: 'jc',  initials: 'JC', name: 'Joshua Castilla'                },
+  { id: 'sc',  initials: 'SC', name: 'Sarah Chen'                     },
+  { id: 'cp',  initials: 'CP', name: 'Catherine Pequino'              },
+  { id: 'ma',  initials: 'MA', name: 'Mark Ashlee'                    },
+  { id: 'jcv', initials: 'JC', name: 'John Cavanagh'                  }
+];
+function getMember(id){
+  for(var i=0;i<BOARD_MEMBERS.length;i++) if(BOARD_MEMBERS[i].id === id) return BOARD_MEMBERS[i];
+  return null;
+}
+function getCardAssigneeIds(card){
+  if(!card || !card.dataset.assignees) return [];
+  return card.dataset.assignees.split(',').filter(Boolean);
+}
+function setCardAssignees(card, ids){
+  if(!card) return;
+  if(ids && ids.length){ card.dataset.assignees = ids.join(','); }
+  else { delete card.dataset.assignees; }
+  // Sync the card tile avatar to the first assignee
+  var footer = card.querySelector('.card-footer');
+  var tile = card.querySelector('.card-assignee');
+  if(ids && ids.length){
+    var first = getMember(ids[0]);
+    if(!first) return;
+    if(!tile){
+      tile = document.createElement('div');
+      tile.className = 'card-assignee';
+      if(footer) footer.appendChild(tile);
+      else card.appendChild(tile);
+    }
+    tile.textContent = first.initials;
+  } else if(tile){
+    tile.remove();
+  }
+}
+function renderAssigneeChips(){
+  var container = document.getElementById('assigneeContainer');
+  if(!container) return;
+  var addBtn = document.getElementById('assigneeAddBtn');
+  Array.prototype.slice.call(container.querySelectorAll('.assignee-chip')).forEach(function(c){ c.remove(); });
+  var ids = getCardAssigneeIds(_currentCard);
+  ids.forEach(function(id){
+    var m = getMember(id);
+    if(!m) return;
+    var chip = document.createElement('span');
+    chip.className = 'assignee-chip';
+    chip.dataset.memberId = id;
+    chip.innerHTML =
+      '<span class="assignee-chip-avatar">' + m.initials + '</span>' + m.name +
+      '<button type="button" class="assignee-chip-remove" aria-label="Remove ' + m.name + '">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>' +
+      '</button>';
+    chip.querySelector('.assignee-chip-remove').addEventListener('click', function(e){
+      e.stopPropagation();
+      removeAssignee(id);
+    });
+    container.insertBefore(chip, addBtn);
+  });
+}
+function addAssignee(id){
+  if(!_currentCard) return;
+  if(!getMember(id)) return; // guard: only board members
+  var ids = getCardAssigneeIds(_currentCard);
+  if(ids.indexOf(id) >= 0) return;
+  ids.push(id);
+  setCardAssignees(_currentCard, ids);
+  renderAssigneeChips();
+  refreshAssigneeDropdown();
+}
+function removeAssignee(id){
+  if(!_currentCard) return;
+  var ids = getCardAssigneeIds(_currentCard).filter(function(x){ return x !== id; });
+  setCardAssignees(_currentCard, ids);
+  renderAssigneeChips();
+  refreshAssigneeDropdown();
+}
+function toggleAssignee(id){
+  if(!_currentCard) return;
+  var ids = getCardAssigneeIds(_currentCard);
+  if(ids.indexOf(id) >= 0) removeAssignee(id);
+  else addAssignee(id);
+}
+var _assigneeDropdownEl = null;
+var _assigneeSearchQuery = '';
+function openAssigneeDropdown(e){
+  e.stopPropagation();
+  if(_assigneeDropdownEl){ closeAssigneeDropdown(); return; }
+  closeMetaDropdowns();
+  var container = document.getElementById('assigneeContainer');
+  if(!container) return;
+  var dd = document.createElement('div');
+  dd.className = 'assignee-dropdown open';
+  dd.innerHTML =
+    '<input type="text" class="assignee-search" placeholder="Search members…" aria-label="Search members">' +
+    '<div class="assignee-list"></div>';
+  container.appendChild(dd);
+  _assigneeDropdownEl = dd;
+  _assigneeSearchQuery = '';
+  refreshAssigneeDropdown();
+  var searchInput = dd.querySelector('.assignee-search');
+  searchInput.addEventListener('input', function(){
+    _assigneeSearchQuery = this.value.toLowerCase().trim();
+    refreshAssigneeDropdown();
+  });
+  searchInput.addEventListener('keydown', function(ev){
+    if(ev.key === 'Escape'){ ev.preventDefault(); closeAssigneeDropdown(); }
+    else if(ev.key === 'Enter'){
+      ev.preventDefault();
+      var firstOption = dd.querySelector('.assignee-option');
+      if(firstOption) firstOption.click();
+    }
+  });
+  setTimeout(function(){ searchInput.focus(); }, 0);
+}
+function refreshAssigneeDropdown(){
+  if(!_assigneeDropdownEl) return;
+  var list = _assigneeDropdownEl.querySelector('.assignee-list');
+  if(!list) return;
+  list.innerHTML = '';
+  var selected = getCardAssigneeIds(_currentCard);
+  var q = _assigneeSearchQuery;
+  var shown = 0;
+  BOARD_MEMBERS.forEach(function(m){
+    if(q && m.name.toLowerCase().indexOf(q) < 0) return;
+    shown++;
+    var isSelected = selected.indexOf(m.id) >= 0;
+    var row = document.createElement('div');
+    row.className = 'assignee-option' + (isSelected ? ' is-selected' : '');
+    row.innerHTML =
+      '<span class="assignee-option-avatar">' + m.initials + '</span>' +
+      '<span class="assignee-option-name">' + m.name + (m.you ? ' <span class="you-tag">You</span>' : '') + '</span>' +
+      '<svg class="assignee-option-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    row.addEventListener('click', function(ev){
+      ev.stopPropagation();
+      toggleAssignee(m.id);
+    });
+    list.appendChild(row);
+  });
+  if(shown === 0){
+    var empty = document.createElement('div');
+    empty.className = 'assignee-empty';
+    empty.textContent = q ? ('No members match "' + q + '"') : 'No members on this board';
+    list.appendChild(empty);
+  }
+}
+function closeAssigneeDropdown(){
+  if(_assigneeDropdownEl){
+    _assigneeDropdownEl.remove();
+    _assigneeDropdownEl = null;
+    _assigneeSearchQuery = '';
+  }
+}
+document.addEventListener('click', function(e){
+  if(!_assigneeDropdownEl) return;
+  if(e.target.closest('.assignee-dropdown')) return;
+  if(e.target.closest('#assigneeAddBtn')) return;
+  closeAssigneeDropdown();
+});
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape' && _assigneeDropdownEl) closeAssigneeDropdown();
+});
 function closeCardPanel(e){
   if(e && e.target && e.target.closest('.card-modal')) return;
   document.getElementById('cardModalOverlay').classList.remove('open');
