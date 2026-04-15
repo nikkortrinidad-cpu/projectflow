@@ -291,6 +291,15 @@
     flex-shrink: 0;
   }
   .column-title-group { display: flex; align-items: center; gap: 10px; }
+  .column-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--text-faint);
+  }
+  .column[data-dot="todo"]     .column-dot { background: #0a84ff; }
+  .column[data-dot="progress"] .column-dot { background: #ff9f0a; }
+  .column[data-dot="review"]   .column-dot { background: #bf5af2; }
+  .column[data-dot="done"]     .column-dot { background: #30d158; }
   .column-title {
     font-size: 13px; font-weight: 600;
     color: var(--text-soft);
@@ -345,19 +354,62 @@
   .col-menu-item.danger { color: var(--accent); }
   .col-menu-divider { height: 1px; background: var(--hairline-soft); margin: 4px 0; }
 
-  /* collapsed column: narrow vertical strip */
-  .column.collapsed { min-width: 56px; max-width: 56px; }
+  /* collapsed column: the whole strip is the expand trigger */
+  .column.collapsed {
+    min-width: 44px; max-width: 44px;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .column.collapsed:hover {
+    background: var(--bg-soft);
+    border-color: var(--hairline);
+  }
   .column.collapsed .column-header {
-    flex-direction: column; gap: 10px;
-    padding: 16px 10px; align-items: center;
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px 0 34px;
+    align-items: center;
+    height: 100%;
+    justify-content: flex-start;
   }
-  .column.collapsed .column-title-group {
-    flex-direction: column; gap: 10px;
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
-  }
-  .column.collapsed .column-title { letter-spacing: 0.12em; }
+  .column.collapsed .column-menu-wrap,
   .column.collapsed .column-cards { display: none; }
+  .column.collapsed .column-title-group {
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+  .column.collapsed .column-dot { width: 10px; height: 10px; }
+  .column.collapsed .column-count {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .column.collapsed .column-title {
+    writing-mode: vertical-rl;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    color: var(--text-soft);
+  }
+  /* expand chevron at bottom of collapsed strip */
+  .column.collapsed::after {
+    content: '»';
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--text-faint);
+    font-size: 14px;
+    line-height: 1;
+    pointer-events: none;
+    opacity: 0.8;
+    transition: opacity 0.15s, color 0.15s;
+  }
+  .column.collapsed:hover::after {
+    opacity: 1;
+    color: var(--text-soft);
+  }
 
   .column-cards {
     flex: 1;
@@ -1402,9 +1454,10 @@
 <div class="board">
 
   <!-- To Do Column -->
-  <div class="column">
+  <div class="column" data-dot="todo">
     <div class="column-header">
       <div class="column-title-group">
+        <span class="column-dot"></span>
         <div class="column-title">To Do</div>
         <div class="column-count">3</div>
       </div>
@@ -1456,9 +1509,10 @@
   </div>
 
   <!-- In Progress Column -->
-  <div class="column">
+  <div class="column" data-dot="progress">
     <div class="column-header">
       <div class="column-title-group">
+        <span class="column-dot"></span>
         <div class="column-title">In Progress</div>
         <div class="column-count">3</div>
       </div>
@@ -1514,9 +1568,10 @@
   </div>
 
   <!-- In Review Column -->
-  <div class="column">
+  <div class="column" data-dot="review">
     <div class="column-header">
       <div class="column-title-group">
+        <span class="column-dot"></span>
         <div class="column-title">In Review</div>
         <div class="column-count">1</div>
       </div>
@@ -1545,9 +1600,10 @@
   </div>
 
   <!-- Done Column -->
-  <div class="column">
+  <div class="column" data-dot="done">
     <div class="column-header">
       <div class="column-title-group">
+        <span class="column-dot"></span>
         <div class="column-title">Done</div>
         <div class="column-count">1</div>
       </div>
@@ -1970,6 +2026,7 @@ function addColumnCommit(){
   col.innerHTML =
     '<div class="column-header">' +
       '<div class="column-title-group">' +
+        '<span class="column-dot"></span>' +
         '<div class="column-title">' + escapeHtml(name) + '</div>' +
         '<div class="column-count">0</div>' +
       '</div>' +
@@ -2153,6 +2210,12 @@ function colAction(e, action){
   }
 }
 document.addEventListener('click', function(e){
+  // expand a collapsed column on any click within it
+  var collapsedCol = e.target.closest('.column.collapsed');
+  if(collapsedCol){
+    collapsedCol.classList.remove('collapsed');
+    return;
+  }
   if(e.target.closest('.col-menu')) return;
   if(e.target.closest('.column-menu')) return;
   document.querySelectorAll('.col-menu.open').forEach(function(m){ m.classList.remove('open'); });
