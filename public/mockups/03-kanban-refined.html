@@ -1799,6 +1799,293 @@
     transition: transform 0.1s;
   }
   .settings-label-color:hover { transform: scale(1.08); }
+
+  /* ============================================================
+     Members modal — single-column variant of settings-backdrop
+     ============================================================ */
+  .members-modal {
+    width: 640px;
+    max-width: 100%;
+    max-height: 86vh;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    border-radius: 16px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: settingsPopIn 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  }
+
+  .members-header {
+    padding: 24px 28px 18px;
+    border-bottom: 1px solid var(--hairline-soft);
+    position: relative;
+  }
+  .members-header h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .members-header p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  .members-close {
+    position: absolute;
+    top: 18px; right: 18px;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s, color 0.12s;
+    font-family: inherit;
+    z-index: 2;
+  }
+  .members-close:hover {
+    background: var(--bg-soft);
+    color: var(--text-primary);
+  }
+  .members-close svg { width: 16px; height: 16px; }
+
+  .members-invite {
+    display: flex;
+    gap: 8px;
+    padding: 16px 28px;
+    border-bottom: 1px solid var(--hairline-soft);
+  }
+  .members-invite-input {
+    flex: 1;
+    padding: 9px 12px;
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 13px;
+    box-sizing: border-box;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .members-invite-input::placeholder { color: var(--text-faint); }
+  .members-invite-input:focus {
+    outline: none;
+    border-color: #0a84ff;
+    background: var(--bg);
+  }
+  .members-invite-role {
+    padding: 9px 10px;
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .members-invite-btn {
+    padding: 9px 16px;
+    background: #0a84ff;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .members-invite-btn:hover { background: #0a6fcc; }
+
+  .members-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px 20px 8px;
+  }
+
+  .members-group { margin-bottom: 18px; }
+  .members-group-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 0 8px 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .members-group-count {
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .members-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    transition: background 0.12s;
+  }
+  .members-row:hover { background: var(--bg-soft); }
+
+  .members-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .avatar-color-1 { background: linear-gradient(135deg, #ff6b9d, #ff3366); }
+  .avatar-color-2 { background: linear-gradient(135deg, #0a84ff, #0a6fcc); }
+  .avatar-color-3 { background: linear-gradient(135deg, #30d158, #0aaf41); }
+  .avatar-color-4 { background: linear-gradient(135deg, #ff9f0a, #cc7000); }
+  .avatar-color-5 { background: linear-gradient(135deg, #bf5af2, #8e3ecc); }
+  .avatar-color-6 { background: linear-gradient(135deg, #64d2ff, #0a84ff); }
+
+  .members-identity {
+    flex: 1;
+    min-width: 0;
+  }
+  .members-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .members-you-tag {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+    padding: 1px 6px;
+    background: var(--hairline-soft);
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .members-client-tag {
+    font-size: 11px;
+    color: #ff9f0a;
+    background: rgba(255,159,10,0.12);
+    padding: 1px 7px;
+    border-radius: 4px;
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+  .members-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .members-role-pill {
+    padding: 4px 10px;
+    border: 1px solid var(--hairline);
+    background: var(--bg-soft);
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+    flex-shrink: 0;
+  }
+  .members-role-pill:hover {
+    background: var(--bg);
+    color: var(--text-primary);
+    border-color: var(--text-faint);
+  }
+  .members-role-pill svg { width: 10px; height: 10px; opacity: 0.7; }
+
+  .members-menu {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s, color 0.12s;
+    flex-shrink: 0;
+  }
+  .members-menu:hover {
+    background: var(--hairline-soft);
+    color: var(--text-primary);
+  }
+  .members-menu svg { width: 14px; height: 14px; }
+
+  .members-footer {
+    padding: 16px 28px;
+    border-top: 1px solid var(--hairline-soft);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: var(--bg-soft);
+  }
+  .members-footer-text { flex: 1; }
+  .members-footer-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin: 0 0 2px;
+  }
+  .members-footer-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  .members-toggle {
+    width: 40px;
+    height: 24px;
+    background: var(--hairline);
+    border-radius: 999px;
+    border: none;
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .members-toggle::after {
+    content: '';
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 18px; height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.15s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+  .members-toggle.on { background: #0a84ff; }
+  .members-toggle.on::after { transform: translateX(16px); }
 </style>
 </head>
 <body>
@@ -1866,7 +2153,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       Board Settings
     </button>
-    <button class="btn-sm">
+    <button class="btn-sm" onclick="openMembers()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       Members
     </button>
@@ -2400,6 +2687,147 @@
         </div>
       </div>
     </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     Members Modal
+     ═══════════════════════════════════════════════════════════ -->
+<div class="settings-backdrop" id="membersModal" role="dialog" aria-modal="true" aria-label="Members">
+  <div class="members-modal" onclick="event.stopPropagation()">
+
+    <header class="members-header">
+      <h2>Members</h2>
+      <p>6 people have access to Website Redesign</p>
+      <button class="members-close" onclick="closeMembers()" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </header>
+
+    <div class="members-invite">
+      <input type="email" class="members-invite-input" placeholder="Invite by email address">
+      <select class="members-invite-role" aria-label="Invite role">
+        <option>Editor</option>
+        <option>Viewer</option>
+        <option>Admin</option>
+      </select>
+      <button class="members-invite-btn">Invite</button>
+    </div>
+
+    <div class="members-body">
+
+      <div class="members-group">
+        <div class="members-group-title">Admins <span class="members-group-count">· 1</span></div>
+
+        <div class="members-row">
+          <div class="members-avatar avatar-color-1">NT</div>
+          <div class="members-identity">
+            <div class="members-name">Nikko Trinidad <span class="members-you-tag">You</span></div>
+            <div class="members-sub">nikko@121group.io</div>
+          </div>
+          <button class="members-role-pill">
+            Admin
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <button class="members-menu" aria-label="More actions">
+            <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="members-group">
+        <div class="members-group-title">Editors <span class="members-group-count">· 3</span></div>
+
+        <div class="members-row">
+          <div class="members-avatar avatar-color-2">JC</div>
+          <div class="members-identity">
+            <div class="members-name">Joshua Castilla</div>
+            <div class="members-sub">joshua@121group.io</div>
+          </div>
+          <button class="members-role-pill">
+            Editor
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <button class="members-menu" aria-label="More actions">
+            <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+          </button>
+        </div>
+
+        <div class="members-row">
+          <div class="members-avatar avatar-color-3">SC</div>
+          <div class="members-identity">
+            <div class="members-name">Sarah Chen</div>
+            <div class="members-sub">sarah@121group.io</div>
+          </div>
+          <button class="members-role-pill">
+            Editor
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <button class="members-menu" aria-label="More actions">
+            <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+          </button>
+        </div>
+
+        <div class="members-row">
+          <div class="members-avatar avatar-color-4">CP</div>
+          <div class="members-identity">
+            <div class="members-name">Catherine Pequino</div>
+            <div class="members-sub">catherine@121group.io</div>
+          </div>
+          <button class="members-role-pill">
+            Editor
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <button class="members-menu" aria-label="More actions">
+            <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="members-group">
+        <div class="members-group-title">Viewers <span class="members-group-count">· 2</span></div>
+
+        <div class="members-row">
+          <div class="members-avatar avatar-color-5">MA</div>
+          <div class="members-identity">
+            <div class="members-name">Mark Ashlee</div>
+            <div class="members-sub">mark@121group.io</div>
+          </div>
+          <button class="members-role-pill">
+            Viewer
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <button class="members-menu" aria-label="More actions">
+            <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+          </button>
+        </div>
+
+        <div class="members-row">
+          <div class="members-avatar avatar-color-6">JC</div>
+          <div class="members-identity">
+            <div class="members-name">John Cavanagh <span class="members-client-tag">Client</span></div>
+            <div class="members-sub">john@acmecorp.com · Acme Corporation</div>
+          </div>
+          <button class="members-role-pill">
+            Viewer
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <button class="members-menu" aria-label="More actions">
+            <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <footer class="members-footer">
+      <div class="members-footer-text">
+        <div class="members-footer-title">Link sharing</div>
+        <div class="members-footer-sub">Anyone with the link can view this board.</div>
+      </div>
+      <button class="members-toggle" aria-label="Toggle link sharing" onclick="this.classList.toggle('on')"></button>
+    </footer>
 
   </div>
 </div>
@@ -3036,6 +3464,30 @@ function setSettingsTheme(e, theme){
     if(e.key === 'Escape'){
       var m = document.getElementById('settingsModal');
       if(m && m.classList.contains('open')) closeSettings();
+    }
+  });
+})();
+
+/* Members modal */
+function openMembers(){
+  var m = document.getElementById('membersModal');
+  if(m) m.classList.add('open');
+}
+function closeMembers(){
+  var m = document.getElementById('membersModal');
+  if(m) m.classList.remove('open');
+}
+(function(){
+  var backdrop = document.getElementById('membersModal');
+  if(backdrop){
+    backdrop.addEventListener('click', function(e){
+      if(e.target === backdrop) closeMembers();
+    });
+  }
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){
+      var m = document.getElementById('membersModal');
+      if(m && m.classList.contains('open')) closeMembers();
     }
   });
 })();
