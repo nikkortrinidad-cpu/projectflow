@@ -1256,13 +1256,17 @@
   :root               { --thread: rgba(0,0,0,0.22); }
   :root[data-theme="dark"] { --thread: rgba(255,255,255,0.32); }
 
-  /* Bridge line: vertical spine inside parent .comment-body */
+  /* Bridge line: vertical spine inside parent .comment-body
+     Only visible when replies are expanded (matches live site
+     conditional rendering: bridge renders when !isCollapsed) */
   .bridge-line {
     position: absolute;
     width: 2px;
     background: var(--thread);
     pointer-events: none;
+    display: none;  /* hidden by default */
   }
+  .comment-body:has(> .replies.open) > .bridge-line { display: block; }
   /* Mask: hides bridge below last reply's elbow */
   .bridge-mask {
     position: absolute;
