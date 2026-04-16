@@ -3226,7 +3226,7 @@
             <div class="replies open" data-reply-count="3">
               <div class="comment">
                 <!-- SVG elbow: curves from bridge to SC avatar -->
-                <svg class="elbow-svg" style="left:-30px;top:-2px;width:30px;height:16px" fill="none" overflow="visible"><path d="M 1 0 Q 1 15 15 15 L 30 15" stroke="currentColor" stroke-width="2"/></svg>
+                <svg class="elbow-svg" style="left:-30px;top:-2px;width:30px;height:16px" fill="none" overflow="visible"><path d="M 1 -8 L 1 0 Q 1 15 15 15 L 30 15" stroke="currentColor" stroke-width="2"/></svg>
                 <div class="comment-avatar">SC</div>
                 <div class="comment-body">
                   <!-- Bridge line: reply avatar(26) → bottom of nested replies -->
@@ -3248,7 +3248,7 @@
                       <!-- Mask: last nested reply, hides SC bridge below -->
                       <div class="bridge-mask" style="left:-51px;top:-2px;bottom:0"></div>
                       <!-- SVG elbow: from SC bridge to nested JC avatar -->
-                      <svg class="elbow-svg" style="left:-51px;top:-2px;width:51px;height:16px" fill="none" overflow="visible"><path d="M 1 0 Q 1 15 15 15 L 51 15" stroke="currentColor" stroke-width="2"/></svg>
+                      <svg class="elbow-svg" style="left:-51px;top:-2px;width:51px;height:16px" fill="none" overflow="visible"><path d="M 1 -8 L 1 0 Q 1 15 15 15 L 51 15" stroke="currentColor" stroke-width="2"/></svg>
                       <div class="comment-avatar">JC</div>
                       <div class="comment-body">
                         <div class="comment-bubble">
@@ -3269,7 +3269,7 @@
                 <!-- Mask: last outer reply, hides JC bridge below -->
                 <div class="bridge-mask" style="left:-30px;top:-2px;bottom:0"></div>
                 <!-- SVG elbow: from JC bridge to NT avatar -->
-                <svg class="elbow-svg" style="left:-30px;top:-2px;width:30px;height:16px" fill="none" overflow="visible"><path d="M 1 0 Q 1 15 15 15 L 30 15" stroke="currentColor" stroke-width="2"/></svg>
+                <svg class="elbow-svg" style="left:-30px;top:-2px;width:30px;height:16px" fill="none" overflow="visible"><path d="M 1 -8 L 1 0 Q 1 15 15 15 L 30 15" stroke="currentColor" stroke-width="2"/></svg>
                 <div class="comment-avatar">NT</div>
                 <div class="comment-body">
                   <div class="comment-bubble you">
@@ -4928,7 +4928,7 @@ function makeElbowSvg(w, ac){
   svg.setAttribute('overflow','visible');
   svg.style.cssText = 'left:-'+w+'px;top:-2px;width:'+w+'px;height:'+(ac+3)+'px';
   var path = document.createElementNS('http://www.w3.org/2000/svg','path');
-  path.setAttribute('d','M 1 0 Q 1 '+y+' '+y+' '+y+' L '+w+' '+y);
+  path.setAttribute('d','M 1 -8 L 1 0 Q 1 '+y+' '+y+' '+y+' L '+w+' '+y);
   path.setAttribute('stroke','currentColor');
   path.setAttribute('stroke-width','2');
   svg.appendChild(path);
