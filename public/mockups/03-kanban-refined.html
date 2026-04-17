@@ -1244,11 +1244,24 @@
     display: inline-flex; align-items: center; justify-content: center;
     font-size: 10px; font-weight: 700;
     flex-shrink: 0;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.12s, transform 0.12s, background 0.12s;
+    outline: none;
   }
+  .checklist-assignee:hover,
+  .checklist-assignee:focus-visible { border-color: var(--hover-blue); }
+  .checklist-assignee:active { transform: scale(0.94); }
   .checklist-assignee.empty {
     background: transparent;
     border: 1px dashed var(--hairline);
     color: var(--text-faint);
+  }
+  .checklist-assignee.empty:hover,
+  .checklist-assignee.empty:focus-visible {
+    border-style: solid;
+    border-color: var(--hover-blue);
+    color: var(--hover-blue);
   }
   .checklist-add-row {
     display: flex; align-items: center; gap: 12px;
@@ -3680,35 +3693,35 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </button>
               <span class="checklist-text" tabindex="0" role="textbox" aria-label="Edit task" onclick="startEditChecklistText(this)" onkeydown="handleChecklistTextKey(event)">Research competitor hero sections</span>
-              <span class="checklist-assignee">NT</span>
+              <span class="checklist-assignee" data-assignee-id="nt" role="button" tabindex="0" aria-label="Assigned to Nikko Trinidad. Click to reassign." title="Nikko Trinidad" onclick="openChecklistAssigneePicker(event, this)" onkeydown="handleChecklistAssigneeKey(event)">NT</span>
             </div>
             <div class="checklist-row">
               <button class="checklist-checkbox" onclick="toggleChecklistItem(this)" aria-label="Toggle">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </button>
               <span class="checklist-text" tabindex="0" role="textbox" aria-label="Edit task" onclick="startEditChecklistText(this)" onkeydown="handleChecklistTextKey(event)">Create initial sketches</span>
-              <span class="checklist-assignee">SC</span>
+              <span class="checklist-assignee" data-assignee-id="sc" role="button" tabindex="0" aria-label="Assigned to Sarah Chen. Click to reassign." title="Sarah Chen" onclick="openChecklistAssigneePicker(event, this)" onkeydown="handleChecklistAssigneeKey(event)">SC</span>
             </div>
             <div class="checklist-row">
               <button class="checklist-checkbox checked" onclick="toggleChecklistItem(this)" aria-label="Toggle">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </button>
               <span class="checklist-text done" tabindex="0" role="textbox" aria-label="Edit task" onclick="startEditChecklistText(this)" onkeydown="handleChecklistTextKey(event)">Finalize color palette</span>
-              <span class="checklist-assignee">JC</span>
+              <span class="checklist-assignee" data-assignee-id="jc" role="button" tabindex="0" aria-label="Assigned to Joshua Castilla. Click to reassign." title="Joshua Castilla" onclick="openChecklistAssigneePicker(event, this)" onkeydown="handleChecklistAssigneeKey(event)">JC</span>
             </div>
             <div class="checklist-row">
               <button class="checklist-checkbox checked" onclick="toggleChecklistItem(this)" aria-label="Toggle">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </button>
               <span class="checklist-text done" tabindex="0" role="textbox" aria-label="Edit task" onclick="startEditChecklistText(this)" onkeydown="handleChecklistTextKey(event)">Update CSS and animations</span>
-              <span class="checklist-assignee">SC</span>
+              <span class="checklist-assignee" data-assignee-id="sc" role="button" tabindex="0" aria-label="Assigned to Sarah Chen. Click to reassign." title="Sarah Chen" onclick="openChecklistAssigneePicker(event, this)" onkeydown="handleChecklistAssigneeKey(event)">SC</span>
             </div>
             <div class="checklist-row">
               <button class="checklist-checkbox" onclick="toggleChecklistItem(this)" aria-label="Toggle">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </button>
               <span class="checklist-text" tabindex="0" role="textbox" aria-label="Edit task" onclick="startEditChecklistText(this)" onkeydown="handleChecklistTextKey(event)">Get client feedback</span>
-              <span class="checklist-assignee empty">
+              <span class="checklist-assignee empty" data-assignee-id="" role="button" tabindex="0" aria-label="Unassigned. Click to assign." onclick="openChecklistAssigneePicker(event, this)" onkeydown="handleChecklistAssigneeKey(event)">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               </span>
             </div>
@@ -6075,6 +6088,166 @@ function handleChecklistTextKey(e){
     el.blur();              // commit will see the reverted text and keep it
   }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Checklist assignee picker — click any avatar to reassign
+   ─────────────────────────────────────────────────────────── */
+var _clAssigneeAvatar = null;
+var _clPickerEl = null;
+var _clPickerQuery = '';
+var UNASSIGNED_SVG = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+
+function openChecklistAssigneePicker(e, avatar){
+  e.stopPropagation();
+  if(_clPickerEl){
+    var sameAnchor = _clAssigneeAvatar === avatar;
+    closeChecklistAssigneePicker();
+    if(sameAnchor) return;
+  }
+  _clAssigneeAvatar = avatar;
+  var dd = document.createElement('div');
+  dd.className = 'assignee-dropdown open';
+  dd.style.position = 'fixed';
+  dd.style.width = '240px';
+  dd.style.top = '0px';
+  dd.style.left = '-9999px';   // off-screen until we measure
+  dd.innerHTML =
+    '<input type="text" class="assignee-search" placeholder="Assign to…" aria-label="Search members">' +
+    '<div class="assignee-list" role="listbox"></div>';
+  document.body.appendChild(dd);
+  _clPickerEl = dd;
+  _clPickerQuery = '';
+  refreshChecklistAssigneePicker();
+
+  // Anchor below the avatar, clamped to viewport
+  var r = avatar.getBoundingClientRect();
+  var w = dd.offsetWidth;
+  var h = dd.offsetHeight;
+  var top = r.bottom + 6;
+  var left = r.right - w;
+  if(top + h > window.innerHeight - 12){ top = Math.max(12, r.top - h - 6); }
+  if(left < 12) left = 12;
+  if(left + w > window.innerWidth - 12) left = window.innerWidth - 12 - w;
+  dd.style.top = top + 'px';
+  dd.style.left = left + 'px';
+
+  var search = dd.querySelector('.assignee-search');
+  search.addEventListener('input', function(){
+    _clPickerQuery = this.value.toLowerCase().trim();
+    refreshChecklistAssigneePicker();
+  });
+  search.addEventListener('keydown', function(ev){
+    if(ev.key === 'Escape'){ ev.preventDefault(); closeChecklistAssigneePicker(); }
+    else if(ev.key === 'Enter'){
+      ev.preventDefault();
+      var first = dd.querySelector('.assignee-option');
+      if(first) first.click();
+    }
+  });
+  setTimeout(function(){ search.focus(); }, 0);
+}
+
+function refreshChecklistAssigneePicker(){
+  if(!_clPickerEl || !_clAssigneeAvatar) return;
+  var list = _clPickerEl.querySelector('.assignee-list');
+  list.innerHTML = '';
+  var q = _clPickerQuery;
+  var currentId = _clAssigneeAvatar.dataset.assigneeId || '';
+  var shownMembers = 0;
+
+  // "Unassigned" option first — matches on "unassigned", "nobody", "none" or when no filter
+  var matchesUnassigned = !q || 'unassigned nobody none remove'.indexOf(q) >= 0;
+  if(matchesUnassigned){
+    var unRow = document.createElement('div');
+    unRow.className = 'assignee-option' + (currentId === '' ? ' is-selected' : '');
+    unRow.setAttribute('role', 'option');
+    unRow.innerHTML =
+      '<span class="assignee-option-avatar" style="background:transparent;border:1px dashed var(--hairline);color:var(--text-faint);">' + UNASSIGNED_SVG + '</span>' +
+      '<span class="assignee-option-name">Unassigned</span>' +
+      '<svg class="assignee-option-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    unRow.addEventListener('click', function(ev){
+      ev.stopPropagation();
+      setChecklistAssignee(_clAssigneeAvatar, null);
+      closeChecklistAssigneePicker();
+    });
+    list.appendChild(unRow);
+    var sep = document.createElement('div');
+    sep.style.cssText = 'height:1px;background:var(--hairline-soft);margin:4px 4px;';
+    list.appendChild(sep);
+  }
+
+  BOARD_MEMBERS.forEach(function(m){
+    if(q && m.name.toLowerCase().indexOf(q) < 0) return;
+    shownMembers++;
+    var isSelected = m.id === currentId;
+    var row = document.createElement('div');
+    row.className = 'assignee-option' + (isSelected ? ' is-selected' : '');
+    row.setAttribute('role', 'option');
+    row.innerHTML =
+      '<span class="assignee-option-avatar">' + m.initials + '</span>' +
+      '<span class="assignee-option-name">' + m.name + (m.you ? ' <span class="you-tag">You</span>' : '') + '</span>' +
+      '<svg class="assignee-option-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    row.addEventListener('click', function(ev){
+      ev.stopPropagation();
+      setChecklistAssignee(_clAssigneeAvatar, m.id);
+      closeChecklistAssigneePicker();
+    });
+    list.appendChild(row);
+  });
+
+  if(shownMembers === 0 && !matchesUnassigned){
+    var empty = document.createElement('div');
+    empty.className = 'assignee-empty';
+    empty.textContent = 'No members match "' + q + '"';
+    list.appendChild(empty);
+  }
+}
+
+function setChecklistAssignee(avatar, memberId){
+  if(!avatar) return;
+  if(memberId){
+    var m = getMember(memberId);
+    if(!m) return;
+    avatar.textContent = m.initials;
+    avatar.classList.remove('empty');
+    avatar.dataset.assigneeId = m.id;
+    avatar.setAttribute('aria-label', 'Assigned to ' + m.name + '. Click to reassign.');
+    avatar.setAttribute('title', m.name);
+  } else {
+    avatar.innerHTML = UNASSIGNED_SVG;
+    avatar.classList.add('empty');
+    avatar.dataset.assigneeId = '';
+    avatar.setAttribute('aria-label', 'Unassigned. Click to assign.');
+    avatar.removeAttribute('title');
+  }
+}
+
+function closeChecklistAssigneePicker(){
+  if(_clPickerEl){
+    _clPickerEl.remove();
+    _clPickerEl = null;
+    _clAssigneeAvatar = null;
+    _clPickerQuery = '';
+  }
+}
+
+function handleChecklistAssigneeKey(e){
+  if(e.key === 'Enter' || e.key === ' '){
+    e.preventDefault();
+    openChecklistAssigneePicker(e, e.currentTarget);
+  }
+}
+
+document.addEventListener('click', function(e){
+  if(!_clPickerEl) return;
+  if(e.target.closest('.assignee-dropdown')) return;
+  if(e.target.closest('.checklist-assignee')) return;
+  closeChecklistAssigneePicker();
+}, true);
+
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape' && _clPickerEl) closeChecklistAssigneePicker();
+});
 
 /* ═══════════════════════════════════════════════════════════
    Labels — removable pills + add dropdown (card modal metadata)
