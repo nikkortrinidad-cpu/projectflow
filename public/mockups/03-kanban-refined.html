@@ -1397,13 +1397,18 @@
     line-height: 1.5;
     letter-spacing: -0.005em;
   }
-  .comment-text .mention {
+  .comment-text .mention,
+  .comment-input .mention {
     background: rgba(10, 132, 255, 0.18);
     color: #0a84ff;
     padding: 1px 5px;
     border-radius: 4px;
     font-weight: 600;
+    font-size: inherit;
+    /* prevent accidental editing of the mention text itself */
+    cursor: default;
   }
+  .comment-input .mention { user-select: all; }
   .comment-meta {
     display: flex; align-items: center; gap: 12px;
     margin: 6px 0 0 4px;
@@ -1451,6 +1456,88 @@
   @media (prefers-reduced-motion: reduce) {
     .reaction-pill.popping, .reaction-pill.leaving { animation: none; }
     .reaction-pill.leaving { opacity: 0; }
+  }
+
+  /* Mention dropdown — anchored to the @ button */
+  .mention-dropdown {
+    position: fixed;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    padding: 6px;
+    width: 240px;
+    z-index: 1150;
+    display: none;
+    animation: mention-in 140ms ease-out;
+    transform-origin: bottom left;
+  }
+  .mention-dropdown.open { display: block; }
+  @keyframes mention-in {
+    from { opacity: 0; transform: scale(0.96) translateY(4px); }
+    to   { opacity: 1; transform: scale(1) translateY(0);    }
+  }
+  .mention-search {
+    width: 100%; box-sizing: border-box;
+    padding: 7px 10px;
+    background: var(--bg-faint);
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    color: var(--text); font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    margin-bottom: 4px;
+    letter-spacing: -0.005em;
+  }
+  .mention-search:focus { border-color: var(--hover-blue); }
+  .mention-list {
+    max-height: 240px;
+    overflow-y: auto;
+  }
+  .mention-option {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.12s;
+  }
+  .mention-option:hover,
+  .mention-option.is-active {
+    background: var(--hover-tint);
+  }
+  .mention-option-avatar {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9.5px; font-weight: 700;
+    background: var(--avatar-bg);
+    color: var(--avatar-fg);
+    flex-shrink: 0;
+  }
+  .mention-option-name {
+    flex: 1; min-width: 0;
+    font-size: 13px;
+    color: var(--text);
+    letter-spacing: -0.005em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .mention-option-name .you-tag {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+    padding: 1px 6px;
+    background: var(--hairline-soft);
+    border-radius: 4px;
+    margin-left: 6px;
+  }
+  .mention-empty {
+    padding: 14px 10px;
+    text-align: center;
+    color: var(--text-faint);
+    font-size: 12px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mention-dropdown { animation: none; }
   }
 
   /* Reaction emoji picker */
@@ -4175,7 +4262,7 @@
           <div class="comment-toolbar">
             <div class="toolbar-group">
               <button class="toolbar-btn" id="formatToggleBtn" title="Format (Aa)" aria-label="Toggle formatting toolbar" aria-pressed="false" onclick="toggleFormatToolbar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg></button>
-              <button class="toolbar-btn" title="Mention"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/></svg></button>
+              <button class="toolbar-btn" id="mentionToggleBtn" title="Mention someone" aria-label="Mention a team member" aria-pressed="false" onclick="openMentionDropdown(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/></svg></button>
               <button class="toolbar-btn" title="Emoji"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>
               <button class="toolbar-btn" title="GIF"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
               <button class="toolbar-btn" title="Attach"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
@@ -5637,12 +5724,18 @@ function _sanitizeCommentHtml(html){
           node.replaceChild(textNode, child);
           continue;
         }
-        // Strip all attributes except href on <a>
+        // Preserve class="mention" on <span>, href on <a>; strip everything else
+        var isMention = (tag === 'SPAN' && child.classList.contains('mention'));
         var attrs = Array.from(child.attributes || []);
         attrs.forEach(function(a){
-          if(tag === 'A' && a.name.toLowerCase() === 'href'){
-            // Block javascript: URIs
+          var n = a.name.toLowerCase();
+          if(tag === 'A' && n === 'href'){
             if(/^\s*javascript:/i.test(a.value)) child.removeAttribute(a.name);
+            return;
+          }
+          if(isMention && n === 'class'){
+            // Keep only the 'mention' class, drop any others
+            child.setAttribute('class', 'mention');
             return;
           }
           child.removeAttribute(a.name);
@@ -6607,6 +6700,226 @@ document.addEventListener('DOMContentLoaded', function(){
       else if(e.key === 'Escape'){ e.preventDefault(); hideLinkInput(); }
     });
   }
+});
+
+/* ═══════════════════════════════════════════════════════════
+   Comment editor — @ Mention dropdown
+   ─────────────────────────────────────────────────────────── */
+var _mentionDropdownEl = null;
+var _mentionQuery = '';
+var _mentionActiveIndex = 0;
+var _mentionAnchorBtn = null;
+var _mentionCaretMarker = null;   // '@' text node inserted into editor
+
+function openMentionDropdown(anchorBtn){
+  if(_mentionDropdownEl){
+    var same = _mentionAnchorBtn === anchorBtn;
+    closeMentionDropdown();
+    if(same) return;
+  }
+  var editor = _ensureEditorFocus();
+  if(!editor) return;
+
+  // Insert '@' into the editor at caret (visual cue that a mention is being composed)
+  var sel = window.getSelection();
+  var range = (sel && sel.rangeCount > 0) ? sel.getRangeAt(0) : null;
+  if(!range){
+    range = document.createRange();
+    range.selectNodeContents(editor);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+  if(!range.collapsed) range.deleteContents();
+  var atNode = document.createTextNode('@');
+  range.insertNode(atNode);
+  _mentionCaretMarker = atNode;
+
+  // Place caret right after the '@'
+  var afterRange = document.createRange();
+  afterRange.setStartAfter(atNode);
+  afterRange.collapse(true);
+  sel.removeAllRanges();
+  sel.addRange(afterRange);
+  editor.dispatchEvent(new Event('input', { bubbles: true }));
+
+  // Build dropdown
+  var dd = document.createElement('div');
+  dd.className = 'mention-dropdown open';
+  dd.setAttribute('role', 'listbox');
+  dd.setAttribute('aria-label', 'Team members');
+  dd.style.top = '0px';
+  dd.style.left = '-9999px';
+  dd.innerHTML =
+    '<input type="text" class="mention-search" placeholder="Mention a team member…" aria-label="Filter members" autocomplete="off">' +
+    '<div class="mention-list"></div>';
+  document.body.appendChild(dd);
+
+  _mentionDropdownEl = dd;
+  _mentionAnchorBtn = anchorBtn;
+  _mentionQuery = '';
+  _mentionActiveIndex = 0;
+  refreshMentionList();
+
+  // Anchor above the button (comment toolbar is at bottom)
+  var r = anchorBtn.getBoundingClientRect();
+  var w = dd.offsetWidth, h = dd.offsetHeight;
+  var top = r.top - h - 6;
+  var left = r.left;
+  if(top < 12) top = r.bottom + 6;  // flip below if no room above
+  if(left + w > window.innerWidth - 12) left = window.innerWidth - 12 - w;
+  if(left < 12) left = 12;
+  dd.style.top = top + 'px';
+  dd.style.left = left + 'px';
+
+  // Reflect aria state
+  anchorBtn.setAttribute('aria-pressed', 'true');
+  anchorBtn.classList.add('active');
+
+  var search = dd.querySelector('.mention-search');
+  search.addEventListener('input', function(){
+    _mentionQuery = this.value.toLowerCase().trim();
+    _mentionActiveIndex = 0;
+    refreshMentionList();
+  });
+  search.addEventListener('keydown', function(ev){
+    var opts = dd.querySelectorAll('.mention-option');
+    if(ev.key === 'Escape'){ ev.preventDefault(); closeMentionDropdown(true); }
+    else if(ev.key === 'ArrowDown'){
+      ev.preventDefault();
+      if(opts.length){
+        _mentionActiveIndex = (_mentionActiveIndex + 1) % opts.length;
+        _highlightMentionOption();
+      }
+    }
+    else if(ev.key === 'ArrowUp'){
+      ev.preventDefault();
+      if(opts.length){
+        _mentionActiveIndex = (_mentionActiveIndex - 1 + opts.length) % opts.length;
+        _highlightMentionOption();
+      }
+    }
+    else if(ev.key === 'Enter'){
+      ev.preventDefault();
+      if(opts[_mentionActiveIndex]) opts[_mentionActiveIndex].click();
+    }
+  });
+  setTimeout(function(){ search.focus(); }, 0);
+}
+
+function _highlightMentionOption(){
+  if(!_mentionDropdownEl) return;
+  var opts = _mentionDropdownEl.querySelectorAll('.mention-option');
+  opts.forEach(function(el, i){
+    el.classList.toggle('is-active', i === _mentionActiveIndex);
+  });
+  if(opts[_mentionActiveIndex]){
+    opts[_mentionActiveIndex].scrollIntoView({ block: 'nearest' });
+  }
+}
+
+function refreshMentionList(){
+  if(!_mentionDropdownEl) return;
+  var list = _mentionDropdownEl.querySelector('.mention-list');
+  list.innerHTML = '';
+  var q = _mentionQuery;
+  var shown = 0;
+  BOARD_MEMBERS.forEach(function(m){
+    if(q && m.name.toLowerCase().indexOf(q) < 0) return;
+    shown++;
+    var row = document.createElement('div');
+    row.className = 'mention-option';
+    row.setAttribute('role', 'option');
+    row.setAttribute('tabindex', '-1');
+    row.innerHTML =
+      '<span class="mention-option-avatar">' + escapeHtml(m.initials) + '</span>' +
+      '<span class="mention-option-name">' + escapeHtml(m.name) +
+        (m.you ? ' <span class="you-tag">You</span>' : '') +
+      '</span>';
+    row.addEventListener('click', function(ev){
+      ev.stopPropagation();
+      insertMention(m);
+    });
+    list.appendChild(row);
+  });
+  if(shown === 0){
+    var empty = document.createElement('div');
+    empty.className = 'mention-empty';
+    empty.textContent = q ? ('No members match "' + q + '"') : 'No members on this board';
+    list.appendChild(empty);
+  }
+  _highlightMentionOption();
+}
+
+function insertMention(member){
+  var editor = document.getElementById('commentInput');
+  if(!editor || !member) return;
+  editor.focus();
+
+  // Replace the '@' placeholder with a styled mention span + trailing space
+  if(_mentionCaretMarker && _mentionCaretMarker.parentNode){
+    var span = document.createElement('span');
+    span.className = 'mention';
+    span.setAttribute('contenteditable', 'false');
+    span.textContent = '@' + member.name;
+    var space = document.createTextNode('\u00A0');  // non-breaking so it stays
+
+    _mentionCaretMarker.parentNode.replaceChild(span, _mentionCaretMarker);
+    span.parentNode.insertBefore(space, span.nextSibling);
+
+    // Put caret after the space
+    var sel = window.getSelection();
+    var r = document.createRange();
+    r.setStartAfter(space);
+    r.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(r);
+  } else {
+    // Fallback: append at end
+    var s2 = document.createElement('span');
+    s2.className = 'mention';
+    s2.setAttribute('contenteditable', 'false');
+    s2.textContent = '@' + member.name;
+    editor.appendChild(s2);
+    editor.appendChild(document.createTextNode('\u00A0'));
+  }
+
+  _mentionCaretMarker = null;
+  closeMentionDropdown(false);
+  editor.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+function closeMentionDropdown(removeAtChar){
+  if(_mentionDropdownEl){
+    _mentionDropdownEl.remove();
+    _mentionDropdownEl = null;
+  }
+  if(_mentionAnchorBtn){
+    _mentionAnchorBtn.setAttribute('aria-pressed', 'false');
+    _mentionAnchorBtn.classList.remove('active');
+    _mentionAnchorBtn = null;
+  }
+  // If user cancelled and the '@' placeholder is still in the editor, remove it
+  if(removeAtChar && _mentionCaretMarker && _mentionCaretMarker.parentNode){
+    _mentionCaretMarker.parentNode.removeChild(_mentionCaretMarker);
+    var editor = document.getElementById('commentInput');
+    if(editor) editor.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  _mentionCaretMarker = null;
+  _mentionQuery = '';
+  _mentionActiveIndex = 0;
+}
+
+document.addEventListener('click', function(e){
+  if(!_mentionDropdownEl) return;
+  if(e.target.closest('.mention-dropdown')) return;
+  if(e.target.closest('#mentionToggleBtn')) return;
+  // Default: keep the @ placeholder in the editor on outside click
+  closeMentionDropdown(false);
+}, true);
+
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape' && _mentionDropdownEl) closeMentionDropdown(true);
 });
 
 /* ═══════════════════════════════════════════════════════════
