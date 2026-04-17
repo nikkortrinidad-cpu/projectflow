@@ -6109,6 +6109,7 @@ function openChecklistAssigneePicker(e, avatar){
   dd.className = 'assignee-dropdown open';
   dd.style.position = 'fixed';
   dd.style.width = '240px';
+  dd.style.zIndex = '1150';    // above card-modal (1000) & share-overlay (1100)
   dd.style.top = '0px';
   dd.style.left = '-9999px';   // off-screen until we measure
   dd.innerHTML =
