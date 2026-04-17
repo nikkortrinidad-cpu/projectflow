@@ -1425,12 +1425,30 @@
     cursor: pointer;
     border: 1px solid transparent;
     transition: all 0.15s;
+    outline: none;
+    user-select: none;
   }
   .reaction-pill:hover { background: var(--hover-tint); border-color: var(--hover-blue); color: var(--hover-blue); }
+  .reaction-pill:focus-visible { border-color: var(--hover-blue); box-shadow: 0 0 0 2px rgba(10,132,255,0.2); }
+  .reaction-pill:active { transform: scale(0.92); }
   .reaction-pill.you {
     background: rgba(10, 132, 255, 0.15);
     color: #0a84ff;
     border-color: rgba(10, 132, 255, 0.25);
+  }
+  .reaction-pill.popping { animation: reaction-pop 220ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .reaction-pill.leaving { animation: reaction-leave 160ms ease-in forwards; }
+  @keyframes reaction-pop {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.14); }
+    100% { transform: scale(1); }
+  }
+  @keyframes reaction-leave {
+    to { opacity: 0; transform: scale(0.7); max-width: 0; padding-left: 0; padding-right: 0; margin: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .reaction-pill.popping, .reaction-pill.leaving { animation: none; }
+    .reaction-pill.leaving { opacity: 0; }
   }
   .replies-toggle {
     display: inline-flex; align-items: center; gap: 6px;
@@ -3792,7 +3810,7 @@
             </div>
             <div class="comment-meta">
               <span>Mar 4, 2:15 PM</span>
-              <span class="reaction-pill">👍 2</span>
+              <span class="reaction-pill" role="button" tabindex="0" aria-label="React with 👍" onclick="toggleReaction(event, this)" onkeydown="handleReactionKey(event)">👍 2</span>
               <button>Reply</button>
             </div>
             <button class="replies-toggle expanded" onclick="toggleReplies(this)">
@@ -3812,7 +3830,7 @@
                   </div>
                   <div class="comment-meta">
                     <span>Mar 4, 3:30 PM</span>
-                    <span class="reaction-pill you">👍 1</span>
+                    <span class="reaction-pill you" role="button" tabindex="0" aria-label="Remove your 👍 reaction" aria-pressed="true" onclick="toggleReaction(event, this)" onkeydown="handleReactionKey(event)">👍 1</span>
                     <button>Reply</button>
                   </div>
                   <button class="replies-toggle expanded" onclick="toggleReplies(this)">
@@ -3871,8 +3889,8 @@
             </div>
             <div class="comment-meta">
               <span>Mar 5, 10:45 AM</span>
-              <span class="reaction-pill">🙏 1</span>
-              <span class="reaction-pill you">👍 2</span>
+              <span class="reaction-pill" role="button" tabindex="0" aria-label="React with 🙏" onclick="toggleReaction(event, this)" onkeydown="handleReactionKey(event)">🙏 1</span>
+              <span class="reaction-pill you" role="button" tabindex="0" aria-label="Remove your 👍 reaction" aria-pressed="true" onclick="toggleReaction(event, this)" onkeydown="handleReactionKey(event)">👍 2</span>
               <button>Reply</button>
             </div>
           </div>
@@ -6121,6 +6139,53 @@ function handleChecklistTextKey(e){
     e.preventDefault();
     el.textContent = el.dataset.orig || '';
     el.blur();              // commit will see the reverted text and keep it
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Comment reactions — toggle user's reaction on a pill
+   ─────────────────────────────────────────────────────────── */
+function toggleReaction(e, pill){
+  e.stopPropagation();
+  if(!pill || pill.classList.contains('leaving')) return;
+
+  var raw = (pill.textContent || '').trim();
+  // Match: "<emoji/token>  <digits>" — emoji can be multi-codepoint
+  var m = raw.match(/^(.+?)\s+(\d+)$/);
+  if(!m) return;
+  var emoji = m[1].trim();
+  var count = parseInt(m[2], 10) || 0;
+  var youReacted = pill.classList.contains('you');
+
+  if(youReacted){
+    count -= 1;
+    pill.classList.remove('you');
+    pill.setAttribute('aria-pressed', 'false');
+    pill.setAttribute('aria-label', 'React with ' + emoji);
+  } else {
+    count += 1;
+    pill.classList.add('you');
+    pill.setAttribute('aria-pressed', 'true');
+    pill.setAttribute('aria-label', 'Remove your ' + emoji + ' reaction');
+  }
+
+  if(count <= 0){
+    pill.classList.add('leaving');
+    setTimeout(function(){ if(pill.parentNode) pill.parentNode.removeChild(pill); }, 160);
+  } else {
+    pill.textContent = emoji + ' ' + count;
+    // Replay pop animation
+    pill.classList.remove('popping');
+    /* force reflow so the animation restarts */
+    void pill.offsetWidth;
+    pill.classList.add('popping');
+  }
+}
+
+function handleReactionKey(e){
+  if(e.key === 'Enter' || e.key === ' '){
+    e.preventDefault();
+    toggleReaction(e, e.currentTarget);
   }
 }
 
