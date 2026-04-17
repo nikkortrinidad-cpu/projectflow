@@ -918,6 +918,68 @@
   :root:not([data-theme="dark"]) .label-content { color: #8e2bc4; }
   :root:not([data-theme="dark"]) .label-dev { color: #1d8f3e; }
 
+  /* Removable label pills (card modal metadata only) */
+  .meta-value .label-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px 6px 2px 8px;
+    transition: padding-right 0.15s ease, background 0.15s ease;
+  }
+  .meta-value .label-pill-remove {
+    width: 14px; height: 14px;
+    border: none;
+    background: transparent;
+    color: currentColor;
+    opacity: 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    padding: 0;
+    margin-left: 2px;
+    transition: opacity 0.15s ease, background 0.12s ease;
+    max-width: 0;
+    overflow: hidden;
+  }
+  .meta-value .label-pill:hover .label-pill-remove,
+  .meta-value .label-pill:focus-within .label-pill-remove {
+    opacity: 0.7;
+    max-width: 14px;
+  }
+  .meta-value .label-pill-remove:hover,
+  .meta-value .label-pill-remove:focus-visible {
+    opacity: 1;
+    background: rgba(0,0,0,0.12);
+    outline: none;
+  }
+  :root[data-theme="dark"] .meta-value .label-pill-remove:hover,
+  :root[data-theme="dark"] .meta-value .label-pill-remove:focus-visible {
+    background: rgba(255,255,255,0.14);
+  }
+  .meta-value .label-pill-remove svg {
+    width: 10px; height: 10px;
+    stroke-width: 2.5;
+  }
+  .meta-value .label-pill.leaving {
+    animation: label-pill-out 160ms ease-in forwards;
+  }
+  @keyframes label-pill-out {
+    to {
+      opacity: 0;
+      transform: scale(0.85);
+      max-width: 0;
+      padding-left: 0; padding-right: 0;
+      margin: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .meta-value .label-pill,
+    .meta-value .label-pill-remove { transition: none; }
+    .meta-value .label-pill.leaving { animation: none; opacity: 0; }
+  }
+
   .meta-date {
     font-size: 13px; color: var(--text);
     font-feature-settings: "tnum";
@@ -3455,9 +3517,9 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
               Labels
             </div>
-            <div class="meta-value">
-              <span class="label-pill label-design">Design</span>
-              <span class="label-pill label-feature">Feature</span>
+            <div class="meta-value" id="metaLabelsRow">
+              <span class="label-pill label-design" data-label="Design">Design<button class="label-pill-remove" onclick="removeLabelPill(event)" aria-label="Remove Design label" tabindex="0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></span>
+              <span class="label-pill label-feature" data-label="Feature">Feature<button class="label-pill-remove" onclick="removeLabelPill(event)" aria-label="Remove Feature label" tabindex="0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></span>
               <button class="assignee-add" aria-label="Add label" data-tip="Add label" data-tip-pos="below">+</button>
             </div>
           </div>
@@ -5820,6 +5882,42 @@ function renderCumFlow(){
     }
   });
 })();
+
+/* ═══════════════════════════════════════════════════════════
+   Removable label pills (card modal metadata)
+   ─────────────────────────────────────────────────────────── */
+function removeLabelPill(e){
+  e.stopPropagation();
+  var pill = e.currentTarget.closest('.label-pill');
+  if(!pill) return;
+  var row = pill.parentNode;
+  var next = pill.nextElementSibling;          // restore anchor (preserves order)
+  var labelName = pill.dataset.label || pill.textContent.trim() || 'Label';
+
+  // Play collapse animation, then detach. Keep a reference for undo.
+  pill.classList.add('leaving');
+  var removed = false;
+  var detachTimer = setTimeout(function(){
+    if(pill.parentNode) pill.parentNode.removeChild(pill);
+    removed = true;
+  }, 160);
+
+  if(typeof showToast === 'function'){
+    showToast(labelName + ' label removed', {
+      action: 'Undo',
+      duration: 5000,
+      onAction: function(){
+        clearTimeout(detachTimer);
+        pill.classList.remove('leaving');
+        if(removed){
+          // Re-insert at original position
+          if(next && next.parentNode === row) row.insertBefore(pill, next);
+          else row.appendChild(pill);
+        }
+      }
+    });
+  }
+}
 
 /* ═══════════════════════════════════════════════════════════
    Share Modal — invite, role picker, general access, copy link
