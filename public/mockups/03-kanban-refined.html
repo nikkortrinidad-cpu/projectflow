@@ -1450,6 +1450,54 @@
     .reaction-pill.popping, .reaction-pill.leaving { animation: none; }
     .reaction-pill.leaving { opacity: 0; }
   }
+
+  /* Reaction emoji picker */
+  .reaction-picker {
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    padding: 8px;
+    display: none;
+    animation: reaction-picker-in 140ms ease-out;
+    transform-origin: top left;
+  }
+  .reaction-picker.open { display: block; }
+  @keyframes reaction-picker-in {
+    from { opacity: 0; transform: scale(0.96) translateY(-4px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .reaction-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 36px);
+    gap: 2px;
+  }
+  .reaction-emoji-btn {
+    width: 36px; height: 36px;
+    border: none; background: transparent;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    outline: none;
+    font-family: inherit;
+    transition: background 0.12s, transform 0.1s;
+  }
+  .reaction-emoji-btn:hover { background: var(--bg-soft); transform: scale(1.15); }
+  .reaction-emoji-btn:focus-visible {
+    background: var(--bg-soft);
+    box-shadow: 0 0 0 2px var(--hover-blue);
+  }
+  .reaction-emoji-btn:active { transform: scale(0.96); }
+  @media (prefers-reduced-motion: reduce) {
+    .reaction-picker { animation: none; }
+    .reaction-emoji-btn { transition: background 0.12s; }
+    .reaction-emoji-btn:hover, .reaction-emoji-btn:active { transform: none; }
+  }
   .replies-toggle {
     display: inline-flex; align-items: center; gap: 6px;
     margin-top: 8px;
@@ -3811,6 +3859,7 @@
             <div class="comment-meta">
               <span>Mar 4, 2:15 PM</span>
               <span class="reaction-pill" role="button" tabindex="0" aria-label="React with 👍" onclick="toggleReaction(event, this)" onkeydown="handleReactionKey(event)">👍 2</span>
+              <button class="add-reaction-btn">Add reaction</button>
               <button>Reply</button>
             </div>
             <button class="replies-toggle expanded" onclick="toggleReplies(this)">
@@ -3831,6 +3880,7 @@
                   <div class="comment-meta">
                     <span>Mar 4, 3:30 PM</span>
                     <span class="reaction-pill you" role="button" tabindex="0" aria-label="Remove your 👍 reaction" aria-pressed="true" onclick="toggleReaction(event, this)" onkeydown="handleReactionKey(event)">👍 1</span>
+                    <button class="add-reaction-btn">Add reaction</button>
                     <button>Reply</button>
                   </div>
                   <button class="replies-toggle expanded" onclick="toggleReplies(this)">
@@ -3850,7 +3900,7 @@
                         </div>
                         <div class="comment-meta">
                           <span>Mar 4, 4:02 PM</span>
-                          <button>Add reaction</button>
+                          <button class="add-reaction-btn">Add reaction</button>
                           <button>Reply</button>
                         </div>
                       </div>
@@ -3871,7 +3921,7 @@
                   </div>
                   <div class="comment-meta">
                     <span>Mar 4, 4:10 PM</span>
-                    <button>Add reaction</button>
+                    <button class="add-reaction-btn">Add reaction</button>
                     <button>Reply</button>
                   </div>
                 </div>
@@ -3891,6 +3941,7 @@
               <span>Mar 5, 10:45 AM</span>
               <span class="reaction-pill" role="button" tabindex="0" aria-label="React with 🙏" onclick="toggleReaction(event, this)" onkeydown="handleReactionKey(event)">🙏 1</span>
               <span class="reaction-pill you" role="button" tabindex="0" aria-label="Remove your 👍 reaction" aria-pressed="true" onclick="toggleReaction(event, this)" onkeydown="handleReactionKey(event)">👍 2</span>
+              <button class="add-reaction-btn">Add reaction</button>
               <button>Reply</button>
             </div>
           </div>
@@ -3905,7 +3956,7 @@
             </div>
             <div class="comment-meta">
               <span>Mar 5, 2:30 PM</span>
-              <button>Add reaction</button>
+              <button class="add-reaction-btn">Add reaction</button>
               <button>Reply</button>
             </div>
           </div>
@@ -6200,6 +6251,7 @@ function toggleReaction(e, pill){
 }
 
 function _metaHasAddReactionLabel(meta){
+  if(meta.querySelector('button.add-reaction-btn')) return true;
   var btns = meta.querySelectorAll('button');
   for(var i=0;i<btns.length;i++){
     if((btns[i].textContent || '').trim() === 'Add reaction') return true;
@@ -6214,6 +6266,166 @@ function _findReplyButton(meta){
   }
   return null;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Add reaction — emoji picker
+   ─────────────────────────────────────────────────────────── */
+var REACTION_EMOJIS = [
+  '👍','❤️','😂','🎉','🙏','🔥',
+  '👀','💯','✅','❌','💡','🚀',
+  '😊','😢','😮','🤔','👏','💪',
+  '🎯','⚡','✨','🌟','👋','🤝'
+];
+
+var _reactionPickerEl = null;
+var _reactionPickerAnchor = null;
+var _reactionPickerMeta = null;
+
+function openReactionPicker(anchorBtn){
+  if(!anchorBtn) return;
+  if(_reactionPickerEl){
+    var same = _reactionPickerAnchor === anchorBtn;
+    closeReactionPicker();
+    if(same) return;
+  }
+  var meta = anchorBtn.closest('.comment-meta');
+  if(!meta) return;
+
+  var picker = document.createElement('div');
+  picker.className = 'reaction-picker open';
+  picker.style.position = 'fixed';
+  picker.style.zIndex = '1150';   // above card-modal overlay (1000)
+  picker.style.top = '0px';
+  picker.style.left = '-9999px';  // off-screen until measured
+  picker.setAttribute('role', 'menu');
+  picker.setAttribute('aria-label', 'Pick a reaction');
+
+  var grid = document.createElement('div');
+  grid.className = 'reaction-picker-grid';
+  REACTION_EMOJIS.forEach(function(emoji){
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'reaction-emoji-btn';
+    b.setAttribute('role', 'menuitem');
+    b.setAttribute('aria-label', 'React with ' + emoji);
+    b.textContent = emoji;
+    b.addEventListener('click', function(ev){
+      ev.stopPropagation();
+      applyReaction(meta, emoji);
+      closeReactionPicker();
+    });
+    grid.appendChild(b);
+  });
+  picker.appendChild(grid);
+  document.body.appendChild(picker);
+
+  _reactionPickerEl = picker;
+  _reactionPickerAnchor = anchorBtn;
+  _reactionPickerMeta = meta;
+
+  // Anchor: below the button, clamped to viewport
+  var r = anchorBtn.getBoundingClientRect();
+  var w = picker.offsetWidth, h = picker.offsetHeight;
+  var top = r.bottom + 6;
+  var left = r.left;
+  if(top + h > window.innerHeight - 12) top = Math.max(12, r.top - h - 6);
+  if(left < 12) left = 12;
+  if(left + w > window.innerWidth - 12) left = window.innerWidth - 12 - w;
+  picker.style.top = top + 'px';
+  picker.style.left = left + 'px';
+
+  // Focus first emoji for keyboard users
+  setTimeout(function(){
+    var first = picker.querySelector('.reaction-emoji-btn');
+    if(first) first.focus();
+  }, 0);
+}
+
+function closeReactionPicker(){
+  if(_reactionPickerEl){
+    _reactionPickerEl.remove();
+    _reactionPickerEl = null;
+    _reactionPickerAnchor = null;
+    _reactionPickerMeta = null;
+  }
+}
+
+function applyReaction(meta, emoji){
+  if(!meta) return;
+  // Look for an existing pill with the same emoji
+  var pills = meta.querySelectorAll('.reaction-pill');
+  for(var i=0;i<pills.length;i++){
+    var pill = pills[i];
+    var text = (pill.textContent || '').trim();
+    var m = text.match(/^(.+?)\s+(\d+)$/);
+    if(!m) continue;
+    if(m[1].trim() === emoji){
+      var count = parseInt(m[2], 10) || 0;
+      if(pill.classList.contains('you')){
+        // Already reacted — just flash to confirm
+        pill.classList.remove('popping');
+        void pill.offsetWidth;
+        pill.classList.add('popping');
+      } else {
+        count += 1;
+        pill.classList.add('you');
+        pill.setAttribute('aria-pressed', 'true');
+        pill.setAttribute('aria-label', 'Remove your ' + emoji + ' reaction');
+        pill.textContent = emoji + ' ' + count;
+        pill.classList.remove('popping');
+        void pill.offsetWidth;
+        pill.classList.add('popping');
+      }
+      return;
+    }
+  }
+  // No existing pill — create a new one with .you and count 1
+  var newPill = document.createElement('span');
+  newPill.className = 'reaction-pill you';
+  newPill.setAttribute('role', 'button');
+  newPill.setAttribute('tabindex', '0');
+  newPill.setAttribute('aria-pressed', 'true');
+  newPill.setAttribute('aria-label', 'Remove your ' + emoji + ' reaction');
+  newPill.setAttribute('onclick', 'toggleReaction(event, this)');
+  newPill.setAttribute('onkeydown', 'handleReactionKey(event)');
+  newPill.textContent = emoji + ' 1';
+
+  // Insert just before the add-reaction / reply buttons
+  var addBtn = meta.querySelector('button.add-reaction-btn');
+  var replyBtn = _findReplyButton(meta);
+  var anchor = addBtn || replyBtn;
+  if(anchor) meta.insertBefore(newPill, anchor);
+  else meta.appendChild(newPill);
+
+  // Play pop animation on the next frame
+  requestAnimationFrame(function(){
+    newPill.classList.add('popping');
+  });
+}
+
+/* Event delegation: any "Add reaction" button inside a comment */
+document.addEventListener('click', function(e){
+  var btn = e.target.closest('button.add-reaction-btn');
+  if(!btn) return;
+  // Catch any legacy buttons without the class but with the text
+  if(!btn.classList.contains('add-reaction-btn') &&
+     (btn.textContent || '').trim() !== 'Add reaction') return;
+  e.preventDefault();
+  e.stopPropagation();
+  openReactionPicker(btn);
+});
+
+/* Outside click / Escape close */
+document.addEventListener('click', function(e){
+  if(!_reactionPickerEl) return;
+  if(e.target.closest('.reaction-picker')) return;
+  if(e.target.closest('button.add-reaction-btn')) return;
+  closeReactionPicker();
+}, true);
+
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape' && _reactionPickerEl) closeReactionPicker();
+});
 
 function handleReactionKey(e){
   if(e.key === 'Enter' || e.key === ' '){
