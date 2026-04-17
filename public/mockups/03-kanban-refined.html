@@ -3859,7 +3859,7 @@
             <div class="comment-meta">
               <span>Mar 4, 2:15 PM</span>
               <span class="reaction-pill" role="button" tabindex="0" aria-label="React with 👍" onclick="toggleReaction(event, this)" onkeydown="handleReactionKey(event)">👍 2</span>
-              <button class="add-reaction-btn">Add reaction</button>
+              <button class="add-reaction-btn" onclick="openReactionPicker(this)">Add reaction</button>
               <button>Reply</button>
             </div>
             <button class="replies-toggle expanded" onclick="toggleReplies(this)">
@@ -3880,7 +3880,7 @@
                   <div class="comment-meta">
                     <span>Mar 4, 3:30 PM</span>
                     <span class="reaction-pill you" role="button" tabindex="0" aria-label="Remove your 👍 reaction" aria-pressed="true" onclick="toggleReaction(event, this)" onkeydown="handleReactionKey(event)">👍 1</span>
-                    <button class="add-reaction-btn">Add reaction</button>
+                    <button class="add-reaction-btn" onclick="openReactionPicker(this)">Add reaction</button>
                     <button>Reply</button>
                   </div>
                   <button class="replies-toggle expanded" onclick="toggleReplies(this)">
@@ -3900,7 +3900,7 @@
                         </div>
                         <div class="comment-meta">
                           <span>Mar 4, 4:02 PM</span>
-                          <button class="add-reaction-btn">Add reaction</button>
+                          <button class="add-reaction-btn" onclick="openReactionPicker(this)">Add reaction</button>
                           <button>Reply</button>
                         </div>
                       </div>
@@ -3921,7 +3921,7 @@
                   </div>
                   <div class="comment-meta">
                     <span>Mar 4, 4:10 PM</span>
-                    <button class="add-reaction-btn">Add reaction</button>
+                    <button class="add-reaction-btn" onclick="openReactionPicker(this)">Add reaction</button>
                     <button>Reply</button>
                   </div>
                 </div>
@@ -3941,7 +3941,7 @@
               <span>Mar 5, 10:45 AM</span>
               <span class="reaction-pill" role="button" tabindex="0" aria-label="React with 🙏" onclick="toggleReaction(event, this)" onkeydown="handleReactionKey(event)">🙏 1</span>
               <span class="reaction-pill you" role="button" tabindex="0" aria-label="Remove your 👍 reaction" aria-pressed="true" onclick="toggleReaction(event, this)" onkeydown="handleReactionKey(event)">👍 2</span>
-              <button class="add-reaction-btn">Add reaction</button>
+              <button class="add-reaction-btn" onclick="openReactionPicker(this)">Add reaction</button>
               <button>Reply</button>
             </div>
           </div>
@@ -3956,7 +3956,7 @@
             </div>
             <div class="comment-meta">
               <span>Mar 5, 2:30 PM</span>
-              <button class="add-reaction-btn">Add reaction</button>
+              <button class="add-reaction-btn" onclick="openReactionPicker(this)">Add reaction</button>
               <button>Reply</button>
             </div>
           </div>
@@ -6233,6 +6233,7 @@ function toggleReaction(e, pill){
           addBtn.className = 'add-reaction-btn';
           addBtn.type = 'button';
           addBtn.textContent = 'Add reaction';
+          addBtn.setAttribute('onclick', 'openReactionPicker(this)');
           // Insert just before the Reply button if present, else at the end
           var reply = _findReplyButton(meta);
           if(reply) meta.insertBefore(addBtn, reply);
@@ -6402,18 +6403,6 @@ function applyReaction(meta, emoji){
     newPill.classList.add('popping');
   });
 }
-
-/* Event delegation: any "Add reaction" button inside a comment */
-document.addEventListener('click', function(e){
-  var btn = e.target.closest('button.add-reaction-btn');
-  if(!btn) return;
-  // Catch any legacy buttons without the class but with the text
-  if(!btn.classList.contains('add-reaction-btn') &&
-     (btn.textContent || '').trim() !== 'Add reaction') return;
-  e.preventDefault();
-  e.stopPropagation();
-  openReactionPicker(btn);
-});
 
 /* Outside click / Escape close */
 document.addEventListener('click', function(e){
