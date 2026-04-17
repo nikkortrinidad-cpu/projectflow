@@ -1540,8 +1540,9 @@
     .mention-dropdown { animation: none; }
   }
 
-  /* Reaction emoji picker */
-  .reaction-picker {
+  /* Emoji grid pickers — shared by reaction + comment-insert */
+  .reaction-picker,
+  .emoji-picker {
     background: var(--bg-elev);
     border: 1px solid var(--hairline);
     border-radius: 12px;
@@ -1551,17 +1552,20 @@
     animation: reaction-picker-in 140ms ease-out;
     transform-origin: top left;
   }
-  .reaction-picker.open { display: block; }
+  .reaction-picker.open,
+  .emoji-picker.open { display: block; }
   @keyframes reaction-picker-in {
     from { opacity: 0; transform: scale(0.96) translateY(-4px); }
     to   { opacity: 1; transform: scale(1) translateY(0); }
   }
-  .reaction-picker-grid {
+  .reaction-picker-grid,
+  .emoji-picker-grid {
     display: grid;
     grid-template-columns: repeat(6, 36px);
     gap: 2px;
   }
-  .reaction-emoji-btn {
+  .reaction-emoji-btn,
+  .emoji-picker-btn {
     width: 36px; height: 36px;
     border: none; background: transparent;
     font-size: 20px;
@@ -1576,16 +1580,29 @@
     font-family: inherit;
     transition: background 0.12s, transform 0.1s;
   }
-  .reaction-emoji-btn:hover { background: var(--bg-soft); transform: scale(1.15); }
-  .reaction-emoji-btn:focus-visible {
+  .reaction-emoji-btn:hover,
+  .emoji-picker-btn:hover { background: var(--bg-soft); transform: scale(1.15); }
+  .reaction-emoji-btn:focus-visible,
+  .emoji-picker-btn:focus-visible {
     background: var(--bg-soft);
     box-shadow: 0 0 0 2px var(--hover-blue);
   }
-  .reaction-emoji-btn:active { transform: scale(0.96); }
+  .reaction-emoji-btn:active,
+  .emoji-picker-btn:active { transform: scale(0.96); }
+  /* A subtle heading above the emoji grid — optional */
+  .emoji-picker-heading {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 4px 6px 6px;
+  }
   @media (prefers-reduced-motion: reduce) {
-    .reaction-picker { animation: none; }
-    .reaction-emoji-btn { transition: background 0.12s; }
-    .reaction-emoji-btn:hover, .reaction-emoji-btn:active { transform: none; }
+    .reaction-picker, .emoji-picker { animation: none; }
+    .reaction-emoji-btn, .emoji-picker-btn { transition: background 0.12s; }
+    .reaction-emoji-btn:hover, .reaction-emoji-btn:active,
+    .emoji-picker-btn:hover, .emoji-picker-btn:active { transform: none; }
   }
   .replies-toggle {
     display: inline-flex; align-items: center; gap: 6px;
@@ -4263,7 +4280,7 @@
             <div class="toolbar-group">
               <button class="toolbar-btn" id="formatToggleBtn" title="Format (Aa)" aria-label="Toggle formatting toolbar" aria-pressed="false" onclick="toggleFormatToolbar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg></button>
               <button class="toolbar-btn" id="mentionToggleBtn" title="Mention someone" aria-label="Mention a team member" aria-pressed="false" onclick="openMentionDropdown(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/></svg></button>
-              <button class="toolbar-btn" title="Emoji"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>
+              <button class="toolbar-btn" id="emojiInsertBtn" title="Insert emoji" aria-label="Insert emoji" aria-pressed="false" onclick="openEmojiInsertPicker(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>
               <button class="toolbar-btn" title="GIF"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
               <button class="toolbar-btn" title="Attach"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
             </div>
@@ -6758,6 +6775,162 @@ document.addEventListener('DOMContentLoaded', function(){
       else if(e.key === 'Escape'){ e.preventDefault(); hideLinkInput(); }
     });
   }
+});
+
+/* ═══════════════════════════════════════════════════════════
+   Comment editor — emoji insert picker (smiley-face button)
+   ─────────────────────────────────────────────────────────── */
+var EMOJI_INSERT_SET = [
+  '😊','😂','🤣','😍','😎','🥳',
+  '😅','🤔','😐','😕','😮','😳',
+  '😴','😔','😭','😤','🤯','🤗',
+  '👍','👎','👏','🙌','🙏','💪',
+  '❤️','💙','💚','💛','💜','💔',
+  '💯','🔥','✨','⭐','🌟','⚡',
+  '🎉','🎊','🚀','🎯','🏆','💡'
+];
+
+var _emojiInsertPickerEl = null;
+var _emojiInsertAnchor = null;
+var _emojiInsertSavedRange = null;
+
+function openEmojiInsertPicker(anchorBtn){
+  if(_emojiInsertPickerEl){
+    var same = _emojiInsertAnchor === anchorBtn;
+    closeEmojiInsertPicker();
+    if(same) return;
+  }
+
+  // Save the editor's selection so we can restore it after focus moves
+  _ensureEditorFocus();
+  _saveSelection();
+  _emojiInsertSavedRange = _savedRange ? _savedRange.cloneRange() : null;
+
+  var picker = document.createElement('div');
+  picker.className = 'emoji-picker open';
+  picker.setAttribute('role', 'menu');
+  picker.setAttribute('aria-label', 'Insert emoji');
+  picker.style.position = 'fixed';
+  picker.style.zIndex = '1150';
+  picker.style.top = '0px';
+  picker.style.left = '-9999px';
+
+  var heading = document.createElement('div');
+  heading.className = 'emoji-picker-heading';
+  heading.textContent = 'Frequently used';
+  picker.appendChild(heading);
+
+  var grid = document.createElement('div');
+  grid.className = 'emoji-picker-grid';
+  EMOJI_INSERT_SET.forEach(function(emoji){
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'emoji-picker-btn';
+    b.setAttribute('role', 'menuitem');
+    b.setAttribute('aria-label', 'Insert ' + emoji);
+    b.textContent = emoji;
+    b.addEventListener('click', function(ev){
+      ev.stopPropagation();
+      ev.preventDefault();
+      insertEmojiIntoEditor(emoji);
+      closeEmojiInsertPicker();
+    });
+    grid.appendChild(b);
+  });
+  picker.appendChild(grid);
+  document.body.appendChild(picker);
+
+  _emojiInsertPickerEl = picker;
+  _emojiInsertAnchor = anchorBtn;
+
+  // Anchor above the button (toolbar is at bottom)
+  var r = anchorBtn.getBoundingClientRect();
+  var w = picker.offsetWidth, h = picker.offsetHeight;
+  var top = r.top - h - 6;
+  var left = r.left;
+  if(top < 12) top = r.bottom + 6;      // flip below if no room above
+  if(left + w > window.innerWidth - 12) left = window.innerWidth - 12 - w;
+  if(left < 12) left = 12;
+  picker.style.top = top + 'px';
+  picker.style.left = left + 'px';
+
+  anchorBtn.setAttribute('aria-pressed', 'true');
+  anchorBtn.classList.add('active');
+
+  // Keep focus on the editor so the caret position is clear. Users can
+  // still Tab into the grid if they prefer keyboard selection.
+  setTimeout(function(){
+    var editor = document.getElementById('commentInput');
+    if(editor) editor.focus();
+    if(_emojiInsertSavedRange){
+      var sel = window.getSelection();
+      try { sel.removeAllRanges(); sel.addRange(_emojiInsertSavedRange); }
+      catch(err){}
+    }
+  }, 0);
+}
+
+function insertEmojiIntoEditor(emoji){
+  var editor = document.getElementById('commentInput');
+  if(!editor || !emoji) return;
+  editor.focus();
+
+  // Restore saved selection (click on picker may have moved focus off the editor)
+  var sel = window.getSelection();
+  if(_emojiInsertSavedRange){
+    try { sel.removeAllRanges(); sel.addRange(_emojiInsertSavedRange); }
+    catch(err){}
+  }
+
+  var range = sel.rangeCount ? sel.getRangeAt(0) : null;
+  var editorContainsSel = range && editor.contains(range.commonAncestorContainer);
+  if(!range || !editorContainsSel){
+    // Fallback: append at end
+    range = document.createRange();
+    range.selectNodeContents(editor);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+  if(!range.collapsed) range.deleteContents();
+
+  var textNode = document.createTextNode(emoji);
+  range.insertNode(textNode);
+
+  var after = document.createRange();
+  after.setStartAfter(textNode);
+  after.collapse(true);
+  sel.removeAllRanges();
+  sel.addRange(after);
+
+  // Update saved range to new position for the next emoji in the picker
+  _emojiInsertSavedRange = after.cloneRange();
+
+  editor.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+function closeEmojiInsertPicker(){
+  if(_emojiInsertPickerEl){
+    _emojiInsertPickerEl.remove();
+    _emojiInsertPickerEl = null;
+  }
+  if(_emojiInsertAnchor){
+    _emojiInsertAnchor.setAttribute('aria-pressed', 'false');
+    _emojiInsertAnchor.classList.remove('active');
+    _emojiInsertAnchor = null;
+  }
+  _emojiInsertSavedRange = null;
+}
+
+document.addEventListener('click', function(e){
+  if(!_emojiInsertPickerEl) return;
+  if(e.target.closest('.emoji-picker')) return;
+  if(e.target.closest('#emojiInsertBtn')) return;
+  closeEmojiInsertPicker();
+}, true);
+
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape' && _emojiInsertPickerEl) closeEmojiInsertPicker();
 });
 
 /* ═══════════════════════════════════════════════════════════
