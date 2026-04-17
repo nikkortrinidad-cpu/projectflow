@@ -1649,6 +1649,46 @@
     max-height: 120px;
   }
   .comment-input-area textarea::placeholder { color: var(--text-faint); }
+  /* Rich (contenteditable) comment input — replaces textarea for live formatting */
+  .comment-input {
+    width: 100%;
+    border: none; outline: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--text);
+    letter-spacing: -0.005em;
+    min-height: 36px;
+    max-height: 120px;
+    overflow-y: auto;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    cursor: text;
+    -webkit-user-modify: read-write-plaintext-only; /* safer paste on webkit */
+    -webkit-user-modify: read-write;
+  }
+  .comment-input:empty::before {
+    content: attr(data-placeholder);
+    color: var(--text-faint);
+    pointer-events: none;
+  }
+  .comment-input strong, .comment-input b { font-weight: 700; }
+  .comment-input em, .comment-input i { font-style: italic; }
+  .comment-input s, .comment-input strike, .comment-input del { text-decoration: line-through; }
+  .comment-input code {
+    font-family: 'SF Mono', Monaco, monospace;
+    font-size: 12px;
+    background: var(--bg-soft);
+    padding: 1px 5px;
+    border-radius: 4px;
+    border: 1px solid var(--hairline-soft);
+  }
+  .comment-input a {
+    color: var(--hover-blue);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .comment-input br { line-height: inherit; }
   .comment-toolbar {
     display: flex; align-items: center; justify-content: space-between;
     margin-top: 4px;
@@ -4121,7 +4161,7 @@
             <button type="button" class="link-cancel" onclick="hideLinkInput()">Cancel</button>
           </div>
 
-          <textarea id="commentInput" placeholder="Write a comment…" rows="2" oninput="updateSendState()" onkeydown="handleCommentKeyboardShortcut(event)"></textarea>
+          <div id="commentInput" class="comment-input" contenteditable="true" role="textbox" aria-label="Write a comment" aria-multiline="true" data-placeholder="Write a comment…" oninput="updateSendState()" onkeydown="handleCommentKeyboardShortcut(event)"></div>
           <div class="comment-toolbar">
             <div class="toolbar-group">
               <button class="toolbar-btn" id="formatToggleBtn" title="Format (Aa)" aria-label="Toggle formatting toolbar" aria-pressed="false" onclick="toggleFormatToolbar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg></button>
@@ -5565,16 +5605,66 @@ function recalcChecklistProgress(){
   if(fill) fill.style.width = pct + '%';
   if(counter) counter.textContent = done + ' of ' + total + ' · ' + pct + '%';
 }
+function _getCommentInputText(input){
+  // Plain-text representation used for the disabled-state check.
+  // Trim BRs / whitespace from a contenteditable container.
+  return (input.innerText || input.textContent || '').trim();
+}
+
+function _sanitizeCommentHtml(html){
+  // Allow a small, safe subset of inline-formatting tags in comments.
+  var allowed = ['STRONG','B','EM','I','U','S','STRIKE','DEL','CODE','A','BR','SPAN'];
+  var tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  function clean(node){
+    for(var i = node.childNodes.length - 1; i >= 0; i--){
+      var child = node.childNodes[i];
+      if(child.nodeType === 1){
+        var tag = child.tagName.toUpperCase();
+        if(allowed.indexOf(tag) < 0){
+          // Replace unknown element with its text contents
+          var textNode = document.createTextNode(child.textContent || '');
+          node.replaceChild(textNode, child);
+          continue;
+        }
+        // Strip all attributes except href on <a>
+        var attrs = Array.from(child.attributes || []);
+        attrs.forEach(function(a){
+          if(tag === 'A' && a.name.toLowerCase() === 'href'){
+            // Block javascript: URIs
+            if(/^\s*javascript:/i.test(a.value)) child.removeAttribute(a.name);
+            return;
+          }
+          child.removeAttribute(a.name);
+        });
+        if(tag === 'A'){
+          child.setAttribute('target', '_blank');
+          child.setAttribute('rel', 'noopener noreferrer');
+        }
+        clean(child);
+      } else if(child.nodeType !== 3 && child.nodeType !== 1){
+        node.removeChild(child);
+      }
+    }
+  }
+  clean(tmp);
+  return tmp.innerHTML;
+}
+
 function updateSendState(){
   var input = document.getElementById('commentInput');
   var group = document.getElementById('sendGroup');
   if(!input || !group) return;
-  group.classList.toggle('disabled', !input.value.trim());
+  var hasText = !!_getCommentInputText(input);
+  group.classList.toggle('disabled', !hasText);
 }
+
 function sendComment(){
   var input = document.getElementById('commentInput');
-  if(!input || !input.value.trim()) return;
-  var text = input.value.trim();
+  if(!input) return;
+  var plain = _getCommentInputText(input);
+  if(!plain) return;
+  var safeHtml = _sanitizeCommentHtml(input.innerHTML);
   var content = document.querySelector('.sidebar-content[data-tab="comments"]');
   if(content){
     var now = new Date();
@@ -5586,9 +5676,9 @@ function sendComment(){
       '<div class="comment-body">' +
         '<div class="comment-bubble you">' +
           '<div class="comment-author">Nikko Trinidad <span class="you-badge">You</span></div>' +
-          '<div class="comment-text">' + escapeHtml(text).replace(/\n/g, '<br>') + '</div>' +
+          '<div class="comment-text">' + safeHtml + '</div>' +
         '</div>' +
-        '<div class="comment-meta"><span>' + stamp + '</span><button>Reply</button></div>' +
+        '<div class="comment-meta"><span>' + stamp + '</span><button class="add-reaction-btn" onclick="openReactionPicker(this)">Add reaction</button><button>Reply</button></div>' +
       '</div>';
     // append before the comment-input-wrap if it's inside, else at the end
     var inputWrap = content.querySelector('.comment-input-wrap');
@@ -5603,7 +5693,7 @@ function sendComment(){
     // scroll the new comment into view
     node.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
-  input.value = '';
+  input.innerHTML = '';
   updateSendState();
 }
 
@@ -6329,34 +6419,91 @@ function toggleFormatToolbar(){
   if(!open) hideLinkInput();
 }
 
-function _wrapSelection(ta, left, right, placeholder){
-  ta.focus();
-  var start = ta.selectionStart;
-  var end = ta.selectionEnd;
-  var value = ta.value;
-  var selected = value.slice(start, end);
-  var hasSel = selected.length > 0;
-  var inner = hasSel ? selected : (placeholder || 'text');
-  var insertion = left + inner + right;
-  ta.setRangeText(insertion, start, end, 'end');
-  if(!hasSel){
-    // Select the placeholder for quick replacement
-    var selStart = start + left.length;
-    var selEnd = selStart + inner.length;
-    ta.setSelectionRange(selStart, selEnd);
+var _savedRange = null;
+
+function _saveSelection(){
+  var sel = window.getSelection();
+  if(sel && sel.rangeCount > 0){
+    _savedRange = sel.getRangeAt(0).cloneRange();
   }
-  ta.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+function _restoreSelection(){
+  if(!_savedRange) return null;
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(_savedRange);
+  return _savedRange;
+}
+
+function _editorHasFocus(){
+  var editor = document.getElementById('commentInput');
+  if(!editor) return false;
+  var sel = window.getSelection();
+  if(!sel || sel.rangeCount === 0) return false;
+  var range = sel.getRangeAt(0);
+  return editor.contains(range.commonAncestorContainer);
+}
+
+function _ensureEditorFocus(){
+  var editor = document.getElementById('commentInput');
+  if(!editor) return null;
+  if(!_editorHasFocus()){
+    editor.focus();
+    // If empty, place caret inside
+    if(!editor.firstChild){
+      var range = document.createRange();
+      range.selectNodeContents(editor);
+      range.collapse(true);
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+  }
+  return editor;
 }
 
 function applyFormat(type){
-  var ta = document.getElementById('commentInput');
-  if(!ta) return;
-  switch(type){
-    case 'bold':   _wrapSelection(ta, '**',  '**',  'bold text');   break;
-    case 'italic': _wrapSelection(ta, '*',   '*',   'italic text'); break;
-    case 'strike': _wrapSelection(ta, '~~',  '~~',  'strike text'); break;
-    case 'code':   _wrapSelection(ta, '`',   '`',   'code');        break;
+  var editor = _ensureEditorFocus();
+  if(!editor) return;
+  // execCommand is deprecated but still widely supported and the simplest
+  // path for a mockup. The real app uses TipTap which handles this natively.
+  try {
+    if(type === 'bold')         document.execCommand('bold', false, null);
+    else if(type === 'italic')  document.execCommand('italic', false, null);
+    else if(type === 'strike')  document.execCommand('strikeThrough', false, null);
+    else if(type === 'code')    _wrapSelectionWith(editor, 'code');
+  } catch(err){
+    console.warn('applyFormat failed:', err);
   }
+  editor.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+function _wrapSelectionWith(editor, tagName){
+  var sel = window.getSelection();
+  if(!sel || sel.rangeCount === 0) return;
+  var range = sel.getRangeAt(0);
+  if(range.collapsed){
+    // Insert placeholder and wrap it
+    var el = document.createElement(tagName);
+    el.textContent = 'code';
+    range.insertNode(el);
+    // Select the placeholder
+    var r = document.createRange();
+    r.selectNodeContents(el);
+    sel.removeAllRanges();
+    sel.addRange(r);
+    return;
+  }
+  // Wrap existing selection
+  var contents = range.extractContents();
+  var wrapper = document.createElement(tagName);
+  wrapper.appendChild(contents);
+  range.insertNode(wrapper);
+  var r2 = document.createRange();
+  r2.selectNodeContents(wrapper);
+  sel.removeAllRanges();
+  sel.addRange(r2);
 }
 
 /* Inline link URL input */
@@ -6364,12 +6511,9 @@ function showLinkInput(){
   var wrap = document.getElementById('linkInline');
   var input = document.getElementById('linkInlineInput');
   if(!wrap || !input) return;
-  var ta = document.getElementById('commentInput');
-  // Remember the selection so we can insert at the right place after Apply
-  if(ta){
-    _linkSelStart = ta.selectionStart;
-    _linkSelEnd = ta.selectionEnd;
-  }
+  // Remember current selection in editor so we can insert the link there
+  _ensureEditorFocus();
+  _saveSelection();
   wrap.classList.add('open');
   wrap.setAttribute('aria-hidden', 'false');
   input.value = '';
@@ -6383,30 +6527,54 @@ function hideLinkInput(){
   wrap.setAttribute('aria-hidden', 'true');
 }
 
-var _linkSelStart = 0, _linkSelEnd = 0;
-
 function applyLink(){
   var input = document.getElementById('linkInlineInput');
-  var ta = document.getElementById('commentInput');
-  if(!input || !ta) return;
+  var editor = document.getElementById('commentInput');
+  if(!input || !editor) return;
   var rawUrl = (input.value || '').trim();
   if(!rawUrl){ hideLinkInput(); return; }
   // Prepend https:// if the user didn't include a scheme
   var url = /^[a-z][a-z0-9+.\-]*:\/\//i.test(rawUrl) ? rawUrl : 'https://' + rawUrl;
 
-  var value = ta.value;
-  var selected = value.slice(_linkSelStart, _linkSelEnd);
-  var text = selected || 'link text';
-  var insertion = '[' + text + '](' + url + ')';
-  ta.focus();
-  ta.setRangeText(insertion, _linkSelStart, _linkSelEnd, 'end');
-  // If there was no selection, select the "link text" part for quick replacement
-  if(!selected){
-    var textStart = _linkSelStart + 1;   // after '['
-    var textEnd = textStart + text.length;
-    ta.setSelectionRange(textStart, textEnd);
+  editor.focus();
+  var range = _restoreSelection();
+  var sel = window.getSelection();
+
+  // If we lost the selection (unlikely but possible), append the link at end
+  if(!range){
+    range = document.createRange();
+    range.selectNodeContents(editor);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
   }
-  ta.dispatchEvent(new Event('input', { bubbles: true }));
+
+  var a = document.createElement('a');
+  a.href = url;
+  a.setAttribute('target', '_blank');
+  a.setAttribute('rel', 'noopener noreferrer');
+
+  if(range.collapsed){
+    a.textContent = 'link text';
+    range.insertNode(a);
+    // Select the link text for quick replacement
+    var r2 = document.createRange();
+    r2.selectNodeContents(a);
+    sel.removeAllRanges();
+    sel.addRange(r2);
+  } else {
+    // Wrap existing selection
+    var contents = range.extractContents();
+    a.appendChild(contents);
+    range.insertNode(a);
+    var r3 = document.createRange();
+    r3.setStartAfter(a);
+    r3.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(r3);
+  }
+
+  editor.dispatchEvent(new Event('input', { bubbles: true }));
   hideLinkInput();
 }
 
