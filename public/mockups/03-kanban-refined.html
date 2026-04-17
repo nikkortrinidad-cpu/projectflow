@@ -2764,6 +2764,341 @@
     [data-tip]::after { transition: opacity 0.12s ease 0.45s; transform: translateX(-50%); }
     [data-tip][data-tip-pos="left"]::after { transform: translateY(50%); }
   }
+
+  /* ═══════════════════════════════════════════════════════════
+     SHARE MODAL — invite people + link access (Apple-HIG tuned)
+     ─────────────────────────────────────────────────────────── */
+  .share-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1100;
+    align-items: center; justify-content: center;
+    padding: 24px;
+    opacity: 0;
+    transition: opacity 0.2s ease-out;
+  }
+  .share-overlay.open { display: flex; opacity: 1; }
+  .share-modal {
+    width: 100%; max-width: 480px;
+    max-height: min(85vh, 640px);
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    border-radius: 16px;
+    display: flex; flex-direction: column;
+    overflow-y: auto;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+    transform: translateY(12px);
+    transition: transform 0.2s ease-out;
+  }
+  .share-overlay.open .share-modal { transform: translateY(0); }
+
+  .share-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 24px 12px;
+    flex-shrink: 0;
+  }
+  .share-title {
+    font-size: 17px; font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.015em;
+  }
+  .share-close {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: transparent; border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: background 0.12s, color 0.12s;
+  }
+  .share-close:hover { background: var(--bg-soft); color: var(--text); }
+  .share-close svg { width: 16px; height: 16px; }
+
+  .share-context {
+    display: flex; align-items: center; gap: 8px;
+    margin: 0 24px 4px;
+    padding: 10px 12px;
+    background: var(--bg-soft);
+    border-radius: 10px;
+    font-size: 12px;
+    color: var(--text-muted);
+    letter-spacing: -0.005em;
+  }
+  .share-context svg { width: 14px; height: 14px; flex-shrink: 0; }
+  .share-context-title {
+    color: var(--text);
+    font-weight: 500;
+  }
+  .share-context-sep { opacity: 0.5; margin: 0 2px; }
+
+  .share-section {
+    padding: 16px 24px;
+    border-top: 1px solid var(--hairline-soft);
+  }
+  .share-section + .share-section { border-top: 1px solid var(--hairline-soft); }
+  .share-section:first-of-type { border-top: none; padding-top: 14px; }
+  .share-section-label {
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+    margin-bottom: 10px;
+  }
+
+  /* Invite row */
+  .share-invite-row {
+    display: flex; align-items: stretch;
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    background: var(--bg-faint);
+    transition: border-color 0.12s;
+  }
+  .share-invite-row:focus-within { border-color: var(--hover-blue); }
+  .share-invite-row.invalid { border-color: var(--accent); }
+  .share-email-input {
+    flex: 1; min-width: 0;
+    padding: 10px 14px;
+    background: transparent;
+    border: none; outline: none;
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+    letter-spacing: -0.005em;
+  }
+  .share-email-input::placeholder { color: var(--text-faint); }
+  .share-role-select {
+    border: none;
+    border-left: 1px solid var(--hairline);
+    padding: 0 12px;
+    background: transparent;
+    font-size: 13px; font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: inherit;
+    transition: color 0.12s;
+  }
+  .share-role-select:hover { color: var(--text); }
+  .share-role-select svg { width: 10px; height: 10px; opacity: 0.7; }
+
+  .share-message {
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px 14px;
+    background: var(--bg-faint);
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 64px; max-height: 160px;
+    outline: none;
+    transition: border-color 0.12s;
+    letter-spacing: -0.005em;
+  }
+  .share-message:focus { border-color: var(--hover-blue); }
+  .share-message::placeholder { color: var(--text-faint); }
+
+  .share-invite-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 12px;
+    gap: 8px;
+  }
+  .share-message-toggle {
+    background: transparent; border: none;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 4px 0;
+    display: inline-flex; align-items: center; gap: 6px;
+    letter-spacing: -0.005em;
+  }
+  .share-message-toggle:hover { color: var(--hover-blue); }
+  .share-message-toggle svg { width: 12px; height: 12px; }
+
+  .share-invite-btn {
+    height: 32px;
+    padding: 0 18px;
+    background: var(--hover-blue);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px; font-weight: 600;
+    font-family: inherit;
+    letter-spacing: -0.005em;
+    cursor: pointer;
+    transition: background 0.12s, opacity 0.12s, transform 0.08s;
+  }
+  .share-invite-btn:hover:not(:disabled) { background: var(--hover-blue-dark); }
+  .share-invite-btn:active:not(:disabled) { transform: scale(0.97); }
+  .share-invite-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* People list (reuses .members-row) */
+  .share-people-list { display: flex; flex-direction: column; gap: 2px; }
+  .share-people-list .members-row {
+    padding: 8px 10px; gap: 10px;
+    animation: share-row-in 180ms ease-out;
+  }
+  @keyframes share-row-in {
+    from { opacity: 0; transform: translateX(8px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  .share-people-list .members-avatar {
+    width: 30px; height: 30px; font-size: 11px;
+  }
+  .share-people-list .members-name { font-size: 13px; }
+  .share-people-list .members-sub { font-size: 11px; }
+  .share-role-static {
+    font-size: 12px;
+    color: var(--text-muted);
+    padding: 4px 10px;
+    letter-spacing: -0.005em;
+  }
+
+  /* General access */
+  .share-access-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    transition: background 0.12s;
+    cursor: pointer;
+    outline: none;
+  }
+  .share-access-row:hover,
+  .share-access-row:focus-visible { background: var(--bg-soft); }
+  .share-access-icon {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--bg-soft);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    transition: background 0.12s, color 0.12s;
+  }
+  .share-access-row.public .share-access-icon {
+    background: rgba(10,132,255,0.14);
+    color: var(--hover-blue);
+  }
+  .share-access-icon svg { width: 16px; height: 16px; }
+  .share-access-text { flex: 1; min-width: 0; }
+  .share-access-title {
+    font-size: 14px; font-weight: 500;
+    color: var(--text);
+    letter-spacing: -0.005em;
+  }
+  .share-access-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    letter-spacing: -0.005em;
+  }
+  .share-access-chevron {
+    color: var(--text-muted);
+    flex-shrink: 0;
+    display: inline-flex;
+  }
+  .share-access-chevron svg { width: 14px; height: 14px; }
+
+  /* Link bar */
+  .share-link-bar {
+    display: flex; align-items: stretch;
+    margin-top: 10px;
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    background: var(--bg-faint);
+    overflow: hidden;
+  }
+  .share-link-text {
+    flex: 1; min-width: 0;
+    padding: 10px 14px;
+    font-family: 'SF Mono', Monaco, 'Cascadia Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+    background: transparent;
+    border: none; outline: none;
+    white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .share-link-copy {
+    border: none;
+    border-left: 1px solid var(--hairline);
+    padding: 0 16px;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 13px; font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+    display: inline-flex; align-items: center; gap: 6px;
+    letter-spacing: -0.005em;
+  }
+  .share-link-copy:hover { background: var(--hover-tint); color: var(--hover-blue); }
+  .share-link-copy.copied { color: var(--hover-blue); }
+  .share-link-copy svg { width: 14px; height: 14px; }
+
+  /* Role dropdown menu (floats, anchored dynamically) */
+  .share-role-menu {
+    display: none;
+    position: fixed;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    padding: 6px;
+    min-width: 220px;
+    max-width: 280px;
+    z-index: 1200;
+    transform-origin: top right;
+    animation: share-menu-in 140ms ease-out;
+  }
+  .share-role-menu.open { display: block; }
+  @keyframes share-menu-in {
+    from { opacity: 0; transform: scale(0.96) translateY(-4px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .share-role-item {
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+    display: flex; align-items: flex-start; gap: 10px;
+    letter-spacing: -0.005em;
+  }
+  .share-role-item:hover { background: var(--bg-soft); }
+  .share-role-item > svg {
+    width: 14px; height: 14px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .share-role-item.danger { color: var(--accent); }
+  .share-role-item.danger > svg { color: var(--accent); }
+  .share-role-item-divider { height: 1px; background: var(--hairline-soft); margin: 4px 2px; }
+  .share-role-item-body { flex: 1; min-width: 0; }
+  .share-role-item-title {
+    display: flex; align-items: center; gap: 6px;
+    font-weight: 500;
+  }
+  .share-role-item-check { color: var(--hover-blue); display: inline-flex; }
+  .share-role-item-check svg { width: 12px; height: 12px; }
+  .share-role-item-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    font-weight: 400;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .share-overlay, .share-overlay .share-modal,
+    .share-role-menu, .share-people-list .members-row { transition: none; animation: none; }
+    .share-overlay .share-modal { transform: none; }
+  }
 </style>
 </head>
 <body>
@@ -3048,7 +3383,7 @@
     <!-- FULL-WIDTH TITLEBAR -->
     <div class="card-titlebar">
       <div class="titlebar-actions">
-        <button class="tb-btn" onclick="tbShareCard()" aria-label="Share" data-tip="Copy card link" data-tip-pos="below">
+        <button class="tb-btn" onclick="openShareModal()" aria-label="Share" data-tip="Share card" data-tip-pos="below">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
         </button>
         <button class="tb-btn" onclick="toggleTbMenu(event)" aria-label="More" data-tip="More actions" data-tip-pos="below">
@@ -3385,6 +3720,115 @@
     </div><!-- /.card-modal-body-row -->
 
   </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     Share Modal
+     ═══════════════════════════════════════════════════════════ -->
+<div class="share-overlay" id="shareOverlay" role="dialog" aria-labelledby="shareTitle" aria-modal="true" onclick="closeShareModal(event)">
+  <div class="share-modal" onclick="event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="share-header">
+      <div class="share-title" id="shareTitle">Share card</div>
+      <button class="share-close" onclick="closeShareModal()" aria-label="Close" data-tip="Close (Esc)" data-tip-pos="left">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- Context chip -->
+    <div class="share-context" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
+      <span><span class="share-context-title" id="shareContextTitle">Untitled card</span><span class="share-context-sep"> · </span><span id="shareContextStatus">In Progress</span></span>
+    </div>
+
+    <!-- Invite People -->
+    <div class="share-section">
+      <div class="share-section-label">Invite people</div>
+      <div class="share-invite-row" id="shareInviteRow">
+        <input type="email" class="share-email-input" id="shareEmailInput" placeholder="Email address" aria-label="Email address" autocomplete="off">
+        <button class="share-role-select" id="shareInviteRoleBtn" onclick="openInviteRoleMenu(event)" aria-haspopup="menu" aria-label="Choose invite role">
+          <span id="shareInviteRoleLabel">Can edit</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+      </div>
+      <textarea class="share-message" id="shareMessage" placeholder="Add a message (optional)" aria-label="Optional message" style="display:none;"></textarea>
+      <div class="share-invite-footer">
+        <button class="share-message-toggle" id="shareMessageToggle" onclick="toggleShareMessage()" type="button" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>Add a message</span>
+        </button>
+        <button class="share-invite-btn" id="shareInviteBtn" onclick="submitInvite()" disabled>Invite</button>
+      </div>
+    </div>
+
+    <!-- People with access -->
+    <div class="share-section">
+      <div class="share-section-label">People with access</div>
+      <div class="share-people-list" id="sharePeopleList">
+        <!-- Current user (static, non-editable) -->
+        <div class="members-row" data-owner="true">
+          <div class="members-avatar avatar-color-2">NT</div>
+          <div class="members-identity">
+            <div class="members-name">Nikko Trinidad <span class="members-you-tag">You</span></div>
+            <div class="members-sub">nikko@121group.io</div>
+          </div>
+          <span class="share-role-static">Owner</span>
+        </div>
+        <!-- Pre-populated board members (demo) -->
+        <div class="members-row" data-member-id="seed-jc" data-role="edit">
+          <div class="members-avatar avatar-color-2">JC</div>
+          <div class="members-identity">
+            <div class="members-name">Joshua Castilla</div>
+            <div class="members-sub">joshua@121group.io</div>
+          </div>
+          <button class="members-role-pill" onclick="openMemberRoleMenu(event, 'seed-jc')" aria-haspopup="menu">
+            <span class="role-label">Can edit</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        </div>
+        <div class="members-row" data-member-id="seed-sc" data-role="comment">
+          <div class="members-avatar avatar-color-3">SC</div>
+          <div class="members-identity">
+            <div class="members-name">Sarah Chen</div>
+            <div class="members-sub">sarah@121group.io</div>
+          </div>
+          <button class="members-role-pill" onclick="openMemberRoleMenu(event, 'seed-sc')" aria-haspopup="menu">
+            <span class="role-label">Can comment</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- General access -->
+    <div class="share-section">
+      <div class="share-section-label">General access</div>
+      <div class="share-access-row" id="shareAccessRow" onclick="toggleGeneralAccessMenu(event)" role="button" tabindex="0" aria-haspopup="menu">
+        <div class="share-access-icon" id="shareAccessIconBox">
+          <svg id="shareAccessIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <div class="share-access-text">
+          <div class="share-access-title" id="shareAccessTitle">Restricted</div>
+          <div class="share-access-sub" id="shareAccessSub">Only invited people can access</div>
+        </div>
+        <div class="share-access-chevron">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+      <div class="share-link-bar">
+        <input type="text" class="share-link-text" id="shareLinkText" readonly aria-label="Shareable link">
+        <button class="share-link-copy" id="shareLinkCopy" onclick="copyShareLink()" aria-label="Copy link">
+          <svg id="shareLinkCopyIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <span id="shareLinkCopyLabel">Copy</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Floating role menu (anchored dynamically) -->
+  <div class="share-role-menu" id="shareRoleMenu" onclick="event.stopPropagation()" role="menu"></div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════
@@ -5196,6 +5640,9 @@ document.querySelector('.card-modal').addEventListener('click', function(e){
 /* Escape closes card modal (in addition to existing handlers) */
 document.addEventListener('keydown', function(e){
   if(e.key === 'Escape'){
+    // Share modal takes priority if it's open — it stacks above the card modal.
+    var share = document.getElementById('shareOverlay');
+    if(share && share.classList.contains('open')) return;
     var modal = document.getElementById('cardModalOverlay');
     if(modal && modal.classList.contains('open')){
       closeCardPanel();
@@ -5372,6 +5819,393 @@ function renderCumFlow(){
       if(m && m.classList.contains('open')) closeAnalytics();
     }
   });
+})();
+
+/* ═══════════════════════════════════════════════════════════
+   Share Modal — invite, role picker, general access, copy link
+   ═══════════════════════════════════════════════════════════ */
+(function(){
+  var ROLES = [
+    { id: 'view',    label: 'Can view',    desc: 'Read only',
+      icon: '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>' },
+    { id: 'comment', label: 'Can comment', desc: 'Read and add comments',
+      icon: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>' },
+    { id: 'edit',    label: 'Can edit',    desc: 'Full editing access',
+      icon: '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>' }
+  ];
+  var ACCESS_MODES = [
+    { id: 'restricted', title: 'Restricted',        sub: 'Only invited people can access',
+      icon: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>' },
+    { id: 'link',       title: 'Anyone with link',  sub: 'Anyone with the link can access',
+      icon: '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>' }
+  ];
+  var CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  var COPY_SVG = '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>';
+  var CHECK_PATH = '<polyline points="20 6 9 17 4 12"/>';
+
+  var state = {
+    inviteRole: 'edit',
+    access: 'restricted',
+    activeMenu: null       // 'invite' | 'member:<id>' | 'access' | null
+  };
+
+  function roleById(id){
+    for(var i=0;i<ROLES.length;i++){ if(ROLES[i].id===id) return ROLES[i]; }
+    return ROLES[2];
+  }
+  function accessById(id){
+    for(var i=0;i<ACCESS_MODES.length;i++){ if(ACCESS_MODES[i].id===id) return ACCESS_MODES[i]; }
+    return ACCESS_MODES[0];
+  }
+
+  function escHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  /* ───── Open / close ───── */
+  window.openShareModal = function(){
+    if(typeof _currentCard === 'undefined' || !_currentCard) return;
+    var overlay = document.getElementById('shareOverlay');
+    if(!overlay) return;
+
+    // Context from current card
+    var titleEl = _currentCard.querySelector('.card-title');
+    var cardTitle = (titleEl && titleEl.textContent || 'Untitled card').trim();
+    var column = _currentCard.closest('.column');
+    var colTitleEl = column ? column.querySelector('.column-title') : null;
+    var colTitle = (colTitleEl && colTitleEl.textContent || '').trim();
+    document.getElementById('shareContextTitle').textContent = cardTitle;
+    document.getElementById('shareContextStatus').textContent = colTitle || 'Unscheduled';
+
+    // Shareable link (deterministic per card)
+    if(!_currentCard.dataset.cardId){
+      _currentCard.dataset.cardId = 'c-' + Math.random().toString(36).slice(2, 9);
+    }
+    var link = location.origin + location.pathname + '#card-' + _currentCard.dataset.cardId;
+    document.getElementById('shareLinkText').value = link;
+
+    // Reset fields
+    var emailInput = document.getElementById('shareEmailInput');
+    emailInput.value = '';
+    updateInviteState();
+    resetCopyButton();
+    resetMessageToggle();
+
+    overlay.classList.add('open');
+    // Autofocus the email input after the open transition
+    setTimeout(function(){ emailInput.focus(); }, 220);
+  };
+
+  window.closeShareModal = function(e){
+    if(e && e.target){
+      if(e.target.closest('.share-modal')) return;
+      if(e.target.closest('.share-role-menu')) return;
+    }
+    var overlay = document.getElementById('shareOverlay');
+    if(!overlay) return;
+    overlay.classList.remove('open');
+    closeRoleMenu();
+  };
+
+  /* ───── Invite flow ───── */
+  function isValidEmail(v){
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test((v||'').trim());
+  }
+  function updateInviteState(){
+    var input = document.getElementById('shareEmailInput');
+    var btn   = document.getElementById('shareInviteBtn');
+    var row   = document.getElementById('shareInviteRow');
+    var val   = input.value.trim();
+    var valid = isValidEmail(val);
+    btn.disabled = !valid;
+    if(val && !valid) row.classList.add('invalid');
+    else row.classList.remove('invalid');
+  }
+
+  window.submitInvite = function(){
+    var input = document.getElementById('shareEmailInput');
+    var email = input.value.trim();
+    if(!isValidEmail(email)) return;
+
+    // Derive display info
+    var local = email.split('@')[0] || email;
+    var name = local.replace(/[._-]+/g, ' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
+    var initials = (name.match(/\b\w/g) || ['?']).slice(0,2).join('').toUpperCase();
+    var hash = 0;
+    for(var i=0;i<email.length;i++){ hash = ((hash*31) + email.charCodeAt(i)) | 0; }
+    var colorIdx = (Math.abs(hash) % 6) + 1;
+    var memberId = 'invited-' + Math.random().toString(36).slice(2, 9);
+    var role = roleById(state.inviteRole);
+
+    var row = document.createElement('div');
+    row.className = 'members-row';
+    row.dataset.memberId = memberId;
+    row.dataset.role = role.id;
+    row.innerHTML =
+      '<div class="members-avatar avatar-color-' + colorIdx + '">' + escHtml(initials) + '</div>' +
+      '<div class="members-identity">' +
+        '<div class="members-name">' + escHtml(name) + '</div>' +
+        '<div class="members-sub">' + escHtml(email) + '</div>' +
+      '</div>' +
+      '<button class="members-role-pill" onclick="openMemberRoleMenu(event, \'' + memberId + '\')" aria-haspopup="menu">' +
+        '<span class="role-label">' + escHtml(role.label) + '</span>' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>' +
+      '</button>';
+
+    document.getElementById('sharePeopleList').appendChild(row);
+
+    input.value = '';
+    updateInviteState();
+    if(typeof showToast === 'function') showToast('Invited ' + email);
+    input.focus();
+  };
+
+  /* ───── Optional message toggle ───── */
+  window.toggleShareMessage = function(){
+    var msg = document.getElementById('shareMessage');
+    var toggle = document.getElementById('shareMessageToggle');
+    var labelSpan = toggle.querySelector('span');
+    var svg = toggle.querySelector('svg');
+    var expanded = msg.style.display !== 'none';
+    if(expanded){
+      msg.style.display = 'none';
+      toggle.setAttribute('aria-expanded', 'false');
+      labelSpan.textContent = 'Add a message';
+      svg.innerHTML = '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>';
+    } else {
+      msg.style.display = 'block';
+      toggle.setAttribute('aria-expanded', 'true');
+      labelSpan.textContent = 'Hide message';
+      svg.innerHTML = '<line x1="5" y1="12" x2="19" y2="12"/>';
+      msg.focus();
+    }
+  };
+  function resetMessageToggle(){
+    var msg = document.getElementById('shareMessage');
+    var toggle = document.getElementById('shareMessageToggle');
+    if(!msg || !toggle) return;
+    msg.style.display = 'none';
+    msg.value = '';
+    toggle.setAttribute('aria-expanded', 'false');
+    var labelSpan = toggle.querySelector('span');
+    var svg = toggle.querySelector('svg');
+    if(labelSpan) labelSpan.textContent = 'Add a message';
+    if(svg) svg.innerHTML = '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>';
+  }
+
+  /* ───── Floating role / access menu ───── */
+  function renderRoleItem(role, activeId){
+    var isActive = role.id === activeId;
+    return '<div class="share-role-item" data-role-id="' + role.id + '" role="menuitem" tabindex="0">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + role.icon + '</svg>' +
+      '<div class="share-role-item-body">' +
+        '<div class="share-role-item-title">' + escHtml(role.label) +
+          (isActive ? '<span class="share-role-item-check">' + CHECK_SVG + '</span>' : '') +
+        '</div>' +
+        '<div class="share-role-item-desc">' + escHtml(role.desc) + '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function buildRoleMenu(currentId, includeRemove, onPick){
+    var menu = document.getElementById('shareRoleMenu');
+    var html = ROLES.map(function(r){ return renderRoleItem(r, currentId); }).join('');
+    if(includeRemove){
+      html += '<div class="share-role-item-divider"></div>' +
+        '<div class="share-role-item danger" data-role-id="remove" role="menuitem" tabindex="0">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>' +
+          '<div class="share-role-item-body"><div class="share-role-item-title">Remove access</div></div>' +
+        '</div>';
+    }
+    menu.innerHTML = html;
+    menu.querySelectorAll('.share-role-item').forEach(function(el){
+      el.addEventListener('click', function(){
+        onPick(el.dataset.roleId);
+        closeRoleMenu();
+      });
+    });
+  }
+
+  function buildAccessMenu(onPick){
+    var menu = document.getElementById('shareRoleMenu');
+    var html = ACCESS_MODES.map(function(a){
+      var isActive = a.id === state.access;
+      return '<div class="share-role-item" data-access-id="' + a.id + '" role="menuitem" tabindex="0">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + a.icon + '</svg>' +
+        '<div class="share-role-item-body">' +
+          '<div class="share-role-item-title">' + escHtml(a.title) +
+            (isActive ? '<span class="share-role-item-check">' + CHECK_SVG + '</span>' : '') +
+          '</div>' +
+          '<div class="share-role-item-desc">' + escHtml(a.sub) + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    menu.innerHTML = html;
+    menu.querySelectorAll('.share-role-item').forEach(function(el){
+      el.addEventListener('click', function(){
+        onPick(el.dataset.accessId);
+        closeRoleMenu();
+      });
+    });
+  }
+
+  function anchorMenu(anchorEl){
+    var menu = document.getElementById('shareRoleMenu');
+    var r = anchorEl.getBoundingClientRect();
+    // Open menu first so we can measure it
+    menu.classList.add('open');
+    var mw = menu.offsetWidth || 220;
+    var mh = menu.offsetHeight || 160;
+    var top = r.bottom + 6;
+    var left = r.right - mw;
+    // Keep in viewport
+    if(top + mh > window.innerHeight - 12){ top = Math.max(12, r.top - mh - 6); }
+    if(left < 12) left = 12;
+    if(left + mw > window.innerWidth - 12) left = window.innerWidth - 12 - mw;
+    menu.style.top = top + 'px';
+    menu.style.left = left + 'px';
+  }
+
+  function closeRoleMenu(){
+    var menu = document.getElementById('shareRoleMenu');
+    if(menu) menu.classList.remove('open');
+    state.activeMenu = null;
+  }
+
+  window.openInviteRoleMenu = function(e){
+    e.stopPropagation();
+    var btn = e.currentTarget;
+    buildRoleMenu(state.inviteRole, false, function(id){
+      state.inviteRole = id;
+      document.getElementById('shareInviteRoleLabel').textContent = roleById(id).label;
+    });
+    anchorMenu(btn);
+    state.activeMenu = 'invite';
+  };
+
+  window.openMemberRoleMenu = function(e, memberId){
+    e.stopPropagation();
+    var btn = e.currentTarget;
+    var row = document.querySelector('.members-row[data-member-id="' + memberId + '"]');
+    if(!row) return;
+    var currentRole = row.dataset.role || 'view';
+    var memberEmail = (row.querySelector('.members-sub') || {}).textContent || '';
+    buildRoleMenu(currentRole, true, function(id){
+      if(id === 'remove'){
+        row.remove();
+        if(typeof showToast === 'function') showToast('Removed ' + (memberEmail || 'member'));
+      } else {
+        row.dataset.role = id;
+        var lbl = row.querySelector('.role-label');
+        if(lbl) lbl.textContent = roleById(id).label;
+      }
+    });
+    anchorMenu(btn);
+    state.activeMenu = 'member:' + memberId;
+  };
+
+  window.toggleGeneralAccessMenu = function(e){
+    e.stopPropagation();
+    var anchor = document.getElementById('shareAccessRow');
+    buildAccessMenu(function(id){
+      state.access = id;
+      var a = accessById(id);
+      document.getElementById('shareAccessTitle').textContent = a.title;
+      document.getElementById('shareAccessSub').textContent = a.sub;
+      document.getElementById('shareAccessIcon').innerHTML = a.icon;
+      document.getElementById('shareAccessRow').classList.toggle('public', id === 'link');
+    });
+    anchorMenu(anchor);
+    state.activeMenu = 'access';
+  };
+
+  /* ───── Copy link ───── */
+  function resetCopyButton(){
+    var btn = document.getElementById('shareLinkCopy');
+    var icon = document.getElementById('shareLinkCopyIcon');
+    var label = document.getElementById('shareLinkCopyLabel');
+    if(!btn) return;
+    btn.classList.remove('copied');
+    if(label) label.textContent = 'Copy';
+    if(icon) icon.innerHTML = COPY_SVG;
+  }
+
+  window.copyShareLink = function(){
+    var link = document.getElementById('shareLinkText').value;
+    var btn = document.getElementById('shareLinkCopy');
+    var icon = document.getElementById('shareLinkCopyIcon');
+    var label = document.getElementById('shareLinkCopyLabel');
+    var done = function(){
+      btn.classList.add('copied');
+      if(label) label.textContent = 'Copied';
+      if(icon) icon.innerHTML = CHECK_PATH;
+      setTimeout(resetCopyButton, 1600);
+    };
+    var fallback = function(){
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = link;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed'; ta.style.top = '-1000px';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+        done();
+      } catch(err){
+        if(typeof showToast === 'function') showToast('Unable to copy link');
+      }
+    };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(link).then(done).catch(fallback);
+    } else {
+      fallback();
+    }
+  };
+
+  /* ───── Event wiring ───── */
+  document.addEventListener('DOMContentLoaded', function(){
+    var input = document.getElementById('shareEmailInput');
+    if(input){
+      input.addEventListener('input', updateInviteState);
+      input.addEventListener('keydown', function(e){
+        if(e.key === 'Enter' && !e.shiftKey){
+          e.preventDefault();
+          var btn = document.getElementById('shareInviteBtn');
+          if(!btn.disabled) submitInvite();
+        }
+      });
+    }
+    var accessRow = document.getElementById('shareAccessRow');
+    if(accessRow){
+      accessRow.addEventListener('keydown', function(e){
+        if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggleGeneralAccessMenu(e); }
+      });
+    }
+  });
+
+  // Close role menu on outside click
+  document.addEventListener('click', function(e){
+    if(!state.activeMenu) return;
+    if(e.target.closest('.share-role-menu')) return;
+    if(e.target.closest('.share-role-select')) return;
+    if(e.target.closest('.members-role-pill')) return;
+    if(e.target.closest('.share-access-row')) return;
+    closeRoleMenu();
+  });
+
+  // Escape: close menu first, then modal
+  document.addEventListener('keydown', function(e){
+    if(e.key !== 'Escape') return;
+    if(state.activeMenu){ closeRoleMenu(); e.stopPropagation(); return; }
+    var overlay = document.getElementById('shareOverlay');
+    if(overlay && overlay.classList.contains('open')){
+      closeShareModal();
+      e.stopPropagation();
+    }
+  }, true);  // capture phase — runs before the card-modal Escape handler
 })();
 </script>
 
