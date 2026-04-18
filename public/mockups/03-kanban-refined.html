@@ -4507,7 +4507,7 @@
 </div>
 
 <!-- Card Detail Modal -->
-<div class="card-modal-overlay" id="cardModalOverlay" onclick="closeCardPanel(event)">
+<div class="card-modal-overlay" id="cardModalOverlay" role="dialog" aria-modal="true" aria-labelledby="cardModalTitle" onclick="closeCardPanel(event)">
   <div class="card-modal" onclick="event.stopPropagation()">
 
     <!-- FULL-WIDTH TITLEBAR -->
@@ -4550,7 +4550,7 @@
     <!-- LEFT: main content -->
     <div class="card-modal-main">
       <div class="card-modal-body">
-        <input type="text" class="card-modal-title" value="Update homepage hero section design">
+        <input type="text" class="card-modal-title" id="cardModalTitle" aria-label="Card title" value="Update homepage hero section design">
 
         <div class="meta-table">
           <!-- Row 1: What kind of work? -->
