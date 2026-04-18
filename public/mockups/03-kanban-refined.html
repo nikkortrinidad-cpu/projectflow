@@ -5706,6 +5706,12 @@ function openCardPanel(cardEl){
   document.body.style.overflow = 'hidden';
   recalcChecklistProgress();
   updateSendState();
+  // keep URL hash in sync so Share links stay meaningful without polluting history
+  if(cardEl && cardEl.dataset.cardId){
+    try {
+      history.replaceState(null, '', location.pathname + location.search + '#card-' + cardEl.dataset.cardId);
+    } catch(e){}
+  }
 }
 
 function setStatusDisplay(key){
@@ -6094,6 +6100,10 @@ function closeCardPanel(e){
   document.body.style.overflow = '';
   var menu = document.getElementById('tbMenu');
   if(menu) menu.classList.remove('open');
+  // drop the hash when the card closes so the URL reflects current state
+  if(/^#card-/.test(location.hash || '')){
+    try { history.replaceState(null, '', location.pathname + location.search); } catch(err){}
+  }
 }
 function toggleTbMenu(e){
   e.stopPropagation();
@@ -6433,7 +6443,40 @@ function _bootCommentPersistence(){
   _restorePersistedComments();
   _restoreSeedMutations();
   _restoreDraft();
+  _tagCardIds();
+  _openCardFromHash();
 }
+
+/* ──────────────────────────────────────────────────────────
+   Deep-linking: stable card IDs + hash resolver
+   ──────────────────────────────────────────────────────────
+   Every card gets a deterministic data-card-id (c-1, c-2, ...)
+   at boot, so a URL like …#card-c-3 is a stable pointer that
+   opens the same card across tabs, refreshes, and sessions.
+   Hash changes also route — paste a link in-tab and it opens. */
+function _tagCardIds(){
+  var idx = 0;
+  document.querySelectorAll('.card').forEach(function(card){
+    idx++;
+    if(!card.dataset.cardId) card.dataset.cardId = 'c-' + idx;
+  });
+}
+function _openCardFromHash(){
+  var raw = (location.hash || '').replace(/^#/, '');
+  if(!raw || raw.indexOf('card-') !== 0) return;
+  var id = raw.slice('card-'.length);
+  if(!id) return;
+  // CSS.escape is safe for arbitrary IDs; fall back to a manual sanitizer
+  var safe = (window.CSS && CSS.escape) ? CSS.escape(id) : id.replace(/[^\w-]/g, '');
+  if(!safe) return;
+  var card = document.querySelector('.card[data-card-id="' + safe + '"]');
+  if(!card) return;
+  var overlay = document.getElementById('cardModalOverlay');
+  if(overlay && overlay.classList.contains('open') &&
+     typeof _currentCard !== 'undefined' && _currentCard === card) return;
+  openCardPanel(card);
+}
+window.addEventListener('hashchange', _openCardFromHash);
 if(document.readyState === 'loading'){
   document.addEventListener('DOMContentLoaded', _bootCommentPersistence);
 } else {
