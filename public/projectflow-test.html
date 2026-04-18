@@ -5508,7 +5508,8 @@
 
   /* ── View routing (merged overview + board) ── */
   .view { display: none; }
-  .view.active { display: block; }
+  .view.active { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+  .view-overview.active { overflow-y: auto; }
   </style>
 </head>
 <body>
