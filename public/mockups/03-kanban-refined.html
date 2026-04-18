@@ -6496,7 +6496,27 @@ function _bootCommentPersistence(){
   _restoreSeedMutations();
   _restoreDraft();
   _tagCardIds();
+  _tagCommentAuthors();
   _openCardFromHash();
+}
+
+/* Label every .comment as role=article with the author's name, so the
+   generic "Reply"/"Add reaction" buttons inside announce with context
+   (e.g. "Article, Comment by Joshua Castilla → Reply button"). Runs on
+   boot and whenever a new comment/reply is inserted. */
+function _tagCommentAuthors(root){
+  var scope = root || document;
+  scope.querySelectorAll('.comment').forEach(function(c){
+    var authorEl = c.querySelector(':scope > .comment-body > .comment-bubble > .comment-author');
+    if(!authorEl) return;
+    var clone = authorEl.cloneNode(true);
+    var badge = clone.querySelector('.you-badge');
+    if(badge) badge.remove();
+    var author = clone.textContent.trim();
+    if(!author) return;
+    c.setAttribute('role', 'article');
+    c.setAttribute('aria-label', 'Comment by ' + author);
+  });
 }
 
 /* ──────────────────────────────────────────────────────────
@@ -6776,6 +6796,7 @@ function sendComment(scheduledAt){
     var inputWrap = content.querySelector('.comment-input-wrap');
     if(inputWrap) content.insertBefore(node, inputWrap);
     else content.appendChild(node);
+    _tagCommentAuthors(node);
     // bump comments tab count
     var tabCount = document.querySelector('.sidebar-tab[data-tab="comments"] .tab-count');
     if(tabCount){
@@ -7107,6 +7128,7 @@ function sendReply(parentComment, text, opts){
   while(inner.firstChild) node.appendChild(inner.firstChild);
 
   replies.appendChild(node);
+  _tagCommentAuthors(node);
   replies.classList.add('open');
 
   var count = (parseInt(replies.getAttribute('data-reply-count'), 10) || 0) + 1;
