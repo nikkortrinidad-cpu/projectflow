@@ -338,6 +338,13 @@
     transition: background 0.15s, color 0.15s;
     background: transparent; border: none; font-family: inherit;
     padding: 0;
+    position: relative;
+  }
+  .column-menu::before {
+    content: ''; position: absolute;
+    top: 50%; left: 50%;
+    width: 36px; height: 36px;
+    transform: translate(-50%, -50%);
   }
   .column-menu:hover,
   .column-menu.open { background: var(--hover-tint); color: var(--hover-blue); }
@@ -896,6 +903,13 @@
     font-size: 16px;
     font-family: inherit;
     transition: border-color 0.15s, color 0.15s;
+    position: relative;
+  }
+  .assignee-add::before {
+    content: ''; position: absolute;
+    top: 50%; left: 50%;
+    width: 36px; height: 36px;
+    transform: translate(-50%, -50%);
   }
   .assignee-add:hover { border-color: var(--hover-blue); color: var(--hover-blue); background: var(--hover-tint); }
 
@@ -1203,6 +1217,14 @@
     cursor: pointer;
     flex-shrink: 0;
     transition: all 0.15s;
+    position: relative;
+  }
+  /* Hit-area expansion: grow clickable zone without changing visual. */
+  .checklist-checkbox::before {
+    content: ''; position: absolute;
+    top: 50%; left: 50%;
+    width: 24px; height: 32px;
+    transform: translate(-50%, -50%);
   }
   .checklist-checkbox.checked {
     background: #30d158;
@@ -1250,6 +1272,13 @@
     border: 2px solid transparent;
     transition: border-color 0.12s, transform 0.12s, background 0.12s;
     outline: none;
+    position: relative;
+  }
+  .checklist-assignee::before {
+    content: ''; position: absolute;
+    top: 50%; left: 50%;
+    width: 32px; height: 32px;
+    transform: translate(-50%, -50%);
   }
   .checklist-assignee:hover,
   .checklist-assignee:focus-visible { border-color: var(--hover-blue); }
@@ -2395,6 +2424,13 @@
     color: var(--text-soft);
     cursor: pointer;
     transition: background 0.15s, color 0.15s;
+    position: relative;
+  }
+  .toolbar-btn::before {
+    content: ''; position: absolute;
+    top: 50%; left: 50%;
+    width: 26px; height: 32px;
+    transform: translate(-50%, -50%);
   }
   .toolbar-btn:hover { background: var(--hover-tint); color: var(--hover-blue); }
   .toolbar-btn.active { background: var(--hover-tint); color: var(--hover-blue); }
@@ -3943,6 +3979,13 @@
     cursor: pointer;
     display: inline-flex; align-items: center; justify-content: center;
     transition: background 0.12s, color 0.12s;
+    position: relative;
+  }
+  .share-close::before {
+    content: ''; position: absolute;
+    top: 50%; left: 50%;
+    width: 36px; height: 36px;
+    transform: translate(-50%, -50%);
   }
   .share-close:hover { background: var(--bg-soft); color: var(--text); }
   .share-close svg { width: 16px; height: 16px; }
