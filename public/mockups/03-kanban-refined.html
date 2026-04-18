@@ -2184,9 +2184,11 @@
   }
   .replies .comment-bubble { border-radius: 12px; padding: 8px 12px; }
 
-  /* thread color */
-  :root               { --thread: rgba(0,0,0,0.22); }
-  :root[data-theme="dark"] { --thread: rgba(255,255,255,0.32); }
+  /* thread color — OPAQUE by design. Bridge and elbow stroke overlap
+     at the junction, so any alpha < 1 doubles up and creates a visibly
+     darker spot. React site uses these exact hex values. */
+  :root               { --thread: #d1d1d6; }
+  :root[data-theme="dark"] { --thread: #636366; }
 
   /* Bridge line: vertical spine inside parent .comment-body
      Only visible when replies are expanded (matches live site
