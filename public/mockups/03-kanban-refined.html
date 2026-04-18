@@ -4063,12 +4063,22 @@
     right: calc(100% + 6px);
     transform: translate(2px, 50%);
   }
-  [data-tip][data-tip-pos="left"]:hover::after {
+  [data-tip][data-tip-pos="left"]:hover::after,
+  [data-tip][data-tip-pos="left"]:focus-visible::after {
+    transform: translate(0, 50%);
+  }
+  [data-tip][data-tip-pos="right"]::after {
+    bottom: 50%; left: calc(100% + 6px);
+    transform: translate(-2px, 50%);
+  }
+  [data-tip][data-tip-pos="right"]:hover::after,
+  [data-tip][data-tip-pos="right"]:focus-visible::after {
     transform: translate(0, 50%);
   }
   @media (prefers-reduced-motion: reduce) {
     [data-tip]::after { transition: opacity 0.12s ease 0.45s; transform: translateX(-50%); }
-    [data-tip][data-tip-pos="left"]::after { transform: translateY(50%); }
+    [data-tip][data-tip-pos="left"]::after,
+    [data-tip][data-tip-pos="right"]::after { transform: translateY(50%); }
   }
 
   /* ═══════════════════════════════════════════════════════════
@@ -4863,28 +4873,28 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </button>
               <span class="checklist-text" tabindex="0" role="textbox" aria-label="Edit task" onclick="startEditChecklistText(this)" onkeydown="handleChecklistTextKey(event)">Research competitor hero sections</span>
-              <span class="checklist-assignee" data-assignee-id="nt" role="button" tabindex="0" aria-label="Assigned to Nikko Trinidad. Click to reassign." title="Nikko Trinidad" onclick="openChecklistAssigneePicker(event, this)" onkeydown="handleChecklistAssigneeKey(event)">NT</span>
+              <span class="checklist-assignee" data-assignee-id="nt" role="button" tabindex="0" aria-label="Assigned to Nikko Trinidad. Click to reassign." data-tip="Nikko Trinidad" onclick="openChecklistAssigneePicker(event, this)" onkeydown="handleChecklistAssigneeKey(event)">NT</span>
             </div>
             <div class="checklist-row">
               <button class="checklist-checkbox" onclick="toggleChecklistItem(this)" aria-label="Toggle">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </button>
               <span class="checklist-text" tabindex="0" role="textbox" aria-label="Edit task" onclick="startEditChecklistText(this)" onkeydown="handleChecklistTextKey(event)">Create initial sketches</span>
-              <span class="checklist-assignee" data-assignee-id="sc" role="button" tabindex="0" aria-label="Assigned to Sarah Chen. Click to reassign." title="Sarah Chen" onclick="openChecklistAssigneePicker(event, this)" onkeydown="handleChecklistAssigneeKey(event)">SC</span>
+              <span class="checklist-assignee" data-assignee-id="sc" role="button" tabindex="0" aria-label="Assigned to Sarah Chen. Click to reassign." data-tip="Sarah Chen" onclick="openChecklistAssigneePicker(event, this)" onkeydown="handleChecklistAssigneeKey(event)">SC</span>
             </div>
             <div class="checklist-row">
               <button class="checklist-checkbox checked" onclick="toggleChecklistItem(this)" aria-label="Toggle">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </button>
               <span class="checklist-text done" tabindex="0" role="textbox" aria-label="Edit task" onclick="startEditChecklistText(this)" onkeydown="handleChecklistTextKey(event)">Finalize color palette</span>
-              <span class="checklist-assignee" data-assignee-id="jc" role="button" tabindex="0" aria-label="Assigned to Joshua Castilla. Click to reassign." title="Joshua Castilla" onclick="openChecklistAssigneePicker(event, this)" onkeydown="handleChecklistAssigneeKey(event)">JC</span>
+              <span class="checklist-assignee" data-assignee-id="jc" role="button" tabindex="0" aria-label="Assigned to Joshua Castilla. Click to reassign." data-tip="Joshua Castilla" onclick="openChecklistAssigneePicker(event, this)" onkeydown="handleChecklistAssigneeKey(event)">JC</span>
             </div>
             <div class="checklist-row">
               <button class="checklist-checkbox checked" onclick="toggleChecklistItem(this)" aria-label="Toggle">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </button>
               <span class="checklist-text done" tabindex="0" role="textbox" aria-label="Edit task" onclick="startEditChecklistText(this)" onkeydown="handleChecklistTextKey(event)">Update CSS and animations</span>
-              <span class="checklist-assignee" data-assignee-id="sc" role="button" tabindex="0" aria-label="Assigned to Sarah Chen. Click to reassign." title="Sarah Chen" onclick="openChecklistAssigneePicker(event, this)" onkeydown="handleChecklistAssigneeKey(event)">SC</span>
+              <span class="checklist-assignee" data-assignee-id="sc" role="button" tabindex="0" aria-label="Assigned to Sarah Chen. Click to reassign." data-tip="Sarah Chen" onclick="openChecklistAssigneePicker(event, this)" onkeydown="handleChecklistAssigneeKey(event)">SC</span>
             </div>
             <div class="checklist-row">
               <button class="checklist-checkbox" onclick="toggleChecklistItem(this)" aria-label="Toggle">
@@ -4937,10 +4947,10 @@
             <div class="comment-meta">
               <span>Mar 4, 2:15 PM</span>
               <span class="reaction-pill" role="button" tabindex="0" aria-label="React with 👍" onclick="toggleReaction(event, this)" onkeydown="handleReactionKey(event)">👍 2</span>
-              <button class="add-reaction-btn" title="Add reaction" aria-label="Add reaction" onclick="openReactionPicker(this)">Add reaction</button>
-              <button class="reply-btn" title="Reply to comment" aria-label="Reply to comment">Reply</button>
+              <button class="add-reaction-btn" data-tip="Add reaction" aria-label="Add reaction" onclick="openReactionPicker(this)">Add reaction</button>
+              <button class="reply-btn" data-tip="Reply to comment" aria-label="Reply to comment">Reply</button>
             </div>
-            <button class="replies-toggle expanded" title="Toggle replies" aria-label="Toggle replies" aria-expanded="true" onclick="toggleReplies(this)">
+            <button class="replies-toggle expanded" data-tip="Toggle replies" aria-label="Toggle replies" aria-expanded="true" onclick="toggleReplies(this)">
               <span class="chev">›</span><span class="replies-toggle-text">Hide 3 replies</span>
             </button>
             <div class="replies open" data-reply-count="3">
@@ -4958,10 +4968,10 @@
                   <div class="comment-meta">
                     <span>Mar 4, 3:30 PM</span>
                     <span class="reaction-pill you" role="button" tabindex="0" aria-label="Remove your 👍 reaction" aria-pressed="true" onclick="toggleReaction(event, this)" onkeydown="handleReactionKey(event)">👍 1</span>
-                    <button class="add-reaction-btn" title="Add reaction" aria-label="Add reaction" onclick="openReactionPicker(this)">Add reaction</button>
-                    <button class="reply-btn" title="Reply to comment" aria-label="Reply to comment">Reply</button>
+                    <button class="add-reaction-btn" data-tip="Add reaction" aria-label="Add reaction" onclick="openReactionPicker(this)">Add reaction</button>
+                    <button class="reply-btn" data-tip="Reply to comment" aria-label="Reply to comment">Reply</button>
                   </div>
-                  <button class="replies-toggle expanded" title="Toggle replies" aria-label="Toggle replies" aria-expanded="true" onclick="toggleReplies(this)">
+                  <button class="replies-toggle expanded" data-tip="Toggle replies" aria-label="Toggle replies" aria-expanded="true" onclick="toggleReplies(this)">
                     <span class="chev">›</span><span class="replies-toggle-text">Hide 1 reply</span>
                   </button>
                   <div class="replies open" data-reply-count="1">
@@ -4978,8 +4988,8 @@
                         </div>
                         <div class="comment-meta">
                           <span>Mar 4, 4:02 PM</span>
-                          <button class="add-reaction-btn" title="Add reaction" aria-label="Add reaction" onclick="openReactionPicker(this)">Add reaction</button>
-                          <button class="reply-btn" title="Reply to comment" aria-label="Reply to comment">Reply</button>
+                          <button class="add-reaction-btn" data-tip="Add reaction" aria-label="Add reaction" onclick="openReactionPicker(this)">Add reaction</button>
+                          <button class="reply-btn" data-tip="Reply to comment" aria-label="Reply to comment">Reply</button>
                         </div>
                       </div>
                     </div>
@@ -4999,8 +5009,8 @@
                   </div>
                   <div class="comment-meta">
                     <span>Mar 4, 4:10 PM</span>
-                    <button class="add-reaction-btn" title="Add reaction" aria-label="Add reaction" onclick="openReactionPicker(this)">Add reaction</button>
-                    <button class="reply-btn" title="Reply to comment" aria-label="Reply to comment">Reply</button>
+                    <button class="add-reaction-btn" data-tip="Add reaction" aria-label="Add reaction" onclick="openReactionPicker(this)">Add reaction</button>
+                    <button class="reply-btn" data-tip="Reply to comment" aria-label="Reply to comment">Reply</button>
                   </div>
                 </div>
               </div>
@@ -5019,8 +5029,8 @@
               <span>Mar 5, 10:45 AM</span>
               <span class="reaction-pill" role="button" tabindex="0" aria-label="React with 🙏" onclick="toggleReaction(event, this)" onkeydown="handleReactionKey(event)">🙏 1</span>
               <span class="reaction-pill you" role="button" tabindex="0" aria-label="Remove your 👍 reaction" aria-pressed="true" onclick="toggleReaction(event, this)" onkeydown="handleReactionKey(event)">👍 2</span>
-              <button class="add-reaction-btn" title="Add reaction" aria-label="Add reaction" onclick="openReactionPicker(this)">Add reaction</button>
-              <button class="reply-btn" title="Reply to comment" aria-label="Reply to comment">Reply</button>
+              <button class="add-reaction-btn" data-tip="Add reaction" aria-label="Add reaction" onclick="openReactionPicker(this)">Add reaction</button>
+              <button class="reply-btn" data-tip="Reply to comment" aria-label="Reply to comment">Reply</button>
             </div>
           </div>
         </div>
@@ -5034,8 +5044,8 @@
             </div>
             <div class="comment-meta">
               <span>Mar 5, 2:30 PM</span>
-              <button class="add-reaction-btn" title="Add reaction" aria-label="Add reaction" onclick="openReactionPicker(this)">Add reaction</button>
-              <button class="reply-btn" title="Reply to comment" aria-label="Reply to comment">Reply</button>
+              <button class="add-reaction-btn" data-tip="Add reaction" aria-label="Add reaction" onclick="openReactionPicker(this)">Add reaction</button>
+              <button class="reply-btn" data-tip="Reply to comment" aria-label="Reply to comment">Reply</button>
             </div>
           </div>
         </div>
@@ -5079,12 +5089,12 @@
         <div class="comment-input-area">
           <!-- Format toolbar (hidden until Aa is clicked) -->
           <div class="format-toolbar" id="formatToolbar" role="toolbar" aria-label="Formatting options" aria-hidden="true">
-            <button type="button" class="format-btn bold" title="Bold (⌘B)" aria-label="Bold" onclick="applyFormat('bold')">B</button>
-            <button type="button" class="format-btn italic" title="Italic (⌘I)" aria-label="Italic" onclick="applyFormat('italic')">I</button>
-            <button type="button" class="format-btn strike" title="Strikethrough" aria-label="Strikethrough" onclick="applyFormat('strike')">S</button>
+            <button type="button" class="format-btn bold" data-tip="Bold (⌘B)" aria-label="Bold" onclick="applyFormat('bold')">B</button>
+            <button type="button" class="format-btn italic" data-tip="Italic (⌘I)" aria-label="Italic" onclick="applyFormat('italic')">I</button>
+            <button type="button" class="format-btn strike" data-tip="Strikethrough" aria-label="Strikethrough" onclick="applyFormat('strike')">S</button>
             <span class="format-toolbar-sep" aria-hidden="true"></span>
-            <button type="button" class="format-btn code" title="Code" aria-label="Inline code" onclick="applyFormat('code')">&lt;/&gt;</button>
-            <button type="button" class="format-btn" title="Link (⌘K)" aria-label="Add link" onclick="showLinkInput()">
+            <button type="button" class="format-btn code" data-tip="Code" aria-label="Inline code" onclick="applyFormat('code')">&lt;/&gt;</button>
+            <button type="button" class="format-btn" data-tip="Link (⌘K)" aria-label="Add link" onclick="showLinkInput()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
             </button>
           </div>
@@ -5104,19 +5114,19 @@
           </div>
           <div class="comment-toolbar">
             <div class="toolbar-group">
-              <button class="toolbar-btn" id="formatToggleBtn" title="Format (Aa)" aria-label="Toggle formatting toolbar" aria-pressed="false" onclick="toggleFormatToolbar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg></button>
-              <button class="toolbar-btn" id="mentionToggleBtn" title="Mention someone" aria-label="Mention a team member" aria-pressed="false" onclick="openMentionDropdown(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/></svg></button>
-              <button class="toolbar-btn" id="emojiInsertBtn" title="Insert emoji" aria-label="Insert emoji" aria-pressed="false" onclick="openEmojiInsertPicker(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>
-              <button class="toolbar-btn" id="gifToggleBtn" title="Add GIF" aria-label="Add a GIF" aria-pressed="false" onclick="openGifPicker(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
-              <button class="toolbar-btn" id="attachFileBtn" title="Attach file" aria-label="Attach a file" onclick="openFilePicker()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
+              <button class="toolbar-btn" id="formatToggleBtn" data-tip="Format (Aa)" aria-label="Toggle formatting toolbar" aria-pressed="false" onclick="toggleFormatToolbar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg></button>
+              <button class="toolbar-btn" id="mentionToggleBtn" data-tip="Mention someone" aria-label="Mention a team member" aria-pressed="false" onclick="openMentionDropdown(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/></svg></button>
+              <button class="toolbar-btn" id="emojiInsertBtn" data-tip="Insert emoji" aria-label="Insert emoji" aria-pressed="false" onclick="openEmojiInsertPicker(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>
+              <button class="toolbar-btn" id="gifToggleBtn" data-tip="Add GIF" aria-label="Add a GIF" aria-pressed="false" onclick="openGifPicker(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+              <button class="toolbar-btn" id="attachFileBtn" data-tip="Attach file" aria-label="Attach a file" onclick="openFilePicker()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
               <input type="file" id="commentFileInput" multiple hidden aria-hidden="true" onchange="handleFileInputChange(event)">
             </div>
             <div class="send-group disabled" id="sendGroup">
-              <button class="send-btn" aria-label="Send comment" title="Send (⌘↵)" onclick="sendComment()">
+              <button class="send-btn" aria-label="Send comment" data-tip="Send (⌘↵)" onclick="sendComment()">
                 Send
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
               </button>
-              <button class="schedule-btn" id="scheduleToggleBtn" title="Schedule send" aria-label="Schedule send" aria-haspopup="menu" aria-expanded="false" onclick="openScheduleMenu(this)">
+              <button class="schedule-btn" id="scheduleToggleBtn" data-tip="Schedule send" aria-label="Schedule send" aria-haspopup="menu" aria-expanded="false" onclick="openScheduleMenu(this)">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
               </button>
             </div>
@@ -5333,10 +5343,10 @@
             <div class="workload-name">Joshua Castilla</div>
             <div class="workload-bar">
               <div class="workload-bar-inner" style="width:100%">
-                <div class="workload-bar-seg" style="width:11.11%;background:#0a84ff" title="1 To Do"></div>
-                <div class="workload-bar-seg" style="width:22.22%;background:#ff9f0a" title="2 In Progress"></div>
-                <div class="workload-bar-seg" style="width:11.11%;background:#bf5af2" title="1 Needs Review"></div>
-                <div class="workload-bar-seg" style="width:55.56%;background:#30d158" title="5 Done"></div>
+                <div class="workload-bar-seg" style="width:11.11%;background:#0a84ff" data-tip="1 To Do"></div>
+                <div class="workload-bar-seg" style="width:22.22%;background:#ff9f0a" data-tip="2 In Progress"></div>
+                <div class="workload-bar-seg" style="width:11.11%;background:#bf5af2" data-tip="1 Needs Review"></div>
+                <div class="workload-bar-seg" style="width:55.56%;background:#30d158" data-tip="5 Done"></div>
               </div>
             </div>
             <div class="workload-count">9</div>
@@ -5347,9 +5357,9 @@
             <div class="workload-name">Catherine Pequino</div>
             <div class="workload-bar">
               <div class="workload-bar-inner" style="width:88.89%">
-                <div class="workload-bar-seg" style="width:25%;background:#ff9f0a" title="2 In Progress"></div>
-                <div class="workload-bar-seg" style="width:25%;background:#bf5af2" title="2 Needs Review"></div>
-                <div class="workload-bar-seg" style="width:50%;background:#30d158" title="4 Done"></div>
+                <div class="workload-bar-seg" style="width:25%;background:#ff9f0a" data-tip="2 In Progress"></div>
+                <div class="workload-bar-seg" style="width:25%;background:#bf5af2" data-tip="2 Needs Review"></div>
+                <div class="workload-bar-seg" style="width:50%;background:#30d158" data-tip="4 Done"></div>
               </div>
             </div>
             <div class="workload-count">8</div>
@@ -5360,10 +5370,10 @@
             <div class="workload-name">Nikko Trinidad</div>
             <div class="workload-bar">
               <div class="workload-bar-inner" style="width:77.78%">
-                <div class="workload-bar-seg" style="width:28.57%;background:#0a84ff" title="2 To Do"></div>
-                <div class="workload-bar-seg" style="width:14.29%;background:#ff9f0a" title="1 In Progress"></div>
-                <div class="workload-bar-seg" style="width:14.29%;background:#ff453a" title="1 Blocked"></div>
-                <div class="workload-bar-seg" style="width:42.86%;background:#30d158" title="3 Done"></div>
+                <div class="workload-bar-seg" style="width:28.57%;background:#0a84ff" data-tip="2 To Do"></div>
+                <div class="workload-bar-seg" style="width:14.29%;background:#ff9f0a" data-tip="1 In Progress"></div>
+                <div class="workload-bar-seg" style="width:14.29%;background:#ff453a" data-tip="1 Blocked"></div>
+                <div class="workload-bar-seg" style="width:42.86%;background:#30d158" data-tip="3 Done"></div>
               </div>
             </div>
             <div class="workload-count">7</div>
@@ -5374,10 +5384,10 @@
             <div class="workload-name">Sarah Chen</div>
             <div class="workload-bar">
               <div class="workload-bar-inner" style="width:66.67%">
-                <div class="workload-bar-seg" style="width:16.67%;background:#0a84ff" title="1 To Do"></div>
-                <div class="workload-bar-seg" style="width:16.67%;background:#ff9f0a" title="1 In Progress"></div>
-                <div class="workload-bar-seg" style="width:16.67%;background:#bf5af2" title="1 Needs Review"></div>
-                <div class="workload-bar-seg" style="width:50%;background:#30d158" title="3 Done"></div>
+                <div class="workload-bar-seg" style="width:16.67%;background:#0a84ff" data-tip="1 To Do"></div>
+                <div class="workload-bar-seg" style="width:16.67%;background:#ff9f0a" data-tip="1 In Progress"></div>
+                <div class="workload-bar-seg" style="width:16.67%;background:#bf5af2" data-tip="1 Needs Review"></div>
+                <div class="workload-bar-seg" style="width:50%;background:#30d158" data-tip="3 Done"></div>
               </div>
             </div>
             <div class="workload-count">6</div>
@@ -5388,9 +5398,9 @@
             <div class="workload-name">Alex Santos</div>
             <div class="workload-bar">
               <div class="workload-bar-inner" style="width:55.56%">
-                <div class="workload-bar-seg" style="width:20%;background:#ff9f0a" title="1 In Progress"></div>
-                <div class="workload-bar-seg" style="width:40%;background:#ff453a" title="2 Blocked"></div>
-                <div class="workload-bar-seg" style="width:40%;background:#30d158" title="2 Done"></div>
+                <div class="workload-bar-seg" style="width:20%;background:#ff9f0a" data-tip="1 In Progress"></div>
+                <div class="workload-bar-seg" style="width:40%;background:#ff453a" data-tip="2 Blocked"></div>
+                <div class="workload-bar-seg" style="width:40%;background:#30d158" data-tip="2 Done"></div>
               </div>
             </div>
             <div class="workload-count">5</div>
@@ -5401,8 +5411,8 @@
             <div class="workload-name">Mark Ashlee</div>
             <div class="workload-bar">
               <div class="workload-bar-inner" style="width:44.44%">
-                <div class="workload-bar-seg" style="width:25%;background:#ff9f0a" title="1 In Progress"></div>
-                <div class="workload-bar-seg" style="width:75%;background:#30d158" title="3 Done"></div>
+                <div class="workload-bar-seg" style="width:25%;background:#ff9f0a" data-tip="1 In Progress"></div>
+                <div class="workload-bar-seg" style="width:75%;background:#30d158" data-tip="3 Done"></div>
               </div>
             </div>
             <div class="workload-count">4</div>
@@ -5648,14 +5658,14 @@
         <div class="settings-list">
           <div class="settings-list-row" data-dot="todo">
             <span class="settings-drag-handle" aria-label="Drag to reorder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
-            <span class="settings-list-dot" title="Color: Blue"></span>
+            <span class="settings-list-dot" data-tip="Color: Blue"></span>
             <input class="settings-row-input" type="text" value="To Do">
             <div class="settings-wip">
               <span class="settings-wip-label">WIP</span>
               <input class="settings-wip-input" type="number" value="5" min="0">
             </div>
-            <button class="settings-row-action warn" title="Archive list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></button>
-            <button class="settings-row-action danger" title="Delete list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+            <button class="settings-row-action warn" type="button" data-tip="Archive list" aria-label="Archive list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></button>
+            <button class="settings-row-action danger" type="button" data-tip="Delete list" aria-label="Delete list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
           </div>
           <div class="settings-list-row" data-dot="progress">
             <span class="settings-drag-handle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
@@ -5665,19 +5675,19 @@
               <span class="settings-wip-label">WIP</span>
               <input class="settings-wip-input" type="number" value="3" min="0">
             </div>
-            <button class="settings-row-action warn" title="Archive list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></button>
-            <button class="settings-row-action danger" title="Delete list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+            <button class="settings-row-action warn" type="button" data-tip="Archive list" aria-label="Archive list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></button>
+            <button class="settings-row-action danger" type="button" data-tip="Delete list" aria-label="Delete list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
           </div>
           <div class="settings-list-row" data-dot="blocked">
             <span class="settings-drag-handle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
-            <span class="settings-list-dot" title="Color: Red"></span>
+            <span class="settings-list-dot" data-tip="Color: Red"></span>
             <input class="settings-row-input" type="text" value="Blocked">
             <div class="settings-wip">
               <span class="settings-wip-label">WIP</span>
               <input class="settings-wip-input" type="number" value="2" min="0">
             </div>
-            <button class="settings-row-action warn" title="Archive list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></button>
-            <button class="settings-row-action danger" title="Delete list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+            <button class="settings-row-action warn" type="button" data-tip="Archive list" aria-label="Archive list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></button>
+            <button class="settings-row-action danger" type="button" data-tip="Delete list" aria-label="Delete list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
           </div>
           <div class="settings-list-row" data-dot="review">
             <span class="settings-drag-handle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
@@ -5687,8 +5697,8 @@
               <span class="settings-wip-label">WIP</span>
               <input class="settings-wip-input" type="number" value="2" min="0">
             </div>
-            <button class="settings-row-action warn" title="Archive list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></button>
-            <button class="settings-row-action danger" title="Delete list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+            <button class="settings-row-action warn" type="button" data-tip="Archive list" aria-label="Archive list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></button>
+            <button class="settings-row-action danger" type="button" data-tip="Delete list" aria-label="Delete list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
           </div>
           <div class="settings-list-row" data-dot="done">
             <span class="settings-drag-handle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
@@ -5698,8 +5708,8 @@
               <span class="settings-wip-label">WIP</span>
               <input class="settings-wip-input" type="number" value="0" min="0" placeholder="—">
             </div>
-            <button class="settings-row-action warn" title="Archive list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></button>
-            <button class="settings-row-action danger" title="Delete list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+            <button class="settings-row-action warn" type="button" data-tip="Archive list" aria-label="Archive list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></button>
+            <button class="settings-row-action danger" type="button" data-tip="Delete list" aria-label="Delete list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
           </div>
         </div>
       </div>
@@ -5711,34 +5721,34 @@
 
         <div class="settings-list">
           <div class="settings-list-row">
-            <span class="settings-label-color" style="background: #ff453a" title="Change color"></span>
+            <span class="settings-label-color" style="background: #ff453a" data-tip="Change color" role="button" tabindex="0" aria-label="Change color"></span>
             <input class="settings-row-input" type="text" value="Bug">
-            <button class="settings-row-action danger" title="Delete label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+            <button class="settings-row-action danger" type="button" data-tip="Delete label" aria-label="Delete label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
           </div>
           <div class="settings-list-row">
-            <span class="settings-label-color" style="background: #0a84ff" title="Change color"></span>
+            <span class="settings-label-color" style="background: #0a84ff" data-tip="Change color" role="button" tabindex="0" aria-label="Change color"></span>
             <input class="settings-row-input" type="text" value="Feature">
-            <button class="settings-row-action danger" title="Delete label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+            <button class="settings-row-action danger" type="button" data-tip="Delete label" aria-label="Delete label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
           </div>
           <div class="settings-list-row">
-            <span class="settings-label-color" style="background: #30d158" title="Change color"></span>
+            <span class="settings-label-color" style="background: #30d158" data-tip="Change color" role="button" tabindex="0" aria-label="Change color"></span>
             <input class="settings-row-input" type="text" value="Improvement">
-            <button class="settings-row-action danger" title="Delete label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+            <button class="settings-row-action danger" type="button" data-tip="Delete label" aria-label="Delete label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
           </div>
           <div class="settings-list-row">
-            <span class="settings-label-color" style="background: #ff9f0a" title="Change color"></span>
+            <span class="settings-label-color" style="background: #ff9f0a" data-tip="Change color" role="button" tabindex="0" aria-label="Change color"></span>
             <input class="settings-row-input" type="text" value="Urgent">
-            <button class="settings-row-action danger" title="Delete label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+            <button class="settings-row-action danger" type="button" data-tip="Delete label" aria-label="Delete label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
           </div>
           <div class="settings-list-row">
-            <span class="settings-label-color" style="background: #ff6b9d" title="Change color"></span>
+            <span class="settings-label-color" style="background: #ff6b9d" data-tip="Change color" role="button" tabindex="0" aria-label="Change color"></span>
             <input class="settings-row-input" type="text" value="Design">
-            <button class="settings-row-action danger" title="Delete label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+            <button class="settings-row-action danger" type="button" data-tip="Delete label" aria-label="Delete label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
           </div>
           <div class="settings-list-row">
-            <span class="settings-label-color" style="background: #bf5af2" title="Change color"></span>
+            <span class="settings-label-color" style="background: #bf5af2" data-tip="Change color" role="button" tabindex="0" aria-label="Change color"></span>
             <input class="settings-row-input" type="text" value="Research">
-            <button class="settings-row-action danger" title="Delete label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+            <button class="settings-row-action danger" type="button" data-tip="Delete label" aria-label="Delete label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
           </div>
         </div>
         <button class="settings-add-row">＋ Add label</button>
@@ -6193,14 +6203,17 @@ function renderCardTileAvatars(card){
     var av = document.createElement('div');
     av.className = 'card-assignee';
     av.textContent = m.initials;
-    av.title = m.name;
+    av.setAttribute('data-tip', m.name);
+    av.setAttribute('aria-label', m.name);
     group.appendChild(av);
   });
   if(ids.length > MAX){
     var overflow = document.createElement('div');
     overflow.className = 'card-assignee is-overflow';
     overflow.textContent = '+' + (ids.length - MAX);
-    overflow.title = ids.slice(MAX).map(function(id){ var m = getMember(id); return m ? m.name : id; }).join(', ');
+    var overflowNames = ids.slice(MAX).map(function(id){ var m = getMember(id); return m ? m.name : id; }).join(', ');
+    overflow.setAttribute('data-tip', overflowNames);
+    overflow.setAttribute('aria-label', 'Also assigned: ' + overflowNames);
     group.appendChild(overflow);
   }
 }
@@ -6649,7 +6662,7 @@ function _buildSentCommentNode(safeHtml, stamp, attachments, scheduledIso){
   if(scheduledDate && !isNaN(scheduledDate.getTime())){
     var when = _formatScheduleLabel(scheduledDate);
     stampHtml =
-      '<span class="scheduled-stamp" title="' + escapeHtml(scheduledDate.toLocaleString()) + '">' +
+      '<span class="scheduled-stamp" data-tip="' + escapeHtml(scheduledDate.toLocaleString()) + '" aria-label="Scheduled for ' + escapeHtml(scheduledDate.toLocaleString()) + '">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' +
         'Scheduled for ' + escapeHtml(when) +
       '</span>';
@@ -6664,7 +6677,7 @@ function _buildSentCommentNode(safeHtml, stamp, attachments, scheduledIso){
         textHtml +
         attachmentsHtml +
       '</div>' +
-      '<div class="comment-meta">' + stampHtml + '<button class="add-reaction-btn" title="Add reaction" aria-label="Add reaction" onclick="openReactionPicker(this)">Add reaction</button><button class="reply-btn" title="Reply to comment" aria-label="Reply to comment">Reply</button></div>' +
+      '<div class="comment-meta">' + stampHtml + '<button class="add-reaction-btn" data-tip="Add reaction" aria-label="Add reaction" onclick="openReactionPicker(this)">Add reaction</button><button class="reply-btn" data-tip="Reply to comment" aria-label="Reply to comment">Reply</button></div>' +
     '</div>';
   return node;
 }
@@ -6861,7 +6874,7 @@ function _applyReactionsSnapshot(commentEl, snapshot){
     b.className = 'add-reaction-btn';
     b.type = 'button';
     b.textContent = 'Add reaction';
-    b.title = 'Add reaction';
+    b.setAttribute('data-tip', 'Add reaction');
     b.setAttribute('aria-label', 'Add reaction');
     b.setAttribute('onclick', 'openReactionPicker(this)');
     var reply = _findReplyButton(meta);
@@ -7322,7 +7335,7 @@ function sendReply(parentComment, text, opts){
         '<div class="comment-author">Nikko Trinidad <span class="you-badge">You</span></div>' +
         '<div class="comment-text">' + escapeHtml(text).replace(/\n/g, '<br>') + '</div>' +
       '</div>' +
-      '<div class="comment-meta"><span>' + escapeHtml(stamp) + '</span><button class="add-reaction-btn" title="Add reaction" aria-label="Add reaction" onclick="openReactionPicker(this)">Add reaction</button><button class="reply-btn" title="Reply to comment" aria-label="Reply to comment">Reply</button></div>' +
+      '<div class="comment-meta"><span>' + escapeHtml(stamp) + '</span><button class="add-reaction-btn" data-tip="Add reaction" aria-label="Add reaction" onclick="openReactionPicker(this)">Add reaction</button><button class="reply-btn" data-tip="Reply to comment" aria-label="Reply to comment">Reply</button></div>' +
     '</div>';
   while(inner.firstChild) node.appendChild(inner.firstChild);
 
@@ -7338,7 +7351,7 @@ function sendReply(parentComment, text, opts){
   if(!toggle){
     toggle = document.createElement('button');
     toggle.className = 'replies-toggle expanded';
-    toggle.title = 'Toggle replies';
+    toggle.setAttribute('data-tip', 'Toggle replies');
     toggle.setAttribute('aria-label', 'Toggle replies');
     toggle.setAttribute('aria-expanded', 'true');
     toggle.setAttribute('onclick', 'toggleReplies(this)');
