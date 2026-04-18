@@ -2199,11 +2199,13 @@
     display: none;  /* hidden by default */
   }
   .comment-body:has(> .replies.open) > .bridge-line { display: block; }
-  /* Mask: hides bridge below last reply's elbow */
+  /* Mask: hides bridge below last reply's elbow — must match the
+     comments panel bg exactly (same as React site) or a tinted
+     stripe shows through the connector. */
   .bridge-mask {
     position: absolute;
     width: 2px;
-    background: var(--bg-faint);
+    background: var(--bg-elev);
     pointer-events: none;
     z-index: 1;
   }
@@ -4701,7 +4703,7 @@
             <div class="replies open" data-reply-count="3">
               <div class="comment">
                 <!-- SVG elbow: curves from bridge to SC avatar -->
-                <svg class="elbow-svg" style="left:-30px;top:-2px;width:30px;height:16px" fill="none" overflow="visible"><path d="M 1 -8 L 1 0 Q 1 15 15 15 L 30 15" stroke="currentColor" stroke-width="2"/></svg>
+                <svg class="elbow-svg" style="left:-30px;top:-2px;width:30px;height:16px" fill="none" overflow="visible"><path d="M 1 0 Q 1 15 14 15 L 30 15" stroke="currentColor" stroke-width="2"/></svg>
                 <div class="comment-avatar">SC</div>
                 <div class="comment-body">
                   <!-- Bridge line: reply avatar(26) → bottom of nested replies -->
@@ -4724,7 +4726,7 @@
                       <!-- Mask: last nested reply, hides SC bridge below -->
                       <div class="bridge-mask" style="left:-51px;top:-2px;bottom:0"></div>
                       <!-- SVG elbow: from SC bridge to nested JC avatar -->
-                      <svg class="elbow-svg" style="left:-51px;top:-2px;width:51px;height:16px" fill="none" overflow="visible"><path d="M 1 -8 L 1 0 Q 1 15 15 15 L 51 15" stroke="currentColor" stroke-width="2"/></svg>
+                      <svg class="elbow-svg" style="left:-51px;top:-2px;width:51px;height:16px" fill="none" overflow="visible"><path d="M 1 0 Q 1 15 14 15 L 51 15" stroke="currentColor" stroke-width="2"/></svg>
                       <div class="comment-avatar">JC</div>
                       <div class="comment-body">
                         <div class="comment-bubble">
@@ -4745,7 +4747,7 @@
                 <!-- Mask: last outer reply, hides JC bridge below -->
                 <div class="bridge-mask" style="left:-30px;top:-2px;bottom:0"></div>
                 <!-- SVG elbow: from JC bridge to NT avatar -->
-                <svg class="elbow-svg" style="left:-30px;top:-2px;width:30px;height:16px" fill="none" overflow="visible"><path d="M 1 -8 L 1 0 Q 1 15 15 15 L 30 15" stroke="currentColor" stroke-width="2"/></svg>
+                <svg class="elbow-svg" style="left:-30px;top:-2px;width:30px;height:16px" fill="none" overflow="visible"><path d="M 1 0 Q 1 15 14 15 L 30 15" stroke="currentColor" stroke-width="2"/></svg>
                 <div class="comment-avatar">NT</div>
                 <div class="comment-body">
                   <div class="comment-bubble you">
@@ -6964,14 +6966,16 @@ function openReplyComposer(comment){
 /* ── Connector helpers (matching live site DOM approach) ── */
 function makeElbowSvg(w, ac){
   // w = elbow width, ac = avatar center (half avatar size)
-  var y = ac + 2;
+  // Path matches the live React site exactly:
+  //   vertical from SVG top into a quarter-arc, then horizontal to avatar edge.
+  //   No upward extension — the parent bridge already reaches down here.
   var svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
   svg.setAttribute('class','elbow-svg');
   svg.setAttribute('fill','none');
   svg.setAttribute('overflow','visible');
   svg.style.cssText = 'left:-'+w+'px;top:-2px;width:'+w+'px;height:'+(ac+3)+'px';
   var path = document.createElementNS('http://www.w3.org/2000/svg','path');
-  path.setAttribute('d','M 1 -8 L 1 0 Q 1 '+y+' '+y+' '+y+' L '+w+' '+y);
+  path.setAttribute('d','M 1 0 Q 1 '+(ac+2)+' '+(ac+1)+' '+(ac+2)+' L '+w+' '+(ac+2));
   path.setAttribute('stroke','currentColor');
   path.setAttribute('stroke-width','2');
   svg.appendChild(path);
