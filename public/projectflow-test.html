@@ -4515,36 +4515,6 @@
   }
   .back-to-top:active { transform: scale(0.93); }
   .back-to-top svg { width: 18px; height: 18px; }
-  .back-to-top .btt-tooltip {
-    position: absolute;
-    right: calc(100% + 10px);
-    top: 50%;
-    transform: translateY(-50%);
-    background: var(--text);
-    color: var(--bg);
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: -0.005em;
-    padding: 6px 12px;
-    border-radius: 8px;
-    white-space: nowrap;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.15s ease;
-  }
-  .back-to-top .btt-tooltip::after {
-    content: "";
-    position: absolute;
-    left: 100%;
-    top: 50%;
-    transform: translateY(-50%);
-    border: 5px solid transparent;
-    border-left-color: var(--text);
-  }
-  .back-to-top:hover .btt-tooltip {
-    opacity: 1;
-    transition-delay: 0.4s;
-  }
 
   /* --- BLOCK COMMON --- */
   .block {
@@ -5020,37 +4990,6 @@
   .attn-btn {
     position: relative;
   }
-  .attn-btn .tooltip {
-    position: absolute;
-    bottom: calc(100% + 10px);
-    right: 0;
-    background: var(--text);
-    color: var(--bg);
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: -0.005em;
-    line-height: 1.4;
-    padding: 8px 14px;
-    border-radius: 10px;
-    width: 210px;
-    text-align: center;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.15s ease;
-    z-index: 100;
-  }
-  .attn-btn .tooltip::after {
-    content: "";
-    position: absolute;
-    top: 100%;
-    right: 24px;
-    border: 5px solid transparent;
-    border-top-color: var(--text);
-  }
-  .attn-btn:hover .tooltip {
-    opacity: 1;
-    transition-delay: 0.6s;
-  }
 
   /* --- BLOCK 3: THIS WEEK (5-column board with week tabs) --- */
   .week-tabs {
@@ -5502,28 +5441,6 @@
   .wl-sc-dot.quarter { background: #f59e0b; }
   .wl-sc-dot.quick { background: var(--text-faint); }
 
-  /* Generic tooltip — positioning handled by JS */
-  .tip-bubble {
-    position: fixed;
-    background: var(--text);
-    color: var(--bg);
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: -0.005em;
-    text-transform: none;
-    text-align: left;
-    padding: 6px 10px;
-    border-radius: 7px;
-    white-space: nowrap;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.15s ease;
-    z-index: 9999;
-  }
-  .tip-bubble.visible {
-    opacity: 1;
-  }
-
   /* Reduced motion */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
@@ -5730,8 +5647,8 @@
           <div class="attn-desc">Harvey San Juan sent design review files April 8. No response. Launch date April 18 at risk.</div>
         </div>
         <div class="attn-actions">
-          <button class="attn-btn" onclick="openDelegate(event,this)">Delegate<span class="tooltip">Assign this to a team member who can follow up</span></button>
-          <button class="attn-btn primary" onclick="event.stopPropagation()">Review<span class="tooltip">Open this item and take action now</span></button>
+          <button class="attn-btn" onclick="openDelegate(event,this)" data-tip="Assign this to a team member who can follow up" aria-label="Assign this to a team member who can follow up">Delegate</button>
+          <button class="attn-btn primary" onclick="event.stopPropagation()" data-tip="Open this item and take action now" aria-label="Open this item and take action now">Review</button>
         </div>
       </div>
 
@@ -5746,8 +5663,8 @@
           <div class="attn-desc">Assigned to Kate. Last seen yesterday afternoon. No draft in shared folder yet.</div>
         </div>
         <div class="attn-actions">
-          <button class="attn-btn" onclick="openDelegate(event,this)">Delegate<span class="tooltip">Assign this to a team member who can follow up</span></button>
-          <button class="attn-btn primary" onclick="event.stopPropagation()">Review<span class="tooltip">Open this item and take action now</span></button>
+          <button class="attn-btn" onclick="openDelegate(event,this)" data-tip="Assign this to a team member who can follow up" aria-label="Assign this to a team member who can follow up">Delegate</button>
+          <button class="attn-btn primary" onclick="event.stopPropagation()" data-tip="Open this item and take action now" aria-label="Open this item and take action now">Review</button>
         </div>
       </div>
 
@@ -5762,8 +5679,8 @@
           <div class="attn-desc">Chris flagged capacity issue yesterday. May need to pull in help or extend timeline.</div>
         </div>
         <div class="attn-actions">
-          <button class="attn-btn" onclick="openDelegate(event,this)">Delegate<span class="tooltip">Assign this to a team member who can follow up</span></button>
-          <button class="attn-btn primary" onclick="event.stopPropagation()">Review<span class="tooltip">Open this item and take action now</span></button>
+          <button class="attn-btn" onclick="openDelegate(event,this)" data-tip="Assign this to a team member who can follow up" aria-label="Assign this to a team member who can follow up">Delegate</button>
+          <button class="attn-btn primary" onclick="event.stopPropagation()" data-tip="Open this item and take action now" aria-label="Open this item and take action now">Review</button>
         </div>
       </div>
 
@@ -5780,8 +5697,8 @@
           <div class="attn-desc">Client added a mobile app module. +40 hours estimated. Team paused pending sign-off.</div>
         </div>
         <div class="attn-actions">
-          <button class="attn-btn" onclick="openDelegate(event,this)">Delegate<span class="tooltip">Assign this to a team member who can follow up</span></button>
-          <button class="attn-btn primary" onclick="event.stopPropagation()">Review<span class="tooltip">Open this item and take action now</span></button>
+          <button class="attn-btn" onclick="openDelegate(event,this)" data-tip="Assign this to a team member who can follow up" aria-label="Assign this to a team member who can follow up">Delegate</button>
+          <button class="attn-btn primary" onclick="event.stopPropagation()" data-tip="Open this item and take action now" aria-label="Open this item and take action now">Review</button>
         </div>
       </div>
 
@@ -5796,8 +5713,8 @@
           <div class="attn-desc">Dev team can't proceed until third-party API keys are provisioned. Client IT hasn't responded.</div>
         </div>
         <div class="attn-actions">
-          <button class="attn-btn" onclick="openDelegate(event,this)">Delegate<span class="tooltip">Assign this to a team member who can follow up</span></button>
-          <button class="attn-btn primary" onclick="event.stopPropagation()">Review<span class="tooltip">Open this item and take action now</span></button>
+          <button class="attn-btn" onclick="openDelegate(event,this)" data-tip="Assign this to a team member who can follow up" aria-label="Assign this to a team member who can follow up">Delegate</button>
+          <button class="attn-btn primary" onclick="event.stopPropagation()" data-tip="Open this item and take action now" aria-label="Open this item and take action now">Review</button>
         </div>
       </div>
 
@@ -5812,8 +5729,8 @@
           <div class="attn-desc">8 onboarding tasks created. Contract signed. Kickoff scheduled Tuesday 10am — checklist must be reviewed first.</div>
         </div>
         <div class="attn-actions">
-          <button class="attn-btn" onclick="openDelegate(event,this)">Delegate<span class="tooltip">Assign this to a team member who can follow up</span></button>
-          <button class="attn-btn primary" onclick="event.stopPropagation()">Review<span class="tooltip">Open this item and take action now</span></button>
+          <button class="attn-btn" onclick="openDelegate(event,this)" data-tip="Assign this to a team member who can follow up" aria-label="Assign this to a team member who can follow up">Delegate</button>
+          <button class="attn-btn primary" onclick="event.stopPropagation()" data-tip="Open this item and take action now" aria-label="Open this item and take action now">Review</button>
         </div>
       </div>
 
@@ -6062,10 +5979,8 @@
 </div>
 
 <!-- Back to top button -->
-<button class="back-to-top" id="backToTop" aria-label="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-  <span class="btt-tooltip">Back to top</span>
-</button>
+<button class="back-to-top" id="backToTop" aria-label="Back to top" data-tip="Back to top" data-tip-pos="left" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
 </div>
 
 <!-- ═══════ BOARD VIEW ═══════ -->
@@ -12650,60 +12565,6 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
-/* ── Generic tooltip system ── */
-(function() {
-  var bubble = document.createElement('div');
-  bubble.className = 'tip-bubble';
-  document.body.appendChild(bubble);
-
-  var timer = null;
-
-  document.addEventListener('mouseenter', function(e) {
-    var el = e.target.closest('[data-tip]');
-    if (!el) return;
-
-    clearTimeout(timer);
-    bubble.textContent = el.getAttribute('data-tip');
-
-    /* Position: above the element, left-aligned to its left edge */
-    var rect = el.getBoundingClientRect();
-    bubble.style.visibility = 'hidden';
-    bubble.classList.add('visible');
-
-    /* Measure bubble to avoid overflow */
-    var bw = bubble.offsetWidth;
-    var bh = bubble.offsetHeight;
-    var left = rect.left;
-    if (left + bw > window.innerWidth - 8) {
-      left = window.innerWidth - bw - 8;
-    }
-    if (left < 8) left = 8;
-
-    /* Vertical: above by default; flip below if not enough room
-       (e.g. header icons near the top of the viewport) */
-    var topAbove = rect.top - bh - 6;
-    var topBelow = rect.bottom + 6;
-    var top = topAbove < 8 ? topBelow : topAbove;
-
-    bubble.style.left = left + 'px';
-    bubble.style.top = top + 'px';
-    bubble.style.visibility = '';
-
-    /* Delay before showing */
-    bubble.classList.remove('visible');
-    timer = setTimeout(function() {
-      bubble.classList.add('visible');
-    }, 400);
-  }, true);
-
-  document.addEventListener('mouseleave', function(e) {
-    var el = e.target.closest('[data-tip]');
-    if (!el) return;
-    clearTimeout(timer);
-    bubble.classList.remove('visible');
-  }, true);
-})();
-
 /* ── Block drag-and-drop reorder ── */
 (function() {
   var STORAGE_KEY = 'overview-block-order';
@@ -12785,10 +12646,6 @@ document.addEventListener('keydown', function(e) {
     /* Ghost the original */
     dragged.style.opacity = '0.25';
     dragged.style.transition = 'opacity 0.15s ease';
-
-    /* Hide tooltip */
-    var tipBubble = document.querySelector('.tip-bubble');
-    if (tipBubble) tipBubble.classList.remove('visible');
 
     document.addEventListener('pointermove', onPointerMove);
     document.addEventListener('pointerup', onPointerUp);
