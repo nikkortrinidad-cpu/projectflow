@@ -171,6 +171,16 @@
   :root[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
   :root[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
 
+  .header-tool {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg-soft); border: none;
+    cursor: pointer; color: var(--text-muted);
+    transition: background 0.15s, color 0.15s;
+    padding: 0;
+  }
+  .header-tool:hover { background: var(--hover-tint); color: var(--hover-blue); }
+
   /* Cmd+K modal */
   .cmdk-overlay {
     display: none; position: fixed; inset: 0;
@@ -5510,10 +5520,696 @@
    */
 
 
+  /* ═══════════════════════════════════════════════════════
+   * CLIENTS VIEW — Directory + Client Detail
+   * Reuses tokens from the shared theme; adds status semantics.
+   * ═══════════════════════════════════════════════════════ */
+
+  /* Status colors (shared between directory status dots, hero chips, service dots) */
+  :root {
+    --status-fire: #ff3b30;
+    --status-fire-soft: rgba(255,59,48,0.1);
+    --status-risk: #ff9f0a;
+    --status-risk-soft: rgba(255,159,10,0.12);
+    --status-track: #30d158;
+    --status-track-soft: rgba(48,209,88,0.12);
+    --status-onboard: #007AFF;
+    --status-onboard-soft: rgba(0,122,255,0.1);
+    --status-paused: #8e8e93;
+    --status-paused-soft: rgba(142,142,147,0.12);
+  }
+  :root[data-theme="dark"] {
+    --status-fire: #ff453a;
+    --status-fire-soft: rgba(255,69,58,0.16);
+    --status-risk: #ffb340;
+    --status-risk-soft: rgba(255,179,64,0.16);
+    --status-track: #32d74b;
+    --status-track-soft: rgba(50,215,75,0.16);
+    --status-onboard: #0A84FF;
+    --status-onboard-soft: rgba(10,132,255,0.18);
+    --status-paused: #98989d;
+    --status-paused-soft: rgba(152,152,157,0.14);
+  }
+
+  /* ── Clients page wrapper ── */
+  .clients-page { max-width: 1200px; margin: 0 auto; padding: 36px 32px 96px; width: 100%; }
+
+  /* Page header */
+  .clients-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 28px; flex-wrap: wrap; }
+  .clients-heading { display: flex; align-items: baseline; gap: 14px; }
+  .clients-title {
+    font-size: 34px; font-weight: 600; letter-spacing: -0.022em; color: var(--text);
+    line-height: 1.1;
+  }
+  .clients-count {
+    font-size: 15px; color: var(--text-soft); letter-spacing: -0.01em;
+    font-feature-settings: "tnum";
+  }
+  .clients-actions { display: flex; align-items: center; gap: 10px; }
+
+  /* Segmented filter control (pill-shaped, matches Apple macOS segmented controls) */
+  .clients-segment {
+    display: inline-flex; align-items: center;
+    background: var(--bg-soft); border-radius: 10px;
+    padding: 3px; gap: 0;
+  }
+  .clients-segment button {
+    background: none; border: none;
+    padding: 6px 14px;
+    font-size: 13px; font-weight: 500; letter-spacing: -0.005em;
+    color: var(--text-muted);
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    display: inline-flex; align-items: center; gap: 6px;
+    font-feature-settings: "tnum";
+  }
+  .clients-segment button:hover { color: var(--text); }
+  .clients-segment button.on {
+    background: var(--bg-elev); color: var(--text);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 0.5px var(--hairline);
+  }
+  :root[data-theme="dark"] .clients-segment button.on {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4), 0 0 0 0.5px rgba(255,255,255,0.08);
+  }
+  .clients-segment .seg-count {
+    font-size: 11px; color: var(--text-faint); font-weight: 500;
+    font-feature-settings: "tnum";
+  }
+  .clients-segment button.on .seg-count { color: var(--text-muted); }
+
+  .clients-primary-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 16px; border-radius: 980px;
+    background: var(--highlight); color: #fff; border: none;
+    font-size: 13px; font-weight: 500; letter-spacing: -0.005em;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .clients-primary-btn:hover { opacity: 0.9; }
+  .clients-primary-btn:active { transform: scale(0.97); opacity: 0.85; }
+  .clients-primary-btn svg { width: 14px; height: 14px; }
+
+  /* Pinned clients strip (your clients) */
+  .clients-pinned {
+    margin-bottom: 24px;
+    padding: 20px 22px;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+  }
+  .clients-pinned-label {
+    font-size: 11px; font-weight: 500; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .clients-pinned-label svg { width: 12px; height: 12px; color: var(--text-faint); }
+  .clients-pinned-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px;
+  }
+  .pinned-card {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px; border-radius: 10px;
+    background: var(--bg-soft);
+    cursor: pointer;
+    transition: background 0.15s;
+    border: 1px solid transparent;
+    text-decoration: none;
+    color: inherit;
+  }
+  .pinned-card:hover { background: var(--hover-tint); border-color: var(--hairline-soft); }
+  .pinned-card .pinned-logo {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600; letter-spacing: -0.01em;
+    flex-shrink: 0;
+  }
+  .pinned-card .pinned-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .pinned-card .pinned-name {
+    font-size: 13px; font-weight: 500; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    letter-spacing: -0.005em;
+  }
+  .pinned-card .pinned-meta {
+    font-size: 11px; color: var(--text-soft);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .pinned-card .pinned-status {
+    width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+  }
+
+  /* Client list (dense rows) */
+  .clients-list {
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .clients-list-header {
+    display: grid;
+    grid-template-columns: 16px minmax(220px, 2.2fr) minmax(200px, 2fr) minmax(120px, 1fr) minmax(140px, 1.2fr) minmax(80px, 0.8fr) 16px;
+    gap: 16px; align-items: center;
+    padding: 12px 20px;
+    background: var(--bg-soft);
+    border-bottom: 1px solid var(--hairline-soft);
+    font-size: 11px; font-weight: 500;
+    color: var(--text-soft);
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .client-row {
+    display: grid;
+    grid-template-columns: 16px minmax(220px, 2.2fr) minmax(200px, 2fr) minmax(120px, 1fr) minmax(140px, 1.2fr) minmax(80px, 0.8fr) 16px;
+    gap: 16px; align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--hairline-soft);
+    cursor: pointer;
+    transition: background 0.15s;
+    color: inherit; text-decoration: none;
+  }
+  .client-row:last-child { border-bottom: none; }
+  .client-row:hover { background: var(--bg-soft); }
+
+  .client-status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .client-status-dot.fire { background: var(--status-fire); }
+  .client-status-dot.risk { background: var(--status-risk); }
+  .client-status-dot.track { background: var(--status-track); }
+  .client-status-dot.onboard { background: var(--status-onboard); }
+  .client-status-dot.paused { background: var(--status-paused); }
+
+  .client-identity { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .client-logo {
+    width: 36px; height: 36px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600; letter-spacing: -0.01em;
+    flex-shrink: 0;
+    color: #fff;
+  }
+  .client-identity-body { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .client-name {
+    font-size: 14px; font-weight: 500; color: var(--text);
+    letter-spacing: -0.005em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .client-industry {
+    font-size: 12px; color: var(--text-soft);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .client-services {
+    display: flex; align-items: center; gap: 6px; flex-wrap: nowrap;
+    min-width: 0; overflow: hidden;
+  }
+  .service-pill {
+    display: inline-flex; align-items: center;
+    padding: 3px 9px; border-radius: 980px;
+    font-size: 11px; font-weight: 500; letter-spacing: -0.005em;
+    background: var(--tag-bg); color: var(--tag-text);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .service-pill.more {
+    background: transparent; color: var(--text-soft);
+    padding: 3px 4px;
+  }
+
+  .client-am {
+    display: flex; align-items: center; gap: 8px;
+    min-width: 0;
+  }
+  .client-am-avatar {
+    width: 24px; height: 24px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 600;
+    color: #fff; flex-shrink: 0;
+  }
+  .client-am-name {
+    font-size: 13px; color: var(--text-muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .client-metric {
+    font-size: 13px; color: var(--text); font-feature-settings: "tnum";
+    letter-spacing: -0.005em;
+  }
+  .client-metric .metric-label { color: var(--text-soft); font-size: 12px; margin-right: 4px; }
+  .client-metric.urgent { color: var(--status-fire); font-weight: 500; }
+
+  .client-timestamp {
+    font-size: 12px; color: var(--text-faint);
+    text-align: right;
+    font-feature-settings: "tnum";
+    white-space: nowrap;
+  }
+
+  .client-chevron {
+    color: var(--text-faint);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.15s;
+  }
+  .client-row:hover .client-chevron { opacity: 1; }
+
+  /* Status chip (used in hero + filters) */
+  .status-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px 4px 9px; border-radius: 980px;
+    font-size: 11px; font-weight: 500; letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  .status-chip .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .status-chip.fire { background: var(--status-fire-soft); color: var(--status-fire); }
+  .status-chip.fire .dot { background: var(--status-fire); }
+  .status-chip.risk { background: var(--status-risk-soft); color: var(--status-risk); }
+  .status-chip.risk .dot { background: var(--status-risk); }
+  .status-chip.track { background: var(--status-track-soft); color: var(--status-track); }
+  .status-chip.track .dot { background: var(--status-track); }
+  .status-chip.onboard { background: var(--status-onboard-soft); color: var(--status-onboard); }
+  .status-chip.onboard .dot { background: var(--status-onboard); }
+  .status-chip.paused { background: var(--status-paused-soft); color: var(--status-paused); }
+  .status-chip.paused .dot { background: var(--status-paused); }
+
+  /* Brand logo colors (generated for mock clients — reuse avatar palette) */
+  .logo-indigo { background: linear-gradient(135deg, #5e5ce6, #3d3ab5); }
+  .logo-sky    { background: linear-gradient(135deg, #64d2ff, #0a84ff); }
+  .logo-teal   { background: linear-gradient(135deg, #5ac8fa, #007aff); }
+  .logo-green  { background: linear-gradient(135deg, #30d158, #0aaf41); }
+  .logo-amber  { background: linear-gradient(135deg, #ffd60a, #d97700); }
+  .logo-orange { background: linear-gradient(135deg, #ff9f0a, #d46900); }
+  .logo-pink   { background: linear-gradient(135deg, #ff375f, #c21e4a); }
+  .logo-purple { background: linear-gradient(135deg, #bf5af2, #7c3aed); }
+  .logo-slate  { background: linear-gradient(135deg, #8e8e93, #48484a); }
+
+  /* ═══════════════════════════════════════════════════════
+   * CLIENT DETAIL PAGE
+   * ═══════════════════════════════════════════════════════ */
+  .client-detail-page { max-width: 1200px; margin: 0 auto; padding: 24px 32px 96px; width: 100%; }
+
+  .detail-breadcrumb {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px; color: var(--text-soft); letter-spacing: -0.005em;
+    margin-bottom: 20px;
+  }
+  .detail-breadcrumb a {
+    color: var(--text-muted); text-decoration: none;
+    padding: 3px 6px; border-radius: 6px;
+    transition: background 0.15s, color 0.15s;
+  }
+  .detail-breadcrumb a:hover { background: var(--bg-soft); color: var(--text); }
+  .detail-breadcrumb .sep { color: var(--text-faint); font-weight: 400; }
+  .detail-breadcrumb .current { color: var(--text); font-weight: 500; padding: 3px 0; }
+
+  /* Hero */
+  .client-hero {
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 18px;
+    padding: 28px 32px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 24px;
+    align-items: center;
+    margin-bottom: 28px;
+    box-shadow: var(--shadow);
+  }
+  .hero-logo {
+    width: 72px; height: 72px; border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; font-weight: 600; letter-spacing: -0.02em;
+    color: #fff; flex-shrink: 0;
+  }
+  .hero-body { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+  .hero-name-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .hero-name {
+    font-size: 28px; font-weight: 600; letter-spacing: -0.022em;
+    color: var(--text); line-height: 1.15;
+  }
+  .hero-meta {
+    display: flex; align-items: center; gap: 18px;
+    font-size: 13px; color: var(--text-muted); letter-spacing: -0.005em;
+    flex-wrap: wrap;
+  }
+  .hero-meta .meta-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--text-faint); }
+  .hero-meta-item { display: flex; align-items: center; gap: 7px; }
+  .hero-meta-item svg { width: 13px; height: 13px; color: var(--text-faint); }
+  .hero-am-avatar {
+    width: 20px; height: 20px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 600; color: #fff;
+  }
+
+  /* Billing chip (role-gated; simply not rendered when hidden) */
+  .hero-billing {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 12px 6px 10px; border-radius: 980px;
+    background: var(--bg-soft);
+    font-size: 12px; font-weight: 500; color: var(--text-muted);
+    font-feature-settings: "tnum";
+  }
+  .hero-billing svg { width: 13px; height: 13px; color: var(--text-faint); }
+  .hero-billing strong { color: var(--text); font-weight: 600; margin-right: 2px; }
+  .hero-billing .renew { color: var(--text-soft); font-size: 11px; }
+
+  /* Hero actions */
+  .hero-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .hero-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 14px; border-radius: 980px;
+    background: var(--bg-soft); border: 1px solid var(--hairline-soft);
+    color: var(--text); font-size: 13px; font-weight: 500; letter-spacing: -0.005em;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .hero-btn:hover { background: var(--hover-tint); border-color: var(--hover-blue); color: var(--hover-blue); }
+  .hero-btn svg { width: 13px; height: 13px; }
+  .hero-btn.primary {
+    background: var(--highlight); border-color: var(--highlight); color: #fff;
+  }
+  .hero-btn.primary:hover { opacity: 0.9; background: var(--highlight); border-color: var(--highlight); color: #fff; }
+  .hero-btn.icon-only { padding: 8px; width: 36px; height: 36px; justify-content: center; }
+
+  /* Sections (reuse .block pattern for consistency) */
+  .detail-section {
+    margin-bottom: 36px;
+  }
+  .detail-section-header {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
+    margin-bottom: 16px;
+  }
+  .detail-section-title {
+    font-size: 13px; font-weight: 600; color: var(--text);
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .detail-section-sub {
+    font-size: 12px; color: var(--text-soft); letter-spacing: -0.005em;
+  }
+  .detail-section-link {
+    font-size: 13px; font-weight: 500; color: var(--highlight);
+    text-decoration: none; letter-spacing: -0.005em;
+  }
+  .detail-section-link:hover { text-decoration: underline; }
+
+  /* Services list — each service is first-class */
+  .services-list { display: flex; flex-direction: column; gap: 12px; }
+  .service-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 14px;
+    padding: 20px 22px;
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    gap: 20px;
+    align-items: center;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .service-card:hover { border-color: var(--hairline); box-shadow: var(--shadow-hover); }
+  .service-icon {
+    width: 44px; height: 44px; border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; flex-shrink: 0;
+  }
+  .service-icon svg { width: 18px; height: 18px; }
+  .service-card-body { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .service-name-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .service-name {
+    font-size: 15px; font-weight: 600; color: var(--text);
+    letter-spacing: -0.012em;
+  }
+  .service-type {
+    font-size: 11px; font-weight: 500; color: var(--text-soft);
+    text-transform: uppercase; letter-spacing: 0.04em;
+    padding: 2px 8px; border-radius: 980px;
+    background: var(--bg-soft);
+  }
+  .service-type.retainer { color: var(--status-track); background: var(--status-track-soft); }
+  .service-type.project  { color: var(--status-onboard); background: var(--status-onboard-soft); }
+  .service-sub {
+    font-size: 12px; color: var(--text-soft); letter-spacing: -0.005em;
+  }
+  .service-sub .sep { margin: 0 6px; color: var(--text-faint); }
+  .service-progress {
+    display: flex; flex-direction: column; gap: 6px;
+    min-width: 160px;
+  }
+  .service-progress-label {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 11px; color: var(--text-soft); letter-spacing: -0.005em;
+    font-feature-settings: "tnum";
+  }
+  .service-progress-label strong { color: var(--text); font-weight: 600; font-size: 12px; }
+  .service-progress-bar {
+    height: 4px; background: var(--bg-soft); border-radius: 2px; overflow: hidden;
+  }
+  .service-progress-fill {
+    height: 100%; background: var(--highlight); border-radius: 2px;
+    transition: width 0.3s;
+  }
+  .service-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .service-star {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent; border: none;
+    cursor: pointer; color: var(--text-faint);
+    transition: background 0.15s, color 0.15s;
+  }
+  .service-star:hover { background: var(--bg-soft); color: var(--status-risk); }
+  .service-star.active { color: var(--status-risk); }
+  .service-star svg { width: 16px; height: 16px; }
+  .service-open {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 980px;
+    background: var(--bg-soft); border: 1px solid var(--hairline-soft);
+    color: var(--text); font-size: 13px; font-weight: 500; letter-spacing: -0.005em;
+    cursor: pointer; text-decoration: none;
+    transition: all 0.15s;
+  }
+  .service-open:hover { background: var(--highlight-soft); border-color: var(--highlight); color: var(--highlight); }
+  .service-open svg { width: 12px; height: 12px; }
+
+  /* Integrations grid — mocked dashboards */
+  .integrations-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 14px;
+  }
+  .integration-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: flex; flex-direction: column; gap: 14px;
+    box-shadow: var(--shadow);
+  }
+  .integration-top {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .integration-brand { display: flex; align-items: center; gap: 10px; }
+  .integration-brand-mark {
+    width: 28px; height: 28px; border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg-soft);
+  }
+  .integration-brand-mark svg { width: 16px; height: 16px; }
+  .integration-name {
+    font-size: 13px; font-weight: 600; color: var(--text);
+    letter-spacing: -0.005em;
+  }
+  .integration-status {
+    font-size: 11px; color: var(--status-track); display: flex; align-items: center; gap: 4px;
+  }
+  .integration-status .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--status-track); }
+
+  .integration-metric {
+    display: flex; align-items: baseline; gap: 10px;
+  }
+  .integration-value {
+    font-size: 28px; font-weight: 600; color: var(--text);
+    letter-spacing: -0.025em; line-height: 1;
+    font-feature-settings: "tnum";
+  }
+  .integration-delta {
+    font-size: 12px; font-weight: 500; color: var(--status-track);
+    font-feature-settings: "tnum";
+    display: inline-flex; align-items: center; gap: 3px;
+  }
+  .integration-delta.down { color: var(--status-fire); }
+  .integration-delta svg { width: 10px; height: 10px; }
+  .integration-metric-label {
+    font-size: 11px; color: var(--text-soft);
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+
+  /* Mini sparkline chart — SVG inline */
+  .integration-chart { height: 48px; display: block; width: 100%; }
+  .integration-chart path.area { fill: var(--highlight-soft); }
+  .integration-chart path.line { fill: none; stroke: var(--highlight); stroke-width: 1.5; }
+  .integration-card[data-color="ads"] .integration-chart path.area { fill: rgba(52,199,89,0.1); }
+  .integration-card[data-color="ads"] .integration-chart path.line { stroke: #30d158; }
+  .integration-card[data-color="gsc"] .integration-chart path.area { fill: rgba(191,90,242,0.1); }
+  .integration-card[data-color="gsc"] .integration-chart path.line { stroke: #bf5af2; }
+
+  .integration-row {
+    display: flex; justify-content: space-between;
+    font-size: 12px; color: var(--text-muted);
+    padding-top: 10px; border-top: 1px solid var(--hairline-soft);
+  }
+  .integration-row-label { color: var(--text-soft); }
+  .integration-row-value { color: var(--text); font-feature-settings: "tnum"; font-weight: 500; }
+
+  /* Onboarding section */
+  .onboarding-panel {
+    background: var(--bg-elev);
+    border: 1px solid var(--status-onboard-soft);
+    border-radius: 14px;
+    padding: 22px 24px;
+    box-shadow: var(--shadow);
+  }
+  .onboarding-panel.complete { border-color: var(--hairline-soft); }
+  .onboarding-top {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    margin-bottom: 18px;
+  }
+  .onboarding-title-group { display: flex; align-items: center; gap: 12px; }
+  .onboarding-title {
+    font-size: 15px; font-weight: 600; color: var(--text);
+    letter-spacing: -0.012em;
+  }
+  .onboarding-progress-text {
+    font-size: 13px; color: var(--text-muted); font-feature-settings: "tnum";
+  }
+  .onboarding-progress-bar {
+    width: 160px; height: 4px; background: var(--bg-soft);
+    border-radius: 2px; overflow: hidden;
+  }
+  .onboarding-progress-fill {
+    height: 100%; background: var(--status-onboard); border-radius: 2px;
+    transition: width 0.3s;
+  }
+  .onboarding-panel.complete .onboarding-progress-fill { background: var(--status-track); }
+
+  .onboarding-checklist {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 8px 24px;
+  }
+  .onboarding-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 0;
+    font-size: 13px; color: var(--text);
+    letter-spacing: -0.005em;
+  }
+  .onboarding-check {
+    width: 18px; height: 18px; border-radius: 6px;
+    border: 1.5px solid var(--hairline);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: transparent;
+    transition: all 0.15s;
+    cursor: pointer;
+  }
+  .onboarding-check svg { width: 11px; height: 11px; }
+  .onboarding-item.done .onboarding-check {
+    background: var(--status-track);
+    border-color: var(--status-track);
+    color: #fff;
+  }
+  .onboarding-item.done {
+    color: var(--text-soft);
+    text-decoration: line-through;
+    text-decoration-color: var(--text-faint);
+  }
+  .onboarding-group-label {
+    grid-column: 1 / -1;
+    font-size: 11px; font-weight: 500; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin-top: 14px; padding-top: 14px;
+    border-top: 1px solid var(--hairline-soft);
+  }
+  .onboarding-group-label:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+
+  /* Team section — horizontal avatar row */
+  .team-section-grid {
+    display: flex; align-items: center; gap: 28px; flex-wrap: wrap;
+    padding: 22px 24px;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+  }
+  .team-member-card {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .team-member-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600; color: #fff;
+  }
+  .team-member-body { display: flex; flex-direction: column; gap: 1px; }
+  .team-member-name { font-size: 13px; font-weight: 500; color: var(--text); letter-spacing: -0.005em; }
+  .team-member-role { font-size: 11px; color: var(--text-soft); }
+
+  /* Timeline / activity */
+  .activity-list {
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 14px;
+    padding: 8px 24px;
+    box-shadow: var(--shadow);
+  }
+  .activity-item {
+    display: grid;
+    grid-template-columns: 20px 1fr auto;
+    gap: 14px; align-items: center;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--hairline-soft);
+  }
+  .activity-item:last-child { border-bottom: none; }
+  .activity-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--text-faint); margin: 0 6px;
+  }
+  .activity-text {
+    font-size: 13px; color: var(--text);
+    letter-spacing: -0.005em;
+  }
+  .activity-text strong { font-weight: 500; }
+  .activity-text .subject { color: var(--text-muted); }
+  .activity-time {
+    font-size: 12px; color: var(--text-faint); font-feature-settings: "tnum";
+  }
+
+  /* Responsive collapses */
+  @media (max-width: 900px) {
+    .clients-list-header { display: none; }
+    .client-row {
+      grid-template-columns: 16px 1fr auto;
+      grid-template-areas:
+        "status ident chev"
+        ". services services"
+        ". meta meta";
+      gap: 8px 12px;
+      padding: 16px;
+    }
+    .client-row > :nth-child(1) { grid-area: status; }
+    .client-row > :nth-child(2) { grid-area: ident; }
+    .client-row > :nth-child(3) { grid-area: services; }
+    .client-row > :nth-child(7) { grid-area: chev; }
+    .client-am, .client-metric, .client-timestamp { grid-area: meta; }
+    .client-hero { grid-template-columns: auto 1fr; row-gap: 16px; }
+    .hero-actions { grid-column: 1 / -1; flex-wrap: wrap; }
+    .service-card { grid-template-columns: auto 1fr; row-gap: 12px; }
+    .service-progress, .service-actions { grid-column: 1 / -1; }
+  }
+
   /* ── View routing (merged overview + board) ── */
   .view { display: none; }
   .view.active { display: flex; flex-direction: column; flex: 1; min-height: 0; }
   .view-overview.active { overflow-y: auto; }
+  .view-clients.active,
+  .view-client-detail.active { overflow-y: auto; }
   </style>
 </head>
 <body>
@@ -5523,8 +6219,7 @@
     <div class="header-logo">ProjectFlow</div>
     <nav class="header-nav">
       <a href="#overview" data-view-target="overview" class="on" aria-current="page">Overview</a>
-      <a href="01-clients-refined.html">Clients</a>
-      <a href="#board" data-view-target="board">Board</a>
+      <a href="#clients" data-view-target="clients">Clients</a>
       <a href="#">Analytics</a>
     </nav>
   </div>
@@ -5538,6 +6233,9 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       <span class="notif-dot"></span>
     </div>
+    <button class="header-tool" aria-label="Service templates" onclick="openTemplates()" data-tip="Service templates" data-tip-pos="below">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>
+    </button>
     <button class="theme-toggle" aria-label="Toggle dark mode" onclick="toggleTheme()" data-tip="Toggle theme" data-tip-pos="below">
       <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
@@ -5986,6 +6684,676 @@
 <!-- Back to top button -->
 <button class="back-to-top" id="backToTop" aria-label="Back to top" data-tip="Back to top" data-tip-pos="left" onclick="window.scrollTo({top:0,behavior:'smooth'})">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
+</div>
+
+<!-- ═══════ CLIENTS DIRECTORY VIEW ═══════ -->
+<div class="view view-clients" data-view="clients">
+<main class="clients-page">
+
+  <div class="clients-header">
+    <div class="clients-heading">
+      <div class="clients-title">Clients</div>
+      <div class="clients-count">8 active</div>
+    </div>
+    <div class="clients-actions">
+      <div class="clients-segment" role="tablist" aria-label="Filter by status">
+        <button class="on" role="tab" aria-selected="true">All <span class="seg-count">8</span></button>
+        <button role="tab">On Fire <span class="seg-count">1</span></button>
+        <button role="tab">At Risk <span class="seg-count">2</span></button>
+        <button role="tab">Onboarding <span class="seg-count">1</span></button>
+        <button role="tab">On Track <span class="seg-count">3</span></button>
+        <button role="tab">Paused <span class="seg-count">1</span></button>
+      </div>
+      <button class="clients-primary-btn" data-tip="Add a new client" data-tip-pos="below-end">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Client
+      </button>
+    </div>
+  </div>
+
+  <!-- Pinned clients (yours) -->
+  <div class="clients-pinned">
+    <div class="clients-pinned-label">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2a1 1 0 0 1 .993.883L15 3v4.586l2.707 2.707A1 1 0 0 1 18 11v1a1 1 0 0 1-1 1h-4v6a1 1 0 0 1-1.993.117L11 19v-6H7a1 1 0 0 1-.993-.883L6 12v-1a1 1 0 0 1 .293-.707L9 7.586V3a1 1 0 0 1 .883-.993L10 2h4z"/></svg>
+      Your Clients
+    </div>
+    <div class="clients-pinned-grid">
+      <a href="#clients/acme-corp" data-client-id="acme-corp" class="pinned-card">
+        <div class="pinned-logo logo-indigo">AC</div>
+        <div class="pinned-body">
+          <div class="pinned-name">Acme Corporation</div>
+          <div class="pinned-meta">3 services · 23 open tasks</div>
+        </div>
+        <span class="pinned-status" style="background:var(--status-fire)"></span>
+      </a>
+      <a href="#clients/harvest-co" data-client-id="harvest-co" class="pinned-card">
+        <div class="pinned-logo logo-green">HC</div>
+        <div class="pinned-body">
+          <div class="pinned-name">Harvest &amp; Co.</div>
+          <div class="pinned-meta">2 services · onboarding 67%</div>
+        </div>
+        <span class="pinned-status" style="background:var(--status-onboard)"></span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Client list -->
+  <div class="clients-list" role="list">
+    <div class="clients-list-header">
+      <div></div>
+      <div>Client</div>
+      <div>Services</div>
+      <div>Account Manager</div>
+      <div>Status</div>
+      <div style="text-align:right">Updated</div>
+      <div></div>
+    </div>
+
+    <a href="#clients/acme-corp" data-client-id="acme-corp" class="client-row" role="listitem">
+      <span class="client-status-dot fire" data-tip="On fire — 3 overdue tasks" aria-label="On fire"></span>
+      <div class="client-identity">
+        <div class="client-logo logo-indigo">AC</div>
+        <div class="client-identity-body">
+          <div class="client-name">Acme Corporation</div>
+          <div class="client-industry">Technology · B2B SaaS</div>
+        </div>
+      </div>
+      <div class="client-services">
+        <span class="service-pill">Website</span>
+        <span class="service-pill">SEO</span>
+        <span class="service-pill">Content</span>
+      </div>
+      <div class="client-am">
+        <div class="client-am-avatar" style="background:#5e5ce6">NT</div>
+        <div class="client-am-name">Nikko Trinidad</div>
+      </div>
+      <div class="client-metric urgent">3 overdue</div>
+      <div class="client-timestamp">2h ago</div>
+      <span class="client-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+    </a>
+
+    <a href="#clients/bloom-retail" data-client-id="bloom-retail" class="client-row" role="listitem">
+      <span class="client-status-dot risk" data-tip="At risk — deliverable 3 days behind" aria-label="At risk"></span>
+      <div class="client-identity">
+        <div class="client-logo logo-pink">BR</div>
+        <div class="client-identity-body">
+          <div class="client-name">Bloom Retail</div>
+          <div class="client-industry">E-commerce · Fashion</div>
+        </div>
+      </div>
+      <div class="client-services">
+        <span class="service-pill">SEO</span>
+        <span class="service-pill">Google Ads</span>
+      </div>
+      <div class="client-am">
+        <div class="client-am-avatar" style="background:#ff375f">KC</div>
+        <div class="client-am-name">Kate Chen</div>
+      </div>
+      <div class="client-metric">Deck 3d behind</div>
+      <div class="client-timestamp">5h ago</div>
+      <span class="client-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+    </a>
+
+    <a href="#clients/techstart-inc" data-client-id="techstart-inc" class="client-row" role="listitem">
+      <span class="client-status-dot risk" data-tip="At risk — ad budget at 95%" aria-label="At risk"></span>
+      <div class="client-identity">
+        <div class="client-logo logo-teal">TS</div>
+        <div class="client-identity-body">
+          <div class="client-name">TechStart Inc.</div>
+          <div class="client-industry">SaaS · Developer tools</div>
+        </div>
+      </div>
+      <div class="client-services">
+        <span class="service-pill">SEO</span>
+        <span class="service-pill">Content</span>
+      </div>
+      <div class="client-am">
+        <div class="client-am-avatar" style="background:#ff9f0a">MA</div>
+        <div class="client-am-name">Marcus Aldrin</div>
+      </div>
+      <div class="client-metric">Budget 95%</div>
+      <div class="client-timestamp">1d ago</div>
+      <span class="client-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+    </a>
+
+    <a href="#clients/harvest-co" data-client-id="harvest-co" class="client-row" role="listitem">
+      <span class="client-status-dot onboard" data-tip="Onboarding — checklist 67% complete" aria-label="Onboarding"></span>
+      <div class="client-identity">
+        <div class="client-logo logo-green">HC</div>
+        <div class="client-identity-body">
+          <div class="client-name">Harvest &amp; Co.</div>
+          <div class="client-industry">Agriculture · D2C</div>
+        </div>
+      </div>
+      <div class="client-services">
+        <span class="service-pill">Website</span>
+        <span class="service-pill">Brand</span>
+      </div>
+      <div class="client-am">
+        <div class="client-am-avatar" style="background:#5e5ce6">NT</div>
+        <div class="client-am-name">Nikko Trinidad</div>
+      </div>
+      <div class="client-metric">Onboarding 67%</div>
+      <div class="client-timestamp">3h ago</div>
+      <span class="client-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+    </a>
+
+    <a href="#clients/northwind-labs" data-client-id="northwind-labs" class="client-row" role="listitem">
+      <span class="client-status-dot track" data-tip="On track — no blockers" aria-label="On track"></span>
+      <div class="client-identity">
+        <div class="client-logo logo-sky">NL</div>
+        <div class="client-identity-body">
+          <div class="client-name">Northwind Labs</div>
+          <div class="client-industry">Biotech · Research</div>
+        </div>
+      </div>
+      <div class="client-services">
+        <span class="service-pill">SEO</span>
+        <span class="service-pill">Google Ads</span>
+        <span class="service-pill">Content</span>
+        <span class="service-pill more">+1</span>
+      </div>
+      <div class="client-am">
+        <div class="client-am-avatar" style="background:#ff375f">KC</div>
+        <div class="client-am-name">Kate Chen</div>
+      </div>
+      <div class="client-metric">On schedule</div>
+      <div class="client-timestamp">2d ago</div>
+      <span class="client-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+    </a>
+
+    <a href="#clients/summit-outdoor" data-client-id="summit-outdoor" class="client-row" role="listitem">
+      <span class="client-status-dot track" data-tip="On track — no blockers" aria-label="On track"></span>
+      <div class="client-identity">
+        <div class="client-logo logo-orange">SO</div>
+        <div class="client-identity-body">
+          <div class="client-name">Summit Outdoor</div>
+          <div class="client-industry">Retail · Outdoor apparel</div>
+        </div>
+      </div>
+      <div class="client-services">
+        <span class="service-pill">Content</span>
+      </div>
+      <div class="client-am">
+        <div class="client-am-avatar" style="background:#ff9f0a">MA</div>
+        <div class="client-am-name">Marcus Aldrin</div>
+      </div>
+      <div class="client-metric">On schedule</div>
+      <div class="client-timestamp">4d ago</div>
+      <span class="client-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+    </a>
+
+    <a href="#clients/cascade-coffee" data-client-id="cascade-coffee" class="client-row" role="listitem">
+      <span class="client-status-dot track" data-tip="On track — renewed" aria-label="On track"></span>
+      <div class="client-identity">
+        <div class="client-logo logo-amber">CC</div>
+        <div class="client-identity-body">
+          <div class="client-name">Cascade Coffee</div>
+          <div class="client-industry">F&amp;B · DTC roaster</div>
+        </div>
+      </div>
+      <div class="client-services">
+        <span class="service-pill">SEO</span>
+        <span class="service-pill">Social</span>
+      </div>
+      <div class="client-am">
+        <div class="client-am-avatar" style="background:#ff375f">KC</div>
+        <div class="client-am-name">Kate Chen</div>
+      </div>
+      <div class="client-metric">Renewed 2025</div>
+      <div class="client-timestamp">1w ago</div>
+      <span class="client-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+    </a>
+
+    <a href="#clients/meridian-health" data-client-id="meridian-health" class="client-row" role="listitem">
+      <span class="client-status-dot paused" data-tip="Paused since Mar 14" aria-label="Paused"></span>
+      <div class="client-identity">
+        <div class="client-logo logo-slate">MH</div>
+        <div class="client-identity-body">
+          <div class="client-name">Meridian Health</div>
+          <div class="client-industry">Healthcare · Clinics</div>
+        </div>
+      </div>
+      <div class="client-services">
+        <span class="service-pill">Website</span>
+      </div>
+      <div class="client-am">
+        <div class="client-am-avatar" style="background:#ff9f0a">MA</div>
+        <div class="client-am-name">Marcus Aldrin</div>
+      </div>
+      <div class="client-metric">Paused Mar 14</div>
+      <div class="client-timestamp">3w ago</div>
+      <span class="client-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+    </a>
+  </div>
+
+</main>
+</div>
+
+<!-- ═══════ CLIENT DETAIL VIEW ═══════ -->
+<div class="view view-client-detail" data-view="client-detail">
+
+  <!-- ACME CORPORATION — full detail (featured on-fire client) -->
+  <section class="client-detail-page" data-client-panel="acme-corp">
+    <nav class="detail-breadcrumb" aria-label="Breadcrumb">
+      <a href="#clients" data-view-target="clients">Clients</a>
+      <span class="sep">/</span>
+      <span class="current">Acme Corporation</span>
+    </nav>
+
+    <div class="client-hero">
+      <div class="hero-logo logo-indigo">AC</div>
+      <div class="hero-body">
+        <div class="hero-name-row">
+          <div class="hero-name">Acme Corporation</div>
+          <span class="status-chip fire"><span class="dot"></span>On Fire</span>
+        </div>
+        <div class="hero-meta">
+          <span class="hero-meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            Technology · B2B SaaS
+          </span>
+          <span class="meta-dot"></span>
+          <span class="hero-meta-item">
+            <span class="hero-am-avatar" style="background:#5e5ce6">NT</span>
+            Nikko Trinidad
+          </span>
+          <span class="meta-dot"></span>
+          <span class="hero-meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Client since Aug 2023
+          </span>
+          <span class="meta-dot"></span>
+          <span class="hero-billing" data-role-gate="billing">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            <strong>$14,500</strong>/mo
+            <span class="renew">· Renews Aug 12</span>
+          </span>
+        </div>
+      </div>
+      <div class="hero-actions">
+        <button class="hero-btn icon-only" aria-label="Edit client" data-tip="Edit client" data-tip-pos="below-end">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="hero-btn icon-only" aria-label="More options" data-tip="More options" data-tip-pos="below-end">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="12" r="1.5"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- SERVICES -->
+    <div class="detail-section">
+      <div class="detail-section-header">
+        <div class="detail-section-title">Active Services</div>
+        <div class="detail-section-sub">3 of 3 · Onboarding complete</div>
+      </div>
+      <div class="services-list">
+        <div class="service-card">
+          <div class="service-icon logo-indigo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
+          <div class="service-card-body">
+            <div class="service-name-row">
+              <div class="service-name">Website Redesign</div>
+              <span class="service-type project">Project</span>
+            </div>
+            <div class="service-sub">Template: Web Design — Full Stack<span class="sep">·</span>Due Apr 18<span class="sep">·</span>6 / 14 cards done</div>
+          </div>
+          <div class="service-progress">
+            <div class="service-progress-label"><span>Progress</span><strong>43%</strong></div>
+            <div class="service-progress-bar"><div class="service-progress-fill" style="width:43%"></div></div>
+          </div>
+          <div class="service-actions">
+            <button class="service-star active" aria-label="Unfavorite board" data-tip="Favorited" data-tip-pos="above-end">
+              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </button>
+            <a href="#board" data-view-target="board" class="service-open">Open Board <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg></a>
+          </div>
+        </div>
+
+        <div class="service-card">
+          <div class="service-icon logo-green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
+          <div class="service-card-body">
+            <div class="service-name-row">
+              <div class="service-name">SEO &amp; Organic Growth</div>
+              <span class="service-type retainer">Retainer</span>
+            </div>
+            <div class="service-sub">Template: SEO Retainer — Monthly<span class="sep">·</span>Started Aug 2023<span class="sep">·</span>Next deliverable Apr 22</div>
+          </div>
+          <div class="service-progress">
+            <div class="service-progress-label"><span>This month</span><strong>72%</strong></div>
+            <div class="service-progress-bar"><div class="service-progress-fill" style="width:72%"></div></div>
+          </div>
+          <div class="service-actions">
+            <button class="service-star" aria-label="Favorite board" data-tip="Favorite board" data-tip-pos="above-end">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </button>
+            <a href="#board" data-view-target="board" class="service-open">Open Board <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg></a>
+          </div>
+        </div>
+
+        <div class="service-card">
+          <div class="service-icon logo-purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          </div>
+          <div class="service-card-body">
+            <div class="service-name-row">
+              <div class="service-name">Content Marketing</div>
+              <span class="service-type retainer">Retainer</span>
+            </div>
+            <div class="service-sub">Template: Content — 8 articles/mo<span class="sep">·</span>Started Jan 2025<span class="sep">·</span>Next publish Apr 19</div>
+          </div>
+          <div class="service-progress">
+            <div class="service-progress-label"><span>This month</span><strong>6 / 8 posts</strong></div>
+            <div class="service-progress-bar"><div class="service-progress-fill" style="width:75%"></div></div>
+          </div>
+          <div class="service-actions">
+            <button class="service-star" aria-label="Favorite board" data-tip="Favorite board" data-tip-pos="above-end">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </button>
+            <a href="#board" data-view-target="board" class="service-open">Open Board <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg></a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DATA & INTEGRATIONS -->
+    <div class="detail-section">
+      <div class="detail-section-header">
+        <div>
+          <div class="detail-section-title">Data &amp; Integrations</div>
+          <div class="detail-section-sub" style="margin-top:4px">Last synced 12 min ago · 30-day window</div>
+        </div>
+        <a href="#" class="detail-section-link">Configure →</a>
+      </div>
+      <div class="integrations-grid">
+
+        <div class="integration-card" data-color="ga">
+          <div class="integration-top">
+            <div class="integration-brand">
+              <span class="integration-brand-mark"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="4" height="10" rx="1" fill="#f9ab00"/><rect x="10" y="6" width="4" height="14" rx="1" fill="#e37400"/><rect x="16" y="2" width="4" height="18" rx="1" fill="#4285f4"/></svg></span>
+              <div class="integration-name">Google Analytics</div>
+            </div>
+            <div class="integration-status"><span class="dot"></span>Connected</div>
+          </div>
+          <div>
+            <div class="integration-metric-label">Sessions · last 30d</div>
+            <div class="integration-metric">
+              <span class="integration-value">48.2K</span>
+              <span class="integration-delta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>12.4%</span>
+            </div>
+          </div>
+          <svg class="integration-chart" viewBox="0 0 300 48" preserveAspectRatio="none">
+            <path class="area" d="M0,42 L20,38 L40,40 L60,34 L80,30 L100,32 L120,26 L140,22 L160,24 L180,18 L200,14 L220,16 L240,10 L260,12 L280,8 L300,6 L300,48 L0,48 Z"/>
+            <path class="line" d="M0,42 L20,38 L40,40 L60,34 L80,30 L100,32 L120,26 L140,22 L160,24 L180,18 L200,14 L220,16 L240,10 L260,12 L280,8 L300,6"/>
+          </svg>
+          <div class="integration-row">
+            <span class="integration-row-label">Conv. rate</span>
+            <span class="integration-row-value">3.4%</span>
+          </div>
+        </div>
+
+        <div class="integration-card" data-color="ads">
+          <div class="integration-top">
+            <div class="integration-brand">
+              <span class="integration-brand-mark"><svg viewBox="0 0 24 24"><path d="M12 2 L21 18 L3 18 Z" fill="#fbbc04"/><circle cx="7" cy="18" r="3" fill="#34a853"/><path d="M12 2 L3 18 L7 18 L16 2 Z" fill="#4285f4" opacity="0.7"/></svg></span>
+              <div class="integration-name">Google Ads</div>
+            </div>
+            <div class="integration-status"><span class="dot"></span>Connected</div>
+          </div>
+          <div>
+            <div class="integration-metric-label">Spend · last 30d</div>
+            <div class="integration-metric">
+              <span class="integration-value">$6,842</span>
+              <span class="integration-delta down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>4.1%</span>
+            </div>
+          </div>
+          <svg class="integration-chart" viewBox="0 0 300 48" preserveAspectRatio="none">
+            <path class="area" d="M0,20 L20,24 L40,22 L60,28 L80,26 L100,32 L120,30 L140,34 L160,28 L180,32 L200,26 L220,30 L240,24 L260,28 L280,22 L300,26 L300,48 L0,48 Z"/>
+            <path class="line" d="M0,20 L20,24 L40,22 L60,28 L80,26 L100,32 L120,30 L140,34 L160,28 L180,32 L200,26 L220,30 L240,24 L260,28 L280,22 L300,26"/>
+          </svg>
+          <div class="integration-row">
+            <span class="integration-row-label">CPA · avg</span>
+            <span class="integration-row-value">$42.80</span>
+          </div>
+        </div>
+
+        <div class="integration-card" data-color="gsc">
+          <div class="integration-top">
+            <div class="integration-brand">
+              <span class="integration-brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#bf5af2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+              <div class="integration-name">Search Console</div>
+            </div>
+            <div class="integration-status"><span class="dot"></span>Connected</div>
+          </div>
+          <div>
+            <div class="integration-metric-label">Clicks · last 30d</div>
+            <div class="integration-metric">
+              <span class="integration-value">21.6K</span>
+              <span class="integration-delta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>8.7%</span>
+            </div>
+          </div>
+          <svg class="integration-chart" viewBox="0 0 300 48" preserveAspectRatio="none">
+            <path class="area" d="M0,36 L20,38 L40,34 L60,32 L80,28 L100,30 L120,26 L140,22 L160,24 L180,20 L200,22 L220,16 L240,18 L260,14 L280,10 L300,12 L300,48 L0,48 Z"/>
+            <path class="line" d="M0,36 L20,38 L40,34 L60,32 L80,28 L100,30 L120,26 L140,22 L160,24 L180,20 L200,22 L220,16 L240,18 L260,14 L280,10 L300,12"/>
+          </svg>
+          <div class="integration-row">
+            <span class="integration-row-label">Avg position</span>
+            <span class="integration-row-value">14.2</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ONBOARDING -->
+    <div class="detail-section">
+      <div class="detail-section-header">
+        <div class="detail-section-title">Onboarding</div>
+        <div class="detail-section-sub">Completed Aug 24, 2023</div>
+      </div>
+      <div class="onboarding-panel complete">
+        <div class="onboarding-top">
+          <div class="onboarding-title-group">
+            <div class="onboarding-title">All steps complete</div>
+            <div class="onboarding-progress-bar"><div class="onboarding-progress-fill" style="width:100%"></div></div>
+            <div class="onboarding-progress-text">12 / 12</div>
+          </div>
+        </div>
+        <div class="onboarding-checklist">
+          <div class="onboarding-group-label">Universal</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Signed contract uploaded</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Billing account configured</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Brand guidelines collected</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Kickoff call completed</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Production team briefed</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Slack channel created</div>
+          <div class="onboarding-group-label">Web Design add-on</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Hosting credentials received</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Staging URL provisioned</div>
+          <div class="onboarding-group-label">SEO add-on</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Google Analytics access granted</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Search Console verified</div>
+          <div class="onboarding-group-label">Content add-on</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Editorial calendar aligned</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Voice &amp; tone doc approved</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEAM -->
+    <div class="detail-section">
+      <div class="detail-section-header">
+        <div class="detail-section-title">Team</div>
+        <div class="detail-section-sub">6 people assigned</div>
+      </div>
+      <div class="team-section-grid">
+        <div class="team-member-card">
+          <div class="team-member-avatar" style="background:#5e5ce6">NT</div>
+          <div class="team-member-body">
+            <div class="team-member-name">Nikko Trinidad</div>
+            <div class="team-member-role">Account Manager</div>
+          </div>
+        </div>
+        <div class="team-member-card">
+          <div class="team-member-avatar" style="background:#ff9f0a">MA</div>
+          <div class="team-member-body">
+            <div class="team-member-name">Marcus Aldrin</div>
+            <div class="team-member-role">Lead Designer</div>
+          </div>
+        </div>
+        <div class="team-member-card">
+          <div class="team-member-avatar" style="background:#30d158">EV</div>
+          <div class="team-member-body">
+            <div class="team-member-name">Elena Vasquez</div>
+            <div class="team-member-role">Developer</div>
+          </div>
+        </div>
+        <div class="team-member-card">
+          <div class="team-member-avatar" style="background:#bf5af2">JC</div>
+          <div class="team-member-body">
+            <div class="team-member-name">James Chen</div>
+            <div class="team-member-role">SEO Specialist</div>
+          </div>
+        </div>
+        <div class="team-member-card">
+          <div class="team-member-avatar" style="background:#ff375f">SP</div>
+          <div class="team-member-body">
+            <div class="team-member-name">Sophie Park</div>
+            <div class="team-member-role">Content Writer</div>
+          </div>
+        </div>
+        <div class="team-member-card">
+          <div class="team-member-avatar" style="background:#64d2ff">RM</div>
+          <div class="team-member-body">
+            <div class="team-member-name">Ravi Mehta</div>
+            <div class="team-member-role">Developer</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVITY -->
+    <div class="detail-section">
+      <div class="detail-section-header">
+        <div class="detail-section-title">Recent Activity</div>
+        <a href="#" class="detail-section-link">View all →</a>
+      </div>
+      <div class="activity-list">
+        <div class="activity-item">
+          <span class="activity-dot" style="background:var(--status-fire)"></span>
+          <div class="activity-text"><strong>Nikko</strong> <span class="subject">flagged "Website redesign blocked waiting on client feedback" as urgent</span></div>
+          <span class="activity-time">2h ago</span>
+        </div>
+        <div class="activity-item">
+          <span class="activity-dot"></span>
+          <div class="activity-text"><strong>Sophie</strong> <span class="subject">published article "Scaling developer tools for enterprise"</span></div>
+          <span class="activity-time">Yesterday, 4:12 PM</span>
+        </div>
+        <div class="activity-item">
+          <span class="activity-dot" style="background:var(--status-track)"></span>
+          <div class="activity-text"><strong>Marcus</strong> <span class="subject">moved "Homepage wireframes" to Needs Review</span></div>
+          <span class="activity-time">Yesterday, 11:30 AM</span>
+        </div>
+        <div class="activity-item">
+          <span class="activity-dot"></span>
+          <div class="activity-text"><strong>Harvey</strong> <span class="subject">(client) left a comment on "Brand refresh moodboard"</span></div>
+          <span class="activity-time">Apr 15, 3:45 PM</span>
+        </div>
+        <div class="activity-item">
+          <span class="activity-dot"></span>
+          <div class="activity-text"><strong>Elena</strong> <span class="subject">deployed staging.acme.com v2.4.0</span></div>
+          <span class="activity-time">Apr 15, 10:22 AM</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Other clients — minimal preview panel -->
+  <section class="client-detail-page" data-client-panel="bloom-retail" hidden>
+    <nav class="detail-breadcrumb" aria-label="Breadcrumb">
+      <a href="#clients" data-view-target="clients">Clients</a>
+      <span class="sep">/</span>
+      <span class="current">Bloom Retail</span>
+    </nav>
+    <div class="client-hero">
+      <div class="hero-logo logo-pink">BR</div>
+      <div class="hero-body">
+        <div class="hero-name-row">
+          <div class="hero-name">Bloom Retail</div>
+          <span class="status-chip risk"><span class="dot"></span>At Risk</span>
+        </div>
+        <div class="hero-meta">
+          <span class="hero-meta-item">E-commerce · Fashion</span>
+          <span class="meta-dot"></span>
+          <span class="hero-meta-item"><span class="hero-am-avatar" style="background:#ff375f">KC</span>Kate Chen</span>
+          <span class="meta-dot"></span>
+          <span class="hero-billing" data-role-gate="billing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg><strong>$8,200</strong>/mo<span class="renew">· Renews Jun 30</span></span>
+        </div>
+      </div>
+    </div>
+    <div class="detail-section" style="text-align:center; padding:48px 24px; color:var(--text-soft); font-size:14px;">Full detail panel for this client will follow the same structure as Acme Corporation.<br><a href="#clients" data-view-target="clients" style="color:var(--highlight); text-decoration:none; display:inline-block; margin-top:12px;">← Back to Clients</a></div>
+  </section>
+
+  <section class="client-detail-page" data-client-panel="techstart-inc" hidden>
+    <nav class="detail-breadcrumb" aria-label="Breadcrumb"><a href="#clients" data-view-target="clients">Clients</a><span class="sep">/</span><span class="current">TechStart Inc.</span></nav>
+    <div class="client-hero"><div class="hero-logo logo-teal">TS</div><div class="hero-body"><div class="hero-name-row"><div class="hero-name">TechStart Inc.</div><span class="status-chip risk"><span class="dot"></span>At Risk</span></div><div class="hero-meta"><span class="hero-meta-item">SaaS · Developer tools</span><span class="meta-dot"></span><span class="hero-meta-item"><span class="hero-am-avatar" style="background:#ff9f0a">MA</span>Marcus Aldrin</span></div></div></div>
+    <div class="detail-section" style="text-align:center; padding:48px 24px; color:var(--text-soft); font-size:14px;">Full detail panel for this client will follow the same structure as Acme Corporation.<br><a href="#clients" data-view-target="clients" style="color:var(--highlight); text-decoration:none; display:inline-block; margin-top:12px;">← Back to Clients</a></div>
+  </section>
+
+  <section class="client-detail-page" data-client-panel="harvest-co" hidden>
+    <nav class="detail-breadcrumb" aria-label="Breadcrumb"><a href="#clients" data-view-target="clients">Clients</a><span class="sep">/</span><span class="current">Harvest &amp; Co.</span></nav>
+    <div class="client-hero"><div class="hero-logo logo-green">HC</div><div class="hero-body"><div class="hero-name-row"><div class="hero-name">Harvest &amp; Co.</div><span class="status-chip onboard"><span class="dot"></span>Onboarding</span></div><div class="hero-meta"><span class="hero-meta-item">Agriculture · D2C</span><span class="meta-dot"></span><span class="hero-meta-item"><span class="hero-am-avatar" style="background:#5e5ce6">NT</span>Nikko Trinidad</span></div></div></div>
+    <div class="detail-section"><div class="detail-section-header"><div class="detail-section-title">Onboarding</div><div class="detail-section-sub">8 of 12 complete — boards read-only to production until 100%</div></div>
+      <div class="onboarding-panel"><div class="onboarding-top"><div class="onboarding-title-group"><div class="onboarding-title">Onboarding in progress</div><div class="onboarding-progress-bar"><div class="onboarding-progress-fill" style="width:67%"></div></div><div class="onboarding-progress-text">8 / 12</div></div></div>
+        <div class="onboarding-checklist">
+          <div class="onboarding-group-label">Universal</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Signed contract uploaded</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Billing account configured</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Brand guidelines collected</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Kickoff call completed</div>
+          <div class="onboarding-item"><span class="onboarding-check"></span>Production team briefed</div>
+          <div class="onboarding-item"><span class="onboarding-check"></span>Slack channel created</div>
+          <div class="onboarding-group-label">Web Design add-on</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Hosting credentials received</div>
+          <div class="onboarding-item"><span class="onboarding-check"></span>Staging URL provisioned</div>
+          <div class="onboarding-group-label">Brand add-on</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Moodboard inputs collected</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Competitor audit shared</div>
+          <div class="onboarding-item"><span class="onboarding-check"></span>Naming preferences finalized</div>
+          <div class="onboarding-item"><span class="onboarding-check"></span>Asset handoff checklist signed</div>
+        </div>
+      </div>
+    </div>
+    <div class="detail-section" style="text-align:center; padding:24px; color:var(--text-soft); font-size:14px;"><a href="#clients" data-view-target="clients" style="color:var(--highlight); text-decoration:none;">← Back to Clients</a></div>
+  </section>
+
+  <section class="client-detail-page" data-client-panel="northwind-labs" hidden>
+    <nav class="detail-breadcrumb" aria-label="Breadcrumb"><a href="#clients" data-view-target="clients">Clients</a><span class="sep">/</span><span class="current">Northwind Labs</span></nav>
+    <div class="client-hero"><div class="hero-logo logo-sky">NL</div><div class="hero-body"><div class="hero-name-row"><div class="hero-name">Northwind Labs</div><span class="status-chip track"><span class="dot"></span>On Track</span></div><div class="hero-meta"><span class="hero-meta-item">Biotech · Research</span><span class="meta-dot"></span><span class="hero-meta-item"><span class="hero-am-avatar" style="background:#ff375f">KC</span>Kate Chen</span></div></div></div>
+    <div class="detail-section" style="text-align:center; padding:48px 24px; color:var(--text-soft); font-size:14px;">Full detail panel for this client will follow the same structure as Acme Corporation.<br><a href="#clients" data-view-target="clients" style="color:var(--highlight); text-decoration:none; display:inline-block; margin-top:12px;">← Back to Clients</a></div>
+  </section>
+
+  <section class="client-detail-page" data-client-panel="summit-outdoor" hidden>
+    <nav class="detail-breadcrumb" aria-label="Breadcrumb"><a href="#clients" data-view-target="clients">Clients</a><span class="sep">/</span><span class="current">Summit Outdoor</span></nav>
+    <div class="client-hero"><div class="hero-logo logo-orange">SO</div><div class="hero-body"><div class="hero-name-row"><div class="hero-name">Summit Outdoor</div><span class="status-chip track"><span class="dot"></span>On Track</span></div><div class="hero-meta"><span class="hero-meta-item">Retail · Outdoor apparel</span><span class="meta-dot"></span><span class="hero-meta-item"><span class="hero-am-avatar" style="background:#ff9f0a">MA</span>Marcus Aldrin</span></div></div></div>
+    <div class="detail-section" style="text-align:center; padding:48px 24px; color:var(--text-soft); font-size:14px;">Full detail panel for this client will follow the same structure as Acme Corporation.<br><a href="#clients" data-view-target="clients" style="color:var(--highlight); text-decoration:none; display:inline-block; margin-top:12px;">← Back to Clients</a></div>
+  </section>
+
+  <section class="client-detail-page" data-client-panel="cascade-coffee" hidden>
+    <nav class="detail-breadcrumb" aria-label="Breadcrumb"><a href="#clients" data-view-target="clients">Clients</a><span class="sep">/</span><span class="current">Cascade Coffee</span></nav>
+    <div class="client-hero"><div class="hero-logo logo-amber">CC</div><div class="hero-body"><div class="hero-name-row"><div class="hero-name">Cascade Coffee</div><span class="status-chip track"><span class="dot"></span>On Track</span></div><div class="hero-meta"><span class="hero-meta-item">F&amp;B · DTC roaster</span><span class="meta-dot"></span><span class="hero-meta-item"><span class="hero-am-avatar" style="background:#ff375f">KC</span>Kate Chen</span></div></div></div>
+    <div class="detail-section" style="text-align:center; padding:48px 24px; color:var(--text-soft); font-size:14px;">Full detail panel for this client will follow the same structure as Acme Corporation.<br><a href="#clients" data-view-target="clients" style="color:var(--highlight); text-decoration:none; display:inline-block; margin-top:12px;">← Back to Clients</a></div>
+  </section>
+
+  <section class="client-detail-page" data-client-panel="meridian-health" hidden>
+    <nav class="detail-breadcrumb" aria-label="Breadcrumb"><a href="#clients" data-view-target="clients">Clients</a><span class="sep">/</span><span class="current">Meridian Health</span></nav>
+    <div class="client-hero"><div class="hero-logo logo-slate">MH</div><div class="hero-body"><div class="hero-name-row"><div class="hero-name">Meridian Health</div><span class="status-chip paused"><span class="dot"></span>Paused</span></div><div class="hero-meta"><span class="hero-meta-item">Healthcare · Clinics</span><span class="meta-dot"></span><span class="hero-meta-item"><span class="hero-am-avatar" style="background:#ff9f0a">MA</span>Marcus Aldrin</span></div></div></div>
+    <div class="detail-section" style="text-align:center; padding:48px 24px; color:var(--text-soft); font-size:14px;">Paused since Mar 14. Full detail preserved — resume anytime.<br><a href="#clients" data-view-target="clients" style="color:var(--highlight); text-decoration:none; display:inline-block; margin-top:12px;">← Back to Clients</a></div>
+  </section>
+
 </div>
 
 <!-- ═══════ BOARD VIEW ═══════ -->
@@ -7257,6 +8625,10 @@ function toggleTheme() {
   var next = cur === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', next);
   localStorage.setItem('refined-theme', next);
+}
+function openTemplates() {
+  /* Templates manager — full UI comes in a later sweep. */
+  alert('Service Templates manager — coming in a later sweep.');
 }
 function openCmdK() {
   document.getElementById('cmdkOverlay').classList.add('open');
@@ -12747,39 +14119,79 @@ document.addEventListener('keydown', function(e) {
   page.addEventListener('pointerdown', onPointerDown);
 })();
 
-/* ── View routing (merged overview + board) ── */
+/* ── View routing (overview · clients · client-detail · board) ── */
 (function() {
-  function routeToView(name) {
-    var target = (name === 'board') ? 'board' : 'overview';
+  var VALID = { overview: 1, board: 1, clients: 1, 'client-detail': 1 };
+
+  function routeToView(target, clientId) {
+    if (!VALID[target]) target = 'overview';
     document.querySelectorAll('.view').forEach(function(v) {
       v.classList.toggle('active', v.getAttribute('data-view') === target);
     });
+    // Nav: "Clients" stays active when on client-detail too.
+    var navKey = (target === 'client-detail') ? 'clients' : target;
     document.querySelectorAll('.header-nav a[data-view-target]').forEach(function(a) {
-      var on = a.getAttribute('data-view-target') === target;
+      var on = a.getAttribute('data-view-target') === navKey;
       a.classList.toggle('on', on);
       if (on) { a.setAttribute('aria-current', 'page'); }
       else    { a.removeAttribute('aria-current'); }
     });
     document.body.setAttribute('data-active-view', target);
+    // Client detail — swap visible client panel by data-client-id
+    if (target === 'client-detail' && clientId) {
+      document.querySelectorAll('[data-client-panel]').forEach(function(p) {
+        p.hidden = p.getAttribute('data-client-panel') !== clientId;
+      });
+    }
   }
-  function readHash() {
+
+  function parseHash() {
     var h = (window.location.hash || '').replace('#','').toLowerCase();
-    return (h === 'board') ? 'board' : 'overview';
+    if (h === 'board') return { view: 'board' };
+    if (h === 'clients' || h === '') return { view: h || 'overview' };
+    var m = h.match(/^clients\/(.+)$/);
+    if (m) return { view: 'client-detail', id: m[1] };
+    if (h === 'overview') return { view: 'overview' };
+    return { view: 'overview' };
   }
+
   document.addEventListener('click', function(e) {
     var a = e.target.closest('.header-nav a[data-view-target]');
     if (!a) return;
     e.preventDefault();
     var target = a.getAttribute('data-view-target');
-    if (window.location.hash !== '#' + target) {
-      history.pushState(null, '', '#' + target);
+    var newHash = '#' + target;
+    if (window.location.hash !== newHash) {
+      history.pushState(null, '', newHash);
     }
     routeToView(target);
     window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
   });
-  window.addEventListener('hashchange', function() { routeToView(readHash()); });
+
+  // Links into client detail (from directory rows, pinned strip, Cmd+K etc.)
+  document.addEventListener('click', function(e) {
+    var a = e.target.closest('a[data-client-id]');
+    if (!a) return;
+    e.preventDefault();
+    var id = a.getAttribute('data-client-id');
+    var newHash = '#clients/' + id;
+    if (window.location.hash !== newHash) {
+      history.pushState(null, '', newHash);
+    }
+    routeToView('client-detail', id);
+    window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+  });
+
+  window.addEventListener('hashchange', function() {
+    var parsed = parseHash();
+    routeToView(parsed.view, parsed.id);
+  });
+
   /* Initial route */
-  routeToView(readHash());
+  (function() {
+    var parsed = parseHash();
+    routeToView(parsed.view, parsed.id);
+  })();
 })();
 </script>
 
