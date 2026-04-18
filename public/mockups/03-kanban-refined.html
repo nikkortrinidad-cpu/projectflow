@@ -416,12 +416,15 @@
   .column[data-dot="blocked"]  .column-dot { background: #ff453a; }
   .column[data-dot="review"]   .column-dot { background: #bf5af2; }
   .column[data-dot="done"]     .column-dot { background: #30d158; }
-  /* left-edge status accent — same language as the overdue card border */
-  .column[data-dot="todo"]     { box-shadow: inset 2px 0 0 #0a84ff; }
-  .column[data-dot="progress"] { box-shadow: inset 2px 0 0 #ff9f0a; }
-  .column[data-dot="blocked"]  { box-shadow: inset 2px 0 0 #ff453a; }
-  .column[data-dot="review"]   { box-shadow: inset 2px 0 0 #bf5af2; }
-  .column[data-dot="done"]     { box-shadow: inset 2px 0 0 #30d158; }
+  /* left-edge status accent — only in collapsed state, where the
+     header dot gets crowded by the vertical title + count and the
+     stripe becomes the primary color anchor (44px-wide strips).
+     Expanded columns use the header dot alone for a cleaner look. */
+  .column.collapsed[data-dot="todo"]     { box-shadow: inset 3px 0 0 #0a84ff; }
+  .column.collapsed[data-dot="progress"] { box-shadow: inset 3px 0 0 #ff9f0a; }
+  .column.collapsed[data-dot="blocked"]  { box-shadow: inset 3px 0 0 #ff453a; }
+  .column.collapsed[data-dot="review"]   { box-shadow: inset 3px 0 0 #bf5af2; }
+  .column.collapsed[data-dot="done"]     { box-shadow: inset 3px 0 0 #30d158; }
   .column-title {
     font-size: 13px; font-weight: 600;
     color: var(--text-soft);
