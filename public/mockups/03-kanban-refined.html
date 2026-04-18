@@ -607,7 +607,7 @@
   /* Empty-column placeholder: appears only when a column has no visible cards.
      Soft cue so filtered/empty lists don't read as broken dead space. */
   .column-cards:not(:has(.card)):not(:has(.add-card-form))::before {
-    content: 'No cards yet — drag one in or click + Add Card below.';
+    content: 'No cards yet — drag one in from another list.';
     display: flex;
     align-items: center;
     justify-content: center;
@@ -4494,7 +4494,6 @@
           <div class="card-assignee">JK</div>
         </div>
       </div>
-      <button class="add-card-btn" onclick="addCardStart(this)">＋ Add Card</button>
     </div>
   </div>
 
@@ -4535,7 +4534,6 @@
           <div class="card-assignee">MA</div>
         </div>
       </div>
-      <button class="add-card-btn" onclick="addCardStart(this)">＋ Add Card</button>
     </div>
   </div>
 
@@ -4567,7 +4565,6 @@
           <div class="card-assignee">NT</div>
         </div>
       </div>
-      <button class="add-card-btn" onclick="addCardStart(this)">＋ Add Card</button>
     </div>
   </div>
 
@@ -4596,7 +4593,6 @@
           <div class="card-assignee">JC</div>
         </div>
       </div>
-      <button class="add-card-btn" onclick="addCardStart(this)">＋ Add Card</button>
     </div>
   </div>
 
