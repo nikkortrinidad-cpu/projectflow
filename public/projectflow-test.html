@@ -6355,6 +6355,10 @@
     font-feature-settings: "tnum";
   }
   .view-chip:hover { background: var(--hover-tint); color: var(--hover-blue); }
+  .view-chip:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--highlight-soft), 0 0 0 4px var(--highlight);
+  }
   .view-chip.active {
     background: var(--highlight); color: #fff;
     border-color: var(--highlight);
@@ -6395,6 +6399,12 @@
     transition: transform 0.15s;
   }
   .pinned-avatar:hover { transform: translateY(-1px); }
+  .pinned-avatar:focus-visible {
+    outline: none;
+  }
+  .pinned-avatar:focus-visible .pinned-avatar-circle {
+    box-shadow: 0 0 0 2px var(--bg-elev), 0 0 0 4px var(--highlight);
+  }
   .pinned-avatar-circle {
     position: relative;
     width: 40px; height: 40px; border-radius: 50%;
@@ -6451,6 +6461,11 @@
     left: 0; top: 0; bottom: 0; width: 3px;
     background: var(--highlight);
   }
+  .clients-split-wrapper .client-row:focus-visible {
+    outline: none;
+    background: var(--bg-soft);
+    box-shadow: inset 0 0 0 2px var(--highlight);
+  }
   .clients-split-wrapper .client-row > .client-status-dot { grid-area: status; }
   .clients-split-wrapper .client-row > .client-identity { grid-area: ident; min-width: 0; }
   .clients-split-wrapper .client-row > .client-services { grid-area: services; min-width: 0; }
@@ -6468,14 +6483,15 @@
   }
   .clients-split-wrapper .client-identity-body { min-width: 0; }
   .clients-split-wrapper .client-name {
-    font-size: 13px; font-weight: 500;
+    font-size: 13px; font-weight: 500; line-height: 1.35;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     letter-spacing: -0.005em;
   }
   .clients-split-wrapper .client-industry {
-    font-size: 11px; color: var(--text-soft);
+    font-size: 12px; line-height: 1.4;
+    color: var(--text-soft);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    margin-top: 1px;
+    margin-top: 2px;
   }
 
   /* Services in compact row — smaller pills */
@@ -6484,13 +6500,14 @@
     overflow: hidden; padding-left: 37px;
   }
   .clients-split-wrapper .client-services .service-pill {
-    font-size: 10px; padding: 2px 7px;
+    font-size: 11px; line-height: 1.3;
+    padding: 2px 8px;
     border-radius: 980px;
     white-space: nowrap;
     flex-shrink: 0;
   }
   .clients-split-wrapper .client-services .service-pill.more {
-    padding: 2px 6px;
+    padding: 2px 7px;
   }
 
   /* Detail pane — restyle */
@@ -6503,29 +6520,33 @@
     display: none; /* split view makes breadcrumb redundant */
   }
 
-  /* Hero star button (pin/unpin) */
+  /* Hero star button (pin/unpin) — lives inside .hero-actions as first child */
   .hero-star-btn {
     display: inline-flex; align-items: center; justify-content: center;
     width: 34px; height: 34px; border-radius: 8px;
     background: transparent; border: 1px solid var(--hairline);
     color: var(--text-faint);
     cursor: pointer;
-    transition: all 0.15s;
+    transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.1s;
     flex-shrink: 0;
   }
   .hero-star-btn:hover {
     background: var(--bg-soft); color: var(--text-muted);
-    border-color: var(--hairline);
   }
+  .hero-star-btn:active { transform: scale(0.94); }
   .hero-star-btn svg { width: 16px; height: 16px; }
   .hero-star-btn.pinned {
     background: var(--highlight-soft);
     color: var(--highlight);
-    border-color: var(--highlight-soft);
+    border-color: transparent;
   }
   .hero-star-btn.pinned:hover {
     background: var(--hover-tint-strong);
     color: var(--hover-blue);
+  }
+  .hero-star-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--highlight-soft), 0 0 0 4px var(--highlight);
   }
 
   /* Empty state for detail pane */
@@ -6544,6 +6565,47 @@
     font-size: 17px; font-weight: 500;
     color: var(--text-muted); letter-spacing: -0.01em;
     margin-bottom: 6px;
+  }
+
+  /* List empty state — no results for filter/search */
+  .list-empty-state {
+    display: none;
+    flex-direction: column; align-items: center; justify-content: center;
+    padding: 36px 20px;
+    text-align: center;
+    color: var(--text-soft);
+    gap: 8px;
+  }
+  .list-empty-state.shown { display: flex; }
+  .list-empty-state svg {
+    width: 32px; height: 32px;
+    color: var(--text-faint);
+    margin-bottom: 4px;
+    opacity: 0.5;
+  }
+  .list-empty-title {
+    font-size: 14px; font-weight: 500;
+    color: var(--text-muted); letter-spacing: -0.005em;
+    line-height: 1.35;
+  }
+  .list-empty-sub {
+    font-size: 12px; line-height: 1.4;
+    color: var(--text-soft);
+    max-width: 240px;
+  }
+  .list-empty-clear {
+    margin-top: 6px;
+    padding: 6px 14px; border-radius: 980px;
+    background: var(--highlight-soft); color: var(--highlight);
+    border: none;
+    font-size: 12px; font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .list-empty-clear:hover { background: var(--hover-tint-strong); }
+  .list-empty-clear:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--highlight-soft), 0 0 0 4px var(--highlight);
   }
 
   /* Responsive: collapse to single pane below 860px */
@@ -7128,6 +7190,13 @@
   </div>
 
   <!-- Client list -->
+  <div class="list-empty-state" id="listEmptyState" role="status" aria-live="polite">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <div class="list-empty-title">No clients match</div>
+    <div class="list-empty-sub" id="listEmptySub">Try a different search or saved view.</div>
+    <button type="button" class="list-empty-clear" id="listEmptyClear">Clear filters</button>
+  </div>
+
   <div class="clients-list" role="list">
     <div class="clients-list-header">
       <div></div>
@@ -15058,6 +15127,36 @@ document.addEventListener('keydown', function(e) {
     if (chip) chip.textContent = shownCount;
     var segAll = document.getElementById('svCount-all');
     if (segAll) segAll.textContent = clients.length;
+
+    // Empty state
+    var empty = document.getElementById('listEmptyState');
+    var sub = document.getElementById('listEmptySub');
+    if (empty) {
+      empty.classList.toggle('shown', shownCount === 0);
+      if (sub && shownCount === 0) {
+        if (q && activeView !== 'all') {
+          sub.textContent = 'No match for \u201c' + q + '\u201d in this view.';
+        } else if (q) {
+          sub.textContent = 'No match for \u201c' + q + '\u201d.';
+        } else {
+          sub.textContent = 'No clients in this saved view yet.';
+        }
+      }
+    }
+  }
+
+  function clearFilters() {
+    activeView = 'all';
+    searchQuery = '';
+    var input = document.getElementById('clientsSearchInput');
+    if (input) input.value = '';
+    document.querySelectorAll('#savedViews .view-chip').forEach(function(c) {
+      var on = c.getAttribute('data-view-id') === 'all';
+      c.classList.toggle('active', on);
+      c.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    applyFilter();
+    if (input) input.focus();
   }
 
   /* Render pinned avatars strip */
@@ -15122,35 +15221,42 @@ document.addEventListener('keydown', function(e) {
     return m ? m[1] : 'acme-corp';
   }
 
-  /* Hero star button — inject into visible client detail panel */
+  /* Hero star button — insert as first child of .hero-actions (or create one) */
   function ensureHeroStar() {
     var panel = document.querySelector('.view-client-detail .client-detail-page:not([hidden])');
     if (!panel) return;
     var hero = panel.querySelector('.client-hero');
     if (!hero) return;
     var id = panel.getAttribute('data-client-panel');
-    var existing = hero.querySelector('.hero-star-btn');
+    var isPinned = pinned.indexOf(id) !== -1;
+
+    // Ensure .hero-actions exists (stub panels don't have it)
+    var actions = hero.querySelector('.hero-actions');
+    if (!actions) {
+      actions = document.createElement('div');
+      actions.className = 'hero-actions';
+      hero.appendChild(actions);
+    }
+
+    var existing = actions.querySelector('.hero-star-btn');
     if (existing) {
       existing.setAttribute('data-star', id);
-      existing.classList.toggle('pinned', pinned.indexOf(id) !== -1);
-      existing.setAttribute('aria-label', pinned.indexOf(id) !== -1 ? 'Unpin ' + id : 'Pin ' + id);
-      existing.setAttribute('data-tip', pinned.indexOf(id) !== -1 ? 'Unpin client' : 'Pin client');
+      existing.classList.toggle('pinned', isPinned);
+      existing.setAttribute('aria-label', isPinned ? 'Unpin client' : 'Pin client');
+      existing.setAttribute('aria-pressed', isPinned ? 'true' : 'false');
+      existing.setAttribute('data-tip', isPinned ? 'Unpin client' : 'Pin client');
       return;
     }
     var btn = document.createElement('button');
-    btn.className = 'hero-star-btn' + (pinned.indexOf(id) !== -1 ? ' pinned' : '');
+    btn.className = 'hero-star-btn' + (isPinned ? ' pinned' : '');
     btn.type = 'button';
     btn.setAttribute('data-star', id);
-    btn.setAttribute('data-tip', pinned.indexOf(id) !== -1 ? 'Unpin client' : 'Pin client');
+    btn.setAttribute('data-tip', isPinned ? 'Unpin client' : 'Pin client');
     btn.setAttribute('data-tip-pos', 'below-end');
-    btn.setAttribute('aria-label', 'Pin client');
+    btn.setAttribute('aria-label', isPinned ? 'Unpin client' : 'Pin client');
+    btn.setAttribute('aria-pressed', isPinned ? 'true' : 'false');
     btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2a1 1 0 0 1 .993.883L15 3v4.586l2.707 2.707A1 1 0 0 1 18 11v1a1 1 0 0 1-1 1h-4v6a1 1 0 0 1-1.993.117L11 19v-6H7a1 1 0 0 1-.993-.883L6 12v-1a1 1 0 0 1 .293-.707L9 7.586V3a1 1 0 0 1 .883-.993L10 2h4z"/></svg>';
-    hero.style.position = 'relative';
-    // Place star at the top-right of hero
-    btn.style.position = 'absolute';
-    btn.style.top = '0';
-    btn.style.right = '0';
-    hero.appendChild(btn);
+    actions.insertBefore(btn, actions.firstChild);
   }
 
   // Expose for router
@@ -15204,6 +15310,12 @@ document.addEventListener('keydown', function(e) {
       searchQuery = e.target.value || '';
       applyFilter();
     });
+  }
+
+  /* Clear filters button (empty state) */
+  var clearBtn = document.getElementById('listEmptyClear');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', clearFilters);
   }
 
   /* Initial render */
