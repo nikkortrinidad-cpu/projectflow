@@ -6255,6 +6255,319 @@
   .view-overview.active { overflow-y: auto; }
   .view-clients.active,
   .view-client-detail.active { overflow-y: auto; }
+
+  /* ═══════ CLIENTS SPLIT VIEW (Mail.app-style master-detail) ═══════ */
+  .clients-split-wrapper {
+    display: none; flex: 1; min-height: 0; flex-direction: row;
+    background: var(--bg);
+    overflow: hidden;
+  }
+  body[data-active-view="clients"] .clients-split-wrapper,
+  body[data-active-view="client-detail"] .clients-split-wrapper {
+    display: flex;
+  }
+  body[data-active-view="clients"] .clients-split-wrapper .view-clients,
+  body[data-active-view="client-detail"] .clients-split-wrapper .view-clients {
+    display: flex; flex-direction: column;
+    width: 380px; flex-shrink: 0;
+    border-right: 1px solid var(--hairline);
+    background: var(--bg-elev);
+    overflow: hidden;
+    min-height: 0;
+  }
+  body[data-active-view="clients"] .clients-split-wrapper .view-client-detail,
+  body[data-active-view="client-detail"] .clients-split-wrapper .view-client-detail {
+    display: flex; flex-direction: column;
+    flex: 1; min-width: 0; min-height: 0;
+    background: var(--bg);
+    overflow-y: auto;
+  }
+
+  /* In split mode, restyle the inner clients page */
+  .clients-split-wrapper .clients-page {
+    max-width: none; width: 100%; padding: 0;
+    display: flex; flex-direction: column;
+    flex: 1; min-height: 0;
+  }
+
+  /* Hide the original big header (title + segmented tabs + New Client) in split mode */
+  .clients-split-wrapper .clients-header { display: none; }
+
+  /* Hide the original 2-card pinned grid in split mode */
+  .clients-split-wrapper .clients-pinned { display: none; }
+
+  /* List pane toolbar: search + count */
+  .list-pane-toolbar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 14px 10px;
+    border-bottom: 1px solid var(--hairline-soft);
+    flex-shrink: 0;
+  }
+  .list-pane-search {
+    flex: 1; position: relative;
+    display: flex; align-items: center;
+  }
+  .list-pane-search svg {
+    position: absolute; left: 10px; width: 14px; height: 14px;
+    color: var(--text-faint); pointer-events: none;
+  }
+  .list-pane-search input {
+    width: 100%; padding: 7px 12px 7px 30px;
+    background: var(--bg-soft); border: 1px solid transparent;
+    border-radius: 8px;
+    font-size: 13px; color: var(--text);
+    font-family: inherit;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .list-pane-search input::placeholder { color: var(--text-faint); }
+  .list-pane-search input:focus {
+    outline: none; background: var(--bg-elev);
+    border-color: var(--highlight-soft);
+    box-shadow: 0 0 0 3px var(--highlight-soft);
+  }
+  .list-pane-count {
+    font-size: 11px; font-weight: 500;
+    color: var(--text-faint);
+    padding: 3px 8px; border-radius: 980px;
+    background: var(--bg-soft);
+    font-feature-settings: "tnum";
+    white-space: nowrap;
+  }
+
+  /* Saved views chip row */
+  .saved-views {
+    display: flex; gap: 6px; align-items: center;
+    padding: 10px 14px;
+    overflow-x: auto; overflow-y: hidden;
+    border-bottom: 1px solid var(--hairline-soft);
+    flex-shrink: 0;
+    scrollbar-width: none;
+  }
+  .saved-views::-webkit-scrollbar { display: none; }
+  .view-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 5px 10px; border-radius: 980px;
+    background: var(--bg-soft); color: var(--text-muted);
+    border: 1px solid transparent;
+    font-size: 12px; font-weight: 500;
+    cursor: pointer; white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+    font-feature-settings: "tnum";
+  }
+  .view-chip:hover { background: var(--hover-tint); color: var(--hover-blue); }
+  .view-chip.active {
+    background: var(--highlight); color: #fff;
+    border-color: var(--highlight);
+  }
+  .view-chip.active:hover { background: var(--hover-blue-dark); color: #fff; }
+  .view-chip.new-view {
+    background: transparent; color: var(--text-faint);
+    border: 1px dashed var(--hairline);
+  }
+  .view-chip.new-view:hover { color: var(--hover-blue); border-color: var(--hover-blue); background: var(--highlight-soft); }
+
+  /* Pinned avatars strip */
+  .pinned-wrap {
+    padding: 10px 14px 8px;
+    border-bottom: 1px solid var(--hairline-soft);
+    flex-shrink: 0;
+  }
+  .pinned-label {
+    font-size: 10px; font-weight: 500;
+    color: var(--text-faint);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .pinned-label svg { width: 10px; height: 10px; }
+  .pinned-strip {
+    display: flex; gap: 10px;
+    overflow-x: auto; overflow-y: hidden;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+  .pinned-strip::-webkit-scrollbar { display: none; }
+  .pinned-avatar {
+    flex-shrink: 0;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    text-decoration: none; color: inherit;
+    cursor: pointer; width: 52px;
+    transition: transform 0.15s;
+  }
+  .pinned-avatar:hover { transform: translateY(-1px); }
+  .pinned-avatar-circle {
+    position: relative;
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600; letter-spacing: -0.01em;
+    color: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  }
+  .pinned-avatar.selected .pinned-avatar-circle {
+    box-shadow: 0 0 0 2px var(--bg-elev), 0 0 0 4px var(--highlight);
+  }
+  .pinned-status-dot {
+    position: absolute; bottom: -1px; right: -1px;
+    width: 12px; height: 12px; border-radius: 50%;
+    border: 2px solid var(--bg-elev);
+  }
+  .pinned-name {
+    font-size: 10px; color: var(--text-muted);
+    text-align: center; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+    max-width: 52px; line-height: 1.2;
+  }
+
+  /* List scroll area — compact rows */
+  .clients-split-wrapper .clients-list {
+    background: transparent;
+    border: none; border-radius: 0;
+    box-shadow: none;
+    overflow-y: auto; overflow-x: hidden;
+    flex: 1; min-height: 0;
+  }
+  .clients-split-wrapper .clients-list-header { display: none; }
+
+  /* Compact row for 380px pane */
+  .clients-split-wrapper .client-row {
+    grid-template-columns: 8px 1fr auto;
+    grid-template-areas:
+      "status ident time"
+      ". services .";
+    gap: 3px 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--hairline-soft);
+    align-items: center;
+    position: relative;
+  }
+  .clients-split-wrapper .client-row:hover {
+    background: var(--bg-soft);
+  }
+  .clients-split-wrapper .client-row.selected {
+    background: var(--highlight-soft);
+  }
+  .clients-split-wrapper .client-row.selected::before {
+    content: ''; position: absolute;
+    left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--highlight);
+  }
+  .clients-split-wrapper .client-row > .client-status-dot { grid-area: status; }
+  .clients-split-wrapper .client-row > .client-identity { grid-area: ident; min-width: 0; }
+  .clients-split-wrapper .client-row > .client-services { grid-area: services; min-width: 0; }
+  .clients-split-wrapper .client-row > .client-timestamp { grid-area: time; font-size: 11px; color: var(--text-faint); white-space: nowrap; }
+  .clients-split-wrapper .client-row > .client-am,
+  .clients-split-wrapper .client-row > .client-metric,
+  .clients-split-wrapper .client-row > .client-chevron { display: none; }
+
+  .clients-split-wrapper .client-identity {
+    display: flex; align-items: center; gap: 9px;
+  }
+  .clients-split-wrapper .client-logo {
+    width: 28px; height: 28px; border-radius: 7px;
+    font-size: 11px; flex-shrink: 0;
+  }
+  .clients-split-wrapper .client-identity-body { min-width: 0; }
+  .clients-split-wrapper .client-name {
+    font-size: 13px; font-weight: 500;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    letter-spacing: -0.005em;
+  }
+  .clients-split-wrapper .client-industry {
+    font-size: 11px; color: var(--text-soft);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-top: 1px;
+  }
+
+  /* Services in compact row — smaller pills */
+  .clients-split-wrapper .client-services {
+    display: flex; gap: 4px; flex-wrap: nowrap;
+    overflow: hidden; padding-left: 37px;
+  }
+  .clients-split-wrapper .client-services .service-pill {
+    font-size: 10px; padding: 2px 7px;
+    border-radius: 980px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .clients-split-wrapper .client-services .service-pill.more {
+    padding: 2px 6px;
+  }
+
+  /* Detail pane — restyle */
+  .clients-split-wrapper .client-detail-page {
+    padding: 28px 36px 80px;
+    max-width: 920px;
+    margin: 0 auto;
+  }
+  .clients-split-wrapper .detail-breadcrumb {
+    display: none; /* split view makes breadcrumb redundant */
+  }
+
+  /* Hero star button (pin/unpin) */
+  .hero-star-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; border-radius: 8px;
+    background: transparent; border: 1px solid var(--hairline);
+    color: var(--text-faint);
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .hero-star-btn:hover {
+    background: var(--bg-soft); color: var(--text-muted);
+    border-color: var(--hairline);
+  }
+  .hero-star-btn svg { width: 16px; height: 16px; }
+  .hero-star-btn.pinned {
+    background: var(--highlight-soft);
+    color: var(--highlight);
+    border-color: var(--highlight-soft);
+  }
+  .hero-star-btn.pinned:hover {
+    background: var(--hover-tint-strong);
+    color: var(--hover-blue);
+  }
+
+  /* Empty state for detail pane */
+  .detail-empty-state {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    flex: 1; padding: 48px;
+    text-align: center; color: var(--text-soft);
+    font-size: 14px;
+  }
+  .detail-empty-state svg {
+    width: 48px; height: 48px;
+    color: var(--text-faint); margin-bottom: 16px;
+    opacity: 0.4;
+  }
+  .detail-empty-title {
+    font-size: 17px; font-weight: 500;
+    color: var(--text-muted); letter-spacing: -0.01em;
+    margin-bottom: 6px;
+  }
+
+  /* Responsive: collapse to single pane below 860px */
+  @media (max-width: 860px) {
+    body[data-active-view="clients"] .clients-split-wrapper,
+    body[data-active-view="client-detail"] .clients-split-wrapper {
+      flex-direction: column;
+    }
+    body[data-active-view="clients"] .clients-split-wrapper .view-clients,
+    body[data-active-view="client-detail"] .clients-split-wrapper .view-clients {
+      width: 100%; border-right: none;
+      border-bottom: 1px solid var(--hairline);
+    }
+    body[data-active-view="clients"] .clients-split-wrapper .view-client-detail {
+      display: none;
+    }
+    body[data-active-view="client-detail"] .clients-split-wrapper .view-clients {
+      display: none;
+    }
+    body[data-active-view="client-detail"] .clients-split-wrapper .view-client-detail {
+      display: flex;
+    }
+    .clients-split-wrapper .client-detail-page { padding: 20px; }
+  }
   </style>
 </head>
 <body>
@@ -6731,6 +7044,9 @@
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
 </div>
 
+<!-- ═══════ CLIENTS SPLIT VIEW (list + detail side-by-side) ═══════ -->
+<div class="clients-split-wrapper">
+
 <!-- ═══════ CLIENTS DIRECTORY VIEW ═══════ -->
 <div class="view view-clients" data-view="clients">
 <main class="clients-page">
@@ -6756,7 +7072,36 @@
     </div>
   </div>
 
-  <!-- Pinned clients (yours) -->
+  <!-- Split view: list-pane toolbar (search + count) -->
+  <div class="list-pane-toolbar">
+    <label class="list-pane-search">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242.656a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/></svg>
+      <input id="clientsSearchInput" type="search" placeholder="Search clients" aria-label="Search clients">
+    </label>
+    <div class="list-pane-count" id="clientsCountChip">50</div>
+  </div>
+
+  <!-- Split view: saved views chip row -->
+  <div class="saved-views" id="savedViews" role="tablist" aria-label="Saved views">
+    <button class="view-chip active" data-view-id="all" role="tab" aria-selected="true">All <span style="color:inherit; opacity:0.7; font-weight:500; font-size:11px; margin-left:2px;" id="svCount-all">50</span></button>
+    <button class="view-chip" data-view-id="mine" role="tab" aria-selected="false">Assigned to me</button>
+    <button class="view-chip" data-view-id="fire" role="tab" aria-selected="false">On Fire</button>
+    <button class="view-chip" data-view-id="risk" role="tab" aria-selected="false">At Risk</button>
+    <button class="view-chip" data-view-id="renewing" role="tab" aria-selected="false">Renewing soon</button>
+    <button class="view-chip" data-view-id="onboard" role="tab" aria-selected="false">Onboarding</button>
+    <button class="view-chip new-view" data-tip="Create a custom view" data-tip-pos="above">+</button>
+  </div>
+
+  <!-- Split view: pinned avatars strip -->
+  <div class="pinned-wrap" id="pinnedWrap">
+    <div class="pinned-label">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2a1 1 0 0 1 .993.883L15 3v4.586l2.707 2.707A1 1 0 0 1 18 11v1a1 1 0 0 1-1 1h-4v6a1 1 0 0 1-1.993.117L11 19v-6H7a1 1 0 0 1-.993-.883L6 12v-1a1 1 0 0 1 .293-.707L9 7.586V3a1 1 0 0 1 .883-.993L10 2h4z"/></svg>
+      Pinned
+    </div>
+    <div class="pinned-strip" id="pinnedStrip"></div>
+  </div>
+
+  <!-- Pinned clients (yours) — legacy 2-card grid, hidden in split view -->
   <div class="clients-pinned">
     <div class="clients-pinned-label">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2a1 1 0 0 1 .993.883L15 3v4.586l2.707 2.707A1 1 0 0 1 18 11v1a1 1 0 0 1-1 1h-4v6a1 1 0 0 1-1.993.117L11 19v-6H7a1 1 0 0 1-.993-.883L6 12v-1a1 1 0 0 1 .293-.707L9 7.586V3a1 1 0 0 1 .883-.993L10 2h4z"/></svg>
@@ -7568,6 +7913,9 @@
   <section class="client-detail-page" data-client-panel="beacon-music" hidden><nav class="detail-breadcrumb" aria-label="Breadcrumb"><a href="#clients" data-view-target="clients">Clients</a><span class="sep">/</span><span class="current">Beacon Music School</span></nav><div class="client-hero"><div class="hero-logo logo-purple">BM</div><div class="hero-body"><div class="hero-name-row"><div class="hero-name">Beacon Music School</div><span class="status-chip paused"><span class="dot"></span>Paused</span></div><div class="hero-meta"><span class="hero-meta-item">Education · Music lessons</span><span class="meta-dot"></span><span class="hero-meta-item"><span class="hero-am-avatar" style="background:#64d2ff">JP</span>Jordan Park</span></div></div></div><div class="detail-section" style="text-align:center; padding:48px 24px; color:var(--text-soft); font-size:14px;">Paused since Mar 28. Full detail preserved — resume anytime.<br><a href="#clients" data-view-target="clients" style="color:var(--highlight); text-decoration:none; display:inline-block; margin-top:12px;">← Back to Clients</a></div></section>
 
 </div>
+
+</div>
+<!-- ═══════ END CLIENTS SPLIT VIEW ═══════ -->
 
 <!-- ═══════ BOARD VIEW ═══════ -->
 <div class="view view-board" data-view="board">
@@ -14336,6 +14684,8 @@ document.addEventListener('keydown', function(e) {
 (function() {
   var VALID = { overview: 1, board: 1, clients: 1, 'client-detail': 1 };
 
+  var DEFAULT_CLIENT = 'acme-corp';
+
   function routeToView(target, clientId) {
     if (!VALID[target]) target = 'overview';
     document.querySelectorAll('.view').forEach(function(v) {
@@ -14350,11 +14700,22 @@ document.addEventListener('keydown', function(e) {
       else    { a.removeAttribute('aria-current'); }
     });
     document.body.setAttribute('data-active-view', target);
-    // Client detail — swap visible client panel by data-client-id
-    if (target === 'client-detail' && clientId) {
+    // In split view: always show a client detail panel. Default to first pinned if none.
+    if (target === 'clients' || target === 'client-detail') {
+      var id = clientId || DEFAULT_CLIENT;
       document.querySelectorAll('[data-client-panel]').forEach(function(p) {
-        p.hidden = p.getAttribute('data-client-panel') !== clientId;
+        p.hidden = p.getAttribute('data-client-panel') !== id;
       });
+      // Selected row highlight
+      document.querySelectorAll('.view-clients .client-row').forEach(function(r) {
+        r.classList.toggle('selected', r.getAttribute('data-client-id') === id);
+      });
+      // Selected pinned avatar highlight
+      document.querySelectorAll('.pinned-strip .pinned-avatar').forEach(function(a) {
+        a.classList.toggle('selected', a.getAttribute('data-client-id') === id);
+      });
+      // Sync hero star state to pinned set
+      if (typeof syncHeroStar === 'function') syncHeroStar();
     }
   }
 
@@ -14383,8 +14744,10 @@ document.addEventListener('keydown', function(e) {
 
   // Links into client detail (from directory rows, pinned strip, Cmd+K etc.)
   document.addEventListener('click', function(e) {
-    var a = e.target.closest('a[data-client-id]');
+    var a = e.target.closest('a[data-client-id], [data-client-id][role="link"]');
     if (!a) return;
+    // Ignore clicks on the pin/star button
+    if (e.target.closest('.hero-star-btn')) return;
     e.preventDefault();
     var id = a.getAttribute('data-client-id');
     var newHash = '#clients/' + id;
@@ -14392,7 +14755,9 @@ document.addEventListener('keydown', function(e) {
       history.pushState(null, '', newHash);
     }
     routeToView('client-detail', id);
-    window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+    // Scroll detail pane to top (not window)
+    var detailPane = document.querySelector('.clients-split-wrapper .view-client-detail');
+    if (detailPane) detailPane.scrollTo({ top: 0 });
   });
 
   window.addEventListener('hashchange', function() {
@@ -14603,6 +14968,264 @@ document.addEventListener('keydown', function(e) {
   } else {
     enhanceRows();
   }
+})();
+</script>
+
+<script>
+/* ═══════ Clients Split View — pinning, saved views, search, hero star ═══════ */
+(function(){
+  var STORAGE_KEY = 'projectflow-pinned-clients';
+  var MAX_PINNED = 8;
+  var DEFAULT_PINNED = ['acme-corp', 'vertex-finance', 'bloom-retail'];
+
+  function loadPinned() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return DEFAULT_PINNED.slice();
+      var arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : DEFAULT_PINNED.slice();
+    } catch (e) { return DEFAULT_PINNED.slice(); }
+  }
+
+  function savePinned(list) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); } catch (e) {}
+  }
+
+  var pinned = loadPinned();
+
+  /* Read client metadata from the existing rows (single source of truth) */
+  function readClients() {
+    var rows = document.querySelectorAll('.view-clients .client-row');
+    var clients = [];
+    rows.forEach(function(row) {
+      var id = row.getAttribute('data-client-id');
+      if (!id) return;
+      var dot = row.querySelector('.client-status-dot');
+      var statusClass = '';
+      if (dot) {
+        var cls = dot.className.split(/\s+/);
+        for (var i = 0; i < cls.length; i++) {
+          if (cls[i] !== 'client-status-dot' && cls[i]) { statusClass = cls[i]; break; }
+        }
+      }
+      var logoEl = row.querySelector('.client-logo');
+      var logoClass = '';
+      var initials = '';
+      if (logoEl) {
+        var lcls = logoEl.className.split(/\s+/);
+        for (var j = 0; j < lcls.length; j++) {
+          if (lcls[j].indexOf('logo-') === 0) { logoClass = lcls[j]; break; }
+        }
+        initials = (logoEl.textContent || '').trim();
+      }
+      var nameEl = row.querySelector('.client-name');
+      var name = nameEl ? (nameEl.textContent || '').trim() : id;
+      var amEl = row.querySelector('.client-am-avatar');
+      var amInit = amEl ? (amEl.textContent || '').trim() : '';
+      clients.push({
+        id: id, name: name, initials: initials,
+        logoClass: logoClass, statusClass: statusClass, amInit: amInit, rowEl: row
+      });
+    });
+    return clients;
+  }
+
+  /* Saved views */
+  var SAVED_VIEWS = {
+    all:      function(c) { return true; },
+    mine:     function(c) { return c.amInit === 'NT'; },
+    fire:     function(c) { return c.statusClass === 'fire'; },
+    risk:     function(c) { return c.statusClass === 'risk'; },
+    renewing: function(c) { return ['acme-corp','cascade-coffee'].indexOf(c.id) !== -1; },
+    onboard:  function(c) { return c.statusClass === 'onboard'; }
+  };
+  var activeView = 'all';
+  var searchQuery = '';
+
+  function applyFilter() {
+    var clients = readClients();
+    var fn = SAVED_VIEWS[activeView] || SAVED_VIEWS.all;
+    var q = searchQuery.toLowerCase().trim();
+    var shownCount = 0;
+    clients.forEach(function(c) {
+      var matchesView = fn(c);
+      var matchesSearch = !q || c.name.toLowerCase().indexOf(q) !== -1;
+      var show = matchesView && matchesSearch;
+      c.rowEl.style.display = show ? '' : 'none';
+      if (show) shownCount++;
+    });
+    var chip = document.getElementById('clientsCountChip');
+    if (chip) chip.textContent = shownCount;
+    var segAll = document.getElementById('svCount-all');
+    if (segAll) segAll.textContent = clients.length;
+  }
+
+  /* Render pinned avatars strip */
+  function renderPinnedStrip() {
+    var strip = document.getElementById('pinnedStrip');
+    if (!strip) return;
+    var wrap = document.getElementById('pinnedWrap');
+    var clients = readClients();
+    var byId = {};
+    clients.forEach(function(c) { byId[c.id] = c; });
+
+    // Filter to pinned clients that exist in our data
+    var items = pinned.filter(function(id) { return byId[id]; }).map(function(id) { return byId[id]; });
+
+    // Hide whole strip if no pinned
+    if (wrap) wrap.style.display = items.length ? '' : 'none';
+
+    var currentId = getCurrentClientId();
+    strip.innerHTML = items.map(function(c) {
+      var logoColor = getLogoColor(c.logoClass);
+      var statusColor = getStatusColor(c.statusClass);
+      var selected = currentId === c.id ? ' selected' : '';
+      return '<a class="pinned-avatar' + selected + '" href="#clients/' + c.id + '" data-client-id="' + c.id + '" data-tip="' + escapeHtml(c.name) + '" data-tip-pos="below">' +
+        '<div class="pinned-avatar-circle" style="background:' + logoColor + '">' +
+          escapeHtml(c.initials) +
+          (statusColor ? '<span class="pinned-status-dot" style="background:' + statusColor + '"></span>' : '') +
+        '</div>' +
+        '<div class="pinned-name">' + escapeHtml(c.name.split(' ')[0]) + '</div>' +
+      '</a>';
+    }).join('');
+  }
+
+  function escapeHtml(s) {
+    return (s || '').replace(/[&<>"']/g, function(ch) {
+      return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[ch];
+    });
+  }
+
+  function getLogoColor(cls) {
+    var map = {
+      'logo-indigo':'#5e5ce6','logo-green':'#30d158','logo-purple':'#bf5af2',
+      'logo-pink':'#ff375f','logo-amber':'#ff9f0a','logo-teal':'#64d2ff',
+      'logo-blue':'#0a84ff','logo-red':'#ff453a','logo-slate':'#8e8e93',
+      'logo-coral':'#ff6b6b','logo-orange':'#ff9500','logo-mint':'#00c7be',
+      'logo-lavender':'#af52de','logo-rose':'#ff2d55','logo-cyan':'#32ade6',
+      'logo-yellow':'#ffcc00','logo-plum':'#9d4edd','logo-sky':'#5ac8fa',
+      'logo-navy':'#1d4ed8','logo-forest':'#228b22','logo-gold':'#daa520'
+    };
+    return map[cls] || '#8e8e93';
+  }
+  function getStatusColor(cls) {
+    var map = {
+      'fire':'#ff3b30','risk':'#ff9500','onboard':'#5e5ce6',
+      'track':'#30d158','paused':'#98989d'
+    };
+    return map[cls] || null;
+  }
+
+  function getCurrentClientId() {
+    var h = (window.location.hash || '').replace('#','').toLowerCase();
+    var m = h.match(/^clients\/(.+)$/);
+    return m ? m[1] : 'acme-corp';
+  }
+
+  /* Hero star button — inject into visible client detail panel */
+  function ensureHeroStar() {
+    var panel = document.querySelector('.view-client-detail .client-detail-page:not([hidden])');
+    if (!panel) return;
+    var hero = panel.querySelector('.client-hero');
+    if (!hero) return;
+    var id = panel.getAttribute('data-client-panel');
+    var existing = hero.querySelector('.hero-star-btn');
+    if (existing) {
+      existing.setAttribute('data-star', id);
+      existing.classList.toggle('pinned', pinned.indexOf(id) !== -1);
+      existing.setAttribute('aria-label', pinned.indexOf(id) !== -1 ? 'Unpin ' + id : 'Pin ' + id);
+      existing.setAttribute('data-tip', pinned.indexOf(id) !== -1 ? 'Unpin client' : 'Pin client');
+      return;
+    }
+    var btn = document.createElement('button');
+    btn.className = 'hero-star-btn' + (pinned.indexOf(id) !== -1 ? ' pinned' : '');
+    btn.type = 'button';
+    btn.setAttribute('data-star', id);
+    btn.setAttribute('data-tip', pinned.indexOf(id) !== -1 ? 'Unpin client' : 'Pin client');
+    btn.setAttribute('data-tip-pos', 'below-end');
+    btn.setAttribute('aria-label', 'Pin client');
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2a1 1 0 0 1 .993.883L15 3v4.586l2.707 2.707A1 1 0 0 1 18 11v1a1 1 0 0 1-1 1h-4v6a1 1 0 0 1-1.993.117L11 19v-6H7a1 1 0 0 1-.993-.883L6 12v-1a1 1 0 0 1 .293-.707L9 7.586V3a1 1 0 0 1 .883-.993L10 2h4z"/></svg>';
+    hero.style.position = 'relative';
+    // Place star at the top-right of hero
+    btn.style.position = 'absolute';
+    btn.style.top = '0';
+    btn.style.right = '0';
+    hero.appendChild(btn);
+  }
+
+  // Expose for router
+  window.syncHeroStar = function() { ensureHeroStar(); };
+
+  /* Star click handler (delegated) */
+  document.addEventListener('click', function(e) {
+    var star = e.target.closest('.hero-star-btn');
+    if (!star) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var id = star.getAttribute('data-star');
+    if (!id) return;
+    var idx = pinned.indexOf(id);
+    if (idx !== -1) {
+      pinned.splice(idx, 1);
+    } else {
+      if (pinned.length >= MAX_PINNED) {
+        pinned.shift();
+      }
+      pinned.push(id);
+    }
+    savePinned(pinned);
+    renderPinnedStrip();
+    ensureHeroStar();
+  });
+
+  /* Saved views chip handler */
+  document.addEventListener('click', function(e) {
+    var chip = e.target.closest('.view-chip');
+    if (!chip) return;
+    if (chip.classList.contains('new-view')) {
+      // Future: open modal to create custom view
+      return;
+    }
+    var id = chip.getAttribute('data-view-id');
+    if (!id) return;
+    activeView = id;
+    document.querySelectorAll('#savedViews .view-chip').forEach(function(c) {
+      var on = c.getAttribute('data-view-id') === id;
+      c.classList.toggle('active', on);
+      c.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    applyFilter();
+  });
+
+  /* Search input */
+  var searchInput = document.getElementById('clientsSearchInput');
+  if (searchInput) {
+    searchInput.addEventListener('input', function(e) {
+      searchQuery = e.target.value || '';
+      applyFilter();
+    });
+  }
+
+  /* Initial render */
+  function initSplit() {
+    renderPinnedStrip();
+    applyFilter();
+    ensureHeroStar();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSplit);
+  } else {
+    initSplit();
+  }
+
+  /* Re-sync hero star after route changes */
+  window.addEventListener('hashchange', function() {
+    setTimeout(function() {
+      ensureHeroStar();
+      renderPinnedStrip(); // re-highlight selected pinned
+    }, 0);
+  });
 })();
 </script>
 
