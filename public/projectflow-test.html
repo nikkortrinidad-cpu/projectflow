@@ -6290,6 +6290,17 @@
     flex: 1; min-height: 0;
   }
 
+  /* Cross-fade detail pane on client swap */
+  .clients-split-wrapper .view-client-detail {
+    transition: opacity 180ms ease;
+  }
+  .clients-split-wrapper .view-client-detail.swapping {
+    opacity: 0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .clients-split-wrapper .view-client-detail { transition: none; }
+  }
+
   /* Hide the original big header (title + segmented tabs + New Client) in split mode */
   .clients-split-wrapper .clients-header { display: none; }
 
@@ -6335,15 +6346,43 @@
   }
 
   /* Saved views chip row */
+  .saved-views-wrap {
+    position: relative;
+    border-bottom: 1px solid var(--hairline-soft);
+    flex-shrink: 0;
+  }
+  .saved-views-wrap::after {
+    content: '';
+    position: absolute; top: 0; right: 0; bottom: 1px;
+    width: 32px; pointer-events: none;
+    background: linear-gradient(to right, transparent, var(--bg-elev) 70%);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .saved-views-wrap.has-overflow::after { opacity: 1; }
   .saved-views {
     display: flex; gap: 6px; align-items: center;
     padding: 10px 14px;
     overflow-x: auto; overflow-y: hidden;
-    border-bottom: 1px solid var(--hairline-soft);
-    flex-shrink: 0;
     scrollbar-width: none;
+    scroll-behavior: smooth;
   }
   .saved-views::-webkit-scrollbar { display: none; }
+  .view-chip-count {
+    font-size: 10px; font-weight: 500;
+    margin-left: 4px;
+    padding: 1px 6px; border-radius: 980px;
+    background: rgba(0,0,0,0.06); color: inherit;
+    opacity: 0.75;
+    font-feature-settings: "tnum";
+    min-width: 16px; text-align: center;
+    display: inline-block;
+  }
+  :root[data-theme="dark"] .view-chip-count { background: rgba(255,255,255,0.1); }
+  .view-chip.active .view-chip-count {
+    background: rgba(255,255,255,0.2); opacity: 1;
+  }
+  .view-chip.new-view .view-chip-count { display: none; }
   .view-chip {
     display: inline-flex; align-items: center; gap: 4px;
     padding: 5px 10px; border-radius: 980px;
@@ -7144,14 +7183,16 @@
   </div>
 
   <!-- Split view: saved views chip row -->
-  <div class="saved-views" id="savedViews" role="tablist" aria-label="Saved views">
-    <button class="view-chip active" data-view-id="all" role="tab" aria-selected="true">All <span style="color:inherit; opacity:0.7; font-weight:500; font-size:11px; margin-left:2px;" id="svCount-all">50</span></button>
-    <button class="view-chip" data-view-id="mine" role="tab" aria-selected="false">Assigned to me</button>
-    <button class="view-chip" data-view-id="fire" role="tab" aria-selected="false">On Fire</button>
-    <button class="view-chip" data-view-id="risk" role="tab" aria-selected="false">At Risk</button>
-    <button class="view-chip" data-view-id="renewing" role="tab" aria-selected="false">Renewing soon</button>
-    <button class="view-chip" data-view-id="onboard" role="tab" aria-selected="false">Onboarding</button>
-    <button class="view-chip new-view" data-tip="Create a custom view" data-tip-pos="above">+</button>
+  <div class="saved-views-wrap">
+    <div class="saved-views" id="savedViews" role="tablist" aria-label="Saved views">
+      <button class="view-chip active" data-view-id="all" role="tab" aria-selected="true">All <span class="view-chip-count" id="svCount-all">50</span></button>
+      <button class="view-chip" data-view-id="mine" role="tab" aria-selected="false">Assigned to me <span class="view-chip-count" id="svCount-mine">0</span></button>
+      <button class="view-chip" data-view-id="fire" role="tab" aria-selected="false">On Fire <span class="view-chip-count" id="svCount-fire">0</span></button>
+      <button class="view-chip" data-view-id="risk" role="tab" aria-selected="false">At Risk <span class="view-chip-count" id="svCount-risk">0</span></button>
+      <button class="view-chip" data-view-id="renewing" role="tab" aria-selected="false">Renewing soon <span class="view-chip-count" id="svCount-renewing">0</span></button>
+      <button class="view-chip" data-view-id="onboard" role="tab" aria-selected="false">Onboarding <span class="view-chip-count" id="svCount-onboard">0</span></button>
+      <button class="view-chip new-view" data-tip="Create a custom view" data-tip-pos="above" aria-label="Create a custom view">+</button>
+    </div>
   </div>
 
   <!-- Split view: pinned avatars strip -->
@@ -14755,6 +14796,9 @@ document.addEventListener('keydown', function(e) {
 
   var DEFAULT_CLIENT = 'acme-corp';
 
+  // Expose for external callers (keyboard nav in split-view script)
+  window.routeToView = function(t, id) { routeToView(t, id); };
+
   function routeToView(target, clientId) {
     if (!VALID[target]) target = 'overview';
     document.querySelectorAll('.view').forEach(function(v) {
@@ -14772,10 +14816,31 @@ document.addEventListener('keydown', function(e) {
     // In split view: always show a client detail panel. Default to first pinned if none.
     if (target === 'clients' || target === 'client-detail') {
       var id = clientId || DEFAULT_CLIENT;
-      document.querySelectorAll('[data-client-panel]').forEach(function(p) {
-        p.hidden = p.getAttribute('data-client-panel') !== id;
-      });
-      // Selected row highlight
+      var detailPane = document.querySelector('.clients-split-wrapper .view-client-detail');
+      var currentlyShown = detailPane && detailPane.querySelector('[data-client-panel]:not([hidden])');
+      var needsSwap = !currentlyShown || currentlyShown.getAttribute('data-client-panel') !== id;
+
+      function doSwap() {
+        document.querySelectorAll('[data-client-panel]').forEach(function(p) {
+          p.hidden = p.getAttribute('data-client-panel') !== id;
+        });
+        if (detailPane) detailPane.scrollTo({ top: 0 });
+        if (typeof syncHeroStar === 'function') syncHeroStar();
+        if (detailPane) {
+          requestAnimationFrame(function() {
+            detailPane.classList.remove('swapping');
+          });
+        }
+      }
+
+      if (needsSwap && detailPane && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        detailPane.classList.add('swapping');
+        setTimeout(doSwap, 140);
+      } else {
+        doSwap();
+      }
+
+      // Selected row highlight (instant — keeps list responsive)
       document.querySelectorAll('.view-clients .client-row').forEach(function(r) {
         r.classList.toggle('selected', r.getAttribute('data-client-id') === id);
       });
@@ -14783,8 +14848,6 @@ document.addEventListener('keydown', function(e) {
       document.querySelectorAll('.pinned-strip .pinned-avatar').forEach(function(a) {
         a.classList.toggle('selected', a.getAttribute('data-client-id') === id);
       });
-      // Sync hero star state to pinned set
-      if (typeof syncHeroStar === 'function') syncHeroStar();
     }
   }
 
@@ -14824,9 +14887,6 @@ document.addEventListener('keydown', function(e) {
       history.pushState(null, '', newHash);
     }
     routeToView('client-detail', id);
-    // Scroll detail pane to top (not window)
-    var detailPane = document.querySelector('.clients-split-wrapper .view-client-detail');
-    if (detailPane) detailPane.scrollTo({ top: 0 });
   });
 
   window.addEventListener('hashchange', function() {
@@ -15123,10 +15183,23 @@ document.addEventListener('keydown', function(e) {
       c.rowEl.style.display = show ? '' : 'none';
       if (show) shownCount++;
     });
+
+    // Count chip: "50" when no filter, "4 of 50" when filtered/searched
     var chip = document.getElementById('clientsCountChip');
-    if (chip) chip.textContent = shownCount;
-    var segAll = document.getElementById('svCount-all');
-    if (segAll) segAll.textContent = clients.length;
+    if (chip) {
+      var filtered = q || activeView !== 'all';
+      chip.textContent = filtered ? (shownCount + ' of ' + clients.length) : String(clients.length);
+    }
+
+    // Per-chip counts (independent of current search)
+    Object.keys(SAVED_VIEWS).forEach(function(key) {
+      var el = document.getElementById('svCount-' + key);
+      if (!el) return;
+      var n = 0;
+      var match = SAVED_VIEWS[key];
+      clients.forEach(function(c) { if (match(c)) n++; });
+      el.textContent = n;
+    });
 
     // Empty state
     var empty = document.getElementById('listEmptyState');
@@ -15143,6 +15216,17 @@ document.addEventListener('keydown', function(e) {
         }
       }
     }
+
+    updateSavedViewsOverflow();
+  }
+
+  function updateSavedViewsOverflow() {
+    var scroller = document.getElementById('savedViews');
+    var wrap = scroller && scroller.parentElement;
+    if (!scroller || !wrap) return;
+    var overflows = scroller.scrollWidth - scroller.clientWidth > 2;
+    var atEnd = scroller.scrollLeft + scroller.clientWidth >= scroller.scrollWidth - 2;
+    wrap.classList.toggle('has-overflow', overflows && !atEnd);
   }
 
   function clearFilters() {
@@ -15317,6 +15401,111 @@ document.addEventListener('keydown', function(e) {
   if (clearBtn) {
     clearBtn.addEventListener('click', clearFilters);
   }
+
+  /* Saved views scroll → update overflow fade */
+  var savedViewsScroller = document.getElementById('savedViews');
+  if (savedViewsScroller) {
+    savedViewsScroller.addEventListener('scroll', updateSavedViewsOverflow, { passive: true });
+  }
+  window.addEventListener('resize', updateSavedViewsOverflow);
+
+  /* ── Keyboard navigation (Mail.app pattern) ──
+     ↑/↓   — move through visible rows (also swaps detail pane)
+     Home  — jump to first visible row
+     End   — jump to last visible row
+     /     — focus search
+     Esc   — clear search when search is focused
+  */
+  function getVisibleRows() {
+    var rows = document.querySelectorAll('.view-clients .client-row');
+    var out = [];
+    rows.forEach(function(r) { if (r.style.display !== 'none') out.push(r); });
+    return out;
+  }
+
+  function currentSelectedIndex(rows) {
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i].classList.contains('selected')) return i;
+    }
+    return -1;
+  }
+
+  function selectRowAt(rows, idx) {
+    if (idx < 0 || idx >= rows.length) return;
+    var row = rows[idx];
+    var id = row.getAttribute('data-client-id');
+    if (!id) return;
+    var newHash = '#clients/' + id;
+    if (window.location.hash !== newHash) {
+      history.pushState(null, '', newHash);
+    }
+    if (typeof window.routeToView === 'function') {
+      window.routeToView('client-detail', id);
+    } else {
+      // Fallback: dispatch hashchange
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    }
+    row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+
+  document.addEventListener('keydown', function(e) {
+    var view = document.body.getAttribute('data-active-view');
+    if (view !== 'clients' && view !== 'client-detail') return;
+
+    var active = document.activeElement;
+    var inInput = active && (
+      active.tagName === 'INPUT' ||
+      active.tagName === 'TEXTAREA' ||
+      active.isContentEditable
+    );
+
+    // "/" focuses search from anywhere in the clients view (unless typing elsewhere)
+    if (e.key === '/' && !inInput) {
+      var input = document.getElementById('clientsSearchInput');
+      if (input) {
+        e.preventDefault();
+        input.focus();
+        input.select();
+      }
+      return;
+    }
+
+    // Esc while in search → clear (or blur if already empty)
+    if (e.key === 'Escape') {
+      var sInput = document.getElementById('clientsSearchInput');
+      if (active === sInput) {
+        if (sInput.value) {
+          sInput.value = '';
+          sInput.dispatchEvent(new Event('input', { bubbles: true }));
+        } else {
+          sInput.blur();
+        }
+        e.preventDefault();
+      }
+      return;
+    }
+
+    // ↑/↓/Home/End — only when NOT typing in an input
+    if (inInput) return;
+
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Home' || e.key === 'End') {
+      var rows = getVisibleRows();
+      if (!rows.length) return;
+      var idx = currentSelectedIndex(rows);
+      var next = idx;
+      if (e.key === 'ArrowDown') next = idx < 0 ? 0 : Math.min(idx + 1, rows.length - 1);
+      else if (e.key === 'ArrowUp') next = idx < 0 ? rows.length - 1 : Math.max(idx - 1, 0);
+      else if (e.key === 'Home') next = 0;
+      else if (e.key === 'End') next = rows.length - 1;
+      if (next !== idx) {
+        e.preventDefault();
+        selectRowAt(rows, next);
+      }
+    }
+  });
+
+  // Expose routeToView on window so keyboard nav can call it
+  // (router IIFE sets this below, but we guard in case of order)
 
   /* Initial render */
   function initSplit() {
