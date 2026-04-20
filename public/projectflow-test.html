@@ -15373,41 +15373,25 @@ document.addEventListener('keydown', function(e) {
 
   var pinned = loadPinned();
 
-  /* Read client metadata from the existing rows (single source of truth) */
+  /* Read client metadata from PROJECTFLOW_DATA (single source of truth).
+     rowEl is looked up at adapter time so applyFilter() can still hide/show. */
   function readClients() {
-    var rows = document.querySelectorAll('.view-clients .client-row');
-    var clients = [];
-    rows.forEach(function(row) {
-      var id = row.getAttribute('data-client-id');
-      if (!id) return;
-      var dot = row.querySelector('.client-status-dot');
-      var statusClass = '';
-      if (dot) {
-        var cls = dot.className.split(/\s+/);
-        for (var i = 0; i < cls.length; i++) {
-          if (cls[i] !== 'client-status-dot' && cls[i]) { statusClass = cls[i]; break; }
-        }
-      }
-      var logoEl = row.querySelector('.client-logo');
-      var logoClass = '';
-      var initials = '';
-      if (logoEl) {
-        var lcls = logoEl.className.split(/\s+/);
-        for (var j = 0; j < lcls.length; j++) {
-          if (lcls[j].indexOf('logo-') === 0) { logoClass = lcls[j]; break; }
-        }
-        initials = (logoEl.textContent || '').trim();
-      }
-      var nameEl = row.querySelector('.client-name');
-      var name = nameEl ? (nameEl.textContent || '').trim() : id;
-      var amEl = row.querySelector('.client-am-avatar');
-      var amInit = amEl ? (amEl.textContent || '').trim() : '';
-      clients.push({
-        id: id, name: name, initials: initials,
-        logoClass: logoClass, statusClass: statusClass, amInit: amInit, rowEl: row
-      });
+    var D = window.PROJECTFLOW_DATA;
+    if (!D || !D.clients) return [];
+    var memberById = {};
+    D.members.forEach(function(m){ memberById[m.id] = m; });
+    return D.clients.map(function(c) {
+      var member = c.amId ? memberById[c.amId] : null;
+      return {
+        id: c.id,
+        name: c.name,
+        initials: c.initials,
+        logoClass: c.logoClass,
+        statusClass: c.status,
+        amInit: member ? member.initials : '',
+        rowEl: document.querySelector('.view-clients .client-row[data-client-id="' + c.id + '"]')
+      };
     });
-    return clients;
   }
 
   /* Saved views */
