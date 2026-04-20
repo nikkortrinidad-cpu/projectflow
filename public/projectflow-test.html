@@ -16204,5 +16204,25 @@ document.addEventListener('keydown', function(e) {
 })();
 </script>
 
+<script>
+/* Swap Mac-only ⌘ keyboard hints to Ctrl on Windows/Linux. The handlers
+   already accept both modifiers — only the visible labels need adapting. */
+(function(){
+  var isMac = /Mac|iPhone|iPad|iPod/i.test(navigator.platform || navigator.userAgent);
+  if (isMac) return;
+  function apply(){
+    var cmdk = document.querySelector('.cmdk-kbd');
+    if (cmdk) cmdk.textContent = 'Ctrl K';
+    var boardF = document.querySelector('.filter-search kbd');
+    if (boardF) boardF.textContent = 'Ctrl F';
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', apply);
+  } else {
+    apply();
+  }
+})();
+</script>
+
 </body>
 </html>
