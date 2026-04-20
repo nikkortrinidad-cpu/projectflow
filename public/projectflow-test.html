@@ -6446,21 +6446,21 @@
     font-variant-numeric: tabular-nums;
   }
   .pinned-strip {
-    display: flex; gap: 10px;
+    display: flex; gap: 8px;
     overflow-x: auto; overflow-y: hidden;
-    padding: 6px 6px 8px;
+    padding: 4px 6px 8px;
     scrollbar-width: none;
   }
   .pinned-strip::-webkit-scrollbar { display: none; }
   .pinned-nav {
     position: absolute;
-    top: 28px;
-    width: 24px; height: 52px;
+    top: 30px;
+    width: 28px; height: 64px;
     display: none;
     align-items: center; justify-content: center;
-    background: linear-gradient(to left, var(--bg-elev) 40%, rgba(255,255,255,0) 100%);
+    background: linear-gradient(to left, var(--bg-elev) 45%, rgba(255,255,255,0) 100%);
     border: none;
-    color: var(--text-muted);
+    color: var(--text-soft);
     cursor: pointer;
     padding: 0;
     z-index: 2;
@@ -6470,46 +6470,83 @@
   .pinned-nav.right { right: 0; }
   .pinned-nav.left {
     left: 0;
-    background: linear-gradient(to right, var(--bg-elev) 40%, rgba(255,255,255,0) 100%);
-    justify-content: center;
+    background: linear-gradient(to right, var(--bg-elev) 45%, rgba(255,255,255,0) 100%);
   }
   .pinned-wrap.has-overflow-right .pinned-nav.right { display: flex; }
   .pinned-wrap.has-overflow-left  .pinned-nav.left  { display: flex; }
-  .pinned-avatar {
+
+  /* My Boards chip — pins a service board */
+  .board-chip {
     flex-shrink: 0;
-    display: flex; flex-direction: column; align-items: center; gap: 4px;
-    text-decoration: none; color: inherit;
-    cursor: pointer; width: 52px;
-    transition: transform 0.15s;
-  }
-  .pinned-avatar:hover { transform: translateY(-1px); }
-  .pinned-avatar:focus-visible {
-    outline: none;
-  }
-  .pinned-avatar:focus-visible .pinned-avatar-circle {
-    box-shadow: 0 0 0 2px var(--bg-elev), 0 0 0 4px var(--highlight);
-  }
-  .pinned-avatar-circle {
+    width: 178px;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 10px;
+    padding: 8px 10px 8px 12px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px;
+    align-items: center;
+    cursor: pointer;
     position: relative;
-    width: 40px; height: 40px; border-radius: 50%;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    text-decoration: none;
+    color: inherit;
+  }
+  .board-chip::before {
+    content: '';
+    position: absolute; left: 0; top: 10px; bottom: 10px;
+    width: 3px; border-radius: 0 3px 3px 0;
+    background: var(--status-paused, #98989d);
+  }
+  .board-chip[data-status="fire"]::before    { background: var(--status-fire, #ff3b30); }
+  .board-chip[data-status="risk"]::before    { background: var(--status-risk, #ff9500); }
+  .board-chip[data-status="track"]::before   { background: var(--status-track, #30d158); }
+  .board-chip[data-status="onboard"]::before { background: var(--status-onboard, #5e5ce6); }
+  .board-chip:hover {
+    border-color: var(--hairline);
+    background: var(--bg-soft);
+    box-shadow: var(--shadow-hover, 0 2px 8px rgba(0,0,0,0.04));
+  }
+  .board-chip.selected {
+    border-color: var(--highlight);
+    box-shadow: 0 0 0 2px var(--highlight-soft);
+  }
+  .board-chip:focus-visible {
+    outline: none;
+    border-color: var(--highlight);
+    box-shadow: 0 0 0 2px var(--highlight-soft);
+  }
+  .board-chip-logo {
+    width: 26px; height: 26px; border-radius: 7px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 13px; font-weight: 600; letter-spacing: -0.01em;
-    color: #fff;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    color: #fff; font-size: 10px; font-weight: 700;
+    letter-spacing: -0.01em;
+    flex-shrink: 0;
   }
-  .pinned-avatar.selected .pinned-avatar-circle {
-    box-shadow: 0 0 0 2px var(--bg-elev), 0 0 0 4px var(--highlight);
+  .board-chip-body { min-width: 0; }
+  .board-chip-name {
+    font-size: 12px; font-weight: 600;
+    color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
   }
-  .pinned-status-dot {
-    position: absolute; bottom: -1px; right: -1px;
-    width: 12px; height: 12px; border-radius: 50%;
-    border: 2px solid var(--bg-elev);
+  .board-chip-meta {
+    font-size: 10px; font-weight: 500;
+    color: var(--text-faint);
+    margin-top: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .pinned-name {
-    font-size: 10px; color: var(--text-muted);
-    text-align: center; white-space: nowrap;
-    overflow: hidden; text-overflow: ellipsis;
-    max-width: 52px; line-height: 1.2;
+  .board-chip-meta .sep { margin: 0 5px; color: var(--hairline); }
+
+  /* Clients section header — lives between My Boards strip and filter chips */
+  .clients-section-header {
+    padding: 14px 14px 6px;
+    font-size: 10px; font-weight: 600;
+    color: var(--text-faint);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    flex-shrink: 0;
   }
 
   /* List scroll area — compact rows */
@@ -6602,35 +6639,6 @@
   }
   .clients-split-wrapper .detail-breadcrumb {
     display: none; /* split view makes breadcrumb redundant */
-  }
-
-  /* Hero star button (pin/unpin) — lives inside .hero-actions as first child */
-  .hero-star-btn {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 34px; height: 34px; border-radius: 8px;
-    background: transparent; border: 1px solid var(--hairline);
-    color: var(--text-faint);
-    cursor: pointer;
-    transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.1s;
-    flex-shrink: 0;
-  }
-  .hero-star-btn:hover {
-    background: var(--bg-soft); color: var(--text-muted);
-  }
-  .hero-star-btn:active { transform: scale(0.94); }
-  .hero-star-btn svg { width: 16px; height: 16px; }
-  .hero-star-btn.pinned {
-    background: var(--highlight-soft);
-    color: var(--highlight);
-    border-color: transparent;
-  }
-  .hero-star-btn.pinned:hover {
-    background: var(--hover-tint-strong);
-    color: var(--hover-blue);
-  }
-  .hero-star-btn:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--highlight-soft), 0 0 0 4px var(--highlight);
   }
 
   /* Empty state for detail pane */
@@ -7110,6 +7118,27 @@
     <div class="list-pane-count" id="clientsCountChip">50</div>
   </div>
 
+  <!-- Split view: My Boards strip — pin individual kanban boards -->
+  <div class="pinned-wrap" id="pinnedWrap">
+    <div class="pinned-label">
+      <span class="pinned-label-text">
+        <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        My Boards
+      </span>
+      <span class="pinned-count" id="pinnedCount"></span>
+    </div>
+    <button type="button" class="pinned-nav left" id="pinnedNavLeft" aria-label="Scroll boards left">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="pinned-strip" id="pinnedStrip"></div>
+    <button type="button" class="pinned-nav right" id="pinnedNavRight" aria-label="Scroll boards right">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+
+  <!-- All Clients section header -->
+  <div class="clients-section-header">All Clients</div>
+
   <!-- Split view: saved views chip row -->
   <div class="saved-views-wrap">
     <div class="saved-views" id="savedViews" role="tablist" aria-label="Saved views">
@@ -7122,24 +7151,6 @@
       <button class="view-chip" data-view-id="onboard" role="tab" aria-selected="false">Onboarding <span class="view-chip-count" id="svCount-onboard">0</span></button>
       <button class="view-chip new-view" data-tip="Create a custom view" data-tip-pos="above" aria-label="Create a custom view">+</button>
     </div>
-  </div>
-
-  <!-- Split view: pinned avatars strip -->
-  <div class="pinned-wrap" id="pinnedWrap">
-    <div class="pinned-label">
-      <span class="pinned-label-text">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2a1 1 0 0 1 .993.883L15 3v4.586l2.707 2.707A1 1 0 0 1 18 11v1a1 1 0 0 1-1 1h-4v6a1 1 0 0 1-1.993.117L11 19v-6H7a1 1 0 0 1-.993-.883L6 12v-1a1 1 0 0 1 .293-.707L9 7.586V3a1 1 0 0 1 .883-.993L10 2h4z"/></svg>
-        Pinned
-      </span>
-      <span class="pinned-count" id="pinnedCount"></span>
-    </div>
-    <button type="button" class="pinned-nav left" id="pinnedNavLeft" aria-label="Scroll pinned left">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-    </button>
-    <div class="pinned-strip" id="pinnedStrip"></div>
-    <button type="button" class="pinned-nav right" id="pinnedNavRight" aria-label="Scroll pinned right">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-    </button>
   </div>
 
   <!-- Pinned clients (yours) — legacy 2-card grid, hidden in split view -->
@@ -14761,7 +14772,7 @@ document.addEventListener('keydown', function(e) {
           p.hidden = p.getAttribute('data-client-panel') !== id;
         });
         if (detailPane) detailPane.scrollTo({ top: 0 });
-        if (typeof syncHeroStar === 'function') syncHeroStar();
+        if (typeof syncServiceStars === 'function') syncServiceStars();
         if (detailPane) {
           requestAnimationFrame(function() {
             detailPane.classList.remove('swapping');
@@ -14779,10 +14790,6 @@ document.addEventListener('keydown', function(e) {
       // Selected row highlight (instant — keeps list responsive)
       document.querySelectorAll('.view-clients .client-row').forEach(function(r) {
         r.classList.toggle('selected', r.getAttribute('data-client-id') === id);
-      });
-      // Selected pinned avatar highlight
-      document.querySelectorAll('.pinned-strip .pinned-avatar').forEach(function(a) {
-        a.classList.toggle('selected', a.getAttribute('data-client-id') === id);
       });
     }
   }
@@ -14815,8 +14822,8 @@ document.addEventListener('keydown', function(e) {
   document.addEventListener('click', function(e) {
     var a = e.target.closest('a[data-client-id], [data-client-id][role="link"]');
     if (!a) return;
-    // Ignore clicks on the pin/star button
-    if (e.target.closest('.hero-star-btn')) return;
+    // Ignore clicks on service-star buttons (favorite toggle, not navigation)
+    if (e.target.closest('.service-star')) return;
     e.preventDefault();
     var id = a.getAttribute('data-client-id');
     var newHash = '#clients/' + id;
@@ -15288,12 +15295,14 @@ document.addEventListener('keydown', function(e) {
 </script>
 
 <script>
-/* ═══════ Clients Split View — pinning, saved views, search, hero star ═══════ */
+/* ═══════ Clients Split View — My Boards (favorited services), saved views, search ═══════ */
 (function(){
-  var STORAGE_KEY = 'projectflow-pinned-clients';
+  /* Favorites store: array of service IDs (one per board).
+     Migrated from legacy 'projectflow-pinned-clients' key (which stored
+     client IDs) — old data is ignored on the next load. */
+  var STORAGE_KEY = 'projectflow-favorite-boards';
   var MAX_PINNED = 8;
-  var DEFAULT_PINNED = ['acme-corp', 'vertex-finance', 'bloom-retail'];
-  var MAX_PINNED = 9;
+  var DEFAULT_PINNED = ['acme-corp-svc-0', 'bloom-retail-svc-0', 'techstart-inc-svc-0'];
 
   function loadPinned() {
     try {
@@ -15434,34 +15443,47 @@ document.addEventListener('keydown', function(e) {
     if (input) input.focus();
   }
 
-  /* Render pinned avatars strip */
+  /* Render My Boards strip — each chip is a direct shortcut to a kanban board */
   function renderPinnedStrip() {
     var strip = document.getElementById('pinnedStrip');
     if (!strip) return;
     var wrap = document.getElementById('pinnedWrap');
     var countEl = document.getElementById('pinnedCount');
-    var clients = readClients();
-    var byId = {};
-    clients.forEach(function(c) { byId[c.id] = c; });
 
-    // Filter to pinned clients that exist in our data
-    var items = pinned.filter(function(id) { return byId[id]; }).map(function(id) { return byId[id]; });
+    var D = window.PROJECTFLOW_DATA;
+    if (!D) return;
+    var clientById = {};
+    D.clients.forEach(function(c) { clientById[c.id] = c; });
+    var serviceById = {};
+    D.services.forEach(function(s) { serviceById[s.id] = s; });
 
-    // Hide whole strip if no pinned
+    // Filter pinned IDs down to services that actually exist
+    var items = pinned
+      .filter(function(id) { return serviceById[id]; })
+      .map(function(id) {
+        var svc = serviceById[id];
+        var client = clientById[svc.clientId];
+        return { service: svc, client: client };
+      })
+      .filter(function(x) { return x.client; });
+
     if (wrap) wrap.style.display = items.length ? '' : 'none';
     if (countEl) countEl.textContent = items.length + ' / ' + MAX_PINNED;
 
-    var currentId = getCurrentClientId();
-    strip.innerHTML = items.map(function(c) {
-      var logoColor = getLogoColor(c.logoClass);
-      var statusColor = getStatusColor(c.statusClass);
-      var selected = currentId === c.id ? ' selected' : '';
-      return '<a class="pinned-avatar' + selected + '" href="#clients/' + c.id + '" data-client-id="' + c.id + '" data-tip="' + escapeHtml(c.name) + '" data-tip-pos="below">' +
-        '<div class="pinned-avatar-circle" style="background:' + logoColor + '">' +
-          escapeHtml(c.initials) +
-          (statusColor ? '<span class="pinned-status-dot" style="background:' + statusColor + '"></span>' : '') +
+    var currentServiceId = getCurrentServiceId();
+    strip.innerHTML = items.map(function(it) {
+      var svc = it.service, client = it.client;
+      var logoColor = getLogoColor(client.logoClass);
+      var selected = currentServiceId === svc.id ? ' selected' : '';
+      var status = client.status || 'track';
+      var typeLabel = svc.type === 'project' ? 'project' : 'retainer';
+      var firstWord = client.name.split(' ')[0];
+      return '<a class="board-chip' + selected + '" href="#board/' + svc.id + '" data-service-id="' + svc.id + '" data-status="' + status + '" data-tip="' + escapeHtml(svc.name) + ' · ' + escapeHtml(client.name) + '" data-tip-pos="below">' +
+        '<div class="board-chip-logo" style="background:' + logoColor + '">' + escapeHtml(client.initials) + '</div>' +
+        '<div class="board-chip-body">' +
+          '<div class="board-chip-name">' + escapeHtml(svc.name) + '</div>' +
+          '<div class="board-chip-meta">' + escapeHtml(firstWord) + '<span class="sep">·</span>' + escapeHtml(typeLabel) + '</div>' +
         '</div>' +
-        '<div class="pinned-name">' + escapeHtml(c.name.split(' ')[0]) + '</div>' +
       '</a>';
     }).join('');
 
@@ -15528,55 +15550,54 @@ document.addEventListener('keydown', function(e) {
     return m ? m[1] : 'acme-corp';
   }
 
-  /* Hero star button — insert as first child of .hero-actions (or create one) */
-  function ensureHeroStar() {
+  function getCurrentServiceId() {
+    var h = (window.location.hash || '').replace('#','').toLowerCase();
+    var m = h.match(/^board\/(.+)$/);
+    return m ? m[1] : null;
+  }
+
+  /* Reflect favorite state on every service-star button in the visible panel */
+  function syncServiceStars() {
     var panel = document.querySelector('.view-client-detail .client-detail-page:not([hidden])');
     if (!panel) return;
-    var hero = panel.querySelector('.client-hero');
-    if (!hero) return;
-    var id = panel.getAttribute('data-client-panel');
-    var isPinned = pinned.indexOf(id) !== -1;
-
-    // Ensure .hero-actions exists (stub panels don't have it)
-    var actions = hero.querySelector('.hero-actions');
-    if (!actions) {
-      actions = document.createElement('div');
-      actions.className = 'hero-actions';
-      hero.appendChild(actions);
-    }
-
-    var existing = actions.querySelector('.hero-star-btn');
-    if (existing) {
-      existing.setAttribute('data-star', id);
-      existing.classList.toggle('pinned', isPinned);
-      existing.setAttribute('aria-label', isPinned ? 'Unpin client' : 'Pin client');
-      existing.setAttribute('aria-pressed', isPinned ? 'true' : 'false');
-      existing.setAttribute('data-tip', isPinned ? 'Unpin client' : 'Pin client');
-      return;
-    }
-    var btn = document.createElement('button');
-    btn.className = 'hero-star-btn' + (isPinned ? ' pinned' : '');
-    btn.type = 'button';
-    btn.setAttribute('data-star', id);
-    btn.setAttribute('data-tip', isPinned ? 'Unpin client' : 'Pin client');
-    btn.setAttribute('data-tip-pos', 'below-end');
-    btn.setAttribute('aria-label', isPinned ? 'Unpin client' : 'Pin client');
-    btn.setAttribute('aria-pressed', isPinned ? 'true' : 'false');
-    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2a1 1 0 0 1 .993.883L15 3v4.586l2.707 2.707A1 1 0 0 1 18 11v1a1 1 0 0 1-1 1h-4v6a1 1 0 0 1-1.993.117L11 19v-6H7a1 1 0 0 1-.993-.883L6 12v-1a1 1 0 0 1 .293-.707L9 7.586V3a1 1 0 0 1 .883-.993L10 2h4z"/></svg>';
-    actions.insertBefore(btn, actions.firstChild);
+    var cards = panel.querySelectorAll('.service-card[data-service-id]');
+    cards.forEach(function(card) {
+      var sid = card.getAttribute('data-service-id');
+      var star = card.querySelector('.service-star');
+      if (!star) return;
+      var isFav = pinned.indexOf(sid) !== -1;
+      star.classList.toggle('active', isFav);
+      star.setAttribute('aria-label', isFav ? 'Unfavorite board' : 'Favorite board');
+      star.setAttribute('aria-pressed', isFav ? 'true' : 'false');
+      star.setAttribute('data-tip', isFav ? 'Favorited' : 'Favorite board');
+      var svg = star.querySelector('svg');
+      if (svg) {
+        if (isFav) {
+          svg.setAttribute('fill', 'currentColor');
+          svg.removeAttribute('stroke');
+          svg.removeAttribute('stroke-width');
+        } else {
+          svg.setAttribute('fill', 'none');
+          svg.setAttribute('stroke', 'currentColor');
+          svg.setAttribute('stroke-width', '1.8');
+        }
+      }
+    });
   }
 
   // Expose for router
-  window.syncHeroStar = function() { ensureHeroStar(); };
+  window.syncServiceStars = syncServiceStars;
 
-  /* Star click handler (delegated) */
+  /* Star toggle handler (delegated) — favorites a board */
   document.addEventListener('click', function(e) {
-    var star = e.target.closest('.hero-star-btn');
+    var star = e.target.closest('.service-star');
     if (!star) return;
+    var card = star.closest('.service-card[data-service-id]');
+    if (!card) return;
+    var id = card.getAttribute('data-service-id');
+    if (!id) return;
     e.preventDefault();
     e.stopPropagation();
-    var id = star.getAttribute('data-star');
-    if (!id) return;
     var idx = pinned.indexOf(id);
     if (idx !== -1) {
       pinned.splice(idx, 1);
@@ -15588,7 +15609,7 @@ document.addEventListener('keydown', function(e) {
     }
     savePinned(pinned);
     renderPinnedStrip();
-    ensureHeroStar();
+    syncServiceStars();
   });
 
   /* Saved views chip handler */
@@ -15734,7 +15755,7 @@ document.addEventListener('keydown', function(e) {
   function initSplit() {
     renderPinnedStrip();
     applyFilter();
-    ensureHeroStar();
+    syncServiceStars();
   }
 
   if (document.readyState === 'loading') {
@@ -15743,11 +15764,11 @@ document.addEventListener('keydown', function(e) {
     initSplit();
   }
 
-  /* Re-sync hero star after route changes */
+  /* Re-sync after route changes */
   window.addEventListener('hashchange', function() {
     setTimeout(function() {
-      ensureHeroStar();
-      renderPinnedStrip(); // re-highlight selected pinned
+      syncServiceStars();
+      renderPinnedStrip(); // re-highlight selected board chip
     }, 0);
   });
 })();
