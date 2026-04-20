@@ -13807,14 +13807,30 @@ function openAttentionTask(e, btn) {
   });
 })();
 
-/* ── Delegate popover ── */
-var TEAM = [
-  { name: 'Roxy Calinga', initials: 'RC', role: 'Operations Manager' },
-  { name: 'Chris Castellano', initials: 'CC', role: 'Senior Growth & SEO' },
-  { name: 'Kate Lawrence', initials: 'KL', role: 'Account Manager' },
-  { name: 'Harvey San Juan', initials: 'HS', role: 'Web Designer' },
-  { name: 'Michael Potts', initials: 'MP', role: 'Paid Social Manager' }
-];
+/* ── Delegate popover ──
+   TEAM is derived from OPS_TEAM (defined in the workload script below)
+   so the delegate dropdown and Team Workload share the same roster.
+   When PROJECTFLOW_DATA loads, members[type='operator'] takes priority
+   for name/role so any future edits to the central data layer flow
+   through to delegate suggestions automatically. */
+function getTeamRoster() {
+  var D = window.PROJECTFLOW_DATA;
+  if (D && D.members) {
+    var ops = D.members.filter(function(m){ return m.type === 'operator'; });
+    if (ops.length) {
+      return ops.map(function(m){
+        return { name: m.name, initials: m.initials, role: m.role };
+      });
+    }
+  }
+  if (window.OPS_TEAM) {
+    return window.OPS_TEAM.map(function(m){
+      return { name: m.name, initials: m.initials, role: m.role };
+    });
+  }
+  return [];
+}
+Object.defineProperty(window, 'TEAM', { get: function(){ return getTeamRoster(); } });
 
 var activeDelegatePop = null;
 
@@ -14405,42 +14421,52 @@ var BLOCK_LABEL = { full: 'Full Day', half: 'Half Day', quarter: 'Quarter Day', 
 var BLOCK_SYMBOL = { full: '\u{1F7E6}', half: '\u{1F7E9}', quarter: '\u{1F7E8}', quick: '\u2B1C' };
 var CAPACITY = 4; /* Full Day equivalents per week */
 
-var wlData = [
-  { name: 'Roxy Calinga', role: 'Operations Manager', initials: 'RC', bg: '#e0e7ff', fg: '#4f46e5',
+/* OPS_TEAM is the single source of truth for the operator team — the
+   employees who appear in Team Workload AND in the Delegate popover.
+   Pushed into PROJECTFLOW_DATA.members (with type: 'operator') by the
+   PROJECTFLOW_DATA IIFE so the rest of the app can reference them by id.
+   `tasks[*].seedId` (when set) links a workload tile to a SCHEDULE_SEEDS
+   entry, making it click-through to the matching kanban card. */
+var OPS_TEAM = [
+  { id: 'rc', initials: 'RC', name: 'Roxy Calinga', role: 'Operations Manager', color: '#4f46e5', bg: '#e0e7ff', type: 'operator',
     tasks: [
-      { title: 'Acme wireframes v3 — internal review', meta: 'Wed · Prep before stakeholder call', block: 'full', urgent: true },
-      { title: 'Acme design review — stakeholder walkthrough', meta: 'Thu 2:00 PM · Coordinating', block: 'half', urgent: true },
-      { title: 'Acme website launch prep', meta: 'Fri · At risk, waiting on feedback', block: 'full', urgent: false },
-      { title: 'Acme design revisions', meta: 'Next week Wed · Based on Thu feedback', block: 'full', urgent: false },
-      { title: 'Bloom brand refresh concepts', meta: 'Backlog · No deadline yet', block: 'full', urgent: false }
+      { title: 'Acme wireframes v3 — internal review',         meta: 'Wed · Prep before stakeholder call',   block: 'full',    urgent: true,  seedId: 'acme-wireframes' },
+      { title: 'Acme design review — stakeholder walkthrough', meta: 'Thu 2:00 PM · Coordinating',           block: 'half',    urgent: true,  seedId: 'acme-review' },
+      { title: 'Acme website launch prep',                     meta: 'Fri · At risk, waiting on feedback',   block: 'full',    urgent: false, seedId: 'acme-launch' },
+      { title: 'Acme design revisions',                        meta: 'Next week Wed · Based on Thu feedback',block: 'full',    urgent: false, seedId: 'nw-acme-revisions' },
+      { title: 'Bloom brand refresh concepts',                 meta: 'Backlog · No deadline yet',            block: 'full',    urgent: false }
     ]},
-  { name: 'Chris Castellano', role: 'Senior Growth & SEO Manager', initials: 'CC', bg: '#fef3c7', fg: '#d97706',
+  { id: 'cc', initials: 'CC', name: 'Chris Castellano', role: 'Senior Growth & SEO Manager', color: '#d97706', bg: '#fef3c7', type: 'operator',
     tasks: [
-      { title: 'TechStart SEO audit final delivery', meta: 'Mon · Running 2 days behind', block: 'full', urgent: true },
-      { title: 'Bloom Retail paid ads — performance report', meta: 'Fri · First-week results', block: 'half', urgent: false },
-      { title: 'Summit Outdoor content calendar review', meta: 'Wed · May schedule approval', block: 'quarter', urgent: false },
-      { title: 'Client keyword brief updates', meta: 'Ongoing · 3 clients', block: 'quarter', urgent: false }
+      { title: 'TechStart SEO audit final delivery',           meta: 'Mon · Running 2 days behind',          block: 'full',    urgent: true,  seedId: 'seo-audit' },
+      { title: 'Bloom Retail paid ads — performance report',   meta: 'Fri · First-week results',             block: 'half',    urgent: false, seedId: 'bloom-ads' },
+      { title: 'Summit Outdoor content calendar review',       meta: 'Wed · May schedule approval',          block: 'quarter', urgent: false, seedId: 'summit-calendar' },
+      { title: 'Client keyword brief updates',                 meta: 'Ongoing · 3 clients',                  block: 'quarter', urgent: false }
     ]},
-  { name: 'Kate Lawrence', role: 'Account Manager', initials: 'KL', bg: '#fce7f3', fg: '#db2777',
+  { id: 'kl', initials: 'KL', name: 'Kate Lawrence', role: 'Account Manager', color: '#db2777', bg: '#fce7f3', type: 'operator',
     tasks: [
-      { title: 'Bloom Retail reporting deck', meta: 'Today · Client meeting tomorrow 9am', block: 'full', urgent: true },
-      { title: 'Bloom Retail Q2 plan — team alignment', meta: 'Wed 11:00 AM · Presenting draft', block: 'half', urgent: false },
-      { title: 'Harbor Financial kickoff follow-up email', meta: 'Tue · Post-meeting action items', block: 'quarter', urgent: false },
-      { title: 'Approve Northstar scope change', meta: 'Wed · Quick sign-off', block: 'quick', urgent: false }
+      { title: 'Bloom Retail reporting deck',                  meta: 'Today · Client meeting tomorrow 9am',  block: 'full',    urgent: true,  seedId: 'bloom-deck' },
+      { title: 'Bloom Retail Q2 plan — team alignment',        meta: 'Wed 11:00 AM · Presenting draft',      block: 'half',    urgent: false, seedId: 'bloom-q2' },
+      { title: 'Harbor Financial kickoff follow-up email',     meta: 'Tue · Post-meeting action items',      block: 'quarter', urgent: false },
+      { title: 'Approve Northstar scope change',               meta: 'Wed · Quick sign-off',                 block: 'quick',   urgent: false }
     ]},
-  { name: 'Harvey San Juan', role: 'Web Designer', initials: 'HS', bg: '#d1fae5', fg: '#059669',
+  { id: 'hs', initials: 'HS', name: 'Harvey San Juan', role: 'Web Designer', color: '#059669', bg: '#d1fae5', type: 'operator',
     tasks: [
-      { title: 'Nova Ventures API credentials follow-up', meta: 'Blocked · Client IT hasn\'t responded', block: 'quarter', urgent: false },
-      { title: 'Harbor Financial dev environment setup', meta: 'Tue · New client onboarding', block: 'half', urgent: false }
+      { title: 'Nova Ventures API credentials follow-up',      meta: 'Blocked · Client IT hasn\'t responded',block: 'quarter', urgent: false },
+      { title: 'Harbor Financial dev environment setup',       meta: 'Tue · New client onboarding',          block: 'half',    urgent: false }
     ]},
-  { name: 'Michael Potts', role: 'Paid Social Manager', initials: 'MP', bg: '#ede9fe', fg: '#7c3aed',
+  { id: 'mp', initials: 'MP', name: 'Michael Potts', role: 'Paid Social Manager', color: '#7c3aed', bg: '#ede9fe', type: 'operator',
     tasks: [
-      { title: 'Harbor Financial onboarding checklist', meta: 'Kickoff Tue · 8 tasks created', block: 'half', urgent: false },
-      { title: 'Northstar scope change follow-up', meta: 'Waiting 2 days · Team paused', block: 'quarter', urgent: false },
-      { title: 'Weekly project status updates', meta: 'Fri · All active clients', block: 'half', urgent: false },
-      { title: 'Forward Acme invoice to finance', meta: 'Quick · Minor admin', block: 'quick', urgent: false }
+      { title: 'Harbor Financial onboarding checklist',        meta: 'Kickoff Tue · 8 tasks created',        block: 'half',    urgent: false },
+      { title: 'Northstar scope change follow-up',             meta: 'Waiting 2 days · Team paused',         block: 'quarter', urgent: false },
+      { title: 'Weekly project status updates',                meta: 'Fri · All active clients',             block: 'half',    urgent: false },
+      { title: 'Forward Acme invoice to finance',              meta: 'Quick · Minor admin',                  block: 'quick',   urgent: false }
     ]}
 ];
+window.OPS_TEAM = OPS_TEAM;
+/* Legacy alias — wlData was the original name. Kept as a pointer so any
+   external references continue to resolve. New code should use OPS_TEAM. */
+var wlData = OPS_TEAM;
 
 function calcFDE(tasks) {
   var total = 0;
@@ -14455,12 +14481,22 @@ function fdeStatus(fde) {
   return 'light';
 }
 
-/* Render workload cards from data */
-(function() {
+/* Render workload cards. Idempotent — clears existing tiles before
+   rebuilding so the PROJECTFLOW_DATA kicker can re-run after the data
+   layer is built. Each card resolves its colour/avatar from the
+   member's PROJECTFLOW_DATA entry when available; falls back to the
+   inline OPS_TEAM fields for the first paint. */
+function renderWorkload() {
   var grid = document.getElementById('workloadGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
   var CIRC = 2 * Math.PI * 21; /* ~131.95 */
+  var D = window.PROJECTFLOW_DATA;
+  var memberById = {};
+  if (D && D.members) D.members.forEach(function(m){ memberById[m.id] = m; });
 
-  wlData.forEach(function(d, i) {
+  OPS_TEAM.forEach(function(d, i) {
+    var m = memberById[d.id] || d;
     var fde = calcFDE(d.tasks);
     var status = fdeStatus(fde);
     var pct = Math.min(fde / CAPACITY, 1);
@@ -14477,24 +14513,36 @@ function fdeStatus(fde) {
         '<circle class="ring-fill ' + status + '" cx="26" cy="26" r="21" stroke-dasharray="' + CIRC.toFixed(1) + '" stroke-dashoffset="' + offset.toFixed(1) + '"/></svg>' +
         '<div class="wl-ring-label">' + label + '/' + CAPACITY + '</div>' +
       '</div>' +
-      '<div class="wl-avatar" style="background:' + d.bg + ';color:' + d.fg + ';">' + d.initials + '</div>' +
-      '<div class="wl-name">' + d.name + '</div>' +
-      '<div class="wl-caption">' + d.role + '</div>';
+      '<div class="wl-avatar" style="background:' + (m.bg || d.bg) + ';color:' + (m.color || d.color) + ';">' + (m.initials || d.initials) + '</div>' +
+      '<div class="wl-name">' + (m.name || d.name) + '</div>' +
+      '<div class="wl-caption">' + (m.role || d.role) + '</div>';
     grid.appendChild(card);
   });
-})();
+}
+window.renderWorkload = renderWorkload;
+renderWorkload();
 
 function openWlPanel(idx) {
-  var d = wlData[idx];
+  var d = OPS_TEAM[idx];
+  /* Resolve member info from the central data layer when available so
+     name/role/colour stay in sync if PROJECTFLOW_DATA is the source of
+     truth. Falls back to the inline OPS_TEAM fields. */
+  var D = window.PROJECTFLOW_DATA;
+  var m = d;
+  if (D && D.members) {
+    for (var mi = 0; mi < D.members.length; mi++) {
+      if (D.members[mi].id === d.id) { m = D.members[mi]; break; }
+    }
+  }
   var fde = calcFDE(d.tasks);
   var status = fdeStatus(fde);
 
   var avatar = document.getElementById('wlPanelAvatar');
-  avatar.textContent = d.initials;
-  avatar.style.background = d.bg;
-  avatar.style.color = d.fg;
-  document.getElementById('wlPanelName').textContent = d.name;
-  document.getElementById('wlPanelRole').textContent = d.role;
+  avatar.textContent = m.initials || d.initials;
+  avatar.style.background = m.bg || d.bg;
+  avatar.style.color = m.color || d.color;
+  document.getElementById('wlPanelName').textContent = m.name || d.name;
+  document.getElementById('wlPanelRole').textContent = m.role || d.role;
 
   /* Summary: count blocks by type */
   var counts = { full: 0, half: 0, quarter: 0, quick: 0 };
@@ -14511,12 +14559,27 @@ function openWlPanel(idx) {
   });
   summary.innerHTML = html;
 
-  /* Task list with block tags */
+  /* Task list with block tags. Tasks linked to a SCHEDULE_SEEDS entry
+     (via seedId) are clickable — they route to the matching kanban
+     card on the client's board, just like the Overview Schedule. */
   var body = document.getElementById('wlPanelBody');
   body.innerHTML = '';
+  var scheduleMap = (D && D.scheduleTaskMap) || {};
   d.tasks.forEach(function(t) {
     var div = document.createElement('div');
     div.className = 'wl-panel-task';
+    var serviceId = t.seedId ? scheduleMap[t.seedId] : null;
+    if (serviceId) {
+      div.classList.add('linked');
+      div.setAttribute('data-service-id', serviceId);
+      div.setAttribute('data-task-id', t.seedId);
+      div.style.cursor = 'pointer';
+      div.onclick = function(e) {
+        e.stopPropagation();
+        closeWlPanel();
+        if (typeof goToBoardTask === 'function') goToBoardTask(serviceId, t.seedId);
+      };
+    }
     div.innerHTML =
       '<span class="wl-pt-dot ' + (t.urgent ? 'urgent' : 'normal') + '"></span>' +
       '<div><div>' + t.title + '</div>' +
@@ -15321,6 +15384,22 @@ document.addEventListener('keydown', function(e) {
     clients.push(client);
   });
 
+  /* Push the operator team (Team Workload roster) into members so the
+     rest of the app — delegate popover, future assignee pickers,
+     reporting — references the same employee records. Marked
+     `type: 'operator'` so consumers can distinguish them from AMs
+     (which are inferred from client rows). */
+  if (window.OPS_TEAM) {
+    window.OPS_TEAM.forEach(function(op) {
+      if (memberSeen[op.id]) return;
+      members.push({
+        id: op.id, initials: op.initials, name: op.name, role: op.role,
+        color: op.color, bg: op.bg, type: 'operator'
+      });
+      memberSeen[op.id] = true;
+    });
+  }
+
   /* Inject schedule seeds as real kanban cards. Each seed lands on the
      service whose templateKey matches `pool`; if none, it falls back to
      svc-0 of that client. The id-to-serviceId map is exposed so the
@@ -15363,6 +15442,9 @@ document.addEventListener('keydown', function(e) {
   // (PROJECTFLOW_DATA is built lazily after page DOM). Render now.
   if (typeof renderSchedule === 'function') renderSchedule();
   if (typeof applyToday === 'function') applyToday();
+  // Re-render workload now that PROJECTFLOW_DATA.members is populated,
+  // so the cards pick up canonical name/role/colour from the data layer.
+  if (typeof renderWorkload === 'function') renderWorkload();
 })();
 </script>
 
