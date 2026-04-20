@@ -14864,6 +14864,32 @@ document.addEventListener('keydown', function(e) {
     window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
   });
 
+  // Schedule tasks: route into the kanban board for the underlying card
+  // and open the card modal. Falls through to the client-detail handler
+  // if the schedule task isn't seeded into kanban data.
+  document.addEventListener('click', function(e) {
+    var weekTask = e.target.closest('.week-task');
+    if (!weekTask) return;
+    var taskId = weekTask.getAttribute('data-id');
+    var D = window.PROJECTFLOW_DATA;
+    var serviceId = (D && D.scheduleTaskMap) ? D.scheduleTaskMap[taskId] : null;
+    if (!serviceId) return; // fall through to client-detail handler below
+    e.preventDefault();
+    e.stopImmediatePropagation(); // prevent the client-detail handler from also firing
+    var newHash = '#board/' + serviceId;
+    // Use location.hash (not pushState) so the kanban re-render listener fires.
+    if (window.location.hash !== newHash) {
+      window.location.hash = newHash;
+    } else {
+      routeToView('board');
+    }
+    // Wait for the kanban renderer to draw cards for this service.
+    setTimeout(function(){
+      var card = document.querySelector('.view-board .card[data-card-id="' + CSS.escape(taskId) + '"]');
+      if (card && typeof openCardPanel === 'function') openCardPanel(card);
+    }, 220);
+  });
+
   // Links into client detail (from directory rows, pinned strip, Cmd+K etc.)
   document.addEventListener('click', function(e) {
     var a = e.target.closest('a[data-client-id], [data-client-id][role="link"]');
@@ -15219,6 +15245,31 @@ document.addEventListener('keydown', function(e) {
     website: ['Sitemap & wireframe approval','Homepage hero build','Case study template','Navigation redesign','CMS migration plan','Accessibility audit','Performance optimization','Staging QA pass','Analytics event mapping','Launch-day checklist']
   };
 
+  /* Schedule seeds — every <a class="week-task"> in the Overview Schedule
+     becomes a real kanban card on the matching client/service board.
+     `pool` names the preferred service templateKey; if that pool isn't
+     among the client's actual services, the task lands on svc-0. */
+  var SCHEDULE_SEEDS = [
+    { id: 'seo-audit',            clientId: 'techstart-inc',   pool: 'contentSEO', title: 'TechStart SEO audit final delivery',           columnId: 'review',     priority: 'urgent', severity: 'warning', dueDate: '2026-04-13' },
+    { id: 'bloom-deck',           clientId: 'bloom-retail',    pool: 'email',      title: 'Bloom Retail reporting deck',                   columnId: 'review',     priority: 'high',   severity: 'warning', dueDate: '2026-04-13' },
+    { id: 'polaris-kickoff',      clientId: 'polaris-aero',    pool: 'contentSEO', title: 'Polaris Aero kickoff meeting',                  columnId: 'done',       priority: 'medium', dueDate: '2026-04-14' },
+    { id: 'vertex-scope',         clientId: 'vertex-finance',  pool: 'launch',     title: 'Vertex Finance scope change decision',          columnId: 'inprogress', priority: 'urgent', severity: 'warning', dueDate: '2026-04-15' },
+    { id: 'echo-api',             clientId: 'echo-voiceai',    pool: 'demandgen',  title: 'Echo Voice AI API credentials follow-up',       columnId: 'todo',       priority: 'medium', dueDate: '2026-04-15' },
+    { id: 'acme-wireframes',      clientId: 'acme-corp',       pool: 'contentSEO', title: 'Acme wireframes v3 internal review',            columnId: 'inprogress', priority: 'high',   dueDate: '2026-04-15' },
+    { id: 'bloom-q2',             clientId: 'bloom-retail',    pool: 'seasonal',   title: 'Bloom Retail Q2 plan — team alignment',         columnId: 'inprogress', priority: 'medium', dueDate: '2026-04-15' },
+    { id: 'summit-calendar',      clientId: 'summit-outdoor',  pool: 'paidSocial', title: 'Summit Outdoor content calendar sign-off',      columnId: 'review',     priority: 'medium', dueDate: '2026-04-15' },
+    { id: 'riverbank-sow',        clientId: 'riverbank-law',   pool: 'linkedin',   title: 'Riverbank Law SOW draft review',                columnId: 'todo',       priority: 'high',   dueDate: '2026-04-15' },
+    { id: 'acme-review',          clientId: 'acme-corp',       pool: 'cro',        title: 'Acme design review — stakeholder walkthrough',  columnId: 'inprogress', priority: 'high',   dueDate: '2026-04-16' },
+    { id: 'acme-launch',          clientId: 'acme-corp',       pool: 'cro',        title: 'Acme website launch target',                    columnId: 'inprogress', priority: 'urgent', severity: 'warning', dueDate: '2026-04-17' },
+    { id: 'bloom-ads',            clientId: 'bloom-retail',    pool: 'cro',        title: 'Bloom Retail paid ads — performance report',    columnId: 'inprogress', priority: 'medium', dueDate: '2026-04-17' },
+    { id: 'nw-bloom-retro',       clientId: 'bloom-retail',    pool: 'seasonal',   title: 'Bloom Retail campaign retro',                   columnId: 'todo',       priority: 'medium', dueDate: '2026-04-20' },
+    { id: 'nw-polaris-checkin',   clientId: 'polaris-aero',    pool: 'contentSEO', title: 'Polaris Aero 1-week check-in',                  columnId: 'todo',       priority: 'low',    dueDate: '2026-04-21' },
+    { id: 'nw-summit-publish',    clientId: 'summit-outdoor',  pool: 'paidSocial', title: 'Summit Outdoor May content goes live',          columnId: 'todo',       priority: 'medium', dueDate: '2026-04-21' },
+    { id: 'nw-acme-revisions',    clientId: 'acme-corp',       pool: 'contentSEO', title: 'Acme design revisions due',                     columnId: 'todo',       priority: 'high',   dueDate: '2026-04-22' },
+    { id: 'nw-riverbank-kickoff', clientId: 'riverbank-law',   pool: 'linkedin',   title: 'Riverbank Law project kickoff',                 columnId: 'todo',       priority: 'medium', dueDate: '2026-04-23' },
+    { id: 'nw-vertex-delivery',   clientId: 'vertex-finance',  pool: 'launch',     title: 'Vertex Finance mobile module spec delivery',    columnId: 'todo',       priority: 'high',   dueDate: '2026-04-24' }
+  ];
+
   var AM_COLORS = { NT: '#5e5ce6', KC: '#ff375f', MA: '#ff9f0a', DR: '#30d158', JP: '#64d2ff' };
 
   function extractAM(row){
@@ -15333,9 +15384,34 @@ document.addEventListener('keydown', function(e) {
     clients.push(client);
   });
 
+  /* Inject schedule seeds as real kanban cards. Each seed lands on the
+     service whose templateKey matches `pool`; if none, it falls back to
+     svc-0 of that client. The id-to-serviceId map is exposed so the
+     schedule click handler can route to the correct board. */
+  var scheduleTaskMap = {};
+  var clientById = {};
+  clients.forEach(function(c){ clientById[c.id] = c; });
+  SCHEDULE_SEEDS.forEach(function(seed){
+    var clientServices = services.filter(function(s){ return s.clientId === seed.clientId; });
+    if (!clientServices.length) return;
+    var target = clientServices.filter(function(s){ return s.templateKey === seed.pool; })[0] || clientServices[0];
+    var amId = (clientById[seed.clientId] || {}).amId || null;
+    var task = {
+      id: seed.id, serviceId: target.id, clientId: seed.clientId,
+      title: seed.title, columnId: seed.columnId, priority: seed.priority,
+      assigneeId: amId, labels: [],
+      dueDate: seed.dueDate, createdAt: daysFromToday(-7)
+    };
+    if (seed.severity) task.severity = seed.severity;
+    tasks.push(task);
+    target.taskIds.push(seed.id);
+    scheduleTaskMap[seed.id] = target.id;
+  });
+
   window.PROJECTFLOW_DATA = {
     clients: clients, services: services, tasks: tasks,
-    members: members, integrations: integrations, today: TODAY
+    members: members, integrations: integrations, today: TODAY,
+    scheduleTaskMap: scheduleTaskMap
   };
 })();
 </script>
