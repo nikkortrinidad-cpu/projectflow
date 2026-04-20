@@ -257,7 +257,7 @@
 
   /* BREADCRUMB BAR */
   .breadcrumb-bar {
-    padding: 16px 32px;
+    padding: 12px 32px;
     background: var(--bg);
     border-bottom: 1px solid var(--hairline-soft);
     display: flex; align-items: center; justify-content: space-between;
@@ -265,31 +265,34 @@
     transition: background 0.3s, border-color 0.3s;
   }
   .breadcrumb {
-    font-size: 14px; color: var(--text-soft);
-    letter-spacing: -0.01em;
+    font-size: 13px; color: var(--text-soft);
+    letter-spacing: -0.005em;
   }
   .breadcrumb ol {
     list-style: none;
     padding: 0; margin: 0;
-    display: flex; align-items: center; gap: 10px;
+    display: flex; align-items: center; gap: 6px;
   }
   .breadcrumb li {
-    display: flex; align-items: center; gap: 10px;
+    display: flex; align-items: center; gap: 6px;
   }
   .breadcrumb li + li::before {
     content: '\203A';
     color: var(--text-faint);
-    font-size: 14px;
+    font-size: 13px;
     line-height: 1;
+    font-weight: 400;
   }
   .breadcrumb a {
     color: var(--text-muted); text-decoration: none;
     font-weight: 500;
-    transition: color 0.15s;
+    padding: 3px 6px; border-radius: 6px;
+    transition: background 0.15s, color 0.15s;
   }
-  .breadcrumb a:hover { color: var(--text); }
+  .breadcrumb a:hover { background: var(--bg-soft); color: var(--text); }
   .breadcrumb [aria-current="page"] {
-    color: var(--text); font-weight: 600; letter-spacing: -0.015em;
+    color: var(--text); font-weight: 500; letter-spacing: -0.005em;
+    padding: 3px 0;
   }
 
   .board-actions { display: flex; gap: 8px; }
@@ -762,25 +765,6 @@
     background: var(--hover-tint);
   }
   .add-column.hidden { display: none; }
-
-  .nav-hint {
-    text-align: center;
-    padding: 18px;
-    color: var(--text-soft);
-    font-size: 13px;
-    flex-shrink: 0;
-    border-top: 1px solid var(--hairline-soft);
-    background: var(--bg);
-    letter-spacing: -0.005em;
-    transition: background 0.3s, border-color 0.3s, color 0.3s;
-  }
-  .nav-hint a {
-    color: var(--text);
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.15s;
-  }
-  .nav-hint a:hover { color: var(--accent); }
 
   /* Add forms (inline) */
   .add-column-form {
@@ -7991,8 +7975,8 @@
 <div class="breadcrumb-bar">
   <nav class="breadcrumb" aria-label="Breadcrumb">
     <ol>
-      <li><a href="01-clients-refined.html">Clients</a></li>
-      <li><a href="#">Acme Corporation</a></li>
+      <li><a href="#clients" data-view-target="clients">Clients</a></li>
+      <li><a href="#clients/acme-corp" data-view-target="clients">Acme Corporation</a></li>
       <li><span aria-current="page">Website Redesign</span></li>
     </ol>
   </nav>
@@ -8240,10 +8224,6 @@
        is the default; adding a new list is a deliberate action done via
        Board Settings → Lists. -->
 
-</div>
-
-<div class="nav-hint">
-  <a href="01-clients-refined.html">← Back to Clients</a> · This is your existing Kanban board, now scoped to a specific service
 </div>
 
 <!-- Card Detail Modal -->
