@@ -4645,13 +4645,26 @@
     border: 1px solid var(--hairline-soft);
     box-shadow: var(--shadow);
     display: grid;
-    grid-template-columns: 1.2fr 1px 1fr 1px 1fr 1px 1fr;
+    grid-template-columns: 1.2fr 1px 1fr 1px 1fr;
     gap: 32px;
     align-items: center;
     transition: background 0.3s, border-color 0.3s;
   }
   .health-divider { background: var(--hairline); height: 64px; width: 1px; }
   .health-cell { display: flex; align-items: center; gap: 18px; }
+  .health-cell.clickable {
+    cursor: pointer;
+    border-radius: 12px;
+    padding: 6px 10px;
+    margin: -6px -10px;
+    transition: background 0.15s ease;
+  }
+  .health-cell.clickable:hover { background: var(--hover-tint); }
+  .health-cell.clickable:focus-visible {
+    outline: 2px solid var(--hover-blue);
+    outline-offset: 2px;
+    background: var(--hover-tint);
+  }
   .health-icon {
     width: 44px; height: 44px; border-radius: 12px;
     display: flex; align-items: center; justify-content: center;
@@ -5467,7 +5480,7 @@
   /* Responsive */
   @media (max-width: 960px) {
     .health-strip {
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, 1fr);
       gap: 28px;
     }
     .health-divider { display: none; }
@@ -6743,7 +6756,7 @@
       <div class="block-sub">Across 8 active clients</div>
     </div>
     <div class="health-strip">
-      <div class="health-cell">
+      <div class="health-cell clickable" role="button" tabindex="0" data-saved-view="fire" aria-label="View On Fire clients">
         <div class="health-icon alert" data-tip="Overdue or blocked — needs action now">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
         </div>
@@ -6754,7 +6767,7 @@
         </div>
       </div>
       <div class="health-divider"></div>
-      <div class="health-cell">
+      <div class="health-cell clickable" role="button" tabindex="0" data-saved-view="risk" aria-label="View At Risk clients">
         <div class="health-icon" data-tip="Behind schedule or approaching deadline">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         </div>
@@ -6773,17 +6786,6 @@
           <div class="health-label">On Track</div>
           <div class="health-value">5</div>
           <div class="health-sub">clients healthy</div>
-        </div>
-      </div>
-      <div class="health-divider"></div>
-      <div class="health-cell">
-        <div class="health-icon" data-tip="% of tasks delivered by their due date">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        </div>
-        <div>
-          <div class="health-label">Avg Delivery</div>
-          <div class="health-value">94<span class="unit">%</span></div>
-          <div class="health-sub">on schedule</div>
         </div>
       </div>
     </div>
@@ -14899,6 +14901,30 @@ document.addEventListener('keydown', function(e) {
     var parsed = parseHash();
     routeToView(parsed.view, parsed.id);
   })();
+
+  /* Portfolio Health → Clients saved-view drill-in */
+  function activateSavedView(viewId) {
+    if (window.location.hash !== '#clients') {
+      history.pushState(null, '', '#clients');
+    }
+    routeToView('clients');
+    var chip = document.querySelector('#savedViews .view-chip[data-view-id="' + viewId + '"]');
+    if (chip) chip.click();
+    window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+  }
+  document.addEventListener('click', function(e) {
+    var cell = e.target.closest('[data-saved-view]');
+    if (!cell) return;
+    e.preventDefault();
+    activateSavedView(cell.getAttribute('data-saved-view'));
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var cell = e.target.closest('[data-saved-view]');
+    if (!cell) return;
+    e.preventDefault();
+    activateSavedView(cell.getAttribute('data-saved-view'));
+  });
 })();
 </script>
 
