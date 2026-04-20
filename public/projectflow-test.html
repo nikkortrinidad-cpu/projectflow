@@ -6778,7 +6778,7 @@
         </div>
       </div>
       <div class="health-divider"></div>
-      <div class="health-cell">
+      <div class="health-cell clickable" role="button" tabindex="0" data-saved-view="track" aria-label="View On Track clients">
         <div class="health-icon" data-tip="Delivering on time, no blockers">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
@@ -7191,6 +7191,7 @@
       <button class="view-chip" data-view-id="mine" role="tab" aria-selected="false">Assigned to me <span class="view-chip-count" id="svCount-mine">0</span></button>
       <button class="view-chip" data-view-id="fire" role="tab" aria-selected="false">On Fire <span class="view-chip-count" id="svCount-fire">0</span></button>
       <button class="view-chip" data-view-id="risk" role="tab" aria-selected="false">At Risk <span class="view-chip-count" id="svCount-risk">0</span></button>
+      <button class="view-chip" data-view-id="track" role="tab" aria-selected="false">On Track <span class="view-chip-count" id="svCount-track">0</span></button>
       <button class="view-chip" data-view-id="renewing" role="tab" aria-selected="false">Renewing soon <span class="view-chip-count" id="svCount-renewing">0</span></button>
       <button class="view-chip" data-view-id="onboard" role="tab" aria-selected="false">Onboarding <span class="view-chip-count" id="svCount-onboard">0</span></button>
       <button class="view-chip new-view" data-tip="Create a custom view" data-tip-pos="above" aria-label="Create a custom view">+</button>
@@ -15191,6 +15192,7 @@ document.addEventListener('keydown', function(e) {
     mine:     function(c) { return c.amInit === 'NT'; },
     fire:     function(c) { return c.statusClass === 'fire'; },
     risk:     function(c) { return c.statusClass === 'risk'; },
+    track:    function(c) { return c.statusClass === 'track'; },
     renewing: function(c) { return ['acme-corp','cascade-coffee'].indexOf(c.id) !== -1; },
     onboard:  function(c) { return c.statusClass === 'onboard'; }
   };
