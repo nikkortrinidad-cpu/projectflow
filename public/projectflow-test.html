@@ -15223,7 +15223,7 @@ document.addEventListener('keydown', function(e) {
         };
         if (status === 'fire' && si === 0 && ti === 0) {
           task.severity = 'critical'; task.priority = 'urgent';
-          task.columnId = (seed % 2) ? 'todo' : 'inprogress';
+          task.columnId = 'blocked';
           task.dueDate = daysFromToday(-(((seed) % 9) + 1));
           task.blockerReason = pick(['Waiting on client feedback','Missing creative assets','Legal review pending','Budget approval stalled'], seed % 4);
         } else if (status === 'risk' && col === 'inprogress' && ti < 2) {
@@ -15785,6 +15785,178 @@ document.addEventListener('keydown', function(e) {
     document.addEventListener('DOMContentLoaded', render);
   } else {
     render();
+  }
+})();
+</script>
+
+<script>
+/* Phase 4: Kanban board renderer — cards come from PROJECTFLOW_DATA.tasks */
+(function(){
+  var D = window.PROJECTFLOW_DATA;
+  if (!D || !D.tasks || !D.services || !D.clients) return;
+
+  var COL_TO_DOT = {
+    todo: 'todo', inprogress: 'progress', blocked: 'blocked',
+    review: 'review', done: 'done'
+  };
+  var POOL_LABEL = {
+    demandgen: 'Demand Gen', contentSEO: 'SEO', launch: 'Launch', cro: 'CRO',
+    paidSocial: 'Paid Social', email: 'Email', seasonal: 'Campaign',
+    localSEO: 'Local SEO', paidLead: 'Ads', reputation: 'Reputation',
+    social: 'Social', photo: 'Photo', linkedin: 'LinkedIn', website: 'Website'
+  };
+  var PRIORITY_LABEL = { urgent: 'Urgent', high: 'Priority' };
+  var HELPER_POOL = ['jc','sc','cp','ma','jcv','nt'];
+
+  function h(s){ var x=0; for(var i=0;i<s.length;i++) x=((x<<5)-x+s.charCodeAt(i))|0; return Math.abs(x); }
+  function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  function pickService(){
+    var acme = D.clients.filter(function(c){ return c.id === 'acme-corp'; })[0];
+    var client = acme || D.clients[0];
+    return D.services.filter(function(s){ return s.clientId === client.id; })[0];
+  }
+
+  function toDate(v){
+    if (!v) return null;
+    if (v instanceof Date) return v;
+    return new Date(String(v) + 'T00:00:00');
+  }
+  function fmtDate(s){
+    var d = toDate(s); if (!d || isNaN(d)) return '';
+    var M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return M[d.getMonth()] + ' ' + d.getDate();
+  }
+  function daysBetween(a, b){
+    var da = toDate(a), db = toDate(b);
+    if (!da || !db || isNaN(da) || isNaN(db)) return 0;
+    return Math.round((da - db) / 86400000);
+  }
+
+  var ICON_CLOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+  var ICON_BLOCKED = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>';
+  var ICON_DATE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+  var ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  var ICON_COMMENT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+  var ICON_ATTACH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>';
+
+  function dueBadge(task, today){
+    if (task.columnId === 'done') {
+      return '<div class="card-due">' + ICON_CHECK + esc(fmtDate(task.dueDate)) + '</div>';
+    }
+    if (task.columnId === 'blocked') {
+      var age = Math.max(1, daysBetween(today, task.createdAt || task.dueDate));
+      return '<div class="card-due due-blocked">' + ICON_BLOCKED + 'Blocked · ' + age + 'd</div>';
+    }
+    var diff = daysBetween(task.dueDate, today);
+    if (diff < 0) return '<div class="card-due due-overdue">' + ICON_CLOCK + 'Overdue ' + (-diff) + 'd</div>';
+    if (diff === 0) return '<div class="card-due due-soon">' + ICON_DATE + 'Today</div>';
+    if (diff <= 3) return '<div class="card-due due-soon">' + ICON_DATE + esc(fmtDate(task.dueDate)) + '</div>';
+    return '<div class="card-due">' + ICON_DATE + esc(fmtDate(task.dueDate)) + '</div>';
+  }
+
+  function labelPills(task, service){
+    var html = '<span class="card-label">' + esc(POOL_LABEL[service.templateKey] || 'Work') + '</span>';
+    if (PRIORITY_LABEL[task.priority]) html += '<span class="card-label">' + PRIORITY_LABEL[task.priority] + '</span>';
+    return html;
+  }
+
+  function assigneeList(task){
+    var ids = [];
+    if (task.assigneeId) ids.push(task.assigneeId);
+    var helper = HELPER_POOL[h(task.id) % HELPER_POOL.length];
+    if (helper !== task.assigneeId) ids.push(helper);
+    return ids;
+  }
+
+  function ensureMemberExists(id){
+    if (!window.BOARD_MEMBERS) return null;
+    for (var i = 0; i < BOARD_MEMBERS.length; i++) if (BOARD_MEMBERS[i].id === id) return BOARD_MEMBERS[i];
+    var am = (D.members || []).filter(function(m){ return m.id === id; })[0];
+    if (am) { BOARD_MEMBERS.push({ id: am.id, initials: am.initials, name: am.name }); return BOARD_MEMBERS[BOARD_MEMBERS.length-1]; }
+    return null;
+  }
+
+  function primaryInitials(ids){
+    var pm = ensureMemberExists(ids[0]);
+    return pm ? pm.initials : (ids[0] || '?').toUpperCase();
+  }
+
+  function buildCard(task, service, client, today){
+    var ids = assigneeList(task);
+    ids.forEach(ensureMemberExists);
+    var seed = h(task.id);
+    var comments = seed % 7;
+    var attach = (seed >> 3) % 4;
+    var cls = 'card' + (task.columnId === 'done' ? ' is-done' : '');
+    var desc = task.blockerReason
+      ? task.blockerReason + '. ' + service.name + ' — ' + client.name + '.'
+      : service.name + ' for ' + client.name + '.';
+    var metaInner = '';
+    if (comments > 0) metaInner += '<span>' + ICON_COMMENT + comments + '</span>';
+    if (attach > 0) metaInner += '<span>' + ICON_ATTACH + attach + '</span>';
+
+    return '<div class="' + cls + '"' +
+      ' data-card-id="' + esc(task.id) + '"' +
+      ' data-priority="' + esc(task.priority) + '"' +
+      ' data-assignees="' + esc(ids.join(',')) + '"' +
+      ' data-description="' + esc(desc) + '"' +
+      ' data-due-date="' + esc(task.dueDate) + '"' +
+      ' data-start-date="' + esc(task.createdAt) + '"' +
+      ' data-client-id="' + esc(task.clientId) + '"' +
+      ' data-service-id="' + esc(task.serviceId) + '"' +
+      '>' +
+      '<div class="card-top">' +
+        '<div class="card-labels">' + labelPills(task, service) + '</div>' +
+        dueBadge(task, today) +
+      '</div>' +
+      '<div class="card-title">' + esc(task.title) + '</div>' +
+      '<div class="card-footer">' +
+        '<div class="card-meta">' + metaInner + '</div>' +
+        '<div class="card-assignee">' + esc(primaryInitials(ids)) + '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderBoard(){
+    var service = pickService();
+    if (!service) return;
+    var client = D.clients.filter(function(c){ return c.id === service.clientId; })[0];
+    if (!client) return;
+
+    var crumbs = document.querySelectorAll('.view-board .breadcrumb li');
+    if (crumbs.length >= 3) {
+      crumbs[1].innerHTML = '<a href="#clients/' + esc(client.id) + '">' + esc(client.name) + '</a>';
+      crumbs[2].innerHTML = '<span aria-current="page">' + esc(service.name) + '</span>';
+    }
+
+    var byCol = { todo: [], inprogress: [], blocked: [], review: [], done: [] };
+    D.tasks.forEach(function(t){
+      if (t.serviceId === service.id && byCol[t.columnId]) byCol[t.columnId].push(t);
+    });
+
+    Object.keys(COL_TO_DOT).forEach(function(colKey){
+      var col = document.querySelector('.view-board .column[data-dot="' + COL_TO_DOT[colKey] + '"]');
+      if (!col) return;
+      var cardsWrap = col.querySelector('.column-cards');
+      if (!cardsWrap) return;
+      var addBtn = cardsWrap.querySelector('.add-card-btn');
+      cardsWrap.innerHTML = '';
+      byCol[colKey].forEach(function(t){
+        cardsWrap.insertAdjacentHTML('beforeend', buildCard(t, service, client, D.today));
+      });
+      if (addBtn) cardsWrap.appendChild(addBtn);
+      var countEl = col.querySelector('.column-count');
+      if (countEl) countEl.textContent = String(byCol[colKey].length);
+    });
+
+    if (typeof initCardTiles === 'function') initCardTiles();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderBoard);
+  } else {
+    renderBoard();
   }
 })();
 </script>
