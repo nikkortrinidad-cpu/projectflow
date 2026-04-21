@@ -8552,16 +8552,20 @@
     white-space: nowrap;
   }
   .list-pane-add-btn {
-    width: 28px; height: 28px;
-    display: inline-flex; align-items: center; justify-content: center;
+    height: 30px;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 0 12px 0 10px;
     background: var(--highlight); color: #fff;
     border: 0; border-radius: 8px;
+    font: inherit; font-size: 12.5px; font-weight: 500;
+    letter-spacing: -0.005em;
     cursor: pointer; flex-shrink: 0;
+    white-space: nowrap;
     transition: opacity 0.15s, transform 0.1s;
   }
   .list-pane-add-btn:hover { opacity: 0.9; }
-  .list-pane-add-btn:active { transform: scale(0.94); }
-  .list-pane-add-btn svg { width: 14px; height: 14px; }
+  .list-pane-add-btn:active { transform: scale(0.97); }
+  .list-pane-add-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
 
   /* Just-added row highlight (fires after new client save) */
   .client-row.just-added {
@@ -9257,8 +9261,9 @@
       <input id="clientsSearchInput" type="search" placeholder="Search clients" aria-label="Search clients">
     </label>
     <div class="list-pane-count" id="clientsCountChip">50</div>
-    <button type="button" class="list-pane-add-btn" data-new-client-btn data-tip="New client" data-tip-pos="below-end" aria-label="New client">
+    <button type="button" class="list-pane-add-btn" data-new-client-btn aria-label="Add client">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>Add client</span>
     </button>
   </div>
 
