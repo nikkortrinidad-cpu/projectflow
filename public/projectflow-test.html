@@ -6186,7 +6186,7 @@
   .client-detail-page[data-active-tab="overview"] .detail-section[data-tab]:not([data-tab~="overview"]) { display: none; }
   .client-detail-page[data-active-tab="about"] .detail-section:not([data-tab~="about"]) { display: none; }
   .client-detail-page[data-active-tab="notes"] .detail-section:not([data-tab~="notes"]) { display: none; }
-  .client-detail-page[data-active-tab="team"] .detail-section:not([data-tab~="team"]) { display: none; }
+  .client-detail-page[data-active-tab="touchpoints"] .detail-section:not([data-tab~="touchpoints"]) { display: none; }
   .client-detail-page[data-active-tab="stats"] .detail-section:not([data-tab~="stats"]) { display: none; }
   .client-detail-page[data-active-tab="onboarding"] .detail-section:not([data-tab~="onboarding"]) { display: none; }
 
@@ -8535,8 +8535,8 @@
       <button class="client-tab" role="tab" type="button" data-tab-target="notes" aria-selected="false">
         Notes
       </button>
-      <button class="client-tab" role="tab" type="button" data-tab-target="team" aria-selected="false">
-        Team
+      <button class="client-tab" role="tab" type="button" data-tab-target="touchpoints" aria-selected="false">
+        Touchpoints
       </button>
       <button class="client-tab" role="tab" type="button" data-tab-target="stats" aria-selected="false">
         Stats
@@ -8704,20 +8704,27 @@
         </div>
 
       </div>
+    </div>
 
-      <!-- MEETINGS — paper trail with TL;DRs + action items -->
+    <!-- TOUCHPOINTS — dedicated tab for meeting paper trail + action items -->
+    <div class="detail-section" data-section-id="acme-touchpoints" data-tab="touchpoints">
+      <div class="detail-section-header">
+        <div class="detail-section-title">Touchpoints</div>
+        <div class="detail-section-sub">Avg cadence 8 days · Next sync Apr 22</div>
+      </div>
+
+      <!-- Meetings/touchpoints paper trail with TL;DRs + action items -->
       <div class="meetings-section">
         <div class="meetings-header">
           <div class="meetings-header-left">
-            <div class="meetings-title">Meetings</div>
             <span class="meetings-cadence">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              Avg cadence 8 days · 12 meetings this quarter
+              12 touchpoints this quarter · 4 open action items
             </span>
           </div>
           <button class="meetings-log-btn" data-log-meeting type="button">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Log meeting
+            Log touchpoint
           </button>
         </div>
 
@@ -8889,14 +8896,14 @@
 
         </div>
 
-        <a href="#" class="meetings-view-all" data-view-all-meetings>View all 12 meetings →</a>
+        <a href="#" class="meetings-view-all" data-view-all-meetings>View all 12 touchpoints →</a>
 
       </div>
 
     </div>
 
-    <!-- TEAM -->
-    <div class="detail-section" data-section-id="acme-team" data-tab="team">
+    <!-- TEAM (lives under About tab) -->
+    <div class="detail-section" data-section-id="acme-team" data-tab="about">
       <div class="detail-section-header">
         <div class="detail-section-title">Team</div>
         <div class="detail-section-sub">6 people assigned</div>
@@ -18616,7 +18623,7 @@ window.OPS_TEAM = OPS_TEAM;
 
     document.querySelectorAll('[data-log-meeting]').forEach(function(btn){
       btn.addEventListener('click', function(){
-        if (window.showToast) window.showToast('Log meeting flow — coming soon', { duration: 1800 });
+        if (window.showToast) window.showToast('Log touchpoint flow — coming soon', { duration: 1800 });
       });
     });
 
@@ -18630,7 +18637,7 @@ window.OPS_TEAM = OPS_TEAM;
     document.querySelectorAll('[data-view-all-meetings]').forEach(function(link){
       link.addEventListener('click', function(e){
         e.preventDefault();
-        if (window.showToast) window.showToast('Full meetings log — coming soon', { duration: 1800 });
+        if (window.showToast) window.showToast('Full touchpoint log — coming soon', { duration: 1800 });
       });
     });
   }
