@@ -9323,6 +9323,146 @@
     letter-spacing: -0.003em;
   }
 
+  /* Add Service modal */
+  .as-modal {
+    width: min(900px, 95vw);
+    max-height: 88vh;
+    display: flex; flex-direction: column;
+  }
+  .as-modal-body {
+    display: flex; gap: 0;
+    flex: 1; min-height: 0;
+    margin-top: 14px;
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--bg-elev);
+  }
+  .as-picker {
+    flex: 0 0 300px;
+    border-right: 1px solid var(--hairline);
+    overflow-y: auto;
+    padding: 8px;
+    background: var(--bg-soft);
+  }
+  .as-template-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 10px; border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.1s;
+    border: 1px solid transparent;
+  }
+  .as-template-row:hover { background: var(--bg-elev); }
+  .as-template-row.selected {
+    background: var(--bg-elev);
+    border-color: var(--highlight);
+    box-shadow: 0 0 0 1px var(--highlight) inset;
+  }
+  .as-template-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    background: var(--bg-elev); color: var(--text-muted);
+    border: 1px solid var(--hairline-soft);
+  }
+  .as-template-icon svg { width: 16px; height: 16px; }
+  .as-template-info { flex: 1; min-width: 0; }
+  .as-template-name {
+    font-size: 13.5px; font-weight: 500; color: var(--text);
+    letter-spacing: -0.005em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .as-template-meta {
+    font-size: 11.5px; color: var(--text-faint);
+    margin-top: 1px;
+  }
+  .as-preview {
+    flex: 1; min-width: 0;
+    overflow-y: auto;
+    padding: 20px 22px;
+  }
+  .as-preview-title {
+    font-size: 18px; font-weight: 600;
+    letter-spacing: -0.012em; color: var(--text);
+  }
+  .as-preview-category {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 3px 10px; border-radius: 980px;
+    background: var(--bg-soft);
+    font-size: 11.5px; font-weight: 500;
+    color: var(--text-muted);
+  }
+  .as-preview-section { margin-top: 18px; }
+  .as-preview-section-title {
+    font-size: 10.5px; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .as-preview-chips {
+    display: flex; flex-wrap: wrap; gap: 5px;
+  }
+  .as-preview-chip {
+    padding: 4px 10px; border-radius: 6px;
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline-soft);
+    font-size: 12px; color: var(--text-muted);
+  }
+  .as-preview-list {
+    display: flex; flex-direction: column; gap: 4px;
+    font-size: 12.5px; color: var(--text-muted);
+  }
+  .as-preview-list-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 4px 0;
+  }
+  .as-preview-list-item .dot {
+    width: 13px; height: 13px; border-radius: 3px;
+    background: var(--bg-elev);
+    border: 1.5px solid var(--hairline);
+    box-sizing: border-box;
+    flex-shrink: 0;
+  }
+  .as-preview-group-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--status-risk);
+    margin: 8px 0 4px;
+  }
+  .as-preview-group-label.from-us { color: var(--status-track); }
+  .as-form-row {
+    display: flex; gap: 12px;
+    margin-top: 14px;
+  }
+  .as-form-field { flex: 1; min-width: 0; }
+  .as-form-field label {
+    display: block;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.03em;
+    text-transform: uppercase; color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .as-form-field input,
+  .as-form-field select {
+    width: 100%;
+    padding: 9px 12px; border-radius: 8px;
+    border: 1px solid var(--hairline);
+    background: var(--bg-elev); color: var(--text);
+    font-size: 13.5px;
+    font-family: inherit;
+    letter-spacing: -0.003em;
+  }
+  .as-form-field input:focus,
+  .as-form-field select:focus {
+    outline: none;
+    border-color: var(--highlight);
+    box-shadow: 0 0 0 3px rgba(10,132,255,0.15);
+  }
+  @media (max-width: 720px) {
+    .as-modal-body { flex-direction: column; }
+    .as-picker { flex: 0 0 auto; max-height: 200px; border-right: 0; border-bottom: 1px solid var(--hairline); }
+  }
+
   /* Activity log */
   .template-activity-list {
     display: flex; flex-direction: column; gap: 2px;
@@ -13869,6 +14009,43 @@
 </div>
 
 <!-- New Client modal — Stage 1 of onboarding lifecycle -->
+<div class="log-modal-overlay" data-add-service-modal aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="addServiceModalTitle">
+  <div class="log-modal as-modal" role="document">
+    <div class="log-modal-header">
+      <div>
+        <div class="log-modal-title" id="addServiceModalTitle">Add a service</div>
+      </div>
+      <button class="log-modal-close" data-add-service-close type="button" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="log-modal-subtitle">
+      Pick a template. Onboarding checklist and project brief fields fill in automatically.
+    </div>
+    <div class="as-modal-body">
+      <div class="as-picker" data-as-picker></div>
+      <div class="as-preview" data-as-preview></div>
+    </div>
+    <div class="as-form-row">
+      <div class="as-form-field">
+        <label for="addServiceName">Service display name</label>
+        <input id="addServiceName" type="text" data-as-field="name" autocomplete="off">
+      </div>
+      <div class="as-form-field" style="flex: 0 0 180px">
+        <label for="addServiceType">Type</label>
+        <select id="addServiceType" data-as-field="type">
+          <option value="project">Project</option>
+          <option value="retainer">Retainer</option>
+        </select>
+      </div>
+    </div>
+    <div class="log-modal-footer">
+      <button type="button" class="log-modal-cancel" data-add-service-close>Cancel</button>
+      <button type="button" class="log-modal-save" data-add-service-save>Add service</button>
+    </div>
+  </div>
+</div>
+
 <div class="log-modal-overlay" data-new-client-modal aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="newClientModalTitle">
   <div class="log-modal" role="document">
     <div class="log-modal-header">
@@ -13932,6 +14109,83 @@
 </div>
 
 <script>
+/* ═══════ PROJECTFLOW_TEMPLATES — catalog used by the Add Service picker
+   Mirrors the 5 hardcoded template panels (#templates/...). Editing
+   templates in the admin should one day update this map, but for now the
+   admin is read-only and this is the single source for service creation. */
+window.PROJECTFLOW_TEMPLATES = {
+  'web-design-full-stack': {
+    id: 'web-design-full-stack',
+    name: 'Web Design — Full Stack',
+    category: 'Web Development',
+    defaultType: 'project',
+    iconColor: 'logo-indigo',
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
+    phases: ['Discovery', 'IA & Wireframes', 'Visual Design', 'Development', 'QA', 'Launch'],
+    onboarding: {
+      fromClient: ['Domain registrar credentials', 'Hosting or CDN access', 'Brand kit — logos, fonts, colors', 'Content inventory spreadsheet'],
+      fromUs: ['Provision staging environment', 'Create GitHub repository', 'Install Analytics & Tag Manager']
+    },
+    briefFields: ['Goals', 'Target audience', 'Success metrics', 'Competitors', 'Must-keep features', 'Out of scope', 'Timeline milestones']
+  },
+  'seo-retainer-monthly': {
+    id: 'seo-retainer-monthly',
+    name: 'SEO Retainer — Monthly',
+    category: 'SEO',
+    defaultType: 'retainer',
+    iconColor: 'logo-green',
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>',
+    phases: ['Technical Audit', 'Keyword Strategy', 'On-page', 'Content Cadence', 'Link Building', 'Reporting'],
+    onboarding: {
+      fromClient: ['Google Search Console access', 'Google Analytics access', 'CMS admin login', 'Existing keyword tracking spreadsheet'],
+      fromUs: ['Set up rank tracker', 'Install crawl monitoring']
+    },
+    briefFields: ['Target geographies', 'Priority keywords', 'Competitors to monitor', 'Reporting cadence']
+  },
+  'content-8-articles': {
+    id: 'content-8-articles',
+    name: 'Content — 8 articles/mo',
+    category: 'Content',
+    defaultType: 'retainer',
+    iconColor: 'logo-purple',
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+    phases: ['Research', 'Outlines', 'Drafting', 'Review', 'Publishing', 'Distribution', 'Reporting'],
+    onboarding: {
+      fromClient: ['Editorial voice guide', 'Subject-matter contacts', 'CMS publishing credentials'],
+      fromUs: ['Set up editorial calendar', 'Configure grammar & plagiarism tooling', 'Agree on review SLAs']
+    },
+    briefFields: ['Tone & voice', 'Key topics', 'Distribution channels', 'SEO targets']
+  },
+  'brand-refresh': {
+    id: 'brand-refresh',
+    name: 'Brand Refresh',
+    category: 'Brand',
+    defaultType: 'project',
+    iconColor: 'logo-amber',
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c3.31 0 6-2.69 6-6 0-5.52-4.48-10-10-10z"/></svg>',
+    phases: ['Discovery interviews', 'Moodboards', 'Logo concepts', 'System design', 'Guidelines', 'Rollout kit'],
+    onboarding: {
+      fromClient: ['Existing brand history & assets', 'Leadership interviews scheduled', 'Reference brands & inspirations'],
+      fromUs: ['Set up moodboard workspace', 'Prepare interview script', 'Create style-tile template']
+    },
+    briefFields: ['Brand positioning', 'Audience shift', 'Competitive landscape', 'Must-preserve elements', 'Rollout timeline']
+  },
+  'paid-media': {
+    id: 'paid-media',
+    name: 'Paid Media — Always on',
+    category: 'Paid Media',
+    defaultType: 'retainer',
+    iconColor: 'logo-pink',
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>',
+    phases: ['Audit', 'Account structure', 'Creative', 'Tracking', 'Launch', 'Reporting'],
+    onboarding: {
+      fromClient: ['Ad account access (Meta, Google)', 'Conversion events mapped', 'Landing-page URLs', 'Creative asset library'],
+      fromUs: ['Install tracking pixels', 'Set up budget pacing dashboard', 'Configure UTM naming convention']
+    },
+    briefFields: ['Campaign goals', 'Audiences', 'Creative pillars', 'Exclusions', 'Budget pacing rules']
+  }
+};
+
 function toggleTheme() {
   var cur = document.documentElement.getAttribute('data-theme');
   var next = cur === 'dark' ? 'light' : 'dark';
@@ -23869,7 +24123,7 @@ window.OPS_TEAM = OPS_TEAM;
         '</div>' +
         '<div class="nc-empty-title">Add services to begin onboarding</div>' +
         '<div class="nc-empty-sub">Each service brings its own onboarding checklist and kanban board template. Onboarding starts once at least one service is added.</div>' +
-        '<button type="button" class="nc-empty-cta" data-tip="Service picker comes in Stage 2" data-tip-pos="below">' +
+        '<button type="button" class="nc-empty-cta" data-tip="Pick a service template" data-tip-pos="below">' +
           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>' +
           ' Add service' +
         '</button>' +
@@ -23995,6 +24249,240 @@ window.OPS_TEAM = OPS_TEAM;
       e.preventDefault(); save();
     }
   });
+})();
+
+/* ─── Add Service modal: template picker + service creation ─── */
+(function(){
+  var modal = document.querySelector('[data-add-service-modal]');
+  if (!modal) return;
+
+  var picker = modal.querySelector('[data-as-picker]');
+  var preview = modal.querySelector('[data-as-preview]');
+  var nameInput = modal.querySelector('[data-as-field="name"]');
+  var typeSelect = modal.querySelector('[data-as-field="type"]');
+
+  var currentClientId = null;
+  var currentTemplateId = null;
+
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function open(clientId){
+    currentClientId = clientId;
+    renderPicker();
+    var firstId = Object.keys(window.PROJECTFLOW_TEMPLATES)[0];
+    selectTemplate(firstId);
+    modal.setAttribute('data-open', 'true');
+    modal.setAttribute('aria-hidden', 'false');
+    setTimeout(function(){ nameInput.focus(); nameInput.select(); }, 30);
+  }
+
+  function close(){
+    modal.removeAttribute('data-open');
+    modal.setAttribute('aria-hidden', 'true');
+    currentClientId = null;
+    currentTemplateId = null;
+  }
+
+  function renderPicker(){
+    var T = window.PROJECTFLOW_TEMPLATES;
+    picker.innerHTML = Object.keys(T).map(function(id){
+      var t = T[id];
+      var onbCount = t.onboarding.fromClient.length + t.onboarding.fromUs.length;
+      return '<div class="as-template-row" data-as-template-id="' + id + '">' +
+        '<div class="as-template-icon ' + t.iconColor + '">' + t.iconSvg + '</div>' +
+        '<div class="as-template-info">' +
+          '<div class="as-template-name">' + esc(t.name) + '</div>' +
+          '<div class="as-template-meta">' + t.phases.length + ' phases · ' + onbCount + ' onboarding</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function selectTemplate(id){
+    currentTemplateId = id;
+    var t = window.PROJECTFLOW_TEMPLATES[id];
+    if (!t) return;
+    picker.querySelectorAll('.as-template-row').forEach(function(r){
+      r.classList.toggle('selected', r.getAttribute('data-as-template-id') === id);
+    });
+    nameInput.value = t.name;
+    typeSelect.value = t.defaultType;
+    renderPreview(t);
+  }
+
+  function renderPreview(t){
+    var phasesHtml = t.phases.map(function(p){ return '<div class="as-preview-chip">' + esc(p) + '</div>'; }).join('');
+    var briefHtml = t.briefFields.map(function(b){ return '<div class="as-preview-chip">' + esc(b) + '</div>'; }).join('');
+    var fcHtml = t.onboarding.fromClient.map(function(i){ return '<div class="as-preview-list-item"><span class="dot"></span>' + esc(i) + '</div>'; }).join('');
+    var fuHtml = t.onboarding.fromUs.map(function(i){ return '<div class="as-preview-list-item"><span class="dot"></span>' + esc(i) + '</div>'; }).join('');
+
+    preview.innerHTML =
+      '<div class="as-preview-title">' + esc(t.name) + '</div>' +
+      '<span class="as-preview-category">' + esc(t.category) + '</span>' +
+      '<div class="as-preview-section">' +
+        '<div class="as-preview-section-title">Phases</div>' +
+        '<div class="as-preview-chips">' + phasesHtml + '</div>' +
+      '</div>' +
+      '<div class="as-preview-section">' +
+        '<div class="as-preview-section-title">Onboarding checklist</div>' +
+        '<div class="as-preview-group-label">From client</div>' +
+        '<div class="as-preview-list">' + fcHtml + '</div>' +
+        '<div class="as-preview-group-label from-us">From us</div>' +
+        '<div class="as-preview-list">' + fuHtml + '</div>' +
+      '</div>' +
+      '<div class="as-preview-section">' +
+        '<div class="as-preview-section-title">Project brief fields</div>' +
+        '<div class="as-preview-chips">' + briefHtml + '</div>' +
+      '</div>';
+  }
+
+  function save(){
+    if (!currentTemplateId || !currentClientId) return;
+    var name = (nameInput.value || '').trim();
+    if (!name) { nameInput.focus(); return; }
+    var template = window.PROJECTFLOW_TEMPLATES[currentTemplateId];
+    addServiceToClient(currentClientId, {
+      template: template,
+      name: name,
+      type: typeSelect.value
+    });
+    close();
+  }
+
+  function addServiceToClient(clientId, svc){
+    var panel = document.querySelector('[data-client-panel="' + clientId + '"]');
+    if (!panel) return;
+
+    // Ensure Services section
+    var svcSection = panel.querySelector('[data-client-services]');
+    if (!svcSection) {
+      svcSection = document.createElement('div');
+      svcSection.className = 'detail-section';
+      svcSection.setAttribute('data-client-services', '');
+      svcSection.innerHTML =
+        '<div class="detail-section-header">' +
+          '<div class="detail-section-title">Active Services</div>' +
+          '<div class="detail-section-sub" data-services-sub>0 services</div>' +
+        '</div>' +
+        '<div class="services-list" data-services-list></div>';
+      var emptyState = panel.querySelector('.new-client-empty-state');
+      if (emptyState) {
+        emptyState.parentNode.insertBefore(svcSection, emptyState);
+        emptyState.remove();
+      } else {
+        var hero = panel.querySelector('.client-hero');
+        if (hero && hero.nextSibling) hero.parentNode.insertBefore(svcSection, hero.nextSibling);
+        else panel.appendChild(svcSection);
+      }
+    }
+    var svcList = svcSection.querySelector('[data-services-list]');
+
+    var serviceId = clientId + '-svc-' + Date.now().toString(36);
+    var typeClass = svc.type === 'retainer' ? 'retainer' : 'project';
+    var typeLabel = svc.type === 'retainer' ? 'Retainer' : 'Project';
+    var card = document.createElement('div');
+    card.className = 'service-card';
+    card.setAttribute('data-service-id', serviceId);
+    card.setAttribute('role', 'link');
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('aria-label', 'Open board for service');
+    card.innerHTML =
+      '<div class="service-icon ' + svc.template.iconColor + '">' + svc.template.iconSvg + '</div>' +
+      '<div class="service-card-body">' +
+        '<div class="service-name-row">' +
+          '<div class="service-name">' + esc(svc.name) + '</div>' +
+          '<span class="service-type ' + typeClass + '">' + typeLabel + '</span>' +
+        '</div>' +
+        '<div class="service-sub">Template: ' + esc(svc.template.name) + '<span class="sep">·</span>Onboarding in progress</div>' +
+      '</div>' +
+      '<div class="service-progress">' +
+        '<div class="service-progress-label"><span>Onboarding</span><strong>0%</strong></div>' +
+        '<div class="service-progress-bar"><div class="service-progress-fill" style="width:0%"></div></div>' +
+      '</div>' +
+      '<div class="service-actions">' +
+        '<button class="service-star" aria-label="Favorite board" data-tip="Favorite board" data-tip-pos="above-end">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' +
+        '</button>' +
+      '</div>';
+    svcList.appendChild(card);
+    var count = svcList.querySelectorAll('.service-card').length;
+    var sub = svcSection.querySelector('[data-services-sub]');
+    if (sub) sub.textContent = count + (count === 1 ? ' service' : ' services') + ' · Onboarding in progress';
+
+    // Ensure Onboarding section (after Services)
+    var onbSection = panel.querySelector('[data-client-onboarding]');
+    if (!onbSection) {
+      onbSection = document.createElement('div');
+      onbSection.className = 'detail-section';
+      onbSection.setAttribute('data-client-onboarding', '');
+      onbSection.innerHTML =
+        '<div class="detail-section-header">' +
+          '<div class="detail-section-title">Onboarding</div>' +
+          '<div class="detail-section-sub" data-onboarding-sub>0 / 0</div>' +
+        '</div>' +
+        '<div class="onboarding-panel">' +
+          '<div class="onboarding-checklist" data-onboarding-list></div>' +
+        '</div>';
+      svcSection.parentNode.insertBefore(onbSection, svcSection.nextSibling);
+    }
+    var onbList = onbSection.querySelector('[data-onboarding-list]');
+
+    function addItem(label){
+      var itm = document.createElement('div');
+      itm.className = 'onboarding-item';
+      itm.innerHTML = '<span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>' + esc(label);
+      onbList.appendChild(itm);
+    }
+    function addGroup(label){
+      var g = document.createElement('div');
+      g.className = 'onboarding-group-label';
+      g.textContent = label;
+      onbList.appendChild(g);
+    }
+
+    addGroup(svc.name + ' · From client');
+    svc.template.onboarding.fromClient.forEach(addItem);
+    addGroup(svc.name + ' · From us');
+    svc.template.onboarding.fromUs.forEach(addItem);
+
+    var total = onbList.querySelectorAll('.onboarding-item').length;
+    var done = onbList.querySelectorAll('.onboarding-item.done').length;
+    var onbSub = onbSection.querySelector('[data-onboarding-sub]');
+    if (onbSub) onbSub.textContent = done + ' / ' + total;
+
+    if (typeof window.showToast === 'function') {
+      window.showToast('Added ' + svc.name, { duration: 2200 });
+    }
+  }
+
+  document.addEventListener('click', function(e){
+    var cta = e.target.closest('.nc-empty-cta');
+    if (cta) {
+      e.preventDefault();
+      var panel = cta.closest('[data-client-panel]');
+      if (panel) open(panel.getAttribute('data-client-panel'));
+      return;
+    }
+    if (modal.getAttribute('data-open') !== 'true') return;
+    if (e.target.closest('[data-add-service-close]')) { close(); return; }
+    if (e.target.closest('[data-add-service-save]')) { save(); return; }
+    var row = e.target.closest('[data-as-template-id]');
+    if (row && modal.contains(row)) {
+      selectTemplate(row.getAttribute('data-as-template-id'));
+      return;
+    }
+    if (e.target === modal) { close(); }
+  });
+  document.addEventListener('keydown', function(e){
+    if (modal.getAttribute('data-open') !== 'true') return;
+    if (e.key === 'Escape') { e.preventDefault(); close(); }
+  });
+
+  window.openAddServiceModal = open;
 })();
 </script>
 
