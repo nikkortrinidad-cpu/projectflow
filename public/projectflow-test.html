@@ -5969,11 +5969,48 @@
   /* Sections (reuse .block pattern for consistency) */
   .detail-section {
     margin-bottom: 36px;
+    transition: margin-bottom 0.2s ease;
   }
+  .detail-section[data-collapsed="true"] { margin-bottom: 14px; }
   .detail-section-header {
-    display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
-    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 8px;
+    margin: -6px -8px 10px -8px;
+    border-radius: 8px;
+    transition: background 0.15s;
   }
+  .detail-section[data-section-id] > .detail-section-header {
+    cursor: pointer;
+    user-select: none;
+  }
+  .detail-section[data-section-id] > .detail-section-header:hover { background: var(--bg-soft); }
+  .detail-section[data-section-id] > .detail-section-header:focus-visible {
+    outline: none;
+    background: var(--bg-soft);
+    box-shadow: 0 0 0 2px var(--highlight-soft);
+  }
+  .detail-section[data-section-id] > .detail-section-header::before {
+    content: "";
+    width: 11px; height: 11px;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2386868b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    flex-shrink: 0;
+    transition: transform 0.2s ease, opacity 0.15s;
+    opacity: 0.55;
+  }
+  .detail-section[data-section-id] > .detail-section-header:hover::before { opacity: 1; }
+  .detail-section[data-collapsed="true"] > .detail-section-header::before {
+    transform: rotate(-90deg);
+  }
+  .detail-section[data-section-id] > .detail-section-header > *:last-child {
+    margin-left: auto;
+  }
+  .detail-section[data-collapsed="true"] > *:not(.detail-section-header) {
+    display: none;
+  }
+  .detail-section[data-collapsed="true"] > .detail-section-header { margin-bottom: 0; }
   .detail-section-title {
     font-size: 13px; font-weight: 600; color: var(--text);
     text-transform: uppercase; letter-spacing: 0.08em;
@@ -7558,7 +7595,7 @@
     </div>
 
     <!-- RELATIONSHIP -->
-    <div class="detail-section">
+    <div class="detail-section" data-section-id="acme-relationship">
       <div class="detail-section-header">
         <div class="detail-section-title">Relationship</div>
         <div class="detail-section-sub">Last touch Apr 14 · Next sync Apr 22</div>
@@ -7676,7 +7713,7 @@
     </div>
 
     <!-- NOTES -->
-    <div class="detail-section">
+    <div class="detail-section" data-section-id="acme-notes">
       <div class="detail-section-header">
         <div class="detail-section-title">Notes</div>
         <a href="#" class="detail-section-link">Edit →</a>
@@ -7699,7 +7736,7 @@
     </div>
 
     <!-- SERVICES -->
-    <div class="detail-section">
+    <div class="detail-section" data-section-id="acme-services">
       <div class="detail-section-header">
         <div class="detail-section-title">Active Services</div>
         <div class="detail-section-sub">3 of 3 · Onboarding complete</div>
@@ -7774,7 +7811,7 @@
     </div>
 
     <!-- DATA & INTEGRATIONS -->
-    <div class="detail-section">
+    <div class="detail-section" data-section-id="acme-integrations">
       <div class="detail-section-header">
         <div>
           <div class="detail-section-title">Data &amp; Integrations</div>
@@ -7862,43 +7899,8 @@
       </div>
     </div>
 
-    <!-- ONBOARDING -->
-    <div class="detail-section">
-      <div class="detail-section-header">
-        <div class="detail-section-title">Onboarding</div>
-        <div class="detail-section-sub">Completed Aug 24, 2023</div>
-      </div>
-      <div class="onboarding-panel complete">
-        <div class="onboarding-top">
-          <div class="onboarding-title-group">
-            <div class="onboarding-title">All steps complete</div>
-            <div class="onboarding-progress-bar"><div class="onboarding-progress-fill" style="width:100%"></div></div>
-            <div class="onboarding-progress-text">12 / 12</div>
-          </div>
-        </div>
-        <div class="onboarding-checklist">
-          <div class="onboarding-group-label">Universal</div>
-          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Signed contract uploaded</div>
-          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Billing account configured</div>
-          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Brand guidelines collected</div>
-          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Kickoff call completed</div>
-          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Production team briefed</div>
-          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Slack channel created</div>
-          <div class="onboarding-group-label">Web Design add-on</div>
-          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Hosting credentials received</div>
-          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Staging URL provisioned</div>
-          <div class="onboarding-group-label">SEO add-on</div>
-          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Google Analytics access granted</div>
-          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Search Console verified</div>
-          <div class="onboarding-group-label">Content add-on</div>
-          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Editorial calendar aligned</div>
-          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Voice &amp; tone doc approved</div>
-        </div>
-      </div>
-    </div>
-
     <!-- TEAM -->
-    <div class="detail-section">
+    <div class="detail-section" data-section-id="acme-team">
       <div class="detail-section-header">
         <div class="detail-section-title">Team</div>
         <div class="detail-section-sub">6 people assigned</div>
@@ -7950,7 +7952,7 @@
     </div>
 
     <!-- ACTIVITY -->
-    <div class="detail-section">
+    <div class="detail-section" data-section-id="acme-activity">
       <div class="detail-section-header">
         <div class="detail-section-title">Recent Activity</div>
         <a href="#" class="detail-section-link">View all →</a>
@@ -7980,6 +7982,41 @@
           <span class="activity-dot"></span>
           <div class="activity-text"><strong>Elena</strong> <span class="subject">deployed staging.acme.com v2.4.0</span></div>
           <span class="activity-time">Apr 15, 10:22 AM</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ONBOARDING (complete — collapsed by default, archive reference) -->
+    <div class="detail-section" data-section-id="acme-onboarding" data-collapsed="true">
+      <div class="detail-section-header">
+        <div class="detail-section-title">Onboarding</div>
+        <div class="detail-section-sub">Completed Aug 24, 2023 · 12 / 12</div>
+      </div>
+      <div class="onboarding-panel complete">
+        <div class="onboarding-top">
+          <div class="onboarding-title-group">
+            <div class="onboarding-title">All steps complete</div>
+            <div class="onboarding-progress-bar"><div class="onboarding-progress-fill" style="width:100%"></div></div>
+            <div class="onboarding-progress-text">12 / 12</div>
+          </div>
+        </div>
+        <div class="onboarding-checklist">
+          <div class="onboarding-group-label">Universal</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Signed contract uploaded</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Billing account configured</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Brand guidelines collected</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Kickoff call completed</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Production team briefed</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Slack channel created</div>
+          <div class="onboarding-group-label">Web Design add-on</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Hosting credentials received</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Staging URL provisioned</div>
+          <div class="onboarding-group-label">SEO add-on</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Google Analytics access granted</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Search Console verified</div>
+          <div class="onboarding-group-label">Content add-on</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Editorial calendar aligned</div>
+          <div class="onboarding-item done"><span class="onboarding-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Voice &amp; tone doc approved</div>
         </div>
       </div>
     </div>
@@ -8020,7 +8057,7 @@
   <section class="client-detail-page" data-client-panel="harvest-co" hidden>
     <nav class="detail-breadcrumb" aria-label="Breadcrumb"><a href="#clients" data-view-target="clients">Clients</a><span class="sep">/</span><span class="current">Harvest &amp; Co.</span></nav>
     <div class="client-hero"><div class="hero-logo logo-green">HC</div><div class="hero-body"><div class="hero-name-row"><div class="hero-name">Harvest &amp; Co.</div><span class="status-chip onboard"><span class="dot"></span>Onboarding</span></div><div class="hero-meta"><span class="hero-meta-item">Agriculture · D2C</span><span class="meta-dot"></span><span class="hero-meta-item"><span class="hero-am-avatar" style="background:#5e5ce6">NT</span>Nikko Trinidad</span></div></div></div>
-    <div class="detail-section"><div class="detail-section-header"><div class="detail-section-title">Onboarding</div><div class="detail-section-sub">8 of 12 complete — boards read-only to production until 100%</div></div>
+    <div class="detail-section" data-section-id="harvest-onboarding"><div class="detail-section-header"><div class="detail-section-title">Onboarding</div><div class="detail-section-sub">8 of 12 complete — boards read-only to production until 100%</div></div>
       <div class="onboarding-panel"><div class="onboarding-top"><div class="onboarding-title-group"><div class="onboarding-title">Onboarding in progress</div><div class="onboarding-progress-bar"><div class="onboarding-progress-fill" style="width:67%"></div></div><div class="onboarding-progress-text">8 / 12</div></div></div>
         <div class="onboarding-checklist">
           <div class="onboarding-group-label">Universal</div>
@@ -16718,6 +16755,75 @@ window.OPS_TEAM = OPS_TEAM;
     document.addEventListener('DOMContentLoaded', apply);
   } else {
     apply();
+  }
+})();
+</script>
+
+<script>
+/* Collapsible client-detail sections. Any .detail-section with a
+   data-section-id is wired up; state persists per-section in localStorage.
+   Initial state honors the HTML data-collapsed attribute (e.g. completed
+   Onboarding starts collapsed). Inner <a> or <button> clicks don't toggle. */
+(function(){
+  var STORAGE_KEY = 'projectflow-section-state';
+  function loadStored(){
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') || {}; }
+    catch (e) { return {}; }
+  }
+  function saveStored(obj){
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(obj)); } catch (e) {}
+  }
+  function init(){
+    var stored = loadStored();
+    var sections = document.querySelectorAll('.detail-section[data-section-id]');
+    sections.forEach(function(section){
+      var id = section.getAttribute('data-section-id');
+      var header = section.querySelector(':scope > .detail-section-header');
+      if (!header || !id) return;
+
+      var collapsed = (id in stored)
+        ? !!stored[id]
+        : section.getAttribute('data-collapsed') === 'true';
+
+      if (collapsed) section.setAttribute('data-collapsed', 'true');
+      else section.removeAttribute('data-collapsed');
+
+      header.setAttribute('role', 'button');
+      header.setAttribute('tabindex', '0');
+      header.setAttribute('aria-expanded', String(!collapsed));
+      header.setAttribute('aria-label',
+        (collapsed ? 'Expand' : 'Collapse') + ' ' + (section.querySelector('.detail-section-title')?.textContent || 'section')
+      );
+
+      function toggle(){
+        var nowCollapsed = section.getAttribute('data-collapsed') !== 'true';
+        if (nowCollapsed) section.setAttribute('data-collapsed', 'true');
+        else section.removeAttribute('data-collapsed');
+        header.setAttribute('aria-expanded', String(!nowCollapsed));
+        var title = section.querySelector('.detail-section-title')?.textContent || 'section';
+        header.setAttribute('aria-label', (nowCollapsed ? 'Expand' : 'Collapse') + ' ' + title);
+        var s = loadStored();
+        s[id] = nowCollapsed;
+        saveStored(s);
+      }
+
+      header.addEventListener('click', function(e){
+        // Let inner action links/buttons do their thing without toggling.
+        if (e.target.closest('a, button')) return;
+        toggle();
+      });
+      header.addEventListener('keydown', function(e){
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          toggle();
+        }
+      });
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
   }
 })();
 </script>
