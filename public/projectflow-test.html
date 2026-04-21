@@ -114,16 +114,16 @@
     transition: color 0.15s, background 0.15s;
   }
   .header-nav a:hover {
-    color: var(--highlight);
-    background: color-mix(in srgb, var(--highlight) 8%, transparent);
+    color: var(--text);
+    background: color-mix(in srgb, currentColor 6%, transparent);
   }
   .header-nav a.on {
-    color: var(--highlight);
-    background: color-mix(in srgb, var(--highlight) 12%, transparent);
+    color: var(--text);
+    background: var(--bg-soft);
     font-weight: 600;
   }
   .header-nav a.on:hover {
-    background: color-mix(in srgb, var(--highlight) 16%, transparent);
+    background: color-mix(in srgb, currentColor 10%, transparent);
   }
   .header-nav a.is-stub { display: inline-flex; align-items: center; gap: 6px; cursor: default; }
   .header-nav a.is-stub:hover {
