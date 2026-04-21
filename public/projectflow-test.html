@@ -5899,6 +5899,7 @@
 
   /* Hero */
   .client-hero {
+    position: relative;
     background: var(--bg-elev);
     border: 1px solid var(--hairline-soft);
     border-radius: 18px;
@@ -5910,6 +5911,25 @@
     margin-bottom: 28px;
     box-shadow: var(--shadow);
   }
+  .hero-kebab {
+    position: absolute;
+    top: 14px; right: 14px;
+    width: 30px; height: 30px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 980px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    z-index: 2;
+  }
+  .hero-kebab:hover {
+    background: var(--bg-soft);
+    border-color: var(--hairline-soft);
+    color: var(--text);
+  }
+  .hero-kebab svg { width: 14px; height: 14px; }
   .hero-logo {
     width: 72px; height: 72px; border-radius: 16px;
     display: flex; align-items: center; justify-content: center;
@@ -8835,10 +8855,10 @@
             </button>
           </div>
         </div>
-        <button class="hero-btn icon-only" aria-label="More options" data-tip="More options" data-tip-pos="below-end">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="12" r="1.5"/></svg>
-        </button>
       </div>
+      <button class="hero-kebab" aria-label="More options" data-tip="More options" data-tip-pos="below-end">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="12" r="1.5"/></svg>
+      </button>
     </div>
 
     <!-- CLIENT TABS -->
