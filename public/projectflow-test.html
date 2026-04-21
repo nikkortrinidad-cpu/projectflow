@@ -6469,6 +6469,366 @@
   .integration-row-label { color: var(--text-soft); }
   .integration-row-value { color: var(--text); font-feature-settings: "tnum"; font-weight: 500; }
 
+  /* ======================================================================
+     STATS TAB — PHASE 1
+     Unified multi-platform analytics hub. Apple UX: clarity, deference,
+     depth, direct manipulation, consistent card language across channels.
+     Grid system: 8px baseline, 14px card gap, 45–70 cpl labels.
+     ====================================================================== */
+  .stats-hub { display: flex; flex-direction: column; gap: 28px; }
+
+  .stats-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap;
+    padding: 14px 18px;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+  }
+  .stats-toolbar-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
+  .stats-sync {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--text-soft); letter-spacing: -0.005em;
+  }
+  .stats-sync-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--status-track);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--status-track) 22%, transparent);
+    animation: statsPulse 2.4s ease-in-out infinite;
+  }
+  @keyframes statsPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
+  .stats-sync-label { font-weight: 500; color: var(--text-muted); }
+  .stats-sync-sep { width: 3px; height: 3px; border-radius: 50%; background: var(--text-faint); }
+  .stats-sync-meta { color: var(--text-faint); font-variant-numeric: tabular-nums; }
+  .stats-refresh {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; border-radius: 9px;
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline-soft);
+    color: var(--text-muted); cursor: pointer;
+    transition: background 0.15s, color 0.15s, transform 0.3s;
+  }
+  .stats-refresh:hover { background: var(--bg-elev); color: var(--text); border-color: var(--hairline); }
+  .stats-refresh.spinning svg { animation: statsSpin 0.6s linear; }
+  @keyframes statsSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .stats-refresh svg { width: 14px; height: 14px; }
+
+  .stats-toolbar-right { display: flex; align-items: center; gap: 10px; }
+  .stats-range {
+    display: inline-flex; padding: 3px; gap: 2px;
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 10px;
+  }
+  .stats-range button {
+    border: 0; background: transparent;
+    padding: 6px 14px; border-radius: 7px;
+    color: var(--text-muted); font-size: 12px; font-weight: 500;
+    letter-spacing: -0.005em; cursor: pointer;
+    font-variant-numeric: tabular-nums;
+    transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+  }
+  .stats-range button:hover { color: var(--text); }
+  .stats-range button[data-active="true"] {
+    background: var(--bg-elev); color: var(--text);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.18), 0 0 0 1px var(--hairline-soft);
+  }
+  .stats-range-label {
+    font-size: 11px; color: var(--text-faint);
+    text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;
+  }
+
+  /* --- Hero summary: 4 roll-up KPIs across all channels --- */
+  .stats-hero-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+  }
+  .stats-hero-card {
+    position: relative;
+    padding: 18px 20px 14px;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    display: flex; flex-direction: column; gap: 10px;
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .stats-hero-card:hover { border-color: var(--hairline); }
+  .stats-hero-label {
+    font-size: 11px; font-weight: 600; color: var(--text-faint);
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .stats-hero-value-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .stats-hero-value {
+    font-size: 28px; font-weight: 600; color: var(--text);
+    letter-spacing: -0.022em; line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .stats-hero-delta {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 12px; font-weight: 600; color: var(--status-track);
+    font-variant-numeric: tabular-nums; letter-spacing: -0.005em;
+  }
+  .stats-hero-delta.bad { color: var(--status-fire); }
+  .stats-hero-delta svg { width: 10px; height: 10px; }
+  .stats-hero-foot {
+    font-size: 11px; color: var(--text-faint); letter-spacing: -0.005em;
+  }
+  .stats-hero-spark {
+    height: 32px; width: 100%; display: block; margin-top: 2px;
+  }
+  .stats-hero-spark .line {
+    fill: none; stroke: currentColor; stroke-width: 1.6;
+    stroke-linejoin: round; stroke-linecap: round;
+  }
+  .stats-hero-spark .area { fill: currentColor; opacity: 0.14; }
+  .stats-hero-card[data-tone="spend"] { color: #5e5ce6; }
+  .stats-hero-card[data-tone="leads"] { color: #30d158; }
+  .stats-hero-card[data-tone="cpl"] { color: #bf5af2; }
+  .stats-hero-card[data-tone="email"] { color: #ff9f0a; }
+
+  /* --- Section labels --- */
+  .stats-section-label {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .stats-section-heading {
+    font-size: 11px; font-weight: 600; color: var(--text-faint);
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .stats-section-link {
+    font-size: 12px; color: var(--text-soft); text-decoration: none;
+    letter-spacing: -0.005em;
+  }
+  .stats-section-link:hover { color: var(--text); }
+
+  /* --- Channel cards grid --- */
+  .stats-channels-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 14px;
+  }
+  .stats-channel-card {
+    padding: 18px;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    display: flex; flex-direction: column; gap: 14px;
+    transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+  }
+  .stats-channel-card:hover {
+    border-color: var(--hairline);
+    transform: translateY(-1px);
+  }
+  .stats-channel-card.disconnected {
+    opacity: 0.72;
+    background: var(--bg-soft);
+  }
+
+  .stats-channel-top {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 12px;
+  }
+  .stats-channel-brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .stats-channel-logo {
+    width: 34px; height: 34px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline-soft);
+  }
+  .stats-channel-logo svg { width: 20px; height: 20px; }
+  .stats-channel-name-wrap { min-width: 0; }
+  .stats-channel-name {
+    font-size: 13px; font-weight: 600; color: var(--text);
+    letter-spacing: -0.005em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .stats-channel-sub {
+    font-size: 11px; color: var(--text-faint); margin-top: 2px; letter-spacing: -0.003em;
+  }
+  .stats-channel-status {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 10px; font-weight: 600; color: var(--text-soft);
+    padding: 3px 8px;
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 980px;
+    text-transform: uppercase; letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .stats-channel-status .dot {
+    width: 5px; height: 5px; border-radius: 50%; background: var(--status-paused);
+  }
+  .stats-channel-status.live .dot { background: var(--status-track); box-shadow: 0 0 0 3px color-mix(in srgb, var(--status-track) 20%, transparent); }
+  .stats-channel-status.warn .dot { background: var(--status-risk); }
+  .stats-channel-status.off .dot { background: var(--status-paused); }
+
+  .stats-channel-primary { display: flex; flex-direction: column; gap: 5px; }
+  .stats-channel-primary-label {
+    font-size: 11px; font-weight: 600; color: var(--text-faint);
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .stats-channel-primary-row {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 10px; flex-wrap: wrap;
+  }
+  .stats-channel-primary-value {
+    font-size: 22px; font-weight: 600; color: var(--text);
+    letter-spacing: -0.018em; line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .stats-channel-delta {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 12px; font-weight: 600; color: var(--status-track);
+    font-variant-numeric: tabular-nums; letter-spacing: -0.005em;
+  }
+  .stats-channel-delta.bad { color: var(--status-fire); }
+  .stats-channel-delta.flat { color: var(--text-soft); }
+  .stats-channel-delta svg { width: 10px; height: 10px; }
+
+  .stats-channel-spark { height: 36px; width: 100%; display: block; }
+  .stats-channel-spark .line {
+    fill: none; stroke: currentColor; stroke-width: 1.5;
+    stroke-linejoin: round; stroke-linecap: round;
+  }
+  .stats-channel-spark .area { fill: currentColor; opacity: 0.14; }
+  .stats-channel-card[data-brand="google-ads"] { color: #4285f4; }
+  .stats-channel-card[data-brand="meta"] { color: #0866ff; }
+  .stats-channel-card[data-brand="linkedin"] { color: #0a66c2; }
+  .stats-channel-card[data-brand="pinterest"] { color: #e60023; }
+  .stats-channel-card[data-brand="ga4"] { color: #f9ab00; }
+  .stats-channel-card[data-brand="gsc"] { color: #bf5af2; }
+  .stats-channel-card[data-brand="hubspot"] { color: #ff7a59; }
+
+  .stats-channel-secondary {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    padding-top: 12px;
+    border-top: 1px solid var(--hairline-soft);
+  }
+  .stats-channel-sec {
+    display: flex; flex-direction: column; gap: 3px;
+    padding: 0 10px; position: relative;
+  }
+  .stats-channel-sec:first-child { padding-left: 0; }
+  .stats-channel-sec:last-child { padding-right: 0; }
+  .stats-channel-sec + .stats-channel-sec::before {
+    content: ''; position: absolute; left: 0; top: 6px; bottom: 6px;
+    width: 1px; background: var(--hairline-soft);
+  }
+  .stats-channel-sec-label {
+    font-size: 10px; font-weight: 600; color: var(--text-faint);
+    text-transform: uppercase; letter-spacing: 0.05em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .stats-channel-sec-value {
+    font-size: 13px; font-weight: 600; color: var(--text);
+    letter-spacing: -0.005em; font-variant-numeric: tabular-nums;
+  }
+
+  .stats-channel-foot {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: 2px; margin-top: -4px;
+  }
+  .stats-channel-foot-link {
+    font-size: 12px; color: var(--text-soft); text-decoration: none;
+    letter-spacing: -0.005em;
+    display: inline-flex; align-items: center; gap: 4px;
+    transition: color 0.15s;
+  }
+  .stats-channel-foot-link:hover { color: var(--text); }
+  .stats-channel-foot-link svg { width: 11px; height: 11px; }
+  .stats-channel-foot-meta {
+    font-size: 11px; color: var(--text-faint);
+    letter-spacing: -0.005em; font-variant-numeric: tabular-nums;
+  }
+
+  /* Connect card for disconnected platforms */
+  .stats-channel-connect {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 6px; padding: 14px 10px; text-align: center;
+    min-height: 108px;
+    border: 1px dashed var(--hairline);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--bg-elev) 40%, transparent);
+  }
+  .stats-channel-connect-msg {
+    font-size: 12px; color: var(--text-soft); letter-spacing: -0.005em;
+    max-width: 32ch;
+  }
+  .stats-channel-connect-btn {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 6px 14px; border-radius: 980px;
+    font-size: 12px; font-weight: 600; letter-spacing: -0.005em;
+    color: #fff; background: currentColor;
+    border: 0; cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .stats-channel-connect-btn > * { color: #fff; }
+  .stats-channel-connect-btn:hover { opacity: 0.88; }
+
+  /* --- Activity / anomaly feed --- */
+  .stats-activity {
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .stats-activity-item {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--hairline-soft);
+    transition: background 0.15s;
+  }
+  .stats-activity-item:last-child { border-bottom: 0; }
+  .stats-activity-item:hover { background: color-mix(in srgb, var(--hairline-soft) 45%, transparent); }
+  .stats-activity-icon {
+    width: 32px; height: 32px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .stats-activity-icon.up {
+    background: color-mix(in srgb, var(--status-track) 15%, transparent);
+    color: var(--status-track);
+  }
+  .stats-activity-icon.down {
+    background: color-mix(in srgb, var(--status-fire) 15%, transparent);
+    color: var(--status-fire);
+  }
+  .stats-activity-icon.warn {
+    background: color-mix(in srgb, var(--status-risk) 15%, transparent);
+    color: var(--status-risk);
+  }
+  .stats-activity-icon.info {
+    background: color-mix(in srgb, var(--status-onboard) 15%, transparent);
+    color: var(--status-onboard);
+  }
+  .stats-activity-icon svg { width: 14px; height: 14px; }
+  .stats-activity-body { flex: 1; min-width: 0; }
+  .stats-activity-title {
+    font-size: 13px; font-weight: 500; color: var(--text);
+    letter-spacing: -0.005em; line-height: 1.42;
+  }
+  .stats-activity-title strong {
+    font-weight: 600; color: var(--text);
+  }
+  .stats-activity-meta {
+    font-size: 11px; color: var(--text-faint);
+    margin-top: 4px; display: flex; align-items: center; gap: 7px;
+    letter-spacing: -0.003em;
+  }
+  .stats-activity-meta .sep {
+    width: 2px; height: 2px; border-radius: 50%; background: var(--text-faint);
+  }
+  .stats-activity-time {
+    font-size: 11px; color: var(--text-faint);
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+    padding-top: 1px;
+  }
+
   /* Onboarding section */
   .onboarding-panel {
     background: var(--bg-elev);
@@ -8106,89 +8466,428 @@
       </div>
     </div>
 
-    <!-- DATA & INTEGRATIONS -->
+    <!-- STATS HUB (Phase 1) -->
     <div class="detail-section" data-section-id="acme-integrations" data-tab="stats">
-      <div class="detail-section-header">
+      <div class="stats-hub" data-stats-range="30d">
+
+        <!-- Toolbar: live sync status + time range -->
+        <div class="stats-toolbar">
+          <div class="stats-toolbar-left">
+            <div class="stats-sync">
+              <span class="stats-sync-dot" aria-hidden="true"></span>
+              <span class="stats-sync-label">Live</span>
+              <span class="stats-sync-sep" aria-hidden="true"></span>
+              <span class="stats-sync-meta" data-stats-sync-time>Synced 4 min ago</span>
+            </div>
+            <button type="button" class="stats-refresh" data-stats-refresh aria-label="Refresh data" data-tip="Refresh all platforms" data-tip-pos="above">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg>
+            </button>
+          </div>
+          <div class="stats-toolbar-right">
+            <span class="stats-range-label">Range</span>
+            <div class="stats-range" role="tablist" aria-label="Time range">
+              <button type="button" role="tab" data-stats-range-btn="7d">7d</button>
+              <button type="button" role="tab" data-stats-range-btn="30d" data-active="true" aria-selected="true">30d</button>
+              <button type="button" role="tab" data-stats-range-btn="90d">90d</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hero summary: 4 roll-up KPIs -->
         <div>
-          <div class="detail-section-title">Data &amp; Integrations</div>
-          <div class="detail-section-sub" style="margin-top:4px">Last synced 12 min ago · 30-day window</div>
-        </div>
-        <a href="#" class="detail-section-link">Configure →</a>
-      </div>
-      <div class="integrations-grid">
+          <div class="stats-section-label">
+            <span class="stats-section-heading">Summary · All channels</span>
+            <span class="stats-section-link" style="cursor:default">vs. prior 30 days</span>
+          </div>
+          <div class="stats-hero-grid">
 
-        <div class="integration-card" data-color="ga">
-          <div class="integration-top">
-            <div class="integration-brand">
-              <span class="integration-brand-mark"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="4" height="10" rx="1" fill="#f9ab00"/><rect x="10" y="6" width="4" height="14" rx="1" fill="#e37400"/><rect x="16" y="2" width="4" height="18" rx="1" fill="#4285f4"/></svg></span>
-              <div class="integration-name">Google Analytics</div>
+            <div class="stats-hero-card" data-tone="spend">
+              <span class="stats-hero-label">Ad Spend</span>
+              <div class="stats-hero-value-row">
+                <span class="stats-hero-value">$24,892</span>
+                <span class="stats-hero-delta">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                  6.2%
+                </span>
+              </div>
+              <svg class="stats-hero-spark" viewBox="0 0 300 32" preserveAspectRatio="none">
+                <path class="area" d="M0,24 L25,22 L50,20 L75,22 L100,18 L125,16 L150,18 L175,14 L200,12 L225,14 L250,10 L275,8 L300,6 L300,32 L0,32 Z"/>
+                <path class="line" d="M0,24 L25,22 L50,20 L75,22 L100,18 L125,16 L150,18 L175,14 L200,12 L225,14 L250,10 L275,8 L300,6"/>
+              </svg>
+              <span class="stats-hero-foot">Across 4 paid platforms</span>
             </div>
-            <div class="integration-status"><span class="dot"></span>Connected</div>
-          </div>
-          <div>
-            <div class="integration-metric-label">Sessions · last 30d</div>
-            <div class="integration-metric">
-              <span class="integration-value">48.2K</span>
-              <span class="integration-delta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>12.4%</span>
+
+            <div class="stats-hero-card" data-tone="leads">
+              <span class="stats-hero-label">Leads</span>
+              <div class="stats-hero-value-row">
+                <span class="stats-hero-value">1,284</span>
+                <span class="stats-hero-delta">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                  12.4%
+                </span>
+              </div>
+              <svg class="stats-hero-spark" viewBox="0 0 300 32" preserveAspectRatio="none">
+                <path class="area" d="M0,26 L25,24 L50,22 L75,20 L100,22 L125,18 L150,14 L175,16 L200,12 L225,10 L250,12 L275,8 L300,4 L300,32 L0,32 Z"/>
+                <path class="line" d="M0,26 L25,24 L50,22 L75,20 L100,22 L125,18 L150,14 L175,16 L200,12 L225,10 L250,12 L275,8 L300,4"/>
+              </svg>
+              <span class="stats-hero-foot">Paid + organic · deduped</span>
             </div>
-          </div>
-          <svg class="integration-chart" viewBox="0 0 300 48" preserveAspectRatio="none">
-            <path class="area" d="M0,42 L20,38 L40,40 L60,34 L80,30 L100,32 L120,26 L140,22 L160,24 L180,18 L200,14 L220,16 L240,10 L260,12 L280,8 L300,6 L300,48 L0,48 Z"/>
-            <path class="line" d="M0,42 L20,38 L40,40 L60,34 L80,30 L100,32 L120,26 L140,22 L160,24 L180,18 L200,14 L220,16 L240,10 L260,12 L280,8 L300,6"/>
-          </svg>
-          <div class="integration-row">
-            <span class="integration-row-label">Conv. rate</span>
-            <span class="integration-row-value">3.4%</span>
+
+            <div class="stats-hero-card" data-tone="cpl">
+              <span class="stats-hero-label">Blended CPL</span>
+              <div class="stats-hero-value-row">
+                <span class="stats-hero-value">$19.38</span>
+                <span class="stats-hero-delta">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                  5.5%
+                </span>
+              </div>
+              <svg class="stats-hero-spark" viewBox="0 0 300 32" preserveAspectRatio="none">
+                <path class="area" d="M0,10 L25,12 L50,14 L75,12 L100,16 L125,14 L150,18 L175,16 L200,20 L225,18 L250,22 L275,20 L300,24 L300,32 L0,32 Z"/>
+                <path class="line" d="M0,10 L25,12 L50,14 L75,12 L100,16 L125,14 L150,18 L175,16 L200,20 L225,18 L250,22 L275,20 L300,24"/>
+              </svg>
+              <span class="stats-hero-foot">Lower is better</span>
+            </div>
+
+            <div class="stats-hero-card" data-tone="email">
+              <span class="stats-hero-label">Email Engagement</span>
+              <div class="stats-hero-value-row">
+                <span class="stats-hero-value">34.2<span style="font-size:20px;opacity:0.7">%</span></span>
+                <span class="stats-hero-delta">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                  2.1pt
+                </span>
+              </div>
+              <svg class="stats-hero-spark" viewBox="0 0 300 32" preserveAspectRatio="none">
+                <path class="area" d="M0,18 L25,16 L50,18 L75,14 L100,16 L125,12 L150,14 L175,10 L200,12 L225,10 L250,8 L275,10 L300,6 L300,32 L0,32 Z"/>
+                <path class="line" d="M0,18 L25,16 L50,18 L75,14 L100,16 L125,12 L150,14 L175,10 L200,12 L225,10 L250,8 L275,10 L300,6"/>
+              </svg>
+              <span class="stats-hero-foot">Avg open rate · HubSpot</span>
+            </div>
+
           </div>
         </div>
 
-        <div class="integration-card" data-color="ads">
-          <div class="integration-top">
-            <div class="integration-brand">
-              <span class="integration-brand-mark"><svg viewBox="0 0 24 24"><path d="M12 2 L21 18 L3 18 Z" fill="#fbbc04"/><circle cx="7" cy="18" r="3" fill="#34a853"/><path d="M12 2 L3 18 L7 18 L16 2 Z" fill="#4285f4" opacity="0.7"/></svg></span>
-              <div class="integration-name">Google Ads</div>
-            </div>
-            <div class="integration-status"><span class="dot"></span>Connected</div>
+        <!-- Channel grid -->
+        <div>
+          <div class="stats-section-label">
+            <span class="stats-section-heading">Channels · 7 connected</span>
+            <a href="#" class="stats-section-link" data-stats-manage>Manage integrations →</a>
           </div>
-          <div>
-            <div class="integration-metric-label">Spend · last 30d</div>
-            <div class="integration-metric">
-              <span class="integration-value">$6,842</span>
-              <span class="integration-delta down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>4.1%</span>
+          <div class="stats-channels-grid">
+
+            <!-- Google Ads -->
+            <div class="stats-channel-card" data-brand="google-ads">
+              <div class="stats-channel-top">
+                <div class="stats-channel-brand">
+                  <span class="stats-channel-logo">
+                    <svg viewBox="0 0 24 24"><path d="M12 2 L21 18 L3 18 Z" fill="#fbbc04"/><circle cx="7" cy="18" r="3.2" fill="#34a853"/><path d="M12 2 L3 18 L7 18 L16 2 Z" fill="#4285f4" opacity="0.82"/></svg>
+                  </span>
+                  <div class="stats-channel-name-wrap">
+                    <div class="stats-channel-name">Google Ads</div>
+                    <div class="stats-channel-sub">Search · Performance Max</div>
+                  </div>
+                </div>
+                <span class="stats-channel-status live"><span class="dot"></span>Live</span>
+              </div>
+              <div class="stats-channel-primary">
+                <span class="stats-channel-primary-label">Spend · 30d</span>
+                <div class="stats-channel-primary-row">
+                  <span class="stats-channel-primary-value">$6,842</span>
+                  <span class="stats-channel-delta bad"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>4.1%</span>
+                </div>
+              </div>
+              <svg class="stats-channel-spark" viewBox="0 0 300 36" preserveAspectRatio="none">
+                <path class="area" d="M0,14 L25,16 L50,14 L75,18 L100,16 L125,22 L150,20 L175,24 L200,18 L225,22 L250,16 L275,20 L300,14 L300,36 L0,36 Z"/>
+                <path class="line" d="M0,14 L25,16 L50,14 L75,18 L100,16 L125,22 L150,20 L175,24 L200,18 L225,22 L250,16 L275,20 L300,14"/>
+              </svg>
+              <div class="stats-channel-secondary">
+                <div class="stats-channel-sec"><span class="stats-channel-sec-label">Leads</span><span class="stats-channel-sec-value">312</span></div>
+                <div class="stats-channel-sec"><span class="stats-channel-sec-label">CPL</span><span class="stats-channel-sec-value">$21.92</span></div>
+                <div class="stats-channel-sec"><span class="stats-channel-sec-label">Impr. share</span><span class="stats-channel-sec-value">68%</span></div>
+              </div>
+              <div class="stats-channel-foot">
+                <a href="#" class="stats-channel-foot-link" data-platform-link="Google Ads">Open in Google Ads <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></a>
+                <span class="stats-channel-foot-meta">Synced 3 min ago</span>
+              </div>
             </div>
-          </div>
-          <svg class="integration-chart" viewBox="0 0 300 48" preserveAspectRatio="none">
-            <path class="area" d="M0,20 L20,24 L40,22 L60,28 L80,26 L100,32 L120,30 L140,34 L160,28 L180,32 L200,26 L220,30 L240,24 L260,28 L280,22 L300,26 L300,48 L0,48 Z"/>
-            <path class="line" d="M0,20 L20,24 L40,22 L60,28 L80,26 L100,32 L120,30 L140,34 L160,28 L180,32 L200,26 L220,30 L240,24 L260,28 L280,22 L300,26"/>
-          </svg>
-          <div class="integration-row">
-            <span class="integration-row-label">CPA · avg</span>
-            <span class="integration-row-value">$42.80</span>
+
+            <!-- Meta Ads -->
+            <div class="stats-channel-card" data-brand="meta">
+              <div class="stats-channel-top">
+                <div class="stats-channel-brand">
+                  <span class="stats-channel-logo">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M4 16 C4 9, 8 5, 12 11 C16 17, 20 13, 20 8" stroke="#0866ff" stroke-width="2.2" stroke-linecap="round"/><path d="M4 16 C4 9, 8 5, 12 11 C16 17, 20 13, 20 8" stroke="url(#metaGrad)" stroke-width="2.2" stroke-linecap="round" opacity="0.7"/><defs><linearGradient id="metaGrad" x1="0" x2="24" y1="0" y2="24"><stop offset="0" stop-color="#19afff"/><stop offset="1" stop-color="#0866ff"/></linearGradient></defs></svg>
+                  </span>
+                  <div class="stats-channel-name-wrap">
+                    <div class="stats-channel-name">Meta Ads</div>
+                    <div class="stats-channel-sub">Facebook · Instagram</div>
+                  </div>
+                </div>
+                <span class="stats-channel-status live"><span class="dot"></span>Live</span>
+              </div>
+              <div class="stats-channel-primary">
+                <span class="stats-channel-primary-label">Spend · 30d</span>
+                <div class="stats-channel-primary-row">
+                  <span class="stats-channel-primary-value">$9,410</span>
+                  <span class="stats-channel-delta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>14.8%</span>
+                </div>
+              </div>
+              <svg class="stats-channel-spark" viewBox="0 0 300 36" preserveAspectRatio="none">
+                <path class="area" d="M0,24 L25,22 L50,20 L75,22 L100,18 L125,16 L150,14 L175,16 L200,10 L225,8 L250,12 L275,6 L300,4 L300,36 L0,36 Z"/>
+                <path class="line" d="M0,24 L25,22 L50,20 L75,22 L100,18 L125,16 L150,14 L175,16 L200,10 L225,8 L250,12 L275,6 L300,4"/>
+              </svg>
+              <div class="stats-channel-secondary">
+                <div class="stats-channel-sec"><span class="stats-channel-sec-label">Leads</span><span class="stats-channel-sec-value">486</span></div>
+                <div class="stats-channel-sec"><span class="stats-channel-sec-label">CPL</span><span class="stats-channel-sec-value">$19.36</span></div>
+                <div class="stats-channel-sec"><span class="stats-channel-sec-label">Reach</span><span class="stats-channel-sec-value">412K</span></div>
+              </div>
+              <div class="stats-channel-foot">
+                <a href="#" class="stats-channel-foot-link" data-platform-link="Meta Ads Manager">Open in Ads Manager <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></a>
+                <span class="stats-channel-foot-meta">Synced 2 min ago</span>
+              </div>
+            </div>
+
+            <!-- LinkedIn Ads -->
+            <div class="stats-channel-card" data-brand="linkedin">
+              <div class="stats-channel-top">
+                <div class="stats-channel-brand">
+                  <span class="stats-channel-logo">
+                    <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="4" fill="#0a66c2"/><rect x="5" y="9" width="3" height="10" fill="#fff"/><circle cx="6.5" cy="6" r="1.8" fill="#fff"/><path d="M10 9 H13 V10.5 C13.6,9.4 14.8,9 16,9 C18,9 19,10.5 19,13 V19 H16 V13.5 C16,12.3 15.5,11.6 14.4,11.6 C13.5,11.6 13,12.2 13,13.3 V19 H10 Z" fill="#fff"/></svg>
+                  </span>
+                  <div class="stats-channel-name-wrap">
+                    <div class="stats-channel-name">LinkedIn Ads</div>
+                    <div class="stats-channel-sub">Sponsored content · Lead gen</div>
+                  </div>
+                </div>
+                <span class="stats-channel-status live"><span class="dot"></span>Live</span>
+              </div>
+              <div class="stats-channel-primary">
+                <span class="stats-channel-primary-label">Spend · 30d</span>
+                <div class="stats-channel-primary-row">
+                  <span class="stats-channel-primary-value">$5,240</span>
+                  <span class="stats-channel-delta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>8.3%</span>
+                </div>
+              </div>
+              <svg class="stats-channel-spark" viewBox="0 0 300 36" preserveAspectRatio="none">
+                <path class="area" d="M0,28 L25,26 L50,24 L75,22 L100,24 L125,20 L150,22 L175,18 L200,20 L225,14 L250,16 L275,12 L300,10 L300,36 L0,36 Z"/>
+                <path class="line" d="M0,28 L25,26 L50,24 L75,22 L100,24 L125,20 L150,22 L175,18 L200,20 L225,14 L250,16 L275,12 L300,10"/>
+              </svg>
+              <div class="stats-channel-secondary">
+                <div class="stats-channel-sec"><span class="stats-channel-sec-label">Leads</span><span class="stats-channel-sec-value">148</span></div>
+                <div class="stats-channel-sec"><span class="stats-channel-sec-label">CPL</span><span class="stats-channel-sec-value">$35.40</span></div>
+                <div class="stats-channel-sec"><span class="stats-channel-sec-label">CTR</span><span class="stats-channel-sec-value">0.58%</span></div>
+              </div>
+              <div class="stats-channel-foot">
+                <a href="#" class="stats-channel-foot-link" data-platform-link="LinkedIn Campaign Manager">Open in Campaign Mgr <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></a>
+                <span class="stats-channel-foot-meta">Synced 5 min ago</span>
+              </div>
+            </div>
+
+            <!-- Pinterest Ads -->
+            <div class="stats-channel-card" data-brand="pinterest">
+              <div class="stats-channel-top">
+                <div class="stats-channel-brand">
+                  <span class="stats-channel-logo">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#e60023"/><path d="M12 5.6 C8.7 5.6 6 7.9 6 10.9 C6 12.8 6.9 14.1 8.3 14.5 C8.4 13.9 8.4 13.6 8.5 13 C8.2 12.6 8 12.1 8 11.3 C8 9.5 9.5 7.9 11.6 7.9 C13.5 7.9 14.6 9 14.6 10.5 C14.6 12.5 13.7 14.3 12.3 14.3 C11.5 14.3 11 13.7 11.2 12.9 C11.4 12.1 11.8 11.2 11.8 10.6 C11.8 10 11.5 9.5 10.8 9.5 C10 9.5 9.4 10.3 9.4 11.4 C9.4 12.1 9.6 12.6 9.6 12.6 C9.6 12.6 8.8 15.8 8.6 16.4 C8.4 17.4 8.6 18.5 8.7 18.6 C8.8 18.7 8.9 18.7 9 18.6 C9.1 18.4 10.3 16.9 10.6 16 C10.7 15.7 11.1 14.1 11.1 14.1 C11.4 14.6 12.1 15 13 15 C15.3 15 16.9 12.9 16.9 10.1 C16.9 8 15.1 5.6 12 5.6 Z" fill="#fff"/></svg>
+                  </span>
+                  <div class="stats-channel-name-wrap">
+                    <div class="stats-channel-name">Pinterest Ads</div>
+                    <div class="stats-channel-sub">Standard · Shopping pins</div>
+                  </div>
+                </div>
+                <span class="stats-channel-status warn"><span class="dot"></span>Attention</span>
+              </div>
+              <div class="stats-channel-primary">
+                <span class="stats-channel-primary-label">Spend · 30d</span>
+                <div class="stats-channel-primary-row">
+                  <span class="stats-channel-primary-value">$3,400</span>
+                  <span class="stats-channel-delta bad"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>CPL 31%</span>
+                </div>
+              </div>
+              <svg class="stats-channel-spark" viewBox="0 0 300 36" preserveAspectRatio="none">
+                <path class="area" d="M0,16 L25,18 L50,16 L75,20 L100,18 L125,24 L150,22 L175,26 L200,24 L225,28 L250,26 L275,30 L300,28 L300,36 L0,36 Z"/>
+                <path class="line" d="M0,16 L25,18 L50,16 L75,20 L100,18 L125,24 L150,22 L175,26 L200,24 L225,28 L250,26 L275,30 L300,28"/>
+              </svg>
+              <div class="stats-channel-secondary">
+                <div class="stats-channel-sec"><span class="stats-channel-sec-label">Saves</span><span class="stats-channel-sec-value">8,240</span></div>
+                <div class="stats-channel-sec"><span class="stats-channel-sec-label">CPS</span><span class="stats-channel-sec-value">$0.41</span></div>
+                <div class="stats-channel-sec"><span class="stats-channel-sec-label">Impr.</span><span class="stats-channel-sec-value">1.2M</span></div>
+              </div>
+              <div class="stats-channel-foot">
+                <a href="#" class="stats-channel-foot-link" data-platform-link="Pinterest Ads Manager">Open in Ads Manager <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></a>
+                <span class="stats-channel-foot-meta">Synced 7 min ago</span>
+              </div>
+            </div>
+
+            <!-- GA4 -->
+            <div class="stats-channel-card" data-brand="ga4">
+              <div class="stats-channel-top">
+                <div class="stats-channel-brand">
+                  <span class="stats-channel-logo">
+                    <svg viewBox="0 0 24 24"><rect x="4" y="10" width="4" height="10" rx="1.4" fill="#f9ab00"/><rect x="10" y="6" width="4" height="14" rx="1.4" fill="#e37400"/><rect x="16" y="2" width="4" height="18" rx="1.4" fill="#4285f4"/></svg>
+                  </span>
+                  <div class="stats-channel-name-wrap">
+                    <div class="stats-channel-name">Google Analytics 4</div>
+                    <div class="stats-channel-sub">acmecorp.com · Web</div>
+                  </div>
+                </div>
+                <span class="stats-channel-status live"><span class="dot"></span>Live</span>
+              </div>
+              <div class="stats-channel-primary">
+                <span class="stats-channel-primary-label">Sessions · 30d</span>
+                <div class="stats-channel-primary-row">
+                  <span class="stats-channel-primary-value">48.2K</span>
+                  <span class="stats-channel-delta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>12.4%</span>
+                </div>
+              </div>
+              <svg class="stats-channel-spark" viewBox="0 0 300 36" preserveAspectRatio="none">
+                <path class="area" d="M0,30 L25,28 L50,26 L75,24 L100,26 L125,22 L150,20 L175,18 L200,14 L225,16 L250,12 L275,10 L300,6 L300,36 L0,36 Z"/>
+                <path class="line" d="M0,30 L25,28 L50,26 L75,24 L100,26 L125,22 L150,20 L175,18 L200,14 L225,16 L250,12 L275,10 L300,6"/>
+              </svg>
+              <div class="stats-channel-secondary">
+                <div class="stats-channel-sec"><span class="stats-channel-sec-label">Users</span><span class="stats-channel-sec-value">36.4K</span></div>
+                <div class="stats-channel-sec"><span class="stats-channel-sec-label">Conv.</span><span class="stats-channel-sec-value">3.4%</span></div>
+                <div class="stats-channel-sec"><span class="stats-channel-sec-label">Bounce</span><span class="stats-channel-sec-value">41.8%</span></div>
+              </div>
+              <div class="stats-channel-foot">
+                <a href="#" class="stats-channel-foot-link" data-platform-link="Google Analytics">Open in Analytics <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></a>
+                <span class="stats-channel-foot-meta">Synced 1 min ago</span>
+              </div>
+            </div>
+
+            <!-- Search Console -->
+            <div class="stats-channel-card" data-brand="gsc">
+              <div class="stats-channel-top">
+                <div class="stats-channel-brand">
+                  <span class="stats-channel-logo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#bf5af2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7.2"/><line x1="20.5" y1="20.5" x2="16.3" y2="16.3"/></svg>
+                  </span>
+                  <div class="stats-channel-name-wrap">
+                    <div class="stats-channel-name">Search Console</div>
+                    <div class="stats-channel-sub">Organic search · Google</div>
+                  </div>
+                </div>
+                <span class="stats-channel-status live"><span class="dot"></span>Live</span>
+              </div>
+              <div class="stats-channel-primary">
+                <span class="stats-channel-primary-label">Clicks · 30d</span>
+                <div class="stats-channel-primary-row">
+                  <span class="stats-channel-primary-value">21.6K</span>
+                  <span class="stats-channel-delta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>8.7%</span>
+                </div>
+              </div>
+              <svg class="stats-channel-spark" viewBox="0 0 300 36" preserveAspectRatio="none">
+                <path class="area" d="M0,28 L25,30 L50,26 L75,24 L100,22 L125,24 L150,20 L175,16 L200,18 L225,14 L250,16 L275,10 L300,8 L300,36 L0,36 Z"/>
+                <path class="line" d="M0,28 L25,30 L50,26 L75,24 L100,22 L125,24 L150,20 L175,16 L200,18 L225,14 L250,16 L275,10 L300,8"/>
+              </svg>
+              <div class="stats-channel-secondary">
+                <div class="stats-channel-sec"><span class="stats-channel-sec-label">Impr.</span><span class="stats-channel-sec-value">684K</span></div>
+                <div class="stats-channel-sec"><span class="stats-channel-sec-label">Avg pos.</span><span class="stats-channel-sec-value">14.2</span></div>
+                <div class="stats-channel-sec"><span class="stats-channel-sec-label">CTR</span><span class="stats-channel-sec-value">3.16%</span></div>
+              </div>
+              <div class="stats-channel-foot">
+                <a href="#" class="stats-channel-foot-link" data-platform-link="Google Search Console">Open in Search Console <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></a>
+                <span class="stats-channel-foot-meta">Synced 12 min ago</span>
+              </div>
+            </div>
+
+            <!-- HubSpot -->
+            <div class="stats-channel-card" data-brand="hubspot">
+              <div class="stats-channel-top">
+                <div class="stats-channel-brand">
+                  <span class="stats-channel-logo">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M18 8 V5.5 A1.5 1.5 0 1 0 16.5 4 H14 L14 7.6 A5 5 0 1 0 17.8 15.4 L20 17.6 L21.5 16 L19.4 14 A5 5 0 0 0 18 8 Z M14.2 15.4 A2.9 2.9 0 1 1 14.2 9.6 A2.9 2.9 0 0 1 14.2 15.4 Z" fill="#ff7a59"/></svg>
+                  </span>
+                  <div class="stats-channel-name-wrap">
+                    <div class="stats-channel-name">HubSpot</div>
+                    <div class="stats-channel-sub">Email · CRM</div>
+                  </div>
+                </div>
+                <span class="stats-channel-status live"><span class="dot"></span>Live</span>
+              </div>
+              <div class="stats-channel-primary">
+                <span class="stats-channel-primary-label">Emails sent · 30d</span>
+                <div class="stats-channel-primary-row">
+                  <span class="stats-channel-primary-value">128,400</span>
+                  <span class="stats-channel-delta flat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>0.3%</span>
+                </div>
+              </div>
+              <svg class="stats-channel-spark" viewBox="0 0 300 36" preserveAspectRatio="none">
+                <path class="area" d="M0,20 L25,18 L50,22 L75,16 L100,20 L125,14 L150,22 L175,16 L200,20 L225,14 L250,18 L275,14 L300,16 L300,36 L0,36 Z"/>
+                <path class="line" d="M0,20 L25,18 L50,22 L75,16 L100,20 L125,14 L150,22 L175,16 L200,20 L225,14 L250,18 L275,14 L300,16"/>
+              </svg>
+              <div class="stats-channel-secondary">
+                <div class="stats-channel-sec"><span class="stats-channel-sec-label">Open</span><span class="stats-channel-sec-value">34.2%</span></div>
+                <div class="stats-channel-sec"><span class="stats-channel-sec-label">Click</span><span class="stats-channel-sec-value">6.8%</span></div>
+                <div class="stats-channel-sec"><span class="stats-channel-sec-label">Unsub.</span><span class="stats-channel-sec-value">0.24%</span></div>
+              </div>
+              <div class="stats-channel-foot">
+                <a href="#" class="stats-channel-foot-link" data-platform-link="HubSpot">Open in HubSpot <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></a>
+                <span class="stats-channel-foot-meta">Synced 4 min ago</span>
+              </div>
+            </div>
+
           </div>
         </div>
 
-        <div class="integration-card" data-color="gsc">
-          <div class="integration-top">
-            <div class="integration-brand">
-              <span class="integration-brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#bf5af2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-              <div class="integration-name">Search Console</div>
-            </div>
-            <div class="integration-status"><span class="dot"></span>Connected</div>
+        <!-- Anomaly / activity feed -->
+        <div>
+          <div class="stats-section-label">
+            <span class="stats-section-heading">What changed · Last 7 days</span>
+            <a href="#" class="stats-section-link" data-stats-anomalies>View all anomalies →</a>
           </div>
-          <div>
-            <div class="integration-metric-label">Clicks · last 30d</div>
-            <div class="integration-metric">
-              <span class="integration-value">21.6K</span>
-              <span class="integration-delta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>8.7%</span>
+          <div class="stats-activity">
+            <div class="stats-activity-item">
+              <span class="stats-activity-icon warn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              </span>
+              <div class="stats-activity-body">
+                <div class="stats-activity-title"><strong>Pinterest Ads:</strong> CPL up 31% vs last week — daily budget cap hit 5 days in a row</div>
+                <div class="stats-activity-meta"><span>Pinterest</span><span class="sep"></span><span>Budget pacing</span></div>
+              </div>
+              <span class="stats-activity-time">2h ago</span>
             </div>
-          </div>
-          <svg class="integration-chart" viewBox="0 0 300 48" preserveAspectRatio="none">
-            <path class="area" d="M0,36 L20,38 L40,34 L60,32 L80,28 L100,30 L120,26 L140,22 L160,24 L180,20 L200,22 L220,16 L240,18 L260,14 L280,10 L300,12 L300,48 L0,48 Z"/>
-            <path class="line" d="M0,36 L20,38 L40,34 L60,32 L80,28 L100,30 L120,26 L140,22 L160,24 L180,20 L200,22 L220,16 L240,18 L260,14 L280,10 L300,12"/>
-          </svg>
-          <div class="integration-row">
-            <span class="integration-row-label">Avg position</span>
-            <span class="integration-row-value">14.2</span>
+            <div class="stats-activity-item">
+              <span class="stats-activity-icon up">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+              </span>
+              <div class="stats-activity-body">
+                <div class="stats-activity-title"><strong>Google Ads:</strong> New top keyword “enterprise crm demo” drove 24% of leads this week</div>
+                <div class="stats-activity-meta"><span>Google Ads</span><span class="sep"></span><span>Keyword</span></div>
+              </div>
+              <span class="stats-activity-time">Yesterday</span>
+            </div>
+            <div class="stats-activity-item">
+              <span class="stats-activity-icon down">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+              </span>
+              <div class="stats-activity-body">
+                <div class="stats-activity-title"><strong>Meta Ads:</strong> Impressions down 18% on “Spring launch” creative — likely fatigue (live since Mar 12)</div>
+                <div class="stats-activity-meta"><span>Meta</span><span class="sep"></span><span>Creative</span></div>
+              </div>
+              <span class="stats-activity-time">2d ago</span>
+            </div>
+            <div class="stats-activity-item">
+              <span class="stats-activity-icon up">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+              </span>
+              <div class="stats-activity-body">
+                <div class="stats-activity-title"><strong>GA4:</strong> /pricing bounce rate improved 8pt after last week's copy update</div>
+                <div class="stats-activity-meta"><span>GA4</span><span class="sep"></span><span>Landing page</span></div>
+              </div>
+              <span class="stats-activity-time">3d ago</span>
+            </div>
+            <div class="stats-activity-item">
+              <span class="stats-activity-icon info">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              </span>
+              <div class="stats-activity-body">
+                <div class="stats-activity-title"><strong>HubSpot:</strong> April newsletter reached 2.3× the click rate of March's — top performer</div>
+                <div class="stats-activity-meta"><span>HubSpot</span><span class="sep"></span><span>Email campaign</span></div>
+              </div>
+              <span class="stats-activity-time">Apr 14</span>
+            </div>
           </div>
         </div>
 
@@ -17040,6 +17739,71 @@ window.OPS_TEAM = OPS_TEAM;
         tab.addEventListener('click', function(){
           activate(tab.getAttribute('data-tab-target'));
         });
+      });
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+
+/* ── Stats hub — time range toggle, refresh button, platform link stubs.
+   Wires up the Phase 1 Stats tab inside each client detail page. */
+(function(){
+  function init(){
+    document.querySelectorAll('.stats-hub').forEach(function(hub){
+      var rangeBtns = hub.querySelectorAll('[data-stats-range-btn]');
+      rangeBtns.forEach(function(btn){
+        btn.addEventListener('click', function(){
+          var target = btn.getAttribute('data-stats-range-btn');
+          if (!target) return;
+          rangeBtns.forEach(function(b){
+            var isActive = b === btn;
+            if (isActive) b.setAttribute('data-active', 'true');
+            else b.removeAttribute('data-active');
+            b.setAttribute('aria-selected', String(isActive));
+          });
+          hub.setAttribute('data-stats-range', target);
+          if (window.showToast) {
+            window.showToast('Range updated to ' + target + ' — refetching platforms…', { duration: 1800 });
+          }
+        });
+      });
+
+      var refreshBtn = hub.querySelector('[data-stats-refresh]');
+      if (refreshBtn) {
+        refreshBtn.addEventListener('click', function(){
+          refreshBtn.classList.remove('spinning');
+          void refreshBtn.offsetWidth;
+          refreshBtn.classList.add('spinning');
+          setTimeout(function(){ refreshBtn.classList.remove('spinning'); }, 620);
+          var meta = hub.querySelector('[data-stats-sync-time]');
+          if (meta) meta.textContent = 'Synced just now';
+          if (window.showToast) {
+            window.showToast('All platforms refreshed', { duration: 1600 });
+          }
+        });
+      }
+
+      hub.querySelectorAll('[data-platform-link]').forEach(function(link){
+        link.addEventListener('click', function(e){
+          e.preventDefault();
+          var label = link.getAttribute('data-platform-link') || 'platform';
+          if (window.showToast) {
+            window.showToast('Opening ' + label + ' in new tab — demo stub', { duration: 1800 });
+          }
+        });
+      });
+
+      var manage = hub.querySelector('[data-stats-manage]');
+      if (manage) manage.addEventListener('click', function(e){
+        e.preventDefault();
+        if (window.showToast) window.showToast('Integrations manager — coming soon', { duration: 1800 });
+      });
+
+      var anomalies = hub.querySelector('[data-stats-anomalies]');
+      if (anomalies) anomalies.addEventListener('click', function(e){
+        e.preventDefault();
+        if (window.showToast) window.showToast('Full anomaly log — coming soon', { duration: 1800 });
       });
     });
   }
