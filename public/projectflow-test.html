@@ -7569,14 +7569,27 @@
   }
   .onboarding-group-label:first-child { margin-top: 0; padding-top: 0; border-top: none; }
 
-  /* Team section — horizontal avatar row */
+  /* Team section — grouped: Account Manager(s) on top, Project team below */
   .team-section-grid {
-    display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
-    padding: 24px;
+    display: flex; flex-direction: column; gap: 16px;
+    padding: 22px 24px;
     background: var(--bg-elev);
     border: 1px solid var(--hairline-soft);
     border-radius: 14px;
     box-shadow: var(--shadow);
+  }
+  .team-group { display: flex; flex-direction: column; gap: 12px; }
+  .team-group-label {
+    font-size: 10.5px; font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .team-group-row {
+    display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+  }
+  .team-group-divider {
+    height: 1px; background: var(--hairline-soft);
+    margin: 2px -4px;
   }
   .team-member-card {
     display: flex; align-items: center; gap: 12px;
@@ -8958,30 +8971,6 @@
           </a>
         </div>
 
-        <!-- Upcoming sync -->
-        <div class="relationship-card">
-          <div class="relationship-card-head">
-            <div class="relationship-card-label">Upcoming</div>
-            <span class="relationship-card-aux">In 1 day</span>
-          </div>
-          <div>
-            <div class="last-meeting-date">Tue · Apr 22, 2026 · 10:00 AM</div>
-            <div class="last-meeting-title">Weekly client sync</div>
-          </div>
-          <a href="#" class="meeting-recording-link" aria-label="Open calendar event" data-tip="Google Calendar · 30 min hold" data-tip-pos="above">
-            <span class="meeting-recording-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            </span>
-            <div class="meeting-recording-body">
-              <div class="meeting-recording-name">Calendar · 30 min</div>
-              <div class="meeting-recording-meta">Harvey, Jessica, Nikko</div>
-            </div>
-          </a>
-          <div class="meeting-action-items">
-            <strong>3 open action items</strong> due by sync
-          </div>
-        </div>
-
         <!-- Quick links -->
         <div class="relationship-card">
           <div class="relationship-card-head">
@@ -9245,46 +9234,57 @@
         <div class="detail-section-sub">6 people assigned</div>
       </div>
       <div class="team-section-grid">
-        <div class="team-member-card">
-          <div class="team-member-avatar" style="background:#5e5ce6">NT</div>
-          <div class="team-member-body">
-            <div class="team-member-name">Nikko Trinidad</div>
-            <div class="team-member-role">Account Manager</div>
+        <div class="team-group">
+          <div class="team-group-label">Account Manager</div>
+          <div class="team-group-row">
+            <div class="team-member-card">
+              <div class="team-member-avatar" style="background:#5e5ce6">NT</div>
+              <div class="team-member-body">
+                <div class="team-member-name">Nikko Trinidad</div>
+                <div class="team-member-role">Account Manager</div>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="team-member-card">
-          <div class="team-member-avatar" style="background:#ff9f0a">MA</div>
-          <div class="team-member-body">
-            <div class="team-member-name">Marcus Aldrin</div>
-            <div class="team-member-role">Lead Designer</div>
-          </div>
-        </div>
-        <div class="team-member-card">
-          <div class="team-member-avatar" style="background:#30d158">EV</div>
-          <div class="team-member-body">
-            <div class="team-member-name">Elena Vasquez</div>
-            <div class="team-member-role">Developer</div>
-          </div>
-        </div>
-        <div class="team-member-card">
-          <div class="team-member-avatar" style="background:#bf5af2">JC</div>
-          <div class="team-member-body">
-            <div class="team-member-name">James Chen</div>
-            <div class="team-member-role">SEO Specialist</div>
-          </div>
-        </div>
-        <div class="team-member-card">
-          <div class="team-member-avatar" style="background:#ff375f">SP</div>
-          <div class="team-member-body">
-            <div class="team-member-name">Sophie Park</div>
-            <div class="team-member-role">Content Writer</div>
-          </div>
-        </div>
-        <div class="team-member-card">
-          <div class="team-member-avatar" style="background:#64d2ff">RM</div>
-          <div class="team-member-body">
-            <div class="team-member-name">Ravi Mehta</div>
-            <div class="team-member-role">Developer</div>
+        <div class="team-group-divider"></div>
+        <div class="team-group">
+          <div class="team-group-label">Project team</div>
+          <div class="team-group-row">
+            <div class="team-member-card">
+              <div class="team-member-avatar" style="background:#ff9f0a">MA</div>
+              <div class="team-member-body">
+                <div class="team-member-name">Marcus Aldrin</div>
+                <div class="team-member-role">Lead Designer</div>
+              </div>
+            </div>
+            <div class="team-member-card">
+              <div class="team-member-avatar" style="background:#30d158">EV</div>
+              <div class="team-member-body">
+                <div class="team-member-name">Elena Vasquez</div>
+                <div class="team-member-role">Developer</div>
+              </div>
+            </div>
+            <div class="team-member-card">
+              <div class="team-member-avatar" style="background:#bf5af2">JC</div>
+              <div class="team-member-body">
+                <div class="team-member-name">James Chen</div>
+                <div class="team-member-role">SEO Specialist</div>
+              </div>
+            </div>
+            <div class="team-member-card">
+              <div class="team-member-avatar" style="background:#ff375f">SP</div>
+              <div class="team-member-body">
+                <div class="team-member-name">Sophie Park</div>
+                <div class="team-member-role">Content Writer</div>
+              </div>
+            </div>
+            <div class="team-member-card">
+              <div class="team-member-avatar" style="background:#64d2ff">RM</div>
+              <div class="team-member-body">
+                <div class="team-member-name">Ravi Mehta</div>
+                <div class="team-member-role">Developer</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
