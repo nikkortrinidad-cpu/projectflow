@@ -9200,12 +9200,25 @@
     display: flex; flex-direction: column; gap: 6px;
   }
   .template-phase {
-    display: grid;
-    grid-template-columns: 28px 1fr;
-    align-items: center; gap: 12px;
-    padding: 10px 14px; border-radius: 10px;
+    border-radius: 10px;
     background: var(--bg-soft);
     border: 1px solid var(--hairline-soft);
+    overflow: hidden;
+  }
+  .template-phase-toggle {
+    display: grid;
+    grid-template-columns: 22px 1fr auto 14px;
+    align-items: center; gap: 12px;
+    width: 100%; padding: 10px 14px;
+    background: none; border: 0;
+    font: inherit; color: inherit; text-align: left;
+    cursor: pointer;
+    transition: background 0.12s ease;
+  }
+  .template-phase-toggle:hover { background: var(--hover-tint); }
+  .template-phase-toggle:focus-visible {
+    outline: none;
+    background: var(--hover-tint);
   }
   .template-phase-num {
     width: 22px; height: 22px; border-radius: 6px;
@@ -9218,6 +9231,40 @@
   .template-phase-name {
     font-size: 13.5px; font-weight: 500; letter-spacing: -0.005em;
     color: var(--text);
+  }
+  .template-phase-meta {
+    font-size: 11.5px; color: var(--text-faint);
+    font-feature-settings: "tnum";
+    white-space: nowrap;
+  }
+  .template-phase-chevron {
+    width: 14px; height: 14px;
+    color: var(--text-faint);
+    stroke-width: 2;
+    transition: transform 0.2s ease;
+  }
+  .template-phase.expanded .template-phase-chevron {
+    transform: rotate(180deg);
+  }
+  .template-phase-subtasks {
+    display: none;
+    padding: 8px 16px 14px 50px;
+    border-top: 1px solid var(--hairline-soft);
+    background: color-mix(in srgb, var(--bg) 30%, var(--bg-soft));
+  }
+  .template-phase.expanded .template-phase-subtasks {
+    display: flex; flex-direction: column; gap: 1px;
+  }
+  .template-phase-subtask {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 0;
+    font-size: 12.5px; color: var(--text-muted);
+    letter-spacing: -0.003em; line-height: 1.4;
+  }
+  .template-phase-subtask .dot {
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--text-faint);
+    flex-shrink: 0;
   }
 
   /* Checklist */
@@ -11444,12 +11491,96 @@
             <div class="template-section-sub">Auto-populate into the To Do column when onboarding completes</div>
           </div>
           <div class="template-phase-list">
-            <div class="template-phase"><div class="template-phase-num">1</div><div class="template-phase-name">Discovery</div></div>
-            <div class="template-phase"><div class="template-phase-num">2</div><div class="template-phase-name">IA &amp; Wireframes</div></div>
-            <div class="template-phase"><div class="template-phase-num">3</div><div class="template-phase-name">Visual Design</div></div>
-            <div class="template-phase"><div class="template-phase-num">4</div><div class="template-phase-name">Development</div></div>
-            <div class="template-phase"><div class="template-phase-num">5</div><div class="template-phase-name">QA</div></div>
-            <div class="template-phase"><div class="template-phase-num">6</div><div class="template-phase-name">Launch</div></div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">1</div>
+                <div class="template-phase-name">Discovery</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>Kickoff call scheduled</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Stakeholder interviews complete</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Requirements doc drafted</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Competitor scan written up</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Success metrics agreed</div>
+              </div>
+            </div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">2</div>
+                <div class="template-phase-name">IA &amp; Wireframes</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>Sitemap draft</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Key user flows mapped</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Low-fidelity wireframes</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Content model defined</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Internal review signed off</div>
+              </div>
+            </div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">3</div>
+                <div class="template-phase-name">Visual Design</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>Moodboard approved</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Design system foundations</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Hero + core pages designed</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Interactive prototype shared</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Client sign-off</div>
+              </div>
+            </div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">4</div>
+                <div class="template-phase-name">Development</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>Environment + tooling set up</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Component library built</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Pages implemented</div>
+                <div class="template-phase-subtask"><span class="dot"></span>CMS integration</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Animation + polish pass</div>
+              </div>
+            </div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">5</div>
+                <div class="template-phase-name">QA</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>Cross-browser test</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Mobile responsiveness pass</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Accessibility review</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Performance audit</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Bug triage resolved</div>
+              </div>
+            </div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">6</div>
+                <div class="template-phase-name">Launch</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>DNS + hosting cutover</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Analytics + tag verification</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Go-live checklist</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Post-launch monitoring</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Client handoff doc</div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -11514,12 +11645,96 @@
             <div class="template-section-sub">Repeats every month after the first cycle</div>
           </div>
           <div class="template-phase-list">
-            <div class="template-phase"><div class="template-phase-num">1</div><div class="template-phase-name">Audit</div></div>
-            <div class="template-phase"><div class="template-phase-num">2</div><div class="template-phase-name">Keyword plan</div></div>
-            <div class="template-phase"><div class="template-phase-num">3</div><div class="template-phase-name">On-page</div></div>
-            <div class="template-phase"><div class="template-phase-num">4</div><div class="template-phase-name">Content calendar</div></div>
-            <div class="template-phase"><div class="template-phase-num">5</div><div class="template-phase-name">Link building</div></div>
-            <div class="template-phase"><div class="template-phase-num">6</div><div class="template-phase-name">Monthly report</div></div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">1</div>
+                <div class="template-phase-name">Audit</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>Technical crawl</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Content inventory</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Backlink profile</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Competitor scan</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Findings report</div>
+              </div>
+            </div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">2</div>
+                <div class="template-phase-name">Keyword plan</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>Seed list collected</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Search volume pull</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Intent + funnel grouping</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Priority matrix</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Client review</div>
+              </div>
+            </div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">3</div>
+                <div class="template-phase-name">On-page</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>Title &amp; meta updates</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Internal linking pass</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Schema markup</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Image optimization</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Core Web Vitals fix list</div>
+              </div>
+            </div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">4</div>
+                <div class="template-phase-name">Content calendar</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>Topics prioritized</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Briefs drafted</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Assignments made</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Editorial review</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Publish queue set</div>
+              </div>
+            </div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">5</div>
+                <div class="template-phase-name">Link building</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>Target list built</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Outreach sequences</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Pitch drafting</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Follow-up cadence</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Placements tracked</div>
+              </div>
+            </div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">6</div>
+                <div class="template-phase-name">Monthly report</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>Rankings delta</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Traffic analytics</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Win highlights</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Next month plan</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Client readout</div>
+              </div>
+            </div>
           </div>
         </div>
         <div class="template-section">
@@ -11579,13 +11794,111 @@
             <div class="template-section-sub">One batch of 8 cards per month</div>
           </div>
           <div class="template-phase-list">
-            <div class="template-phase"><div class="template-phase-num">1</div><div class="template-phase-name">Topic planning</div></div>
-            <div class="template-phase"><div class="template-phase-num">2</div><div class="template-phase-name">Outlining</div></div>
-            <div class="template-phase"><div class="template-phase-num">3</div><div class="template-phase-name">Drafting</div></div>
-            <div class="template-phase"><div class="template-phase-num">4</div><div class="template-phase-name">Editing</div></div>
-            <div class="template-phase"><div class="template-phase-num">5</div><div class="template-phase-name">Design &amp; imagery</div></div>
-            <div class="template-phase"><div class="template-phase-num">6</div><div class="template-phase-name">Publishing</div></div>
-            <div class="template-phase"><div class="template-phase-num">7</div><div class="template-phase-name">Distribution</div></div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">1</div>
+                <div class="template-phase-name">Topic planning</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>Topic brainstorm</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Keyword overlay</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Priority sort</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Briefs drafted</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Client approval</div>
+              </div>
+            </div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">2</div>
+                <div class="template-phase-name">Outlining</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>SERP analysis</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Outline draft</div>
+                <div class="template-phase-subtask"><span class="dot"></span>SME input</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Revision pass</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Writer handoff</div>
+              </div>
+            </div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">3</div>
+                <div class="template-phase-name">Drafting</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>First draft</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Fact-check</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Internal edit</div>
+                <div class="template-phase-subtask"><span class="dot"></span>SEO pass</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Client-facing draft</div>
+              </div>
+            </div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">4</div>
+                <div class="template-phase-name">Editing</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>Copy edit</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Voice &amp; tone pass</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Structure polish</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Final proofread</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Approval request</div>
+              </div>
+            </div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">5</div>
+                <div class="template-phase-name">Design &amp; imagery</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>Hero image</div>
+                <div class="template-phase-subtask"><span class="dot"></span>In-article graphics</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Social thumbnails</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Alt text + captions</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Image optimization</div>
+              </div>
+            </div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">6</div>
+                <div class="template-phase-name">Publishing</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>CMS upload</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Meta fields</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Internal links</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Schedule post</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Preview check</div>
+              </div>
+            </div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">7</div>
+                <div class="template-phase-name">Distribution</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>Social push</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Newsletter clip</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Repurposed snippets</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Internal Slack share</div>
+                <div class="template-phase-subtask"><span class="dot"></span>UTM tracking</div>
+              </div>
+            </div>
           </div>
         </div>
         <div class="template-section">
@@ -11645,12 +11958,96 @@
             <div class="template-section-sub">One-time engagement, roughly 8–12 weeks</div>
           </div>
           <div class="template-phase-list">
-            <div class="template-phase"><div class="template-phase-num">1</div><div class="template-phase-name">Discovery interviews</div></div>
-            <div class="template-phase"><div class="template-phase-num">2</div><div class="template-phase-name">Moodboards</div></div>
-            <div class="template-phase"><div class="template-phase-num">3</div><div class="template-phase-name">Logo concepts</div></div>
-            <div class="template-phase"><div class="template-phase-num">4</div><div class="template-phase-name">System design</div></div>
-            <div class="template-phase"><div class="template-phase-num">5</div><div class="template-phase-name">Guidelines</div></div>
-            <div class="template-phase"><div class="template-phase-num">6</div><div class="template-phase-name">Rollout kit</div></div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">1</div>
+                <div class="template-phase-name">Discovery interviews</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>Leadership sessions</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Customer interviews</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Internal survey</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Competitive audit</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Insights synthesis</div>
+              </div>
+            </div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">2</div>
+                <div class="template-phase-name">Moodboards</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>Direction sketches</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Mood exploration</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Typography study</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Color exploration</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Direction narrowed</div>
+              </div>
+            </div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">3</div>
+                <div class="template-phase-name">Logo concepts</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>Three directions explored</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Variations developed</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Refinement round</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Client pick</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Final polish</div>
+              </div>
+            </div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">4</div>
+                <div class="template-phase-name">System design</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>Color system</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Type scale</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Iconography</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Illustration style</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Motion principles</div>
+              </div>
+            </div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">5</div>
+                <div class="template-phase-name">Guidelines</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>Logo usage rules</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Color rules</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Type rules</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Imagery style</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Do's and don'ts</div>
+              </div>
+            </div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">6</div>
+                <div class="template-phase-name">Rollout kit</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>Social templates</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Email templates</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Deck template</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Swag mockups</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Launch checklist</div>
+              </div>
+            </div>
           </div>
         </div>
         <div class="template-section">
@@ -11710,12 +12107,96 @@
             <div class="template-section-sub">Runs on a monthly optimize-and-report cadence after launch</div>
           </div>
           <div class="template-phase-list">
-            <div class="template-phase"><div class="template-phase-num">1</div><div class="template-phase-name">Account audit</div></div>
-            <div class="template-phase"><div class="template-phase-num">2</div><div class="template-phase-name">Account setup</div></div>
-            <div class="template-phase"><div class="template-phase-num">3</div><div class="template-phase-name">Creative brief</div></div>
-            <div class="template-phase"><div class="template-phase-num">4</div><div class="template-phase-name">Launch</div></div>
-            <div class="template-phase"><div class="template-phase-num">5</div><div class="template-phase-name">Optimize</div></div>
-            <div class="template-phase"><div class="template-phase-num">6</div><div class="template-phase-name">Monthly report</div></div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">1</div>
+                <div class="template-phase-name">Account audit</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>Structure review</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Conversion setup check</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Keyword waste scan</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Creative audit</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Findings doc</div>
+              </div>
+            </div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">2</div>
+                <div class="template-phase-name">Account setup</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>Campaign structure</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Ad group build</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Negative keywords</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Audience setup</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Budget pacing rules</div>
+              </div>
+            </div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">3</div>
+                <div class="template-phase-name">Creative brief</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>Messaging pillars</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Audience hooks</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Visual direction</div>
+                <div class="template-phase-subtask"><span class="dot"></span>CTA matrix</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Internal approval</div>
+              </div>
+            </div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">4</div>
+                <div class="template-phase-name">Launch</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>Final QA</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Pixel + conversion check</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Soft launch</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Performance baseline</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Full ramp</div>
+              </div>
+            </div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">5</div>
+                <div class="template-phase-name">Optimize</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>Bid adjustments</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Creative refresh</div>
+                <div class="template-phase-subtask"><span class="dot"></span>A/B tests</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Audience refinement</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Budget reallocation</div>
+              </div>
+            </div>
+            <div class="template-phase">
+              <button type="button" class="template-phase-toggle" aria-expanded="false">
+                <div class="template-phase-num">6</div>
+                <div class="template-phase-name">Monthly report</div>
+                <div class="template-phase-meta">5 subtasks</div>
+                <svg class="template-phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="template-phase-subtasks">
+                <div class="template-phase-subtask"><span class="dot"></span>KPI summary</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Winning creatives</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Audience insights</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Next month plan</div>
+                <div class="template-phase-subtask"><span class="dot"></span>Client readout</div>
+              </div>
+            </div>
           </div>
         </div>
         <div class="template-section">
@@ -19089,6 +19570,16 @@ window.OPS_TEAM = OPS_TEAM;
       history.pushState(null, '', newHash);
     }
     routeToView('templates', id);
+  });
+
+  // Phase expand/collapse inside template detail
+  document.addEventListener('click', function(e) {
+    var toggle = e.target.closest('.template-phase-toggle');
+    if (!toggle) return;
+    var phase = toggle.closest('.template-phase');
+    if (!phase) return;
+    var isOpen = phase.classList.toggle('expanded');
+    toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
   });
 
   window.addEventListener('hashchange', function() {
