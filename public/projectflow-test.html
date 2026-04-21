@@ -715,6 +715,14 @@
     background: var(--bg-soft);
     color: var(--text-soft);
   }
+  .card-assignee.empty {
+    background: transparent;
+    color: var(--text-faint);
+    border: 1px dashed var(--hairline);
+  }
+  .card.is-new .card-title {
+    color: var(--text);
+  }
 
   /* done state */
   .card.is-done { opacity: 0.55; }
@@ -14121,7 +14129,14 @@ window.PROJECTFLOW_TEMPLATES = {
     defaultType: 'project',
     iconColor: 'logo-indigo',
     iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
-    phases: ['Discovery', 'IA & Wireframes', 'Visual Design', 'Development', 'QA', 'Launch'],
+    phases: [
+      { name: 'Discovery', subtasks: ['Kickoff call scheduled', 'Stakeholder interviews complete', 'Requirements doc drafted', 'Competitor scan written up', 'Success metrics agreed'] },
+      { name: 'IA & Wireframes', subtasks: ['Sitemap draft', 'Key user flows mapped', 'Low-fidelity wireframes', 'Content model defined', 'Internal review signed off'] },
+      { name: 'Visual Design', subtasks: ['Moodboard approved', 'Design system foundations', 'Hero + core pages designed', 'Interactive prototype shared', 'Client sign-off'] },
+      { name: 'Development', subtasks: ['Environment + tooling set up', 'Component library built', 'Pages implemented', 'CMS integration', 'Animation + polish pass'] },
+      { name: 'QA', subtasks: ['Cross-browser test', 'Mobile responsiveness pass', 'Accessibility review', 'Performance audit', 'Bug triage resolved'] },
+      { name: 'Launch', subtasks: ['DNS + hosting cutover', 'Analytics + tag verification', 'Go-live checklist', 'Post-launch monitoring', 'Client handoff doc'] }
+    ],
     onboarding: {
       fromClient: ['Domain registrar credentials', 'Hosting or CDN access', 'Brand kit — logos, fonts, colors', 'Content inventory spreadsheet'],
       fromUs: ['Provision staging environment', 'Create GitHub repository', 'Install Analytics & Tag Manager']
@@ -14135,7 +14150,14 @@ window.PROJECTFLOW_TEMPLATES = {
     defaultType: 'retainer',
     iconColor: 'logo-green',
     iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>',
-    phases: ['Technical Audit', 'Keyword Strategy', 'On-page', 'Content Cadence', 'Link Building', 'Reporting'],
+    phases: [
+      { name: 'Audit', subtasks: ['Technical crawl', 'Content inventory', 'Backlink profile', 'Competitor scan', 'Findings report'] },
+      { name: 'Keyword plan', subtasks: ['Seed list collected', 'Search volume pull', 'Intent + funnel grouping', 'Priority matrix', 'Client review'] },
+      { name: 'On-page', subtasks: ['Title & meta updates', 'Internal linking pass', 'Schema markup', 'Image optimization', 'Core Web Vitals fix list'] },
+      { name: 'Content calendar', subtasks: ['Topics prioritized', 'Briefs drafted', 'Assignments made', 'Editorial review', 'Publish queue set'] },
+      { name: 'Link building', subtasks: ['Target list built', 'Outreach sequences', 'Pitch drafting', 'Follow-up cadence', 'Placements tracked'] },
+      { name: 'Monthly report', subtasks: ['Rankings delta', 'Traffic analytics', 'Win highlights', 'Next month plan', 'Client readout'] }
+    ],
     onboarding: {
       fromClient: ['Google Search Console access', 'Google Analytics access', 'CMS admin login', 'Existing keyword tracking spreadsheet'],
       fromUs: ['Set up rank tracker', 'Install crawl monitoring']
@@ -14149,7 +14171,15 @@ window.PROJECTFLOW_TEMPLATES = {
     defaultType: 'retainer',
     iconColor: 'logo-purple',
     iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
-    phases: ['Research', 'Outlines', 'Drafting', 'Review', 'Publishing', 'Distribution', 'Reporting'],
+    phases: [
+      { name: 'Topic planning', subtasks: ['Topic brainstorm', 'Keyword overlay', 'Priority sort', 'Briefs drafted', 'Client approval'] },
+      { name: 'Outlining', subtasks: ['SERP analysis', 'Outline draft', 'SME input', 'Revision pass', 'Writer handoff'] },
+      { name: 'Drafting', subtasks: ['First draft', 'Fact-check', 'Internal edit', 'SEO pass', 'Client-facing draft'] },
+      { name: 'Editing', subtasks: ['Copy edit', 'Voice & tone pass', 'Structure polish', 'Final proofread', 'Approval request'] },
+      { name: 'Design & imagery', subtasks: ['Hero image', 'In-article graphics', 'Social thumbnails', 'Alt text + captions', 'Image optimization'] },
+      { name: 'Publishing', subtasks: ['CMS upload', 'Meta fields', 'Internal links', 'Schedule post', 'Preview check'] },
+      { name: 'Distribution', subtasks: ['Social push', 'Newsletter clip', 'Repurposed snippets', 'Internal Slack share', 'UTM tracking'] }
+    ],
     onboarding: {
       fromClient: ['Editorial voice guide', 'Subject-matter contacts', 'CMS publishing credentials'],
       fromUs: ['Set up editorial calendar', 'Configure grammar & plagiarism tooling', 'Agree on review SLAs']
@@ -14163,7 +14193,14 @@ window.PROJECTFLOW_TEMPLATES = {
     defaultType: 'project',
     iconColor: 'logo-amber',
     iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c3.31 0 6-2.69 6-6 0-5.52-4.48-10-10-10z"/></svg>',
-    phases: ['Discovery interviews', 'Moodboards', 'Logo concepts', 'System design', 'Guidelines', 'Rollout kit'],
+    phases: [
+      { name: 'Discovery interviews', subtasks: ['Leadership sessions', 'Customer interviews', 'Internal survey', 'Competitive audit', 'Insights synthesis'] },
+      { name: 'Moodboards', subtasks: ['Direction sketches', 'Mood exploration', 'Typography study', 'Color exploration', 'Direction narrowed'] },
+      { name: 'Logo concepts', subtasks: ['Three directions explored', 'Variations developed', 'Refinement round', 'Client pick', 'Final polish'] },
+      { name: 'System design', subtasks: ['Color system', 'Type scale', 'Iconography', 'Illustration style', 'Motion principles'] },
+      { name: 'Guidelines', subtasks: ['Logo usage rules', 'Color rules', 'Type rules', 'Imagery style', "Do's and don'ts"] },
+      { name: 'Rollout kit', subtasks: ['Social templates', 'Email templates', 'Deck template', 'Swag mockups', 'Launch checklist'] }
+    ],
     onboarding: {
       fromClient: ['Existing brand history & assets', 'Leadership interviews scheduled', 'Reference brands & inspirations'],
       fromUs: ['Set up moodboard workspace', 'Prepare interview script', 'Create style-tile template']
@@ -14177,7 +14214,14 @@ window.PROJECTFLOW_TEMPLATES = {
     defaultType: 'retainer',
     iconColor: 'logo-pink',
     iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>',
-    phases: ['Audit', 'Account structure', 'Creative', 'Tracking', 'Launch', 'Reporting'],
+    phases: [
+      { name: 'Account audit', subtasks: ['Structure review', 'Conversion setup check', 'Keyword waste scan', 'Creative audit', 'Findings doc'] },
+      { name: 'Account setup', subtasks: ['Campaign structure', 'Ad group build', 'Negative keywords', 'Audience setup', 'Budget pacing rules'] },
+      { name: 'Creative brief', subtasks: ['Messaging pillars', 'Audience hooks', 'Visual direction', 'CTA matrix', 'Internal approval'] },
+      { name: 'Launch', subtasks: ['Final QA', 'Pixel + conversion check', 'Soft launch', 'Performance baseline', 'Full ramp'] },
+      { name: 'Optimize', subtasks: ['Bid adjustments', 'Creative refresh', 'A/B tests', 'Audience refinement', 'Budget reallocation'] },
+      { name: 'Monthly report', subtasks: ['KPI summary', 'Winning creatives', 'Audience insights', 'Next month plan', 'Client readout'] }
+    ],
     onboarding: {
       fromClient: ['Ad account access (Meta, Google)', 'Conversion events mapped', 'Landing-page URLs', 'Creative asset library'],
       fromUs: ['Install tracking pixels', 'Set up budget pacing dashboard', 'Configure UTM naming convention']
@@ -14385,11 +14429,30 @@ function openCardPanel(cardEl){
     // Dates
     var startEl = document.getElementById('startDateInput');
     var dueEl = document.getElementById('dueDateInput');
-    if(startEl) startEl.value = ds.startDate || startEl.defaultValue || startEl.value;
-    if(dueEl) dueEl.value = ds.dueDate || dueEl.defaultValue || dueEl.value;
+    var isNewCard = ds.isNew === 'true';
+    if (isNewCard) {
+      if (startEl) startEl.value = '';
+      if (dueEl) dueEl.value = '';
+      // Clear the static sample labels so the manager picks real ones.
+      var labelsRow = document.getElementById('metaLabelsRow');
+      if (labelsRow) {
+        Array.from(labelsRow.querySelectorAll('.label-pill')).forEach(function(p){ p.remove(); });
+      }
+    } else {
+      if(startEl) startEl.value = ds.startDate || startEl.defaultValue || startEl.value;
+      if(dueEl) dueEl.value = ds.dueDate || dueEl.defaultValue || dueEl.value;
+    }
     // Assignees
     if(typeof closeAssigneeDropdown === 'function') closeAssigneeDropdown();
     if(typeof renderAssigneeChips === 'function') renderAssigneeChips();
+    // Checklist — rebuild from the card's data-checklist (JSON), so that
+    // each card owns its own checklist (phase subtasks for new-service
+    // cards, empty otherwise). Cards that still use the legacy static
+    // checklist markup (pre-existing sample cards) keep their original
+    // content untouched.
+    if (typeof ds.checklist === 'string') {
+      rebuildModalChecklist(ds.checklist);
+    }
   }
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -14999,9 +15062,88 @@ function toggleChecklistItem(btn){
   var text = btn.parentElement.querySelector('.checklist-text');
   if(text) text.classList.toggle('done', btn.classList.contains('checked'));
   recalcChecklistProgress();
+  persistModalChecklist();
+}
+
+/* Rebuild the card-modal's .checklist DOM from a JSON-encoded array of
+   { text, done, assigneeId } items (stored on the card as data-checklist).
+   Keeps the "new row" and "add" controls intact. */
+function rebuildModalChecklist(json){
+  var list = document.querySelector('#cardModalOverlay .checklist');
+  if (!list) return;
+  var items;
+  try { items = JSON.parse(json || '[]'); } catch (e) { items = []; }
+  if (!Array.isArray(items)) items = [];
+  var newRow = list.querySelector('.checklist-new-row');
+  var addBtn = list.querySelector('.checklist-add-row');
+  Array.from(list.querySelectorAll('.checklist-row:not(.checklist-new-row)')).forEach(function(r){ r.remove(); });
+  var frag = document.createDocumentFragment();
+  items.forEach(function(item){
+    var row = document.createElement('div');
+    row.className = 'checklist-row';
+    var checkedClass = item.done ? ' checked' : '';
+    var doneClass = item.done ? ' done' : '';
+    var assigneeHtml;
+    if (item.assigneeId) {
+      var initials = (item.assigneeId || '').toUpperCase().slice(0, 2);
+      assigneeHtml = '<span class="checklist-assignee" data-assignee-id="' + escHtml(item.assigneeId) + '" role="button" tabindex="0" aria-label="Assigned. Click to reassign." onclick="openChecklistAssigneePicker(event, this)" onkeydown="handleChecklistAssigneeKey(event)">' + escHtml(initials) + '</span>';
+    } else {
+      assigneeHtml = '<span class="checklist-assignee empty" data-assignee-id="" role="button" tabindex="0" aria-label="Unassigned. Click to assign." onclick="openChecklistAssigneePicker(event, this)" onkeydown="handleChecklistAssigneeKey(event)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>';
+    }
+    row.innerHTML =
+      '<button class="checklist-checkbox' + checkedClass + '" onclick="toggleChecklistItem(this)" aria-label="Toggle">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
+      '</button>' +
+      '<span class="checklist-text' + doneClass + '" tabindex="0" role="textbox" aria-label="Edit task" onclick="startEditChecklistText(this)" onkeydown="handleChecklistTextKey(event)">' + escHtml(item.text || '') + '</span>' +
+      assigneeHtml;
+    frag.appendChild(row);
+  });
+  if (newRow) list.insertBefore(frag, newRow);
+  else if (addBtn) list.insertBefore(frag, addBtn);
+  else list.appendChild(frag);
+}
+
+/* Serialize the modal's current checklist DOM back onto the underlying
+   card (data-checklist attribute), so checking an item, editing its text,
+   adding/removing items, or reassigning persists across re-opens. */
+function persistModalChecklist(){
+  if (typeof _currentCard === 'undefined' || !_currentCard) return;
+  if (!_currentCard.hasAttribute('data-checklist')) return;
+  var list = document.querySelector('#cardModalOverlay .checklist');
+  if (!list) return;
+  var items = [];
+  list.querySelectorAll('.checklist-row:not(.checklist-new-row)').forEach(function(row){
+    var text = row.querySelector('.checklist-text');
+    var box = row.querySelector('.checklist-checkbox');
+    var assn = row.querySelector('.checklist-assignee');
+    items.push({
+      text: text ? text.textContent.trim() : '',
+      done: !!(box && box.classList.contains('checked')),
+      assigneeId: assn ? (assn.getAttribute('data-assignee-id') || null) : null
+    });
+  });
+  _currentCard.setAttribute('data-checklist', JSON.stringify(items));
+  // Keep the card footer's subtask counter in sync with the updated
+  // checklist. Only new-service cards show this counter.
+  if (_currentCard.classList.contains('is-new')) {
+    var meta = _currentCard.querySelector('.card-meta');
+    if (meta) {
+      var done = items.filter(function(i){ return i.done; }).length;
+      var total = items.length;
+      meta.innerHTML = total > 0
+        ? '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' + done + ' / ' + total + '</span>'
+        : '';
+    }
+  }
+}
+
+function escHtml(s){
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 function recalcChecklistProgress(){
-  var boxes = document.querySelectorAll('.checklist .checklist-checkbox');
+  var boxes = document.querySelectorAll('.checklist .checklist-row:not(.checklist-new-row) .checklist-checkbox');
   var bar = document.querySelector('.progress-bar');
   var counter = document.querySelector('.section-label .progress-pct');
   if(!boxes.length){
@@ -16210,6 +16352,7 @@ function _commitChecklistEdit(e){
   delete el.dataset.orig;
   // Clear selection so nothing stays highlighted
   try { window.getSelection().removeAllRanges(); } catch(err){}
+  if (typeof persistModalChecklist === 'function') persistModalChecklist();
 }
 
 function handleChecklistTextKey(e){
@@ -18081,6 +18224,7 @@ function _insertNewChecklistRow(text){
     anchor.parentNode.insertBefore(row, anchor);
   }
   if(typeof recalcChecklistProgress === 'function') recalcChecklistProgress();
+  if(typeof persistModalChecklist === 'function') persistModalChecklist();
   return row;
 }
 
@@ -21296,6 +21440,35 @@ window.OPS_TEAM = OPS_TEAM;
   }
 
   function buildCard(task, service, client, today){
+    // New-service cards: empty metadata, checklist seeded from the
+    // template's phase subtasks. No synthesized description or activity
+    // counters — the managing PM fills those in manually.
+    if (task.isNew) {
+      var checklistJson = JSON.stringify(task.checklist || []);
+      var checklistEsc = checklistJson.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      var newAttrs = ''
+        + ' data-card-id="' + esc(task.id) + '"'
+        + ' data-priority=""'
+        + ' data-assignees=""'
+        + ' data-is-new="true"'
+        + ' data-checklist="' + checklistEsc + '"'
+        + ' data-client-id="' + esc(task.clientId) + '"'
+        + ' data-service-id="' + esc(task.serviceId) + '"';
+      var subtaskCount = (task.checklist || []).length;
+      var metaNew = subtaskCount > 0
+        ? '<span>' + ICON_CHECK + '0 / ' + subtaskCount + '</span>'
+        : '';
+      return '<div class="card is-new"' + newAttrs + '>'
+        + '<div class="card-title">' + esc(task.title) + '</div>'
+        + '<div class="card-footer">'
+          + '<div class="card-meta">' + metaNew + '</div>'
+          + '<div class="card-assignee empty" aria-label="Unassigned">'
+            + '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
+          + '</div>'
+        + '</div>'
+      + '</div>';
+    }
+
     var ids = assigneeList(task);
     ids.forEach(ensureMemberExists);
     var seed = h(task.id);
@@ -24314,7 +24487,7 @@ window.OPS_TEAM = OPS_TEAM;
   }
 
   function renderPreview(t){
-    var phasesHtml = t.phases.map(function(p){ return '<div class="as-preview-chip">' + esc(p) + '</div>'; }).join('');
+    var phasesHtml = t.phases.map(function(p){ return '<div class="as-preview-chip">' + esc(p.name) + '</div>'; }).join('');
     var briefHtml = t.briefFields.map(function(b){ return '<div class="as-preview-chip">' + esc(b) + '</div>'; }).join('');
     var fcHtml = t.onboarding.fromClient.map(function(i){ return '<div class="as-preview-list-item"><span class="dot"></span>' + esc(i) + '</div>'; }).join('');
     var fuHtml = t.onboarding.fromUs.map(function(i){ return '<div class="as-preview-list-item"><span class="dot"></span>' + esc(i) + '</div>'; }).join('');
@@ -24416,7 +24589,9 @@ window.OPS_TEAM = OPS_TEAM;
           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' +
         '</button>' +
       '</div>';
-    svcList.appendChild(card);
+    // Insert at top so the most recent service is first on the client profile.
+    if (svcList.firstChild) svcList.insertBefore(card, svcList.firstChild);
+    else svcList.appendChild(card);
     var count = svcList.querySelectorAll('.service-card').length;
     var sub = svcSection.querySelector('[data-services-sub]');
     if (sub) sub.textContent = count + (count === 1 ? ' service' : ' services') + ' · Onboarding in progress';
@@ -24463,11 +24638,38 @@ window.OPS_TEAM = OPS_TEAM;
     if (onbSub) onbSub.textContent = done + ' / ' + total;
 
     // Register into PROJECTFLOW_DATA so the board view can render this
-    // newly-created service (and find its client on back-nav).
+    // newly-created service (and find its client on back-nav). Each phase
+    // becomes a card in the To Do column with the phase's subtasks as the
+    // card's checklist; every other field stays empty so the owning manager
+    // fills in assignees, priority, labels, and dates manually.
     if (window.PROJECTFLOW_DATA) {
       var D = window.PROJECTFLOW_DATA;
       D.services = D.services || [];
-      D.services.push({
+      D.tasks = D.tasks || [];
+      var taskIds = [];
+      (svc.template.phases || []).forEach(function(phase, idx){
+        var taskId = serviceId + '-t' + idx;
+        D.tasks.push({
+          id: taskId,
+          serviceId: serviceId,
+          clientId: clientId,
+          title: phase.name,
+          columnId: 'todo',
+          priority: '',
+          assigneeId: null,
+          labels: [],
+          dueDate: null,
+          createdAt: null,
+          isNew: true,
+          checklist: (phase.subtasks || []).map(function(text){
+            return { text: text, done: false, assigneeId: null };
+          })
+        });
+        taskIds.push(taskId);
+      });
+      // Unshift so the new service appears first when iterating services
+      // (e.g. in board picker dropdowns that list a client's services).
+      D.services.unshift({
         id: serviceId,
         clientId: clientId,
         name: svc.name,
@@ -24475,12 +24677,12 @@ window.OPS_TEAM = OPS_TEAM;
         templateKey: svc.template.id,
         progress: 0,
         nextDeliverableAt: null,
-        taskIds: []
+        taskIds: taskIds
       });
       var client = (D.clients || []).filter(function(c){ return c.id === clientId; })[0];
       if (client) {
         client.serviceIds = client.serviceIds || [];
-        client.serviceIds.push(serviceId);
+        client.serviceIds.unshift(serviceId);
       }
     }
 
