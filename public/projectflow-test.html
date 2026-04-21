@@ -24344,17 +24344,26 @@ window.OPS_TEAM = OPS_TEAM;
     var name = (nameInput.value || '').trim();
     if (!name) { nameInput.focus(); return; }
     var template = window.PROJECTFLOW_TEMPLATES[currentTemplateId];
-    addServiceToClient(currentClientId, {
+    var serviceId = addServiceToClient(currentClientId, {
       template: template,
       name: name,
       type: typeSelect.value
     });
     close();
+    if (serviceId) {
+      var target = '#board/' + serviceId;
+      if (window.location.hash !== target) {
+        window.location.hash = target;
+      } else {
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
+      }
+      window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+    }
   }
 
   function addServiceToClient(clientId, svc){
     var panel = document.querySelector('[data-client-panel="' + clientId + '"]');
-    if (!panel) return;
+    if (!panel) return null;
 
     // Ensure Services section
     var svcSection = panel.querySelector('[data-client-services]');
@@ -24453,9 +24462,32 @@ window.OPS_TEAM = OPS_TEAM;
     var onbSub = onbSection.querySelector('[data-onboarding-sub]');
     if (onbSub) onbSub.textContent = done + ' / ' + total;
 
+    // Register into PROJECTFLOW_DATA so the board view can render this
+    // newly-created service (and find its client on back-nav).
+    if (window.PROJECTFLOW_DATA) {
+      var D = window.PROJECTFLOW_DATA;
+      D.services = D.services || [];
+      D.services.push({
+        id: serviceId,
+        clientId: clientId,
+        name: svc.name,
+        type: svc.type,
+        templateKey: svc.template.id,
+        progress: 0,
+        nextDeliverableAt: null,
+        taskIds: []
+      });
+      var client = (D.clients || []).filter(function(c){ return c.id === clientId; })[0];
+      if (client) {
+        client.serviceIds = client.serviceIds || [];
+        client.serviceIds.push(serviceId);
+      }
+    }
+
     if (typeof window.showToast === 'function') {
       window.showToast('Added ' + svc.name, { duration: 2200 });
     }
+    return serviceId;
   }
 
   document.addEventListener('click', function(e){
