@@ -22408,8 +22408,13 @@ window.OPS_TEAM = OPS_TEAM;
     }
     return id;
   }
-  function pickLogoColor(){
-    return LOGO_COLORS[Math.floor(Math.random() * LOGO_COLORS.length)];
+  function pickLogoColor(seed){
+    if (!seed) return LOGO_COLORS[Math.floor(Math.random() * LOGO_COLORS.length)];
+    var h = 0, s = String(seed);
+    for (var i = 0; i < s.length; i++) {
+      h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+    }
+    return LOGO_COLORS[Math.abs(h) % LOGO_COLORS.length];
   }
 
   function openModal(){
@@ -22551,7 +22556,7 @@ window.OPS_TEAM = OPS_TEAM;
       managerInitials: managerOpt ? (managerOpt.getAttribute('data-initials') || 'NT') : 'NT',
       managerColor: managerOpt ? (managerOpt.getAttribute('data-color') || '#5e5ce6') : '#5e5ce6',
       initials: getInitials(name),
-      logoColor: pickLogoColor(),
+      logoColor: pickLogoColor(name),
       notes: getValue('notes')
     };
 
