@@ -6737,6 +6737,274 @@
   }
   .meetings-view-all:hover { background: var(--bg-soft); color: var(--text); }
 
+  /* Touchpoint type indicators — shown at the start of each entry */
+  .meeting-type-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 8px;
+    flex-shrink: 0;
+    color: var(--text-muted);
+  }
+  .meeting-type-icon svg { width: 13px; height: 13px; }
+  .meeting-type-icon[data-type="meeting"]  { background: color-mix(in srgb, #0a84ff 14%, transparent); color: #0a84ff; }
+  .meeting-type-icon[data-type="call"]     { background: color-mix(in srgb, #30d158 14%, transparent); color: #30d158; }
+  .meeting-type-icon[data-type="email"]    { background: color-mix(in srgb, #bf5af2 14%, transparent); color: #bf5af2; }
+  .meeting-type-icon[data-type="in-person"]{ background: color-mix(in srgb, #ff9f0a 14%, transparent); color: #ff9f0a; }
+  .meeting-type-icon[data-type="other"]    { background: var(--bg-soft); color: var(--text-muted); }
+
+  /* ── Log touchpoint modal ── */
+  .log-modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 1200;
+    align-items: center; justify-content: center;
+    padding: 24px;
+    animation: logFadeIn 0.18s ease-out;
+  }
+  .log-modal-overlay[data-open="true"] { display: flex; }
+  @keyframes logFadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .log-modal {
+    width: 100%; max-width: 560px;
+    max-height: 92vh;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    border-radius: 18px;
+    display: flex; flex-direction: column;
+    box-shadow: var(--modal-shadow, 0 20px 60px rgba(0,0,0,0.35));
+    animation: logSlideUp 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+    overflow: hidden;
+  }
+  @keyframes logSlideUp { from { transform: translateY(12px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+  .log-modal-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 16px;
+    padding: 20px 22px 12px;
+  }
+  .log-modal-title {
+    font-size: 18px; font-weight: 600; letter-spacing: -0.01em;
+    color: var(--text);
+  }
+  .log-modal-subtitle {
+    font-size: 12.5px; line-height: 1.5; color: var(--text-muted);
+    padding: 0 22px 16px;
+    border-bottom: 1px solid var(--hairline-soft);
+  }
+  .log-modal-close {
+    width: 28px; height: 28px; border-radius: 8px;
+    border: 0; background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: background 0.12s, color 0.12s;
+    flex-shrink: 0;
+  }
+  .log-modal-close:hover { background: var(--bg-soft); color: var(--text); }
+  .log-modal-close svg { width: 14px; height: 14px; }
+
+  .log-modal-form {
+    display: flex; flex-direction: column; gap: 18px;
+    padding: 18px 22px;
+    overflow-y: auto;
+    flex: 1 1 auto;
+  }
+  .log-field { display: flex; flex-direction: column; gap: 6px; }
+  .log-field-row {
+    display: grid; grid-template-columns: 1fr 140px;
+    gap: 14px;
+  }
+  .log-field-label {
+    font-size: 11px; font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .log-field-hint {
+    font-size: 11px; color: var(--text-faint);
+    margin-top: 2px;
+  }
+
+  .log-field-input, .log-field-textarea, .log-field-select {
+    font: inherit; font-size: 14px; color: var(--text);
+    padding: 9px 12px;
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    outline: none;
+    transition: border-color 0.12s, background 0.12s, box-shadow 0.12s;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .log-field-input:focus, .log-field-textarea:focus, .log-field-select:focus {
+    border-color: var(--highlight);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--highlight) 22%, transparent);
+  }
+  .log-field-textarea { resize: vertical; min-height: 72px; max-height: 200px; line-height: 1.55; }
+
+  .log-type-group {
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    padding: 4px;
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+  }
+  .log-type-chip {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 8px 4px;
+    border: 0; border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 11px; font-weight: 500;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+  }
+  .log-type-chip svg { width: 15px; height: 15px; }
+  .log-type-chip:hover { background: var(--bg-elev); color: var(--text); }
+  .log-type-chip[data-selected="true"] {
+    background: var(--bg-elev);
+    color: var(--text);
+    box-shadow: 0 0 0 1px var(--highlight) inset, 0 1px 2px rgba(0,0,0,0.1);
+  }
+  .log-type-chip[data-selected="true"] svg { color: var(--highlight); }
+
+  .log-attendees {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+    padding: 6px 8px;
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    min-height: 38px;
+  }
+  .log-attendees:focus-within {
+    border-color: var(--highlight);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--highlight) 22%, transparent);
+  }
+  .log-attendee-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 8px 3px 4px;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    font-size: 12px; color: var(--text);
+  }
+  .log-attendee-chip-avatar {
+    width: 18px; height: 18px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 8px; font-weight: 700; color: #fff;
+    letter-spacing: 0.02em;
+  }
+  .log-attendee-chip-remove {
+    background: transparent; border: 0; padding: 0;
+    color: var(--text-faint); cursor: pointer;
+    width: 14px; height: 14px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+  }
+  .log-attendee-chip-remove:hover { color: var(--status-fire); background: color-mix(in srgb, var(--status-fire) 14%, transparent); }
+  .log-attendees-input {
+    flex: 1 1 auto;
+    min-width: 100px;
+    border: 0; background: transparent;
+    outline: none;
+    font: inherit; font-size: 13px; color: var(--text);
+    padding: 3px 4px;
+  }
+  .log-attendees-suggest {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+    margin-top: 6px;
+    font-size: 11px; color: var(--text-faint);
+  }
+  .log-suggest-chip {
+    padding: 3px 9px;
+    background: transparent;
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    font-size: 11px; color: var(--text-muted);
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+  }
+  .log-suggest-chip:hover { background: var(--bg-soft); color: var(--text); border-color: var(--hairline-strong); }
+
+  .log-actions-list {
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .log-action-row {
+    display: grid; grid-template-columns: 1fr 110px 130px 28px;
+    gap: 6px;
+    align-items: center;
+  }
+  .log-action-row .log-field-input {
+    font-size: 13px; padding: 7px 10px;
+  }
+  .log-action-row .log-field-select {
+    font-size: 13px; padding: 7px 10px;
+  }
+  .log-action-remove {
+    width: 28px; height: 28px;
+    border: 0; border-radius: 8px;
+    background: transparent;
+    color: var(--text-faint);
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: background 0.12s, color 0.12s;
+  }
+  .log-action-remove:hover { background: color-mix(in srgb, var(--status-fire) 12%, transparent); color: var(--status-fire); }
+  .log-action-remove svg { width: 12px; height: 12px; }
+
+  .log-actions-add {
+    display: inline-flex; align-items: center; gap: 6px;
+    align-self: flex-start;
+    padding: 6px 12px;
+    background: transparent;
+    border: 1px dashed var(--hairline-strong);
+    border-radius: 10px;
+    color: var(--text-muted);
+    font-size: 12px; font-weight: 500;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+  }
+  .log-actions-add:hover {
+    background: var(--bg-soft);
+    color: var(--text);
+    border-color: var(--highlight);
+  }
+  .log-actions-add svg { width: 12px; height: 12px; }
+
+  .log-modal-footer {
+    display: flex; align-items: center; justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 22px;
+    border-top: 1px solid var(--hairline-soft);
+    background: var(--bg-soft);
+  }
+  .log-modal-cancel, .log-modal-save {
+    padding: 9px 18px;
+    border-radius: 10px;
+    font-size: 13px; font-weight: 500;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, transform 0.08s;
+  }
+  .log-modal-cancel {
+    background: transparent;
+    border: 1px solid var(--hairline);
+    color: var(--text);
+  }
+  .log-modal-cancel:hover { background: var(--bg-elev); border-color: var(--hairline-strong); }
+  .log-modal-save {
+    background: var(--highlight);
+    border: 1px solid var(--highlight);
+    color: #fff;
+    font-weight: 600;
+  }
+  .log-modal-save:hover { filter: brightness(1.08); }
+  .log-modal-save:active { transform: scale(0.98); }
+  .log-modal-save:disabled {
+    opacity: 0.45; cursor: not-allowed;
+    filter: none;
+  }
+
   /* Notes panel — constrained width for comfortable reading */
   .notes-panel {
     background: var(--bg-elev);
@@ -8733,6 +9001,7 @@
           <!-- Meeting 1: fresh, no TL;DR yet -->
           <div class="meeting-entry">
             <div class="meeting-top">
+              <span class="meeting-type-icon" data-type="meeting" data-tip="Video meeting" data-tip-pos="above"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></span>
               <span class="meeting-date">Today · 10:00 AM</span>
               <div class="meeting-topic">Website redesign checkpoint</div>
               <div class="meeting-attendees">
@@ -8777,6 +9046,7 @@
           <!-- Meeting 2: Yesterday, TL;DR written and still editable -->
           <div class="meeting-entry">
             <div class="meeting-top">
+              <span class="meeting-type-icon" data-type="meeting" data-tip="Video meeting" data-tip-pos="above"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></span>
               <span class="meeting-date">Yesterday · 2:00 PM</span>
               <div class="meeting-topic">Weekly client sync</div>
               <div class="meeting-attendees">
@@ -8815,6 +9085,7 @@
           <!-- Meeting 3: Apr 18, TL;DR locked (>72h), overdue action item -->
           <div class="meeting-entry">
             <div class="meeting-top">
+              <span class="meeting-type-icon" data-type="meeting" data-tip="Video meeting" data-tip-pos="above"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></span>
               <span class="meeting-date">Apr 18 · 4:30 PM</span>
               <div class="meeting-topic">Escalation: billing dispute</div>
               <div class="meeting-attendees">
@@ -8856,6 +9127,7 @@
           <!-- Meeting 4: Apr 14, TL;DR locked, all action items done -->
           <div class="meeting-entry">
             <div class="meeting-top">
+              <span class="meeting-type-icon" data-type="meeting" data-tip="Video meeting" data-tip-pos="above"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></span>
               <span class="meeting-date">Apr 14 · 11:00 AM</span>
               <div class="meeting-topic">Q2 roadmap sync</div>
               <div class="meeting-attendees">
@@ -10980,6 +11252,99 @@
     </section>
   </div>
 </div>
+</div>
+
+<!-- Log touchpoint modal — opens from the "Log touchpoint" button in Touchpoints tab -->
+<div class="log-modal-overlay" data-log-modal aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="logModalTitle">
+  <div class="log-modal" role="document">
+    <div class="log-modal-header">
+      <div>
+        <div class="log-modal-title" id="logModalTitle">Log a touchpoint</div>
+      </div>
+      <button class="log-modal-close" data-log-close type="button" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="log-modal-subtitle">
+      Capture what just happened with the client — calls, quick emails, in-person visits, or meetings outside Fellow. Limited to the last 14 days so the papertrail stays honest.
+    </div>
+
+    <form class="log-modal-form" data-log-form onsubmit="return false;">
+
+      <div class="log-field">
+        <div class="log-field-label">Type</div>
+        <div class="log-type-group" role="radiogroup" aria-label="Touchpoint type">
+          <button type="button" class="log-type-chip" data-log-type="meeting" data-selected="true" role="radio" aria-checked="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+            Meeting
+          </button>
+          <button type="button" class="log-type-chip" data-log-type="call" role="radio" aria-checked="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            Call
+          </button>
+          <button type="button" class="log-type-chip" data-log-type="email" role="radio" aria-checked="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            Email
+          </button>
+          <button type="button" class="log-type-chip" data-log-type="in-person" role="radio" aria-checked="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            In-person
+          </button>
+          <button type="button" class="log-type-chip" data-log-type="other" role="radio" aria-checked="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Other
+          </button>
+        </div>
+      </div>
+
+      <div class="log-field-row">
+        <div class="log-field">
+          <label class="log-field-label" for="logTopicInput">Topic</label>
+          <input id="logTopicInput" class="log-field-input" data-log-topic type="text" placeholder="Website redesign checkpoint" autocomplete="off">
+        </div>
+        <div class="log-field">
+          <label class="log-field-label" for="logDateInput">When</label>
+          <input id="logDateInput" class="log-field-input" data-log-date type="date">
+          <div class="log-field-hint">Within the last 14 days</div>
+        </div>
+      </div>
+
+      <div class="log-field">
+        <div class="log-field-label">Attendees</div>
+        <div class="log-attendees" data-log-attendees>
+          <input class="log-attendees-input" data-log-attendee-input type="text" placeholder="Type a name and hit Enter" autocomplete="off">
+        </div>
+        <div class="log-attendees-suggest">
+          <span>Quick add:</span>
+          <button type="button" class="log-suggest-chip" data-suggest-attendee="Harvey Kim">Harvey Kim</button>
+          <button type="button" class="log-suggest-chip" data-suggest-attendee="Jessica Park">Jessica Park</button>
+          <button type="button" class="log-suggest-chip" data-suggest-attendee="Ray Ortiz">Ray Ortiz</button>
+          <button type="button" class="log-suggest-chip" data-suggest-attendee="Elena Martinez">Elena Martinez</button>
+          <button type="button" class="log-suggest-chip" data-suggest-attendee="Nikko Trinidad">Nikko Trinidad</button>
+        </div>
+      </div>
+
+      <div class="log-field">
+        <label class="log-field-label" for="logTldrInput">TL;DR</label>
+        <textarea id="logTldrInput" class="log-field-textarea" data-log-tldr rows="3" placeholder="What happened, why it mattered, what's next."></textarea>
+      </div>
+
+      <div class="log-field">
+        <div class="log-field-label">Action items <span style="text-transform:none;font-weight:400;color:var(--text-faint);letter-spacing:0;">(optional)</span></div>
+        <div class="log-actions-list" data-log-actions></div>
+        <button type="button" class="log-actions-add" data-log-add-action>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add action item
+        </button>
+      </div>
+
+    </form>
+
+    <div class="log-modal-footer">
+      <button type="button" class="log-modal-cancel" data-log-close>Cancel</button>
+      <button type="button" class="log-modal-save" data-log-save>Save touchpoint</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -18523,26 +18888,25 @@ window.OPS_TEAM = OPS_TEAM;
     return months[d.getMonth()] + ' ' + d.getDate();
   }
 
+  function dispatch(root){
+    var kind = root.getAttribute('data-kind');
+    if (kind === 'text') startTextEdit(root);
+    else if (kind === 'picker') openPicker(root);
+    else if (kind === 'date') openDateEdit(root);
+  }
   function init(){
-    document.querySelectorAll('.inline-edit').forEach(function(root){
-      var kind = root.getAttribute('data-kind');
-      root.addEventListener('click', function(e){
-        // Ignore clicks that land on the input itself or picker items
-        if (e.target.closest('.inline-edit-input')) return;
-        if (e.target.closest('.inline-picker-item')) return;
-        if (kind === 'text') startTextEdit(root);
-        else if (kind === 'picker') openPicker(root);
-        else if (kind === 'date') openDateEdit(root);
-      });
-      root.addEventListener('keydown', function(e){
-        if (e.target !== root) return;
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          if (kind === 'text') startTextEdit(root);
-          else if (kind === 'picker') openPicker(root);
-          else if (kind === 'date') openDateEdit(root);
-        }
-      });
+    document.addEventListener('click', function(e){
+      var root = e.target.closest('.inline-edit');
+      if (!root) return;
+      if (e.target.closest('.inline-edit-input')) return;
+      if (e.target.closest('.inline-picker-item')) return;
+      dispatch(root);
+    });
+    document.addEventListener('keydown', function(e){
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      if (!e.target.classList || !e.target.classList.contains('inline-edit')) return;
+      e.preventDefault();
+      dispatch(e.target);
     });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
@@ -18596,51 +18960,383 @@ window.OPS_TEAM = OPS_TEAM;
   else init();
 })();
 
-/* ── Meetings section — action-item checkboxes, promote-to-card, stubs. */
+/* ── Meetings section — action-item checkboxes, promote-to-card, stubs.
+   Event-delegated so new entries (e.g. Log touchpoint) just work. */
 (function(){
   function init(){
-    document.querySelectorAll('[data-action-item]').forEach(function(item){
-      var check = item.querySelector('.meeting-action-check');
+    document.addEventListener('click', function(e){
+      var check = e.target.closest('.meeting-action-check');
       if (check) {
-        check.addEventListener('click', function(e){
+        var item = check.closest('[data-action-item]');
+        if (item) {
           e.stopPropagation();
           var done = item.getAttribute('data-done') === 'true';
           item.setAttribute('data-done', done ? 'false' : 'true');
           check.setAttribute('aria-checked', done ? 'false' : 'true');
           var txtEl = item.querySelector('.meeting-action-text');
           var txt = txtEl ? txtEl.textContent : 'action item';
-          if (window.showToast) {
-            window.showToast((done ? 'Reopened · ' : 'Done · ') + txt, { duration: 1600 });
-          }
-        });
+          if (window.showToast) window.showToast((done ? 'Reopened · ' : 'Done · ') + txt, { duration: 1600 });
+          return;
+        }
       }
-      var promote = item.querySelector('[data-promote-to-card]');
-      if (promote) promote.addEventListener('click', function(e){
+      var promote = e.target.closest('[data-promote-to-card]');
+      if (promote) {
         e.stopPropagation();
         if (window.showToast) window.showToast('Promoted to Kanban card — To Do', { duration: 1800 });
-      });
-    });
-
-    document.querySelectorAll('[data-log-meeting]').forEach(function(btn){
-      btn.addEventListener('click', function(){
-        if (window.showToast) window.showToast('Log touchpoint flow — coming soon', { duration: 1800 });
-      });
-    });
-
-    document.querySelectorAll('[data-fellow-link]').forEach(function(link){
-      link.addEventListener('click', function(e){
+        return;
+      }
+      var fellow = e.target.closest('[data-fellow-link]');
+      if (fellow) {
         e.preventDefault();
         if (window.showToast) window.showToast('Opening Fellow recording — demo stub', { duration: 1800 });
-      });
-    });
-
-    document.querySelectorAll('[data-view-all-meetings]').forEach(function(link){
-      link.addEventListener('click', function(e){
+        return;
+      }
+      var viewAll = e.target.closest('[data-view-all-meetings]');
+      if (viewAll) {
         e.preventDefault();
         if (window.showToast) window.showToast('Full touchpoint log — coming soon', { duration: 1800 });
-      });
+        return;
+      }
     });
   }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+
+/* ── Log touchpoint modal — opens from any [data-log-meeting] button.
+   Manually-logged entries stay editable forever (no 72h lock). Date input is
+   restricted to the last 14 days. Types: meeting / call / email / in-person / other. */
+(function(){
+  var TYPES = {
+    meeting:     { label: 'Video meeting',   svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>' },
+    call:        { label: 'Phone call',      svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>' },
+    email:       { label: 'Email thread',    svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>' },
+    'in-person': { label: 'In-person visit', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' },
+    other:       { label: 'Other touchpoint',svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' }
+  };
+
+  var TEAM = [
+    { name: 'Harvey Kim',      initials: 'HK', color: '#5e5ce6' },
+    { name: 'Jessica Park',    initials: 'JP', color: '#ff375f' },
+    { name: 'Ray Ortiz',       initials: 'RO', color: '#30d158' },
+    { name: 'Elena Martinez',  initials: 'EM', color: '#bf5af2' },
+    { name: 'Nikko Trinidad',  initials: 'NT', color: '#0a84ff' },
+    { name: 'Marcus Alvarado', initials: 'MA', color: '#ff9f0a' },
+    { name: 'Kenji Chen',      initials: 'KC', color: '#5e5ce6' }
+  ];
+  var FALLBACK_COLORS = ['#0a84ff', '#5e5ce6', '#30d158', '#ff9f0a', '#bf5af2', '#ff375f'];
+
+  function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+    });
+  }
+  function pad2(n){ return n < 10 ? '0' + n : '' + n; }
+  function toYMD(d){ return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); }
+  function parseYMD(s){
+    if (!s) return null;
+    var p = s.split('-').map(Number);
+    if (p.length !== 3) return null;
+    return new Date(p[0], p[1]-1, p[2]);
+  }
+  function findPerson(name){
+    var lower = String(name || '').toLowerCase().trim();
+    if (!lower) return null;
+    for (var i = 0; i < TEAM.length; i++) {
+      if (TEAM[i].name.toLowerCase() === lower) return TEAM[i];
+    }
+    var words = String(name).trim().split(/\s+/);
+    var initials = (words[0] || '?').charAt(0).toUpperCase();
+    if (words.length > 1) initials += words[words.length - 1].charAt(0).toUpperCase();
+    var color = FALLBACK_COLORS[Math.abs(name.length) % FALLBACK_COLORS.length];
+    return { name: String(name).trim(), initials: initials, color: color };
+  }
+  var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function formatEntryDate(d){
+    var today = new Date(); today.setHours(0,0,0,0);
+    var dd = new Date(d); dd.setHours(0,0,0,0);
+    var diff = Math.round((today - dd) / 86400000);
+    if (diff === 0) return 'Today';
+    if (diff === 1) return 'Yesterday';
+    return MONTHS[d.getMonth()] + ' ' + d.getDate();
+  }
+  function formatDueLabel(ymd){
+    if (!ymd) return { label: '', status: '' };
+    var d = parseYMD(ymd); if (!d) return { label: '', status: '' };
+    var today = new Date(); today.setHours(0,0,0,0);
+    d.setHours(0,0,0,0);
+    var diff = Math.round((d - today) / 86400000);
+    if (diff === 0) return { label: 'Today', status: 'today' };
+    if (diff < 0)   return { label: MONTHS[d.getMonth()] + ' ' + d.getDate(), status: 'overdue' };
+    return { label: MONTHS[d.getMonth()] + ' ' + d.getDate(), status: '' };
+  }
+
+  var overlay, topicEl, dateEl, tldrEl, attendeesEl, attendeeInput, actionsList;
+  var selectedType = 'meeting';
+  var attendees = [];
+
+  function renderAttendees(){
+    Array.prototype.forEach.call(attendeesEl.querySelectorAll('.log-attendee-chip'), function(n){ n.remove(); });
+    attendees.forEach(function(p, idx){
+      var chip = document.createElement('span');
+      chip.className = 'log-attendee-chip';
+      chip.innerHTML =
+        '<span class="log-attendee-chip-avatar" style="background:' + p.color + '">' + escapeHtml(p.initials) + '</span>' +
+        '<span>' + escapeHtml(p.name) + '</span>' +
+        '<button type="button" class="log-attendee-chip-remove" aria-label="Remove" data-remove-index="' + idx + '">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+        '</button>';
+      attendeesEl.insertBefore(chip, attendeeInput);
+    });
+  }
+  function addAttendee(name){
+    var p = findPerson(name);
+    if (!p) return;
+    var dup = attendees.some(function(a){ return a.name.toLowerCase() === p.name.toLowerCase(); });
+    if (!dup) { attendees.push(p); renderAttendees(); }
+  }
+  function removeAttendeeAt(idx){
+    attendees.splice(idx, 1);
+    renderAttendees();
+  }
+
+  function assigneeSelectHTML(){
+    var opts = '<option value="">Assignee</option>';
+    TEAM.forEach(function(p){ opts += '<option value="' + escapeHtml(p.name) + '">' + escapeHtml(p.name) + '</option>'; });
+    return opts;
+  }
+  function addActionRow(){
+    var row = document.createElement('div');
+    row.className = 'log-action-row';
+    row.setAttribute('data-action-row', '');
+    row.innerHTML =
+      '<input class="log-field-input" data-action-text type="text" placeholder="Action item" autocomplete="off">' +
+      '<select class="log-field-select" data-action-assignee>' + assigneeSelectHTML() + '</select>' +
+      '<input class="log-field-input" data-action-due type="date">' +
+      '<button type="button" class="log-action-remove" data-action-remove aria-label="Remove">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+      '</button>';
+    actionsList.appendChild(row);
+  }
+
+  function resetForm(){
+    selectedType = 'meeting';
+    overlay.querySelectorAll('[data-log-type]').forEach(function(b){
+      var isSel = b.getAttribute('data-log-type') === 'meeting';
+      b.setAttribute('data-selected', isSel ? 'true' : 'false');
+      b.setAttribute('aria-checked', isSel ? 'true' : 'false');
+    });
+    topicEl.value = '';
+    tldrEl.value = '';
+    attendees = [];
+    renderAttendees();
+    attendeeInput.value = '';
+    actionsList.innerHTML = '';
+    var today = new Date();
+    var min = new Date(); min.setDate(min.getDate() - 14);
+    dateEl.min = toYMD(min);
+    dateEl.max = toYMD(today);
+    dateEl.value = toYMD(today);
+  }
+
+  function open(){
+    overlay.setAttribute('data-open', 'true');
+    overlay.setAttribute('aria-hidden', 'false');
+    resetForm();
+    document.body.style.overflow = 'hidden';
+    setTimeout(function(){ topicEl.focus(); }, 80);
+  }
+  function close(){
+    overlay.setAttribute('data-open', 'false');
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  function bumpCadenceCount(){
+    var cadence = document.querySelector('.meetings-cadence');
+    if (!cadence) return;
+    cadence.innerHTML = cadence.innerHTML.replace(/(^|>|\s)(\d+)(\s+touchpoints)/, function(m, pre, n, rest){
+      return pre + (parseInt(n, 10) + 1) + rest;
+    });
+  }
+
+  function buildEntry(data){
+    var entry = document.createElement('div');
+    entry.className = 'meeting-entry';
+
+    var typeInfo = TYPES[data.type] || TYPES.meeting;
+    var top = document.createElement('div');
+    top.className = 'meeting-top';
+    var topHTML =
+      '<span class="meeting-type-icon" data-type="' + escapeHtml(data.type) + '" data-tip="' + escapeHtml(typeInfo.label) + '" data-tip-pos="above">' + typeInfo.svg + '</span>' +
+      '<span class="meeting-date">' + escapeHtml(data.dateLabel) + '</span>' +
+      '<div class="meeting-topic">' + escapeHtml(data.topic) + '</div>';
+    if (data.attendees.length) {
+      topHTML += '<div class="meeting-attendees">';
+      data.attendees.forEach(function(p){
+        topHTML += '<span class="attendee" style="background:' + p.color + '" data-tip="' + escapeHtml(p.name) + '" data-tip-pos="above">' + escapeHtml(p.initials) + '</span>';
+      });
+      topHTML += '</div>';
+    }
+    top.innerHTML = topHTML;
+    entry.appendChild(top);
+
+    var tldr = document.createElement('div');
+    tldr.className = 'meeting-tldr inline-edit inline-edit--name';
+    tldr.setAttribute('data-kind', 'text');
+    tldr.setAttribute('data-inline-field', 'tldr');
+    tldr.setAttribute('data-multiline', 'true');
+    tldr.setAttribute('tabindex', '0');
+    tldr.setAttribute('aria-label', 'TL;DR');
+    if (data.tldr) {
+      tldr.innerHTML = '<span data-inline-display>' + escapeHtml(data.tldr) + '</span>';
+    } else {
+      tldr.classList.add('meeting-tldr--empty');
+      tldr.innerHTML = '<span data-inline-display data-empty="true" data-placeholder="Add TL;DR — why this touchpoint mattered.">Add TL;DR — why this touchpoint mattered.</span>';
+    }
+    entry.appendChild(tldr);
+
+    if (data.actions.length) {
+      var actionsEl = document.createElement('div');
+      actionsEl.className = 'meeting-actions';
+      var doneCount = 0;
+      data.actions.forEach(function(a){ if (a.done) doneCount++; });
+      var openCount = data.actions.length - doneCount;
+      var label;
+      if (openCount === 0) label = 'All done';
+      else if (doneCount === 0) label = openCount + ' open';
+      else label = openCount + ' open · ' + doneCount + ' done';
+      var html = '<div class="meeting-actions-label">Action Items <span class="meeting-actions-count">' + label + '</span></div>';
+      data.actions.forEach(function(a){
+        var assignee = a.assignee ? findPerson(a.assignee) : null;
+        var assigneeHTML = assignee
+          ? '<span class="meeting-action-assignee" style="background:' + assignee.color + '" data-tip="' + escapeHtml(assignee.name) + '" data-tip-pos="above">' + escapeHtml(assignee.initials) + '</span>'
+          : '<span class="meeting-action-assignee" style="background:transparent;color:var(--text-faint)" aria-hidden="true">—</span>';
+        var dueHTML = a.dueLabel
+          ? '<span class="meeting-action-due"' + (a.dueStatus ? ' data-status="' + a.dueStatus + '"' : '') + '>' + escapeHtml(a.dueLabel) + '</span>'
+          : '<span class="meeting-action-due" style="color:var(--text-faint)">—</span>';
+        html += '<div class="meeting-action" data-action-item data-done="' + (a.done ? 'true' : 'false') + '">' +
+          '<button class="meeting-action-check" aria-label="Mark done" role="checkbox" aria-checked="' + (a.done ? 'true' : 'false') + '" type="button">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
+          '</button>' +
+          '<div class="meeting-action-text">' + escapeHtml(a.text) + '</div>' +
+          assigneeHTML + dueHTML +
+          '<button class="meeting-action-promote" data-promote-to-card type="button">Promote to card</button>' +
+          '</div>';
+      });
+      actionsEl.innerHTML = html;
+      entry.appendChild(actionsEl);
+    }
+
+    return entry;
+  }
+
+  function save(){
+    var topic = topicEl.value.trim();
+    if (!topic) {
+      topicEl.focus();
+      if (window.showToast) window.showToast('Topic is required', { duration: 1600 });
+      return;
+    }
+    var dateStr = dateEl.value;
+    var d = parseYMD(dateStr);
+    if (!d) {
+      dateEl.focus();
+      if (window.showToast) window.showToast('Pick a date', { duration: 1600 });
+      return;
+    }
+    var today = new Date(); today.setHours(0,0,0,0);
+    var minD  = new Date(); minD.setDate(minD.getDate() - 14); minD.setHours(0,0,0,0);
+    d.setHours(0,0,0,0);
+    if (d > today || d < minD) {
+      if (window.showToast) window.showToast('Date must be within the last 14 days', { duration: 1800 });
+      return;
+    }
+
+    var actions = [];
+    actionsList.querySelectorAll('[data-action-row]').forEach(function(row){
+      var txt = row.querySelector('[data-action-text]').value.trim();
+      if (!txt) return;
+      var assigneeName = row.querySelector('[data-action-assignee]').value;
+      var dueYmd = row.querySelector('[data-action-due]').value;
+      var due = formatDueLabel(dueYmd);
+      actions.push({ text: txt, assignee: assigneeName, dueLabel: due.label, dueStatus: due.status, done: false });
+    });
+
+    var entry = buildEntry({
+      type: selectedType,
+      dateLabel: formatEntryDate(d),
+      topic: topic,
+      attendees: attendees.slice(),
+      tldr: tldrEl.value.trim(),
+      actions: actions
+    });
+
+    var list = document.querySelector('.meetings-list');
+    if (list) list.insertBefore(entry, list.firstChild);
+    bumpCadenceCount();
+
+    if (window.showToast) window.showToast('Touchpoint logged', { duration: 1800 });
+    close();
+  }
+
+  function bindModal(){
+    overlay.addEventListener('click', function(e){
+      var chip = e.target.closest('[data-log-type]');
+      if (chip) {
+        selectedType = chip.getAttribute('data-log-type');
+        overlay.querySelectorAll('[data-log-type]').forEach(function(b){
+          var isSel = b === chip;
+          b.setAttribute('data-selected', isSel ? 'true' : 'false');
+          b.setAttribute('aria-checked', isSel ? 'true' : 'false');
+        });
+        return;
+      }
+      if (e.target.closest('[data-log-close]')) { close(); return; }
+      if (e.target.closest('[data-log-save]'))  { save();  return; }
+      var rem = e.target.closest('.log-attendee-chip-remove');
+      if (rem) { removeAttendeeAt(parseInt(rem.getAttribute('data-remove-index'), 10)); return; }
+      var sug = e.target.closest('[data-suggest-attendee]');
+      if (sug) { addAttendee(sug.getAttribute('data-suggest-attendee')); return; }
+      if (e.target.closest('[data-log-add-action]')) { addActionRow(); return; }
+      var arem = e.target.closest('[data-action-remove]');
+      if (arem) { var r = arem.closest('[data-action-row]'); if (r) r.remove(); return; }
+      if (e.target === overlay) { close(); return; }
+    });
+
+    attendeeInput.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ',') {
+        e.preventDefault();
+        var name = attendeeInput.value.trim().replace(/,$/, '');
+        if (name) { addAttendee(name); attendeeInput.value = ''; }
+      } else if (e.key === 'Backspace' && !attendeeInput.value && attendees.length) {
+        attendees.pop(); renderAttendees();
+      }
+    });
+
+    document.addEventListener('keydown', function(e){
+      if (overlay.getAttribute('data-open') !== 'true') return;
+      if (e.key === 'Escape') { e.preventDefault(); close(); }
+    });
+
+    document.addEventListener('click', function(e){
+      var btn = e.target.closest('[data-log-meeting]');
+      if (btn) { e.preventDefault(); open(); }
+    });
+  }
+
+  function init(){
+    overlay = document.querySelector('[data-log-modal]');
+    if (!overlay) return;
+    topicEl       = overlay.querySelector('[data-log-topic]');
+    dateEl        = overlay.querySelector('[data-log-date]');
+    tldrEl        = overlay.querySelector('[data-log-tldr]');
+    attendeesEl   = overlay.querySelector('[data-log-attendees]');
+    attendeeInput = overlay.querySelector('[data-log-attendee-input]');
+    actionsList   = overlay.querySelector('[data-log-actions]');
+    bindModal();
+  }
+
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 })();
