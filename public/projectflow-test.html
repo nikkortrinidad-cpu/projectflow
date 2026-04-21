@@ -8551,6 +8551,79 @@
     font-feature-settings: "tnum";
     white-space: nowrap;
   }
+  .list-pane-add-btn {
+    width: 28px; height: 28px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--highlight); color: #fff;
+    border: 0; border-radius: 8px;
+    cursor: pointer; flex-shrink: 0;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .list-pane-add-btn:hover { opacity: 0.9; }
+  .list-pane-add-btn:active { transform: scale(0.94); }
+  .list-pane-add-btn svg { width: 14px; height: 14px; }
+
+  /* Just-added row highlight (fires after new client save) */
+  .client-row.just-added {
+    animation: rowJustAdded 1.4s ease-out;
+  }
+  @keyframes rowJustAdded {
+    0%   { background: color-mix(in srgb, var(--highlight) 18%, transparent); }
+    100% { background: transparent; }
+  }
+
+  /* New-client empty state (stub detail panel shown until services are added) */
+  .new-client-empty-state {
+    text-align: center;
+    padding: 64px 32px;
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+  }
+  .new-client-empty-state .nc-empty-icon {
+    width: 56px; height: 56px; border-radius: 16px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: color-mix(in srgb, var(--highlight) 12%, transparent);
+    color: var(--highlight);
+    margin-bottom: 4px;
+  }
+  .new-client-empty-state .nc-empty-icon svg { width: 26px; height: 26px; }
+  .new-client-empty-state .nc-empty-title {
+    font-size: 18px; font-weight: 600; letter-spacing: -0.01em;
+    color: var(--text);
+  }
+  .new-client-empty-state .nc-empty-sub {
+    font-size: 13.5px; line-height: 1.5; color: var(--text-muted);
+    max-width: 420px;
+  }
+  .new-client-empty-state .nc-empty-cta {
+    margin-top: 10px;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 18px; border-radius: 980px;
+    background: var(--highlight); color: #fff; border: 0;
+    font-size: 13px; font-weight: 500; letter-spacing: -0.005em;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .new-client-empty-state .nc-empty-cta:hover { opacity: 0.9; }
+  .new-client-empty-state .nc-empty-cta:active { transform: scale(0.97); }
+  .new-client-empty-state .nc-empty-cta svg { width: 14px; height: 14px; }
+  .new-client-empty-state .nc-empty-notes {
+    margin-top: 28px; max-width: 520px; width: 100%;
+    text-align: left;
+    padding: 14px 16px;
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 12px;
+    font-size: 13px; line-height: 1.55;
+    color: var(--text-muted);
+    white-space: pre-wrap;
+  }
+  .new-client-empty-state .nc-empty-notes-label {
+    display: block;
+    font-size: 11px; font-weight: 600;
+    color: var(--text-faint);
+    text-transform: uppercase; letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
 
   /* Saved views chip row */
   .saved-views-wrap {
@@ -9170,20 +9243,23 @@
         <button role="tab">On Track <span class="seg-count">30</span></button>
         <button role="tab">Paused <span class="seg-count">5</span></button>
       </div>
-      <button class="clients-primary-btn" data-tip="Add a new client" data-tip-pos="below-end">
+      <button class="clients-primary-btn" data-new-client-btn data-tip="Add a new client" data-tip-pos="below-end">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         New Client
       </button>
     </div>
   </div>
 
-  <!-- Split view: list-pane toolbar (search + count) -->
+  <!-- Split view: list-pane toolbar (search + count + new-client button) -->
   <div class="list-pane-toolbar">
     <label class="list-pane-search">
       <svg viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242.656a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/></svg>
       <input id="clientsSearchInput" type="search" placeholder="Search clients" aria-label="Search clients">
     </label>
     <div class="list-pane-count" id="clientsCountChip">50</div>
+    <button type="button" class="list-pane-add-btn" data-new-client-btn data-tip="New client" data-tip-pos="below-end" aria-label="New client">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
   </div>
 
   <!-- Split view: My Boards strip — pin individual kanban boards -->
@@ -12586,6 +12662,80 @@
     <div class="log-modal-footer">
       <button type="button" class="log-modal-cancel" data-import-close>Cancel</button>
       <button type="button" class="log-modal-save" data-import-save>Import</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Client modal — Stage 1 of onboarding lifecycle -->
+<div class="log-modal-overlay" data-new-client-modal aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="newClientModalTitle">
+  <div class="log-modal" role="document">
+    <div class="log-modal-header">
+      <div>
+        <div class="log-modal-title" id="newClientModalTitle">New client</div>
+      </div>
+      <button class="log-modal-close" data-new-client-close type="button" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="log-modal-subtitle">
+      Start with the basics. You'll pick services and start onboarding on the next screen.
+    </div>
+    <form class="log-modal-form" data-new-client-form onsubmit="return false;">
+      <div class="contact-form-row">
+        <div class="contact-form-field">
+          <label for="newClientName">Client name <span style="color:var(--status-fire)">*</span></label>
+          <input id="newClientName" data-new-client-field="name" type="text" placeholder="Acme Corporation" autocomplete="off">
+        </div>
+        <div class="contact-form-field">
+          <label for="newClientIndustry">Industry <span style="color:var(--status-fire)">*</span></label>
+          <input id="newClientIndustry" data-new-client-field="industry" type="text" placeholder="Technology · B2B SaaS" autocomplete="off">
+        </div>
+      </div>
+      <div class="contact-form-row">
+        <div class="contact-form-field">
+          <label for="newClientContactName">Primary contact</label>
+          <input id="newClientContactName" data-new-client-field="contactName" type="text" placeholder="Jane Doe" autocomplete="off">
+        </div>
+        <div class="contact-form-field">
+          <label for="newClientContactEmail">Contact email</label>
+          <input id="newClientContactEmail" data-new-client-field="contactEmail" type="email" placeholder="jane@acme-corp.com" autocomplete="off">
+        </div>
+      </div>
+      <div class="contact-form-row">
+        <div class="contact-form-field">
+          <label for="newClientManager">Account manager</label>
+          <select id="newClientManager" data-new-client-field="manager" class="log-field-select">
+            <option value="nikko-trinidad" data-initials="NT" data-color="#5e5ce6" selected>Nikko Trinidad</option>
+            <option value="kate-chen" data-initials="KC" data-color="#ff375f">Kate Chen</option>
+            <option value="marcus-aldrin" data-initials="MA" data-color="#ff9f0a">Marcus Aldrin</option>
+            <option value="jordan-park" data-initials="JP" data-color="#64d2ff">Jordan Park</option>
+            <option value="diana-reyes" data-initials="DR" data-color="#30d158">Diana Reyes</option>
+          </select>
+        </div>
+        <div class="contact-form-field">
+          <label for="newClientLogoColor">Logo color</label>
+          <select id="newClientLogoColor" data-new-client-field="logoColor" class="log-field-select">
+            <option value="auto" selected>Auto</option>
+            <option value="logo-indigo">Indigo</option>
+            <option value="logo-sky">Sky</option>
+            <option value="logo-teal">Teal</option>
+            <option value="logo-green">Green</option>
+            <option value="logo-amber">Amber</option>
+            <option value="logo-orange">Orange</option>
+            <option value="logo-pink">Pink</option>
+            <option value="logo-purple">Purple</option>
+            <option value="logo-slate">Slate</option>
+          </select>
+        </div>
+      </div>
+      <div class="contact-form-field">
+        <label for="newClientNotes">Internal notes</label>
+        <textarea id="newClientNotes" data-new-client-field="notes" class="log-field-textarea" placeholder="Context for your team — engagement type, how they came to us, anything worth remembering." rows="3"></textarea>
+      </div>
+    </form>
+    <div class="log-modal-footer">
+      <button type="button" class="log-modal-cancel" data-new-client-close>Cancel</button>
+      <button type="button" class="log-modal-save" data-new-client-save>Create client</button>
     </div>
   </div>
 </div>
@@ -18951,6 +19101,9 @@ window.OPS_TEAM = OPS_TEAM;
 
     updateSavedViewsOverflow();
   }
+  /* Expose so the New Client modal (and future flows) can refresh counts
+     + row visibility after mutating PROJECTFLOW_DATA.clients. */
+  window.applyClientsFilter = applyFilter;
 
   function updateSavedViewsOverflow() {
     var scroller = document.getElementById('savedViews');
@@ -22226,6 +22379,260 @@ window.OPS_TEAM = OPS_TEAM;
   } else {
     boot();
   }
+})();
+
+/* ── New Client modal — Stage 1 of onboarding lifecycle ── */
+(function(){
+  var modal = document.querySelector('[data-new-client-modal]');
+  if (!modal) return;
+
+  var LOGO_COLORS = ['logo-indigo','logo-sky','logo-teal','logo-green','logo-amber','logo-orange','logo-pink','logo-purple','logo-slate'];
+
+  function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+    });
+  }
+  function getInitials(name){
+    var parts = String(name || '').trim().split(/\s+/).slice(0, 2);
+    var out = parts.map(function(w){
+      return w.replace(/[^A-Za-z0-9]/g, '').charAt(0).toUpperCase();
+    }).join('');
+    return out || '?';
+  }
+  function toId(name){
+    return String(name || '')
+      .toLowerCase()
+      .replace(/&/g, ' and ')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+  function uniqueId(base){
+    var id = base || 'client', n = 2;
+    while (document.querySelector('[data-client-id="' + id + '"], [data-client-panel="' + id + '"]')) {
+      id = base + '-' + n++;
+    }
+    return id;
+  }
+  function pickLogoColor(){
+    return LOGO_COLORS[Math.floor(Math.random() * LOGO_COLORS.length)];
+  }
+
+  function openModal(){
+    resetForm();
+    modal.setAttribute('data-open', 'true');
+    modal.setAttribute('aria-hidden', 'false');
+    setTimeout(function(){
+      var f = modal.querySelector('[data-new-client-field="name"]');
+      if (f) f.focus();
+    }, 30);
+  }
+  function closeModal(){
+    modal.removeAttribute('data-open');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+  function resetForm(){
+    modal.querySelectorAll('[data-new-client-field]').forEach(function(f){
+      if (f.tagName === 'SELECT') f.selectedIndex = 0;
+      else f.value = '';
+    });
+  }
+  function getValue(name){
+    var f = modal.querySelector('[data-new-client-field="' + name + '"]');
+    return f ? String(f.value || '').trim() : '';
+  }
+  function getSelectedOption(name){
+    var s = modal.querySelector('[data-new-client-field="' + name + '"]');
+    return (s && s.options && s.options[s.selectedIndex]) ? s.options[s.selectedIndex] : null;
+  }
+
+  function buildClientRow(data){
+    var row = document.createElement('a');
+    row.className = 'client-row';
+    row.setAttribute('role', 'listitem');
+    row.setAttribute('href', '#clients/' + data.id);
+    row.setAttribute('data-client-id', data.id);
+    row.innerHTML = '' +
+      '<span class="client-status-dot onboard" data-tip="Onboarding — no services yet" aria-label="Onboarding"></span>' +
+      '<div class="client-identity">' +
+        '<div class="client-logo ' + data.logoColor + '">' + escapeHtml(data.initials) + '</div>' +
+        '<div class="client-identity-body">' +
+          '<div class="client-name">' + escapeHtml(data.name) + '</div>' +
+          '<div class="client-industry">' + escapeHtml(data.industry) + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="client-services"><span class="service-pill" style="opacity:0.55;font-style:italic">No services yet</span></div>' +
+      '<div class="client-am">' +
+        '<div class="client-am-avatar" style="background:' + escapeHtml(data.managerColor) + '">' + escapeHtml(data.managerInitials) + '</div>' +
+        '<div class="client-am-name">' + escapeHtml(data.managerName) + '</div>' +
+      '</div>' +
+      '<div class="client-metric">Onboarding 0%</div>' +
+      '<div class="client-timestamp">just now</div>' +
+      '<span class="client-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>';
+    return row;
+  }
+
+  function buildDetailPanel(data){
+    var section = document.createElement('section');
+    section.className = 'client-detail-page';
+    section.setAttribute('data-client-panel', data.id);
+    section.setAttribute('data-active-tab', 'overview');
+    section.hidden = true;
+    var notesBlock = data.notes
+      ? '<div class="nc-empty-notes"><span class="nc-empty-notes-label">Internal notes</span>' + escapeHtml(data.notes) + '</div>'
+      : '';
+    section.innerHTML = '' +
+      '<nav class="detail-breadcrumb" aria-label="Breadcrumb">' +
+        '<a href="#clients" data-view-target="clients">Clients</a>' +
+        '<span class="sep">/</span>' +
+        '<span class="current">' + escapeHtml(data.name) + '</span>' +
+      '</nav>' +
+      '<div class="client-hero">' +
+        '<div class="hero-logo ' + data.logoColor + '">' + escapeHtml(data.initials) + '</div>' +
+        '<div class="hero-body">' +
+          '<div class="hero-name-row">' +
+            '<div class="hero-name">' + escapeHtml(data.name) + '</div>' +
+            '<span class="status-chip onboard"><span class="dot"></span>Onboarding</span>' +
+          '</div>' +
+          '<div class="hero-meta">' +
+            '<span class="hero-meta-item">' + escapeHtml(data.industry) + '</span>' +
+            '<span class="meta-dot"></span>' +
+            '<span class="hero-meta-item"><span class="hero-meta-label">Manager(s):</span><span class="hero-am-avatar" style="background:' + escapeHtml(data.managerColor) + '">' + escapeHtml(data.managerInitials) + '</span>' + escapeHtml(data.managerName) + '</span>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="detail-section new-client-empty-state">' +
+        '<div class="nc-empty-icon">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="12" y1="10" x2="12" y2="16"/><line x1="9" y1="13" x2="15" y2="13"/></svg>' +
+        '</div>' +
+        '<div class="nc-empty-title">Add services to begin onboarding</div>' +
+        '<div class="nc-empty-sub">Each service brings its own onboarding checklist and kanban board template. Onboarding starts once at least one service is added.</div>' +
+        '<button type="button" class="nc-empty-cta" data-tip="Service picker comes in Stage 2" data-tip-pos="below">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>' +
+          ' Add service' +
+        '</button>' +
+        notesBlock +
+      '</div>';
+    return section;
+  }
+
+  function updateCounts(delta){
+    // "N active" label in the big clients-header (hidden in split mode, but
+    // present in single-pane layout).
+    var headerCount = document.querySelector('.clients-count');
+    if (headerCount) {
+      var m = headerCount.textContent.match(/(\d+)/);
+      if (m) headerCount.textContent = (parseInt(m[1], 10) + delta) + ' active';
+    }
+    // Segmented status tabs (hidden in split mode). applyClientsFilter keeps
+    // the saved-view chips and the split-pane count chip in sync — this
+    // updates only the elements the filter doesn't own.
+    var segAll = document.querySelector('.clients-segment button:nth-child(1) .seg-count');
+    if (segAll) {
+      var nAll = parseInt(segAll.textContent, 10);
+      if (!isNaN(nAll)) segAll.textContent = String(nAll + delta);
+    }
+    var segOnboard = document.querySelector('.clients-segment button:nth-child(4) .seg-count');
+    if (segOnboard) {
+      var nOn = parseInt(segOnboard.textContent, 10);
+      if (!isNaN(nOn)) segOnboard.textContent = String(nOn + delta);
+    }
+  }
+
+  function save(){
+    var name = getValue('name');
+    var industry = getValue('industry');
+    if (!name) { modal.querySelector('[data-new-client-field="name"]').focus(); return; }
+    if (!industry) { modal.querySelector('[data-new-client-field="industry"]').focus(); return; }
+
+    var managerOpt = getSelectedOption('manager');
+    var logoSel = getValue('logoColor') || 'auto';
+    var data = {
+      id: uniqueId(toId(name) || 'client'),
+      name: name,
+      industry: industry,
+      contactName: getValue('contactName'),
+      contactEmail: getValue('contactEmail'),
+      managerName: managerOpt ? managerOpt.textContent : 'Nikko Trinidad',
+      managerInitials: managerOpt ? (managerOpt.getAttribute('data-initials') || 'NT') : 'NT',
+      managerColor: managerOpt ? (managerOpt.getAttribute('data-color') || '#5e5ce6') : '#5e5ce6',
+      initials: getInitials(name),
+      logoColor: (logoSel === 'auto' || !logoSel) ? pickLogoColor() : logoSel,
+      notes: getValue('notes')
+    };
+
+    var list = document.querySelector('.clients-list');
+    if (list) {
+      var header = list.querySelector('.clients-list-header');
+      var row = buildClientRow(data);
+      if (header && header.nextSibling) list.insertBefore(row, header.nextSibling);
+      else list.appendChild(row);
+      requestAnimationFrame(function(){
+        row.classList.add('just-added');
+        setTimeout(function(){ row.classList.remove('just-added'); }, 1400);
+      });
+    }
+
+    var detailView = document.querySelector('.view-client-detail');
+    if (detailView) {
+      detailView.appendChild(buildDetailPanel(data));
+    }
+
+    // Push into the single source of truth so saved-view chips, search,
+    // and downstream analytics all pick up the new client.
+    var D = window.PROJECTFLOW_DATA;
+    if (D && Array.isArray(D.clients)) {
+      D.clients.push({
+        id: data.id,
+        name: data.name,
+        initials: data.initials,
+        logoClass: data.logoColor,
+        status: 'onboard',
+        industry: data.industry,
+        industryCategory: null,
+        amId: (data.managerInitials || '').toLowerCase() || null,
+        mrr: 0,
+        renewsAt: null,
+        startedAt: new Date().toISOString().slice(0,10),
+        serviceIds: []
+      });
+    }
+    if (typeof window.applyClientsFilter === 'function') {
+      window.applyClientsFilter();
+    }
+
+    updateCounts(1);
+    closeModal();
+    if (typeof window.showToast === 'function') {
+      window.showToast('Created ' + data.name, { duration: 2400 });
+    }
+
+    var newHash = '#clients/' + data.id;
+    if (window.location.hash !== newHash) {
+      history.pushState(null, '', newHash);
+    }
+    if (typeof window.routeToView === 'function') {
+      window.routeToView('client-detail', data.id);
+    }
+    window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+  }
+
+  // Delegated event wiring — handles both the top-right pill and the compact split-view button
+  document.addEventListener('click', function(e){
+    var opener = e.target.closest('[data-new-client-btn]');
+    if (opener) { e.preventDefault(); openModal(); return; }
+    if (modal.getAttribute('data-open') !== 'true') return;
+    if (e.target.closest('[data-new-client-close]')) { closeModal(); return; }
+    if (e.target.closest('[data-new-client-save]'))  { save(); return; }
+    if (e.target === modal) { closeModal(); }
+  });
+  document.addEventListener('keydown', function(e){
+    if (modal.getAttribute('data-open') !== 'true') return;
+    if (e.key === 'Escape') { e.preventDefault(); closeModal(); return; }
+    if (e.key === 'Enter' && !e.shiftKey && e.target.tagName !== 'TEXTAREA' && modal.contains(e.target)) {
+      e.preventDefault(); save();
+    }
+  });
 })();
 </script>
 
