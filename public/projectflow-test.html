@@ -7946,6 +7946,385 @@
     margin: -6px;
   }
 
+  /* Notes — Apple Notes-style 2-pane */
+  .notes-section .detail-section-header { align-items: center; gap: 12px; }
+  .notes-new-btn {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px 6px 8px;
+    border-radius: 8px;
+    background: var(--highlight);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 12.5px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    transition: filter 0.12s ease, transform 0.12s ease;
+  }
+  .notes-new-btn svg { width: 13px; height: 13px; }
+  .notes-new-btn:hover { filter: brightness(1.08); }
+  .notes-new-btn:active { transform: scale(0.98); }
+  .notes-new-btn .kbd-hint {
+    background: rgba(255,255,255,0.18);
+    color: #fff;
+    border: none;
+    margin-left: 4px;
+  }
+
+  .kbd-hint {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--text-soft) 12%, transparent);
+    color: var(--text-soft);
+    border: 1px solid var(--hairline-soft);
+    font-family: 'SF Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    min-height: 18px;
+  }
+
+  .notes-app {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 0;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    height: 560px;
+  }
+
+  .notes-sidebar {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--hairline-soft);
+    background: color-mix(in srgb, var(--text-soft) 3%, var(--bg-elev));
+    min-width: 0;
+  }
+
+  .notes-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--hairline-soft);
+    gap: 8px;
+  }
+  .notes-search svg {
+    width: 13px; height: 13px;
+    color: var(--text-soft);
+    flex: 0 0 auto;
+  }
+  .notes-search input {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    outline: none;
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    padding: 0;
+  }
+  .notes-search input::placeholder { color: var(--text-soft); }
+  .notes-search input::-webkit-search-cancel-button { appearance: none; }
+  .kbd-hint--in-search {
+    flex: 0 0 auto;
+    opacity: 0.85;
+  }
+  .notes-search:focus-within .kbd-hint--in-search { opacity: 0.3; }
+
+  .notes-list {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 4px 0 12px;
+  }
+  .notes-list-group-label {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-soft);
+    font-weight: 600;
+    padding: 10px 14px 4px;
+  }
+  .notes-list-item {
+    display: block;
+    padding: 8px 14px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: background 0.12s ease, border-color 0.12s ease;
+    user-select: none;
+  }
+  .notes-list-item:hover {
+    background: color-mix(in srgb, var(--highlight) 5%, transparent);
+  }
+  .notes-list-item[data-active="true"] {
+    background: color-mix(in srgb, var(--highlight) 10%, transparent);
+    border-left-color: var(--highlight);
+  }
+  .notes-list-title-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 2px;
+  }
+  .notes-list-pin {
+    width: 10px; height: 10px;
+    color: var(--highlight);
+    flex: 0 0 auto;
+    opacity: 0.9;
+  }
+  .notes-list-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+  .notes-list-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    color: var(--text-soft);
+  }
+  .notes-list-date { flex: 0 0 auto; }
+  .notes-list-preview {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+  .notes-list-empty {
+    padding: 24px 14px;
+    text-align: center;
+    color: var(--text-soft);
+    font-size: 12.5px;
+  }
+
+  .notes-editor {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    background: var(--bg-elev);
+  }
+
+  .notes-empty {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 40px 32px;
+    text-align: center;
+    color: var(--text-soft);
+  }
+  .notes-empty[hidden] { display: none !important; }
+  .notes-empty svg {
+    width: 36px; height: 36px;
+    opacity: 0.5;
+    margin-bottom: 6px;
+  }
+  .notes-empty-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .notes-empty-sub { font-size: 12.5px; }
+  .notes-empty-sub .kbd-hint { margin: 0 2px; }
+
+  .notes-editor-panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .notes-editor-panel[hidden] { display: none !important; }
+
+  .notes-editor-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--hairline-soft);
+  }
+  .notes-date {
+    font-size: 11.5px;
+    color: var(--text-soft);
+    flex: 1 1 auto;
+    letter-spacing: 0.01em;
+  }
+  .notes-editor-actions {
+    display: inline-flex;
+    gap: 2px;
+  }
+  .notes-icon-btn {
+    width: 28px; height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background: transparent;
+    border: none;
+    color: var(--text-soft);
+    cursor: pointer;
+    transition: background 0.12s ease, color 0.12s ease;
+  }
+  .notes-icon-btn svg { width: 14px; height: 14px; }
+  .notes-icon-btn:hover {
+    background: color-mix(in srgb, var(--text-soft) 10%, transparent);
+    color: var(--text);
+  }
+  .notes-icon-btn[data-active="true"] {
+    color: var(--highlight);
+    background: color-mix(in srgb, var(--highlight) 12%, transparent);
+  }
+  .notes-icon-btn[data-active="true"] svg { fill: currentColor; }
+  .notes-icon-btn--danger:hover {
+    background: color-mix(in srgb, #ff453a 14%, transparent);
+    color: #ff453a;
+  }
+
+  .notes-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--hairline-soft);
+    background: color-mix(in srgb, var(--text-soft) 2%, transparent);
+  }
+  .notes-toolbar-divider {
+    width: 1px;
+    height: 18px;
+    background: var(--hairline);
+    margin: 0 4px;
+    flex: 0 0 auto;
+  }
+  .notes-fmt-btn {
+    width: 28px; height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background: transparent;
+    border: none;
+    color: var(--text-soft);
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.12s ease, color 0.12s ease;
+    padding: 0;
+  }
+  .notes-fmt-btn svg { width: 14px; height: 14px; }
+  .notes-fmt-btn:hover {
+    background: color-mix(in srgb, var(--text-soft) 10%, transparent);
+    color: var(--text);
+  }
+  .notes-fmt-btn[data-active="true"] {
+    background: color-mix(in srgb, var(--highlight) 14%, transparent);
+    color: var(--highlight);
+  }
+
+  .notes-body-editor {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 18px 28px 16px;
+    outline: none;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text);
+    letter-spacing: -0.005em;
+    min-height: 0;
+  }
+  .notes-body-editor:empty::before {
+    content: attr(data-placeholder);
+    color: var(--text-soft);
+    pointer-events: none;
+  }
+  .notes-body-editor h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0 0 10px;
+    line-height: 1.25;
+  }
+  .notes-body-editor h2 {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    margin: 14px 0 6px;
+  }
+  .notes-body-editor p { margin: 0 0 10px; }
+  .notes-body-editor ul {
+    margin: 0 0 10px;
+    padding-left: 22px;
+  }
+  .notes-body-editor li { margin-bottom: 4px; }
+  .notes-body-editor ul[data-checklist] {
+    list-style: none;
+    padding-left: 4px;
+  }
+  .notes-body-editor ul[data-checklist] > li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 2px 0;
+  }
+  .notes-body-editor ul[data-checklist] > li::before {
+    content: '';
+    width: 16px; height: 16px;
+    border: 1.5px solid var(--text-soft);
+    border-radius: 4px;
+    background: transparent;
+    flex: 0 0 auto;
+    margin-top: 3px;
+    cursor: pointer;
+    transition: background 0.12s ease, border-color 0.12s ease;
+  }
+  .notes-body-editor ul[data-checklist] > li[data-done="true"]::before {
+    background: var(--highlight);
+    border-color: var(--highlight);
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+    background-size: 12px 12px;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  .notes-body-editor ul[data-checklist] > li[data-done="true"] {
+    color: var(--text-soft);
+    text-decoration: line-through;
+  }
+  .notes-body-editor a {
+    color: var(--highlight);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+  }
+
+  .notes-editor-footer {
+    padding: 6px 16px;
+    border-top: 1px solid var(--hairline-soft);
+    font-size: 11px;
+    color: var(--text-soft);
+    letter-spacing: 0.01em;
+    text-align: right;
+    background: color-mix(in srgb, var(--text-soft) 2%, transparent);
+  }
+  [data-notes-saved-state][data-state="saving"] { color: var(--text-soft); }
+  [data-notes-saved-state][data-state="saved"] { color: var(--text-soft); }
+
   /* Timeline / activity */
   .activity-list {
     background: var(--bg-elev);
@@ -9806,26 +10185,71 @@
       </div>
     </div>
 
-    <!-- NOTES -->
-    <div class="detail-section" data-section-id="acme-notes" data-tab="notes">
+    <!-- NOTES — Apple Notes-style 2-pane -->
+    <div class="detail-section notes-section" data-section-id="acme-notes" data-tab="notes">
       <div class="detail-section-header">
         <div class="detail-section-title">Notes</div>
-        <a href="#" class="detail-section-link">Edit →</a>
+        <span class="detail-section-sub" data-notes-count>0 notes</span>
+        <button type="button" class="notes-new-btn" data-notes-new>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>New note</span>
+          <span class="kbd-hint" data-kbd-hint="new">⌘N</span>
+        </button>
       </div>
-      <div class="notes-panel">
-        <div class="notes-body">
-          <p><strong>Q2 focus:</strong> Harvey is pushing mobile-first hard — wants the redesign rollout tied to the June revenue target. Budget conversation deferred to May 1 call.</p>
-          <p><strong>Brand refresh</strong> approved Mar 24. Target rollout May 6, but Jessica flagged a possible press window in late May we should slot around.</p>
-          <p>They're <strong>exploring a HubSpot migration</strong> away from their current CRM — surface this before the next QBR since it could affect our content workflows.</p>
-          <p>Harvey prefers Tuesday AM syncs. Jessica loops in her assistant <em>Priya</em> for large threads — CC her when the chain gets past 4 replies.</p>
-        </div>
-        <div class="notes-foot">
-          <span>Last edited by Nikko · 3 days ago</span>
-          <span class="notes-foot-lock">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            Visible to account team only
-          </span>
-        </div>
+
+      <div class="notes-app" data-notes-app data-client-id="acme-corp">
+        <aside class="notes-sidebar">
+          <label class="notes-search">
+            <svg viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242.656a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/></svg>
+            <input type="search" placeholder="Search" data-notes-search aria-label="Search notes">
+            <span class="kbd-hint kbd-hint--in-search" data-kbd-hint="search">⌘F</span>
+          </label>
+          <div class="notes-list" data-notes-list role="list"></div>
+        </aside>
+        <section class="notes-editor" data-notes-editor>
+          <div class="notes-empty" data-notes-empty>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <div class="notes-empty-title">No note selected</div>
+            <div class="notes-empty-sub">Pick a note on the left or press <span class="kbd-hint" data-kbd-hint="new">⌘N</span> to start a new one.</div>
+          </div>
+          <div class="notes-editor-panel" data-notes-editor-panel hidden>
+            <div class="notes-editor-header">
+              <span class="notes-date" data-notes-date></span>
+              <div class="notes-editor-actions">
+                <button type="button" class="notes-icon-btn" data-notes-pin data-tip="Pin note" data-tip-pos="below-end" aria-label="Toggle pin">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.39 4.84L20 8l-4 3.9.94 5.48L12 14.8 7.06 17.38 8 11.9 4 8l5.61-1.16L12 2z"/></svg>
+                </button>
+                <button type="button" class="notes-icon-btn" data-notes-lock data-tip="Visible to account team" data-tip-pos="below-end" aria-label="Visibility">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </button>
+                <button type="button" class="notes-icon-btn notes-icon-btn--danger" data-notes-delete data-tip="Delete note" data-tip-pos="below-end" aria-label="Delete note">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="notes-toolbar" role="toolbar" aria-label="Formatting">
+              <button type="button" data-notes-format="heading" class="notes-fmt-btn" data-tip="Title" data-tip-pos="below"><span style="font-weight:700;font-size:14px;letter-spacing:-0.02em">Aa</span></button>
+              <span class="notes-toolbar-divider"></span>
+              <button type="button" data-notes-format="bold" class="notes-fmt-btn" data-tip="Bold" data-tip-pos="below"><strong>B</strong></button>
+              <button type="button" data-notes-format="italic" class="notes-fmt-btn" data-tip="Italic" data-tip-pos="below"><em>I</em></button>
+              <button type="button" data-notes-format="underline" class="notes-fmt-btn" data-tip="Underline" data-tip-pos="below"><span style="text-decoration:underline">U</span></button>
+              <span class="notes-toolbar-divider"></span>
+              <button type="button" data-notes-format="bullet" class="notes-fmt-btn" data-tip="Bulleted list" data-tip-pos="below">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3.5" cy="6" r="1.2"/><circle cx="3.5" cy="12" r="1.2"/><circle cx="3.5" cy="18" r="1.2"/></svg>
+              </button>
+              <button type="button" data-notes-format="checklist" class="notes-fmt-btn" data-tip="Checklist" data-tip-pos="below">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              </button>
+              <button type="button" data-notes-format="link" class="notes-fmt-btn" data-tip="Insert link" data-tip-pos="below">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72"/></svg>
+              </button>
+            </div>
+            <div class="notes-body-editor" contenteditable="true" data-notes-body spellcheck="true"></div>
+            <div class="notes-editor-footer">
+              <span data-notes-saved-state>All changes saved</span>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
 
@@ -21267,6 +21691,436 @@ window.OPS_TEAM = OPS_TEAM;
     apply(next);
     try { localStorage.setItem(STORAGE_KEY, next ? 'true' : 'false'); } catch (err) {}
   });
+})();
+
+/* ═══════ Notes — Apple Notes-style per-client notebook ═══════ */
+(function(){
+  var IS_MAC = /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent || '');
+  var MOD_LABEL = IS_MAC ? '⌘' : 'Ctrl+';
+  var STORAGE_PREFIX = 'projectflow-notes:';
+
+  // Localize all kbd hints in the notes HTML
+  function localizeKbdHints(){
+    document.querySelectorAll('[data-kbd-hint]').forEach(function(el){
+      var kind = el.getAttribute('data-kbd-hint');
+      if (kind === 'new') el.textContent = MOD_LABEL + 'N';
+      else if (kind === 'search') el.textContent = MOD_LABEL + 'F';
+    });
+  }
+
+  function uid(){ return 'n_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); }
+  function now(){ return Date.now(); }
+
+  function seedNotes(){
+    var base = now();
+    var DAY = 86400000;
+    return [
+      {
+        id: uid(),
+        title: 'Q2 focus — Harvey mobile-first push',
+        body:
+          '<h1>Q2 focus — Harvey mobile-first push</h1>' +
+          '<p>Harvey wants the homepage redesign to feel premium on phones first. Desktop is a polish pass, not a parallel track.</p>' +
+          '<ul><li>Mobile breakpoints ship before any desktop nav iteration</li>' +
+          '<li>Drop the hero carousel — single editorial shot performs 2.3x</li>' +
+          '<li>Check in with Marcus weekly on motion language</li></ul>',
+        pinned: true,
+        updatedAt: base - 2 * 3600 * 1000,
+        createdAt: base - 6 * DAY
+      },
+      {
+        id: uid(),
+        title: 'Comms preferences',
+        body:
+          '<h1>Comms preferences</h1>' +
+          '<p>Harvey reads Slack at night, replies in the morning. Never expect same-day on anything sent after 4pm PT.</p>' +
+          '<ul data-checklist>' +
+            '<li data-done="true">Keep the Tuesday 9am sync weekly — he protects it</li>' +
+            '<li data-done="true">CC Priya on billing and scope changes — she flags compliance</li>' +
+            '<li data-done="false">Always send recap within 2 hours of meeting</li>' +
+          '</ul>',
+        pinned: true,
+        updatedAt: base - 1 * DAY,
+        createdAt: base - 14 * DAY
+      },
+      {
+        id: uid(),
+        title: 'Brand refresh rollout May 6',
+        body:
+          '<h1>Brand refresh rollout May 6</h1>' +
+          '<p>Launch cadence locked in last review. Three-phase:</p>' +
+          '<ul><li>May 6 — marketing site + social</li>' +
+            '<li>May 13 — product UI swap</li>' +
+            '<li>May 20 — investor deck + collateral</li></ul>' +
+          '<p>Risk: product swap collides with their own release. Watch for pushback from Kenji.</p>',
+        pinned: false,
+        updatedAt: base - 3 * DAY,
+        createdAt: base - 12 * DAY
+      },
+      {
+        id: uid(),
+        title: 'HubSpot migration exploration',
+        body:
+          '<h1>HubSpot migration exploration</h1>' +
+          '<p>Informal ask from Ray — would we scope a CRM move? Not in current retainer.</p>' +
+          '<p>Rough estimate: ~$18k, 6 weeks. Flag to Elena before quoting.</p>',
+        pinned: false,
+        updatedAt: base - 8 * DAY,
+        createdAt: base - 20 * DAY
+      }
+    ];
+  }
+
+  function load(clientId){ return seedNotes(); }
+  function save(clientId, notes){ /* ephemeral in mockup */ }
+
+  function fmtDate(ts){
+    var d = new Date(ts);
+    var today = new Date(); today.setHours(0,0,0,0);
+    var dayStart = new Date(d); dayStart.setHours(0,0,0,0);
+    var diff = (today - dayStart) / 86400000;
+    var opts;
+    if (diff === 0) { return 'Today, ' + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); }
+    if (diff === 1) { return 'Yesterday, ' + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); }
+    if (diff < 7)   { return d.toLocaleDateString([], { weekday: 'long' }) + ', ' + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); }
+    return d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+  function fmtShort(ts){
+    var d = new Date(ts);
+    var today = new Date(); today.setHours(0,0,0,0);
+    var dayStart = new Date(d); dayStart.setHours(0,0,0,0);
+    var diff = (today - dayStart) / 86400000;
+    if (diff === 0) return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    if (diff === 1) return 'Yesterday';
+    if (diff < 7)   return d.toLocaleDateString([], { weekday: 'short' });
+    return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  }
+  function groupOf(ts){
+    var today = new Date(); today.setHours(0,0,0,0);
+    var d = new Date(ts); d.setHours(0,0,0,0);
+    var diff = (today - d) / 86400000;
+    if (diff === 0) return 'Today';
+    if (diff === 1) return 'Yesterday';
+    if (diff < 7)   return 'Previous 7 Days';
+    if (diff < 30)  return 'Previous 30 Days';
+    return 'Older';
+  }
+  var GROUP_ORDER = ['Today','Yesterday','Previous 7 Days','Previous 30 Days','Older'];
+
+  function deriveTitle(html){
+    var tmp = document.createElement('div');
+    tmp.innerHTML = html || '';
+    var first = tmp.querySelector('h1, h2, p, li');
+    var t = first ? (first.textContent || '').trim() : (tmp.textContent || '').trim();
+    return t ? t.slice(0, 80) : 'New note';
+  }
+  function derivePreview(html){
+    var tmp = document.createElement('div');
+    tmp.innerHTML = html || '';
+    var first = tmp.querySelector('h1, h2');
+    if (first) first.remove();
+    var text = (tmp.textContent || '').replace(/\s+/g, ' ').trim();
+    return text.slice(0, 120);
+  }
+
+  function init(app){
+    var clientId = app.getAttribute('data-client-id') || 'default';
+    var notes = load(clientId);
+    var activeId = null;
+    var searchTerm = '';
+    var saveTimer = null;
+
+    var listEl   = app.querySelector('[data-notes-list]');
+    var searchEl = app.querySelector('[data-notes-search]');
+    var emptyEl  = app.querySelector('[data-notes-empty]');
+    var panelEl  = app.querySelector('[data-notes-editor-panel]');
+    var dateEl   = app.querySelector('[data-notes-date]');
+    var bodyEl   = app.querySelector('[data-notes-body]');
+    var pinBtn   = app.querySelector('[data-notes-pin]');
+    var savedEl  = app.querySelector('[data-notes-saved-state]');
+    var section  = app.closest('.notes-section');
+    var countEl  = section ? section.querySelector('[data-notes-count]') : null;
+
+    bodyEl.setAttribute('data-placeholder', 'Start typing — your first line becomes the title.');
+
+    function persist(){ save(clientId, notes); }
+
+    function updateCount(){
+      if (!countEl) return;
+      var n = notes.length;
+      countEl.textContent = n + ' note' + (n === 1 ? '' : 's');
+    }
+
+    function filtered(){
+      if (!searchTerm) return notes.slice();
+      var q = searchTerm.toLowerCase();
+      return notes.filter(function(n){
+        if ((n.title || '').toLowerCase().indexOf(q) !== -1) return true;
+        var tmp = document.createElement('div'); tmp.innerHTML = n.body || '';
+        return (tmp.textContent || '').toLowerCase().indexOf(q) !== -1;
+      });
+    }
+
+    function renderList(){
+      listEl.innerHTML = '';
+      var items = filtered().sort(function(a, b){ return b.updatedAt - a.updatedAt; });
+
+      if (!items.length) {
+        var empty = document.createElement('div');
+        empty.className = 'notes-list-empty';
+        empty.textContent = searchTerm ? 'No matches for "' + searchTerm + '"' : 'No notes yet. Create one to start.';
+        listEl.appendChild(empty);
+        return;
+      }
+
+      var buckets = { 'Pinned': [] };
+      GROUP_ORDER.forEach(function(g){ buckets[g] = []; });
+      items.forEach(function(n){
+        if (n.pinned) buckets['Pinned'].push(n);
+        else buckets[groupOf(n.updatedAt)].push(n);
+      });
+
+      var order = ['Pinned'].concat(GROUP_ORDER);
+      order.forEach(function(g){
+        var arr = buckets[g];
+        if (!arr.length) return;
+        var label = document.createElement('div');
+        label.className = 'notes-list-group-label';
+        label.textContent = g;
+        listEl.appendChild(label);
+        arr.forEach(function(n){
+          var item = document.createElement('div');
+          item.className = 'notes-list-item';
+          item.setAttribute('role', 'listitem');
+          item.setAttribute('data-note-id', n.id);
+          if (n.id === activeId) item.setAttribute('data-active', 'true');
+          var pinSvg = n.pinned ? '<svg class="notes-list-pin" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.39 4.84L20 8l-4 3.9.94 5.48L12 14.8 7.06 17.38 8 11.9 4 8l5.61-1.16L12 2z"/></svg>' : '';
+          item.innerHTML =
+            '<div class="notes-list-title-row">' + pinSvg +
+              '<span class="notes-list-title"></span>' +
+            '</div>' +
+            '<div class="notes-list-meta">' +
+              '<span class="notes-list-date"></span>' +
+              '<span class="notes-list-preview"></span>' +
+            '</div>';
+          item.querySelector('.notes-list-title').textContent = n.title || 'New note';
+          item.querySelector('.notes-list-date').textContent = fmtShort(n.updatedAt);
+          var preview = derivePreview(n.body) || 'No additional text';
+          var sep = preview === 'No additional text' ? '' : ' · ';
+          item.querySelector('.notes-list-preview').textContent = sep + preview;
+          listEl.appendChild(item);
+        });
+      });
+    }
+
+    function renderEditor(){
+      var note = notes.find(function(n){ return n.id === activeId; });
+      if (!note) {
+        panelEl.hidden = true;
+        emptyEl.hidden = false;
+        return;
+      }
+      emptyEl.hidden = true;
+      panelEl.hidden = false;
+      dateEl.textContent = fmtDate(note.updatedAt);
+      if (document.activeElement !== bodyEl) bodyEl.innerHTML = note.body || '';
+      pinBtn.setAttribute('data-active', note.pinned ? 'true' : 'false');
+      pinBtn.setAttribute('data-tip', note.pinned ? 'Unpin note' : 'Pin note');
+      setSaved('saved');
+    }
+
+    function setSaved(state){
+      if (!savedEl) return;
+      savedEl.setAttribute('data-state', state);
+      savedEl.textContent = state === 'saving' ? 'Saving…' : 'All changes saved';
+    }
+
+    function selectNote(id){
+      activeId = id;
+      renderList();
+      renderEditor();
+    }
+
+    function createNote(){
+      var n = { id: uid(), title: 'New note', body: '', pinned: false, updatedAt: now(), createdAt: now() };
+      notes.unshift(n);
+      persist();
+      updateCount();
+      selectNote(n.id);
+      setTimeout(function(){
+        bodyEl.focus();
+        // Put cursor inside editor
+        var range = document.createRange();
+        range.selectNodeContents(bodyEl);
+        range.collapse(false);
+        var sel = window.getSelection();
+        sel.removeAllRanges(); sel.addRange(range);
+      }, 20);
+    }
+
+    function deleteNote(id){
+      var idx = notes.findIndex(function(n){ return n.id === id; });
+      if (idx < 0) return;
+      var title = notes[idx].title || 'note';
+      if (typeof window.openConfirm === 'function') {
+        window.openConfirm({
+          title: 'Delete this note?',
+          body: '"' + title + '" will be removed. This cannot be undone in the mockup.',
+          confirmLabel: 'Delete'
+        }).then(function(ok){
+          if (!ok) return;
+          notes.splice(idx, 1);
+          persist();
+          updateCount();
+          activeId = null;
+          renderList();
+          renderEditor();
+          if (window.showToast) window.showToast('Note deleted', { duration: 2000 });
+        });
+      } else {
+        notes.splice(idx, 1);
+        persist(); updateCount();
+        activeId = null; renderList(); renderEditor();
+      }
+    }
+
+    function togglePin(id){
+      var n = notes.find(function(x){ return x.id === id; });
+      if (!n) return;
+      n.pinned = !n.pinned;
+      n.updatedAt = now();
+      persist();
+      renderList();
+      renderEditor();
+      if (window.showToast) window.showToast(n.pinned ? 'Note pinned' : 'Note unpinned', { duration: 1800 });
+    }
+
+    function queueSave(){
+      setSaved('saving');
+      if (saveTimer) clearTimeout(saveTimer);
+      saveTimer = setTimeout(function(){
+        var n = notes.find(function(x){ return x.id === activeId; });
+        if (!n) return;
+        n.body = bodyEl.innerHTML;
+        n.title = deriveTitle(n.body);
+        n.updatedAt = now();
+        persist();
+        dateEl.textContent = fmtDate(n.updatedAt);
+        setSaved('saved');
+        renderList();
+      }, 420);
+    }
+
+    function applyFormat(fmt){
+      bodyEl.focus();
+      if (fmt === 'heading') {
+        document.execCommand('formatBlock', false, 'H1');
+      } else if (fmt === 'bold') {
+        document.execCommand('bold');
+      } else if (fmt === 'italic') {
+        document.execCommand('italic');
+      } else if (fmt === 'underline') {
+        document.execCommand('underline');
+      } else if (fmt === 'bullet') {
+        document.execCommand('insertUnorderedList');
+      } else if (fmt === 'checklist') {
+        insertChecklist();
+      } else if (fmt === 'link') {
+        var url = prompt('Link URL');
+        if (url) document.execCommand('createLink', false, url);
+      }
+      queueSave();
+    }
+
+    function insertChecklist(){
+      var sel = window.getSelection();
+      if (!sel || !sel.rangeCount) return;
+      var ul = document.createElement('ul');
+      ul.setAttribute('data-checklist', '');
+      var li = document.createElement('li');
+      li.setAttribute('data-done', 'false');
+      li.innerHTML = '&nbsp;';
+      ul.appendChild(li);
+      var range = sel.getRangeAt(0);
+      range.deleteContents();
+      range.insertNode(ul);
+      var r = document.createRange();
+      r.selectNodeContents(li);
+      r.collapse(true);
+      sel.removeAllRanges(); sel.addRange(r);
+    }
+
+    // Delegated events scoped to this app
+    app.addEventListener('click', function(e){
+      var item = e.target.closest('[data-note-id]');
+      if (item) { selectNote(item.getAttribute('data-note-id')); return; }
+      if (e.target.closest('[data-notes-pin]')) { if (activeId) togglePin(activeId); return; }
+      if (e.target.closest('[data-notes-delete]')) { if (activeId) deleteNote(activeId); return; }
+      var fmtBtn = e.target.closest('[data-notes-format]');
+      if (fmtBtn) { applyFormat(fmtBtn.getAttribute('data-notes-format')); return; }
+      var checkbox = e.target.closest('ul[data-checklist] > li');
+      if (checkbox && bodyEl.contains(checkbox)) {
+        var rect = checkbox.getBoundingClientRect();
+        if (e.clientX - rect.left < 24) {
+          var done = checkbox.getAttribute('data-done') === 'true';
+          checkbox.setAttribute('data-done', done ? 'false' : 'true');
+          queueSave();
+        }
+      }
+    });
+
+    // "New note" button lives in the section header, outside the app
+    if (section) {
+      section.addEventListener('click', function(e){
+        if (e.target.closest('[data-notes-new]')) createNote();
+      });
+    }
+
+    bodyEl.addEventListener('input', queueSave);
+
+    searchEl.addEventListener('input', function(){
+      searchTerm = searchEl.value.trim();
+      renderList();
+    });
+
+    // Scoped keyboard shortcuts: only when notes tab is active
+    document.addEventListener('keydown', function(e){
+      var tabContent = app.closest('[data-active-tab]');
+      // Find the panel that holds tabs
+      var tabPanel = app.closest('.client-detail-tabs-panel, .client-detail-content, [data-client-detail-content]');
+      // Simpler: check that the notes section is visible
+      var visible = app.offsetParent !== null;
+      if (!visible) return;
+      var mod = IS_MAC ? e.metaKey : e.ctrlKey;
+      if (mod && !e.shiftKey && !e.altKey && (e.key === 'n' || e.key === 'N')) {
+        e.preventDefault();
+        createNote();
+      } else if (mod && !e.shiftKey && !e.altKey && (e.key === 'f' || e.key === 'F')) {
+        e.preventDefault();
+        searchEl.focus();
+        searchEl.select();
+      } else if (e.key === 'Escape') {
+        if (document.activeElement === searchEl && searchEl.value) {
+          searchEl.value = ''; searchTerm = ''; renderList(); return;
+        }
+        if (document.activeElement === bodyEl) { bodyEl.blur(); }
+      }
+    });
+
+    updateCount();
+    renderList();
+    renderEditor();
+  }
+
+  function boot(){
+    localizeKbdHints();
+    document.querySelectorAll('[data-notes-app]').forEach(init);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
 })();
 </script>
 
