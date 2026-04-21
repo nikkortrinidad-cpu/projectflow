@@ -12708,6 +12708,10 @@
       </div>
       <div class="contact-form-row">
         <div class="contact-form-field">
+          <label for="newClientPhone">Client phone number</label>
+          <input id="newClientPhone" data-new-client-field="phone" type="tel" placeholder="+1 (555) 123-4567" autocomplete="off">
+        </div>
+        <div class="contact-form-field">
           <label for="newClientManager">Account manager</label>
           <select id="newClientManager" data-new-client-field="manager" class="log-field-select">
             <option value="nikko-trinidad" data-initials="NT" data-color="#5e5ce6" selected>Nikko Trinidad</option>
@@ -12715,21 +12719,6 @@
             <option value="marcus-aldrin" data-initials="MA" data-color="#ff9f0a">Marcus Aldrin</option>
             <option value="jordan-park" data-initials="JP" data-color="#64d2ff">Jordan Park</option>
             <option value="diana-reyes" data-initials="DR" data-color="#30d158">Diana Reyes</option>
-          </select>
-        </div>
-        <div class="contact-form-field">
-          <label for="newClientLogoColor">Logo color</label>
-          <select id="newClientLogoColor" data-new-client-field="logoColor" class="log-field-select">
-            <option value="auto" selected>Auto</option>
-            <option value="logo-indigo">Indigo</option>
-            <option value="logo-sky">Sky</option>
-            <option value="logo-teal">Teal</option>
-            <option value="logo-green">Green</option>
-            <option value="logo-amber">Amber</option>
-            <option value="logo-orange">Orange</option>
-            <option value="logo-pink">Pink</option>
-            <option value="logo-purple">Purple</option>
-            <option value="logo-slate">Slate</option>
           </select>
         </div>
       </div>
@@ -22551,18 +22540,18 @@ window.OPS_TEAM = OPS_TEAM;
     if (!industry) { modal.querySelector('[data-new-client-field="industry"]').focus(); return; }
 
     var managerOpt = getSelectedOption('manager');
-    var logoSel = getValue('logoColor') || 'auto';
     var data = {
       id: uniqueId(toId(name) || 'client'),
       name: name,
       industry: industry,
+      phone: getValue('phone'),
       contactName: getValue('contactName'),
       contactEmail: getValue('contactEmail'),
       managerName: managerOpt ? managerOpt.textContent : 'Nikko Trinidad',
       managerInitials: managerOpt ? (managerOpt.getAttribute('data-initials') || 'NT') : 'NT',
       managerColor: managerOpt ? (managerOpt.getAttribute('data-color') || '#5e5ce6') : '#5e5ce6',
       initials: getInitials(name),
-      logoColor: (logoSel === 'auto' || !logoSel) ? pickLogoColor() : logoSel,
+      logoColor: pickLogoColor(),
       notes: getValue('notes')
     };
 
