@@ -5971,6 +5971,116 @@
   .hero-btn.primary:hover { opacity: 0.9; background: var(--highlight); border-color: var(--highlight); color: #fff; }
   .hero-btn.icon-only { padding: 8px; width: 36px; height: 36px; justify-content: center; }
 
+  /* ═══ INLINE EDIT PATTERN ═══
+     Fields hint at editability via soft hover tint + pencil corner icon.
+     Click activates an inline editor (text) or picker popover (chip/manager)
+     or native date input (dates). No separate edit mode or button.
+     Apple UX: interface defers to content; indicator stays quiet until needed. */
+  .inline-edit {
+    position: relative;
+    display: inline-flex; align-items: center; gap: inherit;
+    border-radius: 7px;
+    transition: background 0.15s, box-shadow 0.15s;
+    cursor: text;
+  }
+  .inline-edit[data-kind="picker"],
+  .inline-edit[data-kind="date"] { cursor: pointer; }
+  .inline-edit > .inline-edit-hint {
+    position: absolute;
+    top: 3px; right: 4px;
+    width: 11px; height: 11px;
+    color: var(--text-faint);
+    opacity: 0;
+    transition: opacity 0.15s;
+    pointer-events: none;
+  }
+  .inline-edit > .inline-edit-hint svg { width: 100%; height: 100%; display: block; }
+  .inline-edit:hover {
+    background: color-mix(in srgb, var(--highlight) 9%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--highlight) 22%, transparent);
+  }
+  .inline-edit:hover > .inline-edit-hint { opacity: 0.85; }
+  .inline-edit[data-editing="true"] {
+    background: var(--bg-soft);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--highlight) 48%, transparent);
+  }
+  .inline-edit[data-editing="true"] > .inline-edit-hint { opacity: 0; }
+
+  /* Size variants for different hero contexts */
+  .inline-edit--name { padding: 2px 10px; margin: -2px -10px; }
+  .inline-edit--tag { padding: 2px 8px 2px 6px; margin: -2px -6px; gap: 7px; }
+  .inline-edit--meta { padding: 2px 8px 2px 6px; margin: -2px -6px; gap: 7px; }
+  .inline-edit--inline { padding: 1px 8px 1px 6px; margin: -1px -6px; gap: 6px; }
+
+  .inline-edit--pill { padding: 0; margin: 0; border-radius: 999px; }
+  .inline-edit--pill:hover { background: transparent; box-shadow: none; }
+  .inline-edit--pill:hover .status-chip {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--highlight) 32%, transparent);
+  }
+  .inline-edit--pill > .inline-edit-hint {
+    top: -5px; right: -5px;
+    width: 16px; height: 16px; padding: 3px;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 50%;
+    color: var(--text-muted);
+  }
+  .inline-edit--pill:hover > .inline-edit-hint { opacity: 1; }
+
+  /* The inline input that replaces static text during editing */
+  .inline-edit-input {
+    font: inherit; color: inherit; letter-spacing: inherit;
+    background: transparent; border: 0; outline: none;
+    padding: 0; margin: 0;
+    min-width: 40px; max-width: 100%;
+    width: auto;
+    caret-color: var(--highlight);
+  }
+
+  /* ── Picker popover (status, manager) — shares style with new-menu ── */
+  .inline-picker {
+    position: absolute; top: calc(100% + 10px); left: 0;
+    min-width: 220px;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    box-shadow: 0 18px 44px -14px rgba(0,0,0,0.55), 0 2px 10px rgba(0,0,0,0.2);
+    padding: 6px;
+    z-index: 1200;
+    display: none; opacity: 0; transform: translateY(-4px);
+    transition: opacity 0.12s, transform 0.12s;
+  }
+  .inline-picker[data-open="true"] { display: block; opacity: 1; transform: translateY(0); }
+  .inline-picker-section {
+    padding: 8px 10px 4px;
+    font-size: 10.5px; font-weight: 600; color: var(--text-faint);
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .inline-picker-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 8px;
+    background: transparent; border: 0; width: 100%;
+    text-align: left; cursor: pointer; color: var(--text);
+    font-size: 13px; letter-spacing: -0.005em;
+    transition: background 0.1s;
+  }
+  .inline-picker-item:hover,
+  .inline-picker-item:focus-visible { background: var(--bg-soft); outline: none; }
+  .inline-picker-item-dot {
+    width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+  }
+  .inline-picker-item-avatar {
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 600; color: #fff;
+    flex-shrink: 0;
+  }
+  .inline-picker-item-check {
+    margin-left: auto; color: var(--highlight);
+    opacity: 0; width: 14px; height: 14px;
+  }
+  .inline-picker-item[data-selected="true"] .inline-picker-item-check { opacity: 1; }
+
   /* ── "+ New" menu — popover launched from hero action ── */
   .new-menu-wrap { position: relative; display: inline-block; }
   .new-menu {
@@ -8047,29 +8157,66 @@
       <div class="hero-logo logo-indigo">AC</div>
       <div class="hero-body">
         <div class="hero-name-row">
-          <div class="hero-name">Acme Corporation</div>
-          <span class="status-chip fire"><span class="dot"></span>On Fire</span>
+          <span class="inline-edit inline-edit--name" data-inline-field="name" data-kind="text" tabindex="0" role="button" aria-label="Edit client name">
+            <span class="hero-name" data-inline-display>Acme Corporation</span>
+            <span class="inline-edit-hint" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></span>
+          </span>
+          <span class="inline-edit inline-edit--pill" data-inline-field="status" data-kind="picker" data-current="fire" tabindex="0" role="button" aria-label="Edit client status">
+            <span class="status-chip fire" data-inline-display><span class="dot"></span>On Fire</span>
+            <span class="inline-edit-hint" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></span>
+            <div class="inline-picker" data-picker-for="status" role="listbox" aria-label="Select status">
+              <div class="inline-picker-section">Status</div>
+              <button type="button" class="inline-picker-item" data-picker-value="fire" data-selected="true"><span class="inline-picker-item-dot" style="background:#ff3b30"></span><span>On Fire</span><svg class="inline-picker-item-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+              <button type="button" class="inline-picker-item" data-picker-value="risk"><span class="inline-picker-item-dot" style="background:#ff9f0a"></span><span>At Risk</span><svg class="inline-picker-item-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+              <button type="button" class="inline-picker-item" data-picker-value="track"><span class="inline-picker-item-dot" style="background:#30d158"></span><span>On Track</span><svg class="inline-picker-item-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+              <button type="button" class="inline-picker-item" data-picker-value="onboard"><span class="inline-picker-item-dot" style="background:#007AFF"></span><span>Onboarding</span><svg class="inline-picker-item-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+              <button type="button" class="inline-picker-item" data-picker-value="paused"><span class="inline-picker-item-dot" style="background:#8e8e93"></span><span>Paused</span><svg class="inline-picker-item-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+            </div>
+          </span>
         </div>
         <div class="hero-meta">
           <span class="hero-meta-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-            Technology · B2B SaaS
+            <span class="inline-edit inline-edit--inline" data-inline-field="industry" data-kind="text" tabindex="0" role="button" aria-label="Edit industry">
+              <span data-inline-display>Technology · B2B SaaS</span>
+              <span class="inline-edit-hint" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></span>
+            </span>
           </span>
           <span class="meta-dot"></span>
           <span class="hero-meta-item">
-            <span class="hero-meta-label">Manager(s):</span><span class="hero-am-avatar" style="background:#5e5ce6">NT</span>
-            Nikko Trinidad
+            <span class="hero-meta-label">Manager(s):</span>
+            <span class="inline-edit inline-edit--inline" data-inline-field="manager" data-kind="picker" data-current="NT" tabindex="0" role="button" aria-label="Change account manager">
+              <span class="hero-am-avatar" data-inline-avatar style="background:#5e5ce6">NT</span>
+              <span data-inline-display>Nikko Trinidad</span>
+              <span class="inline-edit-hint" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></span>
+              <div class="inline-picker" data-picker-for="manager" role="listbox" aria-label="Select manager">
+                <div class="inline-picker-section">Account manager</div>
+                <button type="button" class="inline-picker-item" data-picker-value="NT" data-picker-name="Nikko Trinidad" data-picker-color="#5e5ce6" data-selected="true"><span class="inline-picker-item-avatar" style="background:#5e5ce6">NT</span><span>Nikko Trinidad</span><svg class="inline-picker-item-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+                <button type="button" class="inline-picker-item" data-picker-value="KC" data-picker-name="Kate Chen" data-picker-color="#ff375f"><span class="inline-picker-item-avatar" style="background:#ff375f">KC</span><span>Kate Chen</span><svg class="inline-picker-item-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+                <button type="button" class="inline-picker-item" data-picker-value="MA" data-picker-name="Marcus Aldrin" data-picker-color="#ff9f0a"><span class="inline-picker-item-avatar" style="background:#ff9f0a">MA</span><span>Marcus Aldrin</span><svg class="inline-picker-item-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+                <button type="button" class="inline-picker-item" data-picker-value="EM" data-picker-name="Elena Martinez" data-picker-color="#30d158"><span class="inline-picker-item-avatar" style="background:#30d158">EM</span><span>Elena Martinez</span><svg class="inline-picker-item-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+              </div>
+            </span>
           </span>
           <span class="meta-dot"></span>
           <span class="hero-meta-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            Client since Aug 2023
+            <span class="inline-edit inline-edit--inline" data-inline-field="since" data-kind="date" data-current="2023-08-01" tabindex="0" role="button" aria-label="Edit client since date">
+              <span data-inline-display>Client since Aug 2023</span>
+              <span class="inline-edit-hint" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></span>
+            </span>
           </span>
           <span class="meta-dot"></span>
           <span class="hero-billing" data-role-gate="billing">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-            <strong>$14,500</strong>/mo
-            <span class="renew">· Renews Aug 12</span>
+            <span class="inline-edit inline-edit--inline" data-inline-field="mrr" data-kind="text" data-prefix="$" data-suffix="/mo" tabindex="0" role="button" aria-label="Edit monthly retainer">
+              <span data-inline-display><strong>$14,500</strong>/mo</span>
+              <span class="inline-edit-hint" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></span>
+            </span>
+            <span class="inline-edit inline-edit--inline" data-inline-field="renewal" data-kind="date" data-current="2026-08-12" tabindex="0" role="button" aria-label="Edit renewal date">
+              <span data-inline-display><span class="renew">· Renews Aug 12</span></span>
+              <span class="inline-edit-hint" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></span>
+            </span>
           </span>
         </div>
       </div>
@@ -8130,9 +8277,6 @@
             </button>
           </div>
         </div>
-        <button class="hero-btn icon-only" aria-label="Edit client" data-tip="Edit client" data-tip-pos="below-end">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </button>
         <button class="hero-btn icon-only" aria-label="More options" data-tip="More options" data-tip-pos="below-end">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="12" r="1.5"/></svg>
         </button>
@@ -17744,6 +17888,205 @@ window.OPS_TEAM = OPS_TEAM;
         tab.addEventListener('click', function(){
           activate(tab.getAttribute('data-tab-target'));
         });
+      });
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+
+/* ── Inline edit — direct manipulation for client hero fields.
+   Text: click → contenteditable swap, commit on Enter/blur.
+   Picker: click → popover, commit on option select.
+   Date: click → native date input, commit on change.
+   Every commit fires a toast for feedback. */
+(function(){
+  function toast(msg){ if (window.showToast) window.showToast(msg, { duration: 1800 }); }
+
+  function startTextEdit(root){
+    if (root.getAttribute('data-editing') === 'true') return;
+    var display = root.querySelector('[data-inline-display]');
+    if (!display) return;
+    var original = display.textContent.trim();
+    // For MRR, strip the /mo suffix before editing
+    var prefix = root.getAttribute('data-prefix') || '';
+    var suffix = root.getAttribute('data-suffix') || '';
+    var startValue = original;
+    if (suffix && startValue.endsWith(suffix)) startValue = startValue.slice(0, -suffix.length).trim();
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'inline-edit-input';
+    input.value = startValue;
+    input.size = Math.max(4, startValue.length + 2);
+    var hint = root.querySelector('.inline-edit-hint');
+    display.style.display = 'none';
+    if (hint) hint.style.display = 'none';
+    root.insertBefore(input, display);
+    root.setAttribute('data-editing', 'true');
+    input.focus();
+    input.select();
+
+    var committed = false;
+    function commit(save){
+      if (committed) return;
+      committed = true;
+      var newVal = input.value.trim();
+      if (save && newVal && newVal !== startValue) {
+        // Re-render display with original formatting (strong for MRR, etc.)
+        var fieldName = root.getAttribute('data-inline-field');
+        if (fieldName === 'mrr') {
+          display.innerHTML = '<strong>' + escapeHtml(newVal) + '</strong>/mo';
+        } else {
+          display.textContent = newVal;
+        }
+        toast('Updated · ' + fieldName);
+      }
+      input.remove();
+      display.style.display = '';
+      if (hint) hint.style.display = '';
+      root.removeAttribute('data-editing');
+    }
+    input.addEventListener('keydown', function(e){
+      if (e.key === 'Enter') { e.preventDefault(); commit(true); }
+      else if (e.key === 'Escape') { e.preventDefault(); commit(false); }
+    });
+    input.addEventListener('blur', function(){ commit(true); });
+  }
+
+  function escapeHtml(s){
+    return (s+'').replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+    });
+  }
+
+  function openPicker(root){
+    var pop = root.querySelector('[data-picker-for]');
+    if (!pop) return;
+    // Close any other open picker first
+    document.querySelectorAll('.inline-picker[data-open="true"]').forEach(function(p){
+      if (p !== pop) p.removeAttribute('data-open');
+    });
+    pop.setAttribute('data-open', 'true');
+    root.setAttribute('data-editing', 'true');
+    setTimeout(function(){
+      document.addEventListener('click', onDocClick, true);
+      document.addEventListener('keydown', onKey, true);
+    }, 0);
+    function close(){
+      pop.removeAttribute('data-open');
+      root.removeAttribute('data-editing');
+      document.removeEventListener('click', onDocClick, true);
+      document.removeEventListener('keydown', onKey, true);
+    }
+    function onDocClick(e){
+      if (!root.contains(e.target)) close();
+    }
+    function onKey(e){
+      if (e.key === 'Escape') { close(); root.focus(); }
+    }
+    pop.querySelectorAll('.inline-picker-item').forEach(function(item){
+      item.onclick = function(ev){
+        ev.stopPropagation();
+        var value = item.getAttribute('data-picker-value');
+        var field = root.getAttribute('data-inline-field');
+        pop.querySelectorAll('.inline-picker-item').forEach(function(i){ i.removeAttribute('data-selected'); });
+        item.setAttribute('data-selected', 'true');
+        applyPickerChoice(root, item, field, value);
+        close();
+        toast('Updated · ' + field);
+      };
+    });
+  }
+
+  function applyPickerChoice(root, item, field, value){
+    if (field === 'status') {
+      var chip = root.querySelector('.status-chip');
+      if (chip) {
+        chip.className = 'status-chip ' + value;
+        var label = item.querySelector('span:not(.inline-picker-item-dot):not(.inline-picker-item-check)');
+        chip.innerHTML = '<span class="dot"></span>' + (label ? label.textContent : value);
+      }
+      root.setAttribute('data-current', value);
+    } else if (field === 'manager') {
+      var name = item.getAttribute('data-picker-name');
+      var color = item.getAttribute('data-picker-color');
+      var avatar = root.querySelector('[data-inline-avatar]');
+      var display = root.querySelector('[data-inline-display]');
+      if (avatar) { avatar.textContent = value; avatar.style.background = color; }
+      if (display) display.textContent = name;
+      root.setAttribute('data-current', value);
+    }
+  }
+
+  function openDateEdit(root){
+    if (root.getAttribute('data-editing') === 'true') return;
+    var display = root.querySelector('[data-inline-display]');
+    var hint = root.querySelector('.inline-edit-hint');
+    var current = root.getAttribute('data-current') || '';
+    var input = document.createElement('input');
+    input.type = 'date';
+    input.className = 'inline-edit-input';
+    if (current) input.value = current;
+    display.style.display = 'none';
+    if (hint) hint.style.display = 'none';
+    root.insertBefore(input, display);
+    root.setAttribute('data-editing', 'true');
+    input.focus();
+    if (input.showPicker) { try { input.showPicker(); } catch(e){} }
+
+    var committed = false;
+    function commit(save){
+      if (committed) return;
+      committed = true;
+      var newVal = input.value;
+      if (save && newVal && newVal !== current) {
+        root.setAttribute('data-current', newVal);
+        var field = root.getAttribute('data-inline-field');
+        var formatted = formatDate(newVal, field);
+        if (field === 'since') display.textContent = 'Client since ' + formatted;
+        else if (field === 'renewal') display.innerHTML = '<span class="renew">· Renews ' + escapeHtml(formatted) + '</span>';
+        else display.textContent = formatted;
+        toast('Updated · ' + field);
+      }
+      input.remove();
+      display.style.display = '';
+      if (hint) hint.style.display = '';
+      root.removeAttribute('data-editing');
+    }
+    input.addEventListener('change', function(){ commit(true); });
+    input.addEventListener('blur', function(){ commit(true); });
+    input.addEventListener('keydown', function(e){
+      if (e.key === 'Escape') { e.preventDefault(); commit(false); }
+    });
+  }
+
+  function formatDate(iso, field){
+    var d = new Date(iso + 'T00:00:00');
+    if (isNaN(d.getTime())) return iso;
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    if (field === 'since') return months[d.getMonth()] + ' ' + d.getFullYear();
+    return months[d.getMonth()] + ' ' + d.getDate();
+  }
+
+  function init(){
+    document.querySelectorAll('.inline-edit').forEach(function(root){
+      var kind = root.getAttribute('data-kind');
+      root.addEventListener('click', function(e){
+        // Ignore clicks that land on the input itself or picker items
+        if (e.target.closest('.inline-edit-input')) return;
+        if (e.target.closest('.inline-picker-item')) return;
+        if (kind === 'text') startTextEdit(root);
+        else if (kind === 'picker') openPicker(root);
+        else if (kind === 'date') openDateEdit(root);
+      });
+      root.addEventListener('keydown', function(e){
+        if (e.target !== root) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (kind === 'text') startTextEdit(root);
+          else if (kind === 'picker') openPicker(root);
+          else if (kind === 'date') openDateEdit(root);
+        }
       });
     });
   }
