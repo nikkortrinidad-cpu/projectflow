@@ -9323,6 +9323,41 @@
     letter-spacing: -0.003em;
   }
 
+  /* Activity log */
+  .template-activity-list {
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .template-activity-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 10px 12px; border-radius: 8px;
+    transition: background 0.1s;
+  }
+  .template-activity-item:hover { background: var(--bg-soft); }
+  .template-activity-avatar {
+    width: 26px; height: 26px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--bg-elev);
+    color: var(--text-muted);
+    font-size: 10.5px; font-weight: 600;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+    border: 1px solid var(--hairline-soft);
+    margin-top: 0;
+  }
+  .template-activity-body {
+    flex: 1; min-width: 0;
+    font-size: 13px; line-height: 1.45;
+    color: var(--text-muted);
+    letter-spacing: -0.003em;
+  }
+  .template-activity-actor {
+    color: var(--text); font-weight: 500;
+  }
+  .template-activity-time {
+    font-size: 12px; color: var(--text-faint);
+    margin-top: 2px;
+  }
+
   /* Responsive: collapse templates to single pane below 860px */
   @media (max-width: 860px) {
     body[data-active-view="templates"] .templates-split-wrapper {
@@ -11484,7 +11519,7 @@
             <div class="template-hero-meta">
               <span class="template-category-chip">Web Development</span>
               <span class="sep"></span>
-              <span>Last edited Apr 12</span>
+              <span class="template-last-edited">—</span>
             </div>
           </div>
         </div>
@@ -11627,6 +11662,14 @@
             <div class="template-brief-field">Timeline milestones</div>
           </div>
         </div>
+
+        <div class="template-section">
+          <div class="template-section-header">
+            <div class="template-section-title">Activity</div>
+            <div class="template-section-sub">Recent changes to this template</div>
+          </div>
+          <div class="template-activity-list"></div>
+        </div>
       </section>
 
       <section class="template-detail-page" data-template-panel="seo-retainer-monthly" hidden>
@@ -11639,7 +11682,7 @@
             <div class="template-hero-meta">
               <span class="template-category-chip">SEO</span>
               <span class="sep"></span>
-              <span>Last edited Apr 9</span>
+              <span class="template-last-edited">—</span>
             </div>
           </div>
         </div>
@@ -11776,6 +11819,14 @@
             <div class="template-brief-field">Reporting cadence</div>
           </div>
         </div>
+
+        <div class="template-section">
+          <div class="template-section-header">
+            <div class="template-section-title">Activity</div>
+            <div class="template-section-sub">Recent changes to this template</div>
+          </div>
+          <div class="template-activity-list"></div>
+        </div>
       </section>
 
       <section class="template-detail-page" data-template-panel="content-8-articles" hidden>
@@ -11788,7 +11839,7 @@
             <div class="template-hero-meta">
               <span class="template-category-chip">Content</span>
               <span class="sep"></span>
-              <span>Last edited Apr 7</span>
+              <span class="template-last-edited">—</span>
             </div>
           </div>
         </div>
@@ -11940,6 +11991,14 @@
             <div class="template-brief-field">SEO targets</div>
           </div>
         </div>
+
+        <div class="template-section">
+          <div class="template-section-header">
+            <div class="template-section-title">Activity</div>
+            <div class="template-section-sub">Recent changes to this template</div>
+          </div>
+          <div class="template-activity-list"></div>
+        </div>
       </section>
 
       <section class="template-detail-page" data-template-panel="brand-refresh" hidden>
@@ -11952,7 +12011,7 @@
             <div class="template-hero-meta">
               <span class="template-category-chip">Brand</span>
               <span class="sep"></span>
-              <span>Last edited Mar 28</span>
+              <span class="template-last-edited">—</span>
             </div>
           </div>
         </div>
@@ -12089,6 +12148,14 @@
             <div class="template-brief-field">Rollout timeline</div>
           </div>
         </div>
+
+        <div class="template-section">
+          <div class="template-section-header">
+            <div class="template-section-title">Activity</div>
+            <div class="template-section-sub">Recent changes to this template</div>
+          </div>
+          <div class="template-activity-list"></div>
+        </div>
       </section>
 
       <section class="template-detail-page" data-template-panel="paid-media" hidden>
@@ -12101,7 +12168,7 @@
             <div class="template-hero-meta">
               <span class="template-category-chip">Paid Media</span>
               <span class="sep"></span>
-              <span>Last edited Mar 22</span>
+              <span class="template-last-edited">—</span>
             </div>
           </div>
         </div>
@@ -12238,6 +12305,14 @@
             <div class="template-brief-field">Exclusions</div>
             <div class="template-brief-field">Budget pacing rules</div>
           </div>
+        </div>
+
+        <div class="template-section">
+          <div class="template-section-header">
+            <div class="template-section-title">Activity</div>
+            <div class="template-section-sub">Recent changes to this template</div>
+          </div>
+          <div class="template-activity-list"></div>
         </div>
       </section>
 
@@ -19595,6 +19670,127 @@ window.OPS_TEAM = OPS_TEAM;
   (function() {
     var parsed = parseHash();
     routeToView(parsed.view, parsed.id);
+  })();
+
+  /* ── Template meta: computes "Last edited" + Activity log from system time ── */
+  (function() {
+    var TEMPLATE_META = {
+      'web-design-full-stack': {
+        editedBy: 'Nikko Trinidad',
+        editedHoursAgo: 9,
+        activity: [
+          { actor: 'Nikko Trinidad', action: 'updated the Discovery phase subtasks', hoursAgo: 9 },
+          { actor: 'Nikko Trinidad', action: 'added "Timeline milestones" to the project brief', hoursAgo: 30 },
+          { actor: 'Kate Chen', action: 'reordered the IA & Wireframes and Visual Design phases', hoursAgo: 78 },
+          { actor: 'Alex Rivera', action: 'added the "From us" onboarding group', hoursAgo: 150 },
+          { actor: 'Nikko Trinidad', action: 'created the template', hoursAgo: 384 }
+        ]
+      },
+      'seo-retainer-monthly': {
+        editedBy: 'Nikko Trinidad',
+        editedHoursAgo: 54,
+        activity: [
+          { actor: 'Nikko Trinidad', action: 'updated the Reporting phase subtasks', hoursAgo: 54 },
+          { actor: 'Kate Chen', action: 'added "Target geographies" to the project brief', hoursAgo: 120 },
+          { actor: 'Nikko Trinidad', action: 'renamed the Technical Audit phase', hoursAgo: 240 },
+          { actor: 'Nikko Trinidad', action: 'created the template', hoursAgo: 432 }
+        ]
+      },
+      'content-8-articles': {
+        editedBy: 'Alex Rivera',
+        editedHoursAgo: 120,
+        activity: [
+          { actor: 'Alex Rivera', action: 'updated the Research phase subtasks', hoursAgo: 120 },
+          { actor: 'Nikko Trinidad', action: 'added 2 onboarding checklist items', hoursAgo: 240 },
+          { actor: 'Nikko Trinidad', action: 'created the template', hoursAgo: 504 }
+        ]
+      },
+      'brand-refresh': {
+        editedBy: 'Nikko Trinidad',
+        editedHoursAgo: 576,
+        activity: [
+          { actor: 'Nikko Trinidad', action: 'updated the Visual System phase', hoursAgo: 576 },
+          { actor: 'Kate Chen', action: 'added "Brand guidelines doc" to onboarding', hoursAgo: 672 },
+          { actor: 'Nikko Trinidad', action: 'created the template', hoursAgo: 840 }
+        ]
+      },
+      'paid-media': {
+        editedBy: 'Kate Chen',
+        editedHoursAgo: 720,
+        activity: [
+          { actor: 'Kate Chen', action: 'updated the Launch phase subtasks', hoursAgo: 720 },
+          { actor: 'Nikko Trinidad', action: 'added "Attribution model" to the project brief', hoursAgo: 792 },
+          { actor: 'Nikko Trinidad', action: 'created the template', hoursAgo: 1080 }
+        ]
+      }
+    };
+
+    function initials(name) {
+      if (!name) return '?';
+      var parts = name.trim().split(/\s+/);
+      return (parts[0].charAt(0) + (parts[1] ? parts[1].charAt(0) : '')).toUpperCase();
+    }
+
+    var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    function relativeFromHoursAgo(hoursAgo, now) {
+      var past = new Date(now.getTime() - hoursAgo * 3600000);
+      var diffMs = now.getTime() - past.getTime();
+      var mins = Math.floor(diffMs / 60000);
+      var hours = Math.floor(diffMs / 3600000);
+      var days = Math.floor(diffMs / 86400000);
+
+      if (mins < 1) return 'just now';
+      if (mins < 60) return mins + ' min ago';
+      if (hours < 24) return hours === 1 ? '1 hour ago' : hours + ' hours ago';
+      if (days < 2) return 'Yesterday';
+      if (days < 7) return days + ' days ago';
+      var sameYear = past.getFullYear() === now.getFullYear();
+      var label = MONTHS[past.getMonth()] + ' ' + past.getDate();
+      return sameYear ? label : label + ', ' + past.getFullYear();
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function render() {
+      var now = new Date();
+      Object.keys(TEMPLATE_META).forEach(function(tid) {
+        var meta = TEMPLATE_META[tid];
+        var panel = document.querySelector('[data-template-panel="' + tid + '"]');
+        if (!panel) return;
+
+        // Hero: "by Name · X hours ago"
+        var last = panel.querySelector('.template-last-edited');
+        if (last) {
+          last.textContent = 'Last edited by ' + meta.editedBy + ' · ' + relativeFromHoursAgo(meta.editedHoursAgo, now);
+        }
+
+        // Activity list
+        var list = panel.querySelector('.template-activity-list');
+        if (list) {
+          list.innerHTML = meta.activity.map(function(a) {
+            return '<div class="template-activity-item">' +
+              '<div class="template-activity-avatar">' + escapeHtml(initials(a.actor)) + '</div>' +
+              '<div class="template-activity-body">' +
+                '<span class="template-activity-actor">' + escapeHtml(a.actor) + '</span> ' +
+                escapeHtml(a.action) +
+                '<div class="template-activity-time">' + escapeHtml(relativeFromHoursAgo(a.hoursAgo, now)) + '</div>' +
+              '</div>' +
+            '</div>';
+          }).join('');
+        }
+      });
+    }
+
+    render();
+    // Refresh once per minute so "X min ago" rolls forward while the tab is open.
+    setInterval(render, 60000);
   })();
 
   /* Portfolio Health → Clients saved-view drill-in */
