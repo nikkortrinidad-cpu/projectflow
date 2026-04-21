@@ -6063,6 +6063,7 @@
      values, e.g. data-tab="overview about" to appear in both. */
   .client-detail-page[data-active-tab="overview"] .detail-section[data-tab]:not([data-tab~="overview"]) { display: none; }
   .client-detail-page[data-active-tab="about"] .detail-section:not([data-tab~="about"]) { display: none; }
+  .client-detail-page[data-active-tab="notes"] .detail-section:not([data-tab~="notes"]) { display: none; }
   .client-detail-page[data-active-tab="onboarding"] .detail-section:not([data-tab~="onboarding"]) { display: none; }
 
   /* Sections (reuse .block pattern for consistency) */
@@ -7817,6 +7818,9 @@
       <button class="client-tab" role="tab" type="button" data-tab-target="about" aria-selected="false">
         About
       </button>
+      <button class="client-tab" role="tab" type="button" data-tab-target="notes" aria-selected="false">
+        Notes
+      </button>
       <button class="client-tab" role="tab" type="button" data-tab-target="onboarding" aria-selected="false">
         Onboarding
         <span class="client-tab-badge done">12 / 12</span>
@@ -8035,7 +8039,7 @@
     </div>
 
     <!-- NOTES -->
-    <div class="detail-section" data-section-id="acme-notes">
+    <div class="detail-section" data-section-id="acme-notes" data-tab="notes">
       <div class="detail-section-header">
         <div class="detail-section-title">Notes</div>
         <a href="#" class="detail-section-link">Edit →</a>
