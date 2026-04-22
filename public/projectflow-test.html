@@ -6624,6 +6624,38 @@
   }
   .service-type.retainer { color: var(--status-track); background: var(--status-track-soft); }
   .service-type.project  { color: var(--status-onboard); background: var(--status-onboard-soft); }
+
+  /* Phase pill — lifecycle stage of a service engagement.
+     12 phases grouped into 4 macro-stages by color:
+       1–4 Pre-sale      → neutral (services rarely live here on client detail)
+       5–6 Onboarding    → blue (active setup)
+       7–11 Active       → green (steady delivery / growth)
+       12 Offboarding    → amber (sunset attention)
+     Format: "N · Name" — number gives journey position, name is readable.   */
+  .phase-pill {
+    display: inline-flex; align-items: center; gap: var(--sp-xs);
+    padding: var(--sp-nano) var(--sp-sm);
+    border-radius: 980px;
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    line-height: var(--lh-hug);
+    white-space: nowrap;
+  }
+  .phase-pill-num {
+    font-feature-settings: "tnum";
+    font-weight: 600;
+    opacity: 0.7;
+    font-size: var(--fs-nano);
+    padding: 1px var(--sp-micro);
+    border-radius: 4px;
+    background: color-mix(in srgb, currentColor 14%, transparent);
+  }
+  .phase-pill.presale   { color: var(--text-muted);     background: var(--bg-soft); }
+  .phase-pill.onboard   { color: var(--status-onboard); background: var(--status-onboard-soft); }
+  .phase-pill.active    { color: var(--status-track);   background: var(--status-track-soft); }
+  .phase-pill.winddown  { color: var(--status-risk);    background: var(--status-risk-soft); }
+
   .service-sub {
     font-size: var(--fs-sm); color: var(--text-soft); letter-spacing: -0.005em;
   }
@@ -11123,6 +11155,7 @@
             <div class="service-name-row">
               <div class="service-name">Brand Refresh Q2</div>
               <span class="service-type project">Project</span>
+              <span class="phase-pill onboard" data-tip="Phase 6 of 12 · Strategy &amp; Planning" data-tip-pos="above-start"><span class="phase-pill-num">6</span>Strategy</span>
             </div>
             <div class="service-sub">Template: Brand Refresh<span class="sep">·</span>Kicked off Apr 7<span class="sep">·</span>Moodboards in review</div>
           </div>
@@ -11145,6 +11178,7 @@
             <div class="service-name-row">
               <div class="service-name">Marketing Site v3</div>
               <span class="service-type project">Project</span>
+              <span class="phase-pill active" data-tip="Phase 7 of 12 · Setup &amp; Build" data-tip-pos="above-start"><span class="phase-pill-num">7</span>Setup &amp; Build</span>
             </div>
             <div class="service-sub">Template: Web Design — Full Stack<span class="sep">·</span>Due May 5<span class="sep">·</span>Development in flight</div>
           </div>
@@ -11167,6 +11201,7 @@
             <div class="service-name-row">
               <div class="service-name">Website Redesign</div>
               <span class="service-type project">Project</span>
+              <span class="phase-pill active" data-tip="Phase 8 of 12 · Launch &amp; Go-Live" data-tip-pos="above-start"><span class="phase-pill-num">8</span>Launch</span>
             </div>
             <div class="service-sub">Template: Web Design — Full Stack<span class="sep">·</span>Due Apr 18<span class="sep">·</span>6 / 14 cards done</div>
           </div>
@@ -11189,6 +11224,7 @@
             <div class="service-name-row">
               <div class="service-name">SEO &amp; Organic Growth</div>
               <span class="service-type retainer">Retainer</span>
+              <span class="phase-pill active" data-tip="Phase 9 of 12 · Ongoing Management &amp; Optimization" data-tip-pos="above-start"><span class="phase-pill-num">9</span>Ongoing</span>
             </div>
             <div class="service-sub">Template: SEO Retainer — Monthly<span class="sep">·</span>Started Aug 2023<span class="sep">·</span>Next deliverable Apr 22</div>
           </div>
@@ -11211,6 +11247,7 @@
             <div class="service-name-row">
               <div class="service-name">Content Marketing</div>
               <span class="service-type retainer">Retainer</span>
+              <span class="phase-pill active" data-tip="Phase 9 of 12 · Ongoing Management &amp; Optimization" data-tip-pos="above-start"><span class="phase-pill-num">9</span>Ongoing</span>
             </div>
             <div class="service-sub">Template: Content — 8 articles/mo<span class="sep">·</span>Started Jan 2025<span class="sep">·</span>Next publish Apr 19</div>
           </div>
@@ -25328,6 +25365,7 @@ window.OPS_TEAM = OPS_TEAM;
         '<div class="service-name-row">' +
           '<div class="service-name">' + esc(svc.name) + '</div>' +
           '<span class="service-type ' + typeClass + '">' + typeLabel + '</span>' +
+          '<span class="phase-pill onboard" data-tip="Phase 5 of 12 · Onboarding &amp; Kickoff" data-tip-pos="above-start"><span class="phase-pill-num">5</span>Onboarding</span>' +
         '</div>' +
         '<div class="service-sub">Template: ' + esc(svc.template.name) + '<span class="sep">·</span>Onboarding in progress</div>' +
       '</div>' +
