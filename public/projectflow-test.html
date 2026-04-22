@@ -24547,13 +24547,20 @@ window.OPS_TEAM = OPS_TEAM;
       // Task row → open kanban card (goToBoardTask pattern).
       // Only intercept plain left-clicks — let ctrl/meta/middle-click fall
       // through to the href so users can open in a new tab if they want.
+      // stopImmediatePropagation is critical: the rows carry data-client-id,
+      // and there's a document-level handler that sends ANY a[data-client-id]
+      // click to the client detail view. Without stopping propagation, that
+      // handler fires after ours and overrides the board navigation, so the
+      // user lands on the client profile page instead of the kanban card.
       var row = e.target.closest('.anlx-up-row[data-task-id], .anlx-drill-row[data-task-id]');
       if (row && !e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0){
         var tid = row.getAttribute('data-task-id');
         var sid = row.getAttribute('data-service-id');
         if (sid && typeof window.goToBoardTask === 'function'){
           e.preventDefault();
+          e.stopImmediatePropagation();
           window.goToBoardTask(sid, tid);
+          return;
         }
       }
     });
