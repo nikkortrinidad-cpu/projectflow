@@ -10418,6 +10418,315 @@
     .wip-recap-sidebar { position: static; max-height: none; }
   }
 
+  /* ═══════ WEEKLY WIP — Action Items (Stage 4) ═══════
+     Core belief: scan what is open, decide who is behind, promote
+     anything that will not close on its own into next week's WIP.
+     Screen exists to triage, not to store data.
+     Blue hierarchy: Tier 2 ring = Raise-for-next-WIP. Tier 3 tint =
+     active filter chip, active raise state, left-edge accent on
+     raised rows. Neutral = filter selects, Clear filters, delete. */
+
+  .wip-actions-root {
+    display: flex; flex-direction: column;
+    gap: var(--sp-xl);
+  }
+
+  .wip-actions-head { display: flex; flex-direction: column; gap: 2px; }
+  .wip-actions-eyebrow {
+    font-size: var(--fs-nano); font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .wip-actions-title {
+    font-size: var(--fs-2xl); font-weight: 700;
+    color: var(--text); margin: 2px 0 0;
+    letter-spacing: -0.02em;
+  }
+  .wip-actions-subtitle {
+    font-size: var(--fs-sm); color: var(--text-soft);
+    margin: 4px 0 0; max-width: 60ch; line-height: 1.45;
+  }
+
+  /* KPI strip */
+  .wip-actions-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--sp-base);
+  }
+  .wip-actions-kpi {
+    padding: var(--sp-base) var(--sp-lg);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    background: var(--bg-elev);
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .wip-actions-kpi-label {
+    font-size: var(--fs-nano); font-weight: 700;
+    color: var(--text-faint);
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .wip-actions-kpi-value {
+    font-size: var(--fs-2xl); font-weight: 700;
+    color: var(--text); letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .wip-actions-kpi.is-warn .wip-actions-kpi-value     { color: var(--status-fire); }
+  .wip-actions-kpi.is-positive .wip-actions-kpi-value { color: var(--status-track); }
+
+  /* Filter bar */
+  .wip-actions-filters {
+    display: flex; flex-direction: column; gap: var(--sp-base);
+    padding: var(--sp-base) var(--sp-lg);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    background: var(--bg-elev);
+  }
+  .wip-actions-filter-row {
+    display: flex; align-items: center; gap: var(--sp-sm);
+    flex-wrap: wrap;
+  }
+  .wip-actions-filter-label {
+    font-size: var(--fs-nano); font-weight: 700;
+    color: var(--text-faint);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    margin-right: var(--sp-xs);
+    min-width: 48px;
+  }
+  .wip-actions-select {
+    font: inherit;
+    font-size: var(--fs-sm);
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: border-color var(--dur-fast) var(--ease-out);
+  }
+  .wip-actions-select:hover { border-color: color-mix(in srgb, var(--text) 18%, transparent); }
+  .wip-actions-select:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
+  }
+  .wip-actions-chip {
+    font-size: var(--fs-sm); font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--hairline);
+    background: transparent;
+    color: var(--text-soft);
+    cursor: pointer;
+    transition: all var(--dur-fast) var(--ease-out);
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .wip-actions-chip:hover {
+    border-color: color-mix(in srgb, var(--text) 18%, transparent);
+    color: var(--text);
+  }
+  .wip-actions-chip:focus-visible { outline: 2px solid var(--highlight); outline-offset: 2px; }
+  .wip-actions-chip.is-active {
+    background: color-mix(in srgb, var(--highlight) 12%, transparent);
+    border-color: color-mix(in srgb, var(--highlight) 22%, transparent);
+    color: var(--highlight);
+  }
+  .wip-actions-chip-count {
+    font-size: var(--fs-nano); font-weight: 700;
+    opacity: 0.75;
+  }
+  .wip-actions-clear {
+    margin-left: auto;
+    font-size: var(--fs-sm); font-weight: 600;
+    color: var(--text-muted);
+    background: none; border: none;
+    padding: 4px 8px;
+    cursor: pointer;
+    border-radius: 6px;
+  }
+  .wip-actions-clear:hover:not(:disabled) {
+    color: var(--text);
+    background: color-mix(in srgb, var(--text) 4%, transparent);
+  }
+  .wip-actions-clear:focus-visible { outline: 2px solid var(--highlight); outline-offset: 2px; }
+  .wip-actions-clear:disabled { opacity: 0.35; cursor: default; }
+
+  /* List */
+  .wip-actions-list {
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    background: var(--bg-elev);
+    overflow: hidden;
+  }
+  .wip-actions-list-head {
+    display: grid;
+    grid-template-columns: 140px minmax(0, 1fr) 140px 160px 130px 36px;
+    gap: var(--sp-base);
+    padding: var(--sp-sm) var(--sp-lg);
+    border-bottom: 1px solid var(--hairline);
+    font-size: var(--fs-nano); font-weight: 700;
+    color: var(--text-faint);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    background: color-mix(in srgb, var(--text) 2%, transparent);
+  }
+  .wip-actions-row {
+    display: grid;
+    grid-template-columns: 140px minmax(0, 1fr) 140px 160px 130px 36px;
+    gap: var(--sp-base);
+    align-items: center;
+    padding: var(--sp-base) var(--sp-lg);
+    border-bottom: 1px solid var(--hairline);
+    position: relative;
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .wip-actions-row:last-child { border-bottom: none; }
+  .wip-actions-row:hover { background: color-mix(in srgb, var(--text) 3%, transparent); }
+  .wip-actions-row.is-overdue {
+    background: color-mix(in srgb, var(--status-fire) 5%, transparent);
+  }
+  .wip-actions-row.is-overdue:hover {
+    background: color-mix(in srgb, var(--status-fire) 9%, transparent);
+  }
+  .wip-actions-row.is-raised {
+    box-shadow: inset 3px 0 0 var(--highlight);
+  }
+  .wip-actions-row.is-done { opacity: 0.58; }
+  .wip-actions-row.is-done .wip-actions-title-text { text-decoration: line-through; }
+
+  /* Row cells */
+  .wip-actions-owner {
+    display: flex; align-items: center; gap: var(--sp-xs);
+    font-size: var(--fs-sm); font-weight: 600; color: var(--text);
+    min-width: 0;
+  }
+  .wip-actions-owner-avatar {
+    width: 22px; height: 22px; border-radius: 999px;
+    background: color-mix(in srgb, var(--highlight) 18%, transparent);
+    color: var(--highlight);
+    font-size: 10px; font-weight: 700;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .wip-actions-owner-name {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    min-width: 0;
+  }
+  .wip-actions-title-cell {
+    display: flex; flex-direction: column; gap: 2px; min-width: 0;
+  }
+  .wip-actions-title-text {
+    font-size: var(--fs-base); color: var(--text); font-weight: 500;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    letter-spacing: -0.01em;
+    display: inline-flex; align-items: center; gap: var(--sp-xs);
+  }
+  .wip-actions-title-meta {
+    font-size: var(--fs-nano); color: var(--text-faint);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .wip-actions-title-meta .sep { margin: 0 4px; color: var(--text-faint); opacity: 0.55; }
+  .wip-actions-title-raised {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: var(--fs-nano); font-weight: 700;
+    color: var(--highlight);
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--highlight) 12%, transparent);
+    letter-spacing: 0.03em;
+  }
+  .wip-actions-due {
+    font-size: var(--fs-sm); color: var(--text-soft);
+    font-variant-numeric: tabular-nums;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .wip-actions-due.is-overdue { color: var(--status-fire); font-weight: 600; }
+  .wip-actions-due.is-today   { color: var(--status-risk); font-weight: 600; }
+  .wip-actions-due svg { flex-shrink: 0; }
+
+  .wip-actions-status-sel {
+    font: inherit;
+    font-size: var(--fs-sm);
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    padding: 4px 8px;
+    cursor: pointer;
+    width: 100%;
+    transition: border-color var(--dur-fast) var(--ease-out);
+  }
+  .wip-actions-status-sel:hover { border-color: color-mix(in srgb, var(--text) 18%, transparent); }
+  .wip-actions-status-sel:focus-visible { outline: 2px solid var(--highlight); outline-offset: 2px; }
+
+  .wip-actions-raise-btn {
+    font-size: var(--fs-sm); font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--hairline);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all var(--dur-fast) var(--ease-out);
+    white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 5px;
+    justify-content: center;
+  }
+  .wip-actions-raise-btn svg { flex-shrink: 0; }
+  .wip-actions-raise-btn:hover {
+    border-color: var(--highlight);
+    color: var(--highlight);
+    background: color-mix(in srgb, var(--highlight) 5%, transparent);
+  }
+  .wip-actions-raise-btn:focus-visible { outline: 2px solid var(--highlight); outline-offset: 2px; }
+  .wip-actions-raise-btn.is-active {
+    background: color-mix(in srgb, var(--highlight) 14%, transparent);
+    border-color: color-mix(in srgb, var(--highlight) 24%, transparent);
+    color: var(--highlight);
+  }
+
+  .wip-actions-row-del {
+    width: 32px; height: 32px;
+    border: none; background: transparent;
+    color: var(--text-faint);
+    cursor: pointer;
+    border-radius: 6px;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: all var(--dur-fast) var(--ease-out);
+  }
+  .wip-actions-row-del:hover {
+    color: var(--status-fire);
+    background: color-mix(in srgb, var(--status-fire) 10%, transparent);
+  }
+  .wip-actions-row-del:focus-visible { outline: 2px solid var(--highlight); outline-offset: 2px; }
+
+  .wip-actions-empty {
+    padding: var(--sp-4xl) var(--sp-xl);
+    text-align: center;
+  }
+  .wip-actions-empty-title {
+    font-size: var(--fs-base); font-weight: 600;
+    color: var(--text); margin-bottom: var(--sp-xs);
+  }
+  .wip-actions-empty-body {
+    font-size: var(--fs-sm); color: var(--text-soft);
+    max-width: 50ch; margin: 0 auto;
+    line-height: 1.45;
+  }
+
+  @media (max-width: 960px) {
+    .wip-actions-kpis { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 760px) {
+    .wip-actions-list-head { display: none; }
+    .wip-actions-row {
+      grid-template-columns: 1fr auto;
+      gap: var(--sp-xs);
+      padding: var(--sp-base) var(--sp-lg);
+    }
+    .wip-actions-status-sel { width: auto; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .wip-actions-row, .wip-actions-chip, .wip-actions-raise-btn, .wip-actions-row-del { transition: none; }
+  }
+
   /* Stubs for other tabs */
   .wip-stub {
     max-width: 520px; margin: 40px auto;
@@ -14278,15 +14587,47 @@
       </div>
     </section>
 
-    <!-- ── ACTION ITEM DASHBOARD (stub for Stage 4) ── -->
-    <section class="wip-sub wip-stub-sub" data-wip-sub="actions" aria-label="Action items" hidden>
-      <div class="wip-stub">
-        <div class="wip-stub-icon" aria-hidden="true">
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    <!-- ── ACTION ITEM DASHBOARD (Stage 4) ── -->
+    <section class="wip-sub" data-wip-sub="actions" aria-label="Action items" hidden>
+      <div class="wip-actions-root">
+
+        <header class="wip-actions-head">
+          <div class="wip-actions-eyebrow">Action items</div>
+          <h1 class="wip-actions-title">Scan what's open</h1>
+          <p class="wip-actions-subtitle">Decide who's behind, who to nudge, and what to promote into next week's WIP. Edits save as you go.</p>
+        </header>
+
+        <div class="wip-actions-kpis" data-wip-actions-kpis></div>
+
+        <div class="wip-actions-filters">
+          <div class="wip-actions-filter-row">
+            <span class="wip-actions-filter-label">Filter</span>
+            <select class="wip-actions-select" data-wip-actions-filter="owner"   aria-label="Filter by owner"></select>
+            <select class="wip-actions-select" data-wip-actions-filter="client"  aria-label="Filter by client"></select>
+            <select class="wip-actions-select" data-wip-actions-filter="channel" aria-label="Filter by channel"></select>
+            <select class="wip-actions-select" data-wip-actions-filter="status"  aria-label="Filter by status"></select>
+            <button class="wip-actions-clear" data-wip-actions-clear type="button">Clear filters</button>
+          </div>
+          <div class="wip-actions-filter-row">
+            <span class="wip-actions-filter-label">Quick</span>
+            <button class="wip-actions-chip" data-wip-actions-quick="overdue"  type="button" aria-pressed="false">Overdue <span class="wip-actions-chip-count" data-count="overdue">0</span></button>
+            <button class="wip-actions-chip" data-wip-actions-quick="due-week" type="button" aria-pressed="false">Due this week <span class="wip-actions-chip-count" data-count="due-week">0</span></button>
+            <button class="wip-actions-chip" data-wip-actions-quick="blocked"  type="button" aria-pressed="false">Blocked <span class="wip-actions-chip-count" data-count="blocked">0</span></button>
+            <button class="wip-actions-chip" data-wip-actions-quick="raised"   type="button" aria-pressed="false">Raised for next WIP <span class="wip-actions-chip-count" data-count="raised">0</span></button>
+          </div>
         </div>
-        <div class="wip-stub-title">Action items — builds in the next stage</div>
-        <div class="wip-stub-body">Owner / due-date / client / status filters, overdue highlight, Raise-for-next-WIP button. Coming in Screen 4.</div>
-        <a class="wip-stub-back" href="#wip/agenda">Back to agenda builder</a>
+
+        <div class="wip-actions-list">
+          <div class="wip-actions-list-head" role="presentation">
+            <span>Owner</span><span>Item</span><span>Due</span><span>Status</span><span>Next WIP</span><span aria-hidden="true"></span>
+          </div>
+          <div data-wip-actions-rows></div>
+          <div class="wip-actions-empty" data-wip-actions-empty hidden>
+            <div class="wip-actions-empty-title" data-wip-actions-empty-title>No action items yet</div>
+            <div class="wip-actions-empty-body"  data-wip-actions-empty-body>Capture actions during the Live meeting &mdash; they will show up here.</div>
+          </div>
+        </div>
+
       </div>
     </section>
 
@@ -31127,6 +31468,408 @@ window.OPS_TEAM = OPS_TEAM;
     }
   })();
 
+  // ══════════════════════════════════════════════════════════════
+  //  ACTION ITEMS (Stage 4) — triage dashboard.
+  //  Belief: scan what is open, decide who is behind, and promote
+  //  anything that will not close on its own into next week's WIP.
+  //  Blue hierarchy: Tier 2 ring = Raise-for-next-WIP per row.
+  //  Tier 3 tint = active filter chip, active raise state, left-edge
+  //  accent on raised rows. Neutral = filter selects, Clear, delete.
+  //  Destructive actions (delete) always undo-able via toast.
+  // ══════════════════════════════════════════════════════════════
+
+  var ACTIONS_STATUSES = [
+    { value: 'in-progress',           label: 'In progress' },
+    { value: 'awaiting-confirmation', label: 'Awaiting confirmation' },
+    { value: 'awaiting-files',        label: 'Awaiting files' },
+    { value: 'needs-attention',       label: 'Needs attention' },
+    { value: 'blocked',               label: 'Blocked' },
+    { value: 'done',                  label: 'Done' }
+  ];
+  var ACTIONS_STATUS_LABEL = {};
+  ACTIONS_STATUSES.forEach(function(s){ ACTIONS_STATUS_LABEL[s.value] = s.label; });
+
+  function ensureActionsDefaults(){
+    if (!state.wipActionFilters) {
+      state.wipActionFilters = { owner: 'all', client: 'all', channel: 'all', status: 'open', quick: null };
+    }
+    (state.actionItems || []).forEach(function(a){
+      if (typeof a.raisedForNextWip !== 'boolean') a.raisedForNextWip = false;
+    });
+  }
+
+  function startOfDay(ts){ var d = new Date(ts); d.setHours(0,0,0,0); return d.getTime(); }
+  function endOfWeek(){
+    // "End of week" = end of Friday (agency convention).
+    var d = new Date(); d.setHours(23,59,59,999);
+    var dow = d.getDay();          // 0 Sun, 5 Fri, 6 Sat
+    var daysToFri = (5 - dow + 7) % 7;
+    if (dow === 6) daysToFri = 6;  // Saturday: next Friday, not today.
+    d.setDate(d.getDate() + daysToFri);
+    return d.getTime();
+  }
+
+  function actionMatchesQuick(a, quick){
+    if (!quick) return true;
+    var today = startOfDay(Date.now());
+    if (quick === 'overdue')  return a.status !== 'done' && a.dueAt && startOfDay(a.dueAt) < today;
+    if (quick === 'due-week') return a.status !== 'done' && a.dueAt && a.dueAt >= today && a.dueAt <= endOfWeek();
+    if (quick === 'blocked')  return a.status === 'blocked';
+    if (quick === 'raised')   return !!a.raisedForNextWip;
+    return true;
+  }
+
+  function actionMatchesFilters(a, f){
+    if (f.owner   !== 'all' && a.owner     !== f.owner)   return false;
+    if (f.client  !== 'all' && a.clientId  !== f.client)  return false;
+    if (f.channel !== 'all' && a.channelId !== f.channel) return false;
+    if (f.status === 'open' && a.status === 'done') return false;
+    if (f.status === 'done' && a.status !== 'done') return false;
+    if (f.status !== 'all' && f.status !== 'open' && f.status !== 'done' && a.status !== f.status) return false;
+    return actionMatchesQuick(a, f.quick);
+  }
+
+  // ── DOM refs ───────────────────────────────────────────────
+  var actionsEls = null;
+  function getActionsEls(){
+    if (actionsEls) return actionsEls;
+    var sub = view.querySelector('[data-wip-sub="actions"]');
+    if (!sub) return null;
+    actionsEls = {
+      kpis:    sub.querySelector('[data-wip-actions-kpis]'),
+      rows:    sub.querySelector('[data-wip-actions-rows]'),
+      empty:   sub.querySelector('[data-wip-actions-empty]'),
+      emptyT:  sub.querySelector('[data-wip-actions-empty-title]'),
+      emptyB:  sub.querySelector('[data-wip-actions-empty-body]'),
+      clear:   sub.querySelector('[data-wip-actions-clear]'),
+      chips:   sub.querySelectorAll('[data-wip-actions-quick]'),
+      selects: {
+        owner:   sub.querySelector('[data-wip-actions-filter="owner"]'),
+        client:  sub.querySelector('[data-wip-actions-filter="client"]'),
+        channel: sub.querySelector('[data-wip-actions-filter="channel"]'),
+        status:  sub.querySelector('[data-wip-actions-filter="status"]')
+      },
+      chipCounts: {
+        'overdue':  sub.querySelector('[data-count="overdue"]'),
+        'due-week': sub.querySelector('[data-count="due-week"]'),
+        'blocked':  sub.querySelector('[data-count="blocked"]'),
+        'raised':   sub.querySelector('[data-count="raised"]')
+      }
+    };
+    return actionsEls;
+  }
+
+  // ── Format helpers ─────────────────────────────────────────
+  function fmtActionDue(ts){
+    if (!ts) return { text: 'No date', klass: '' };
+    var today = startOfDay(Date.now());
+    var due   = startOfDay(ts);
+    var diff  = Math.round((due - today) / 86400000);
+    var dt    = new Date(ts);
+    var dateShort = dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    if (diff < 0)  return { text: Math.abs(diff) + 'd late \u00b7 ' + dateShort, klass: 'is-overdue' };
+    if (diff === 0) return { text: 'Today \u00b7 ' + dateShort,                   klass: 'is-today' };
+    if (diff === 1) return { text: 'Tomorrow \u00b7 ' + dateShort,                klass: '' };
+    if (diff < 7)   return { text: 'in ' + diff + 'd \u00b7 ' + dateShort,        klass: '' };
+    return { text: dateShort, klass: '' };
+  }
+
+  function ownerInitials(name){
+    if (!name) return '?';
+    var parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
+  // ── Populate selects ───────────────────────────────────────
+  function populateActionsFilterSelects(){
+    var E = getActionsEls(); if (!E) return;
+
+    var ownerSet = {};
+    var clientMap = {};
+    state.actionItems.forEach(function(a){
+      if (a.owner) ownerSet[a.owner] = true;
+      if (a.clientId) clientMap[a.clientId] = a.clientName || a.clientId;
+    });
+    var ownerList = Object.keys(ownerSet).sort();
+
+    E.selects.owner.innerHTML = '<option value="all">All owners</option>' +
+      ownerList.map(function(o){ return '<option value="' + escapeHtml(o) + '">' + escapeHtml(o) + '</option>'; }).join('');
+
+    E.selects.client.innerHTML = '<option value="all">All clients</option>' +
+      Object.keys(clientMap).map(function(cid){
+        return '<option value="' + escapeHtml(cid) + '">' + escapeHtml(clientMap[cid]) + '</option>';
+      }).join('');
+
+    E.selects.channel.innerHTML = '<option value="all">All channels</option>' +
+      CHANNELS.map(function(c){
+        return '<option value="' + escapeHtml(c.id) + '">' + escapeHtml(c.name + ' \u2014 ' + c.manager) + '</option>';
+      }).join('');
+
+    E.selects.status.innerHTML =
+      '<option value="all">All statuses</option>' +
+      '<option value="open">Open (not done)</option>' +
+      ACTIONS_STATUSES.map(function(s){
+        return '<option value="' + s.value + '">' + escapeHtml(s.label) + '</option>';
+      }).join('');
+  }
+
+  // ── Renderers ──────────────────────────────────────────────
+  function renderActionsKpis(){
+    var E = getActionsEls(); if (!E) return;
+    var all     = state.actionItems;
+    var open    = all.filter(function(a){ return a.status !== 'done'; });
+    var overdue = open.filter(function(a){ return actionMatchesQuick(a, 'overdue'); }).length;
+    var raised  = all.filter(function(a){ return !!a.raisedForNextWip; }).length;
+    var done    = all.filter(function(a){ return a.status === 'done'; }).length;
+    var kpis = [
+      { label: 'Open',              value: open.length, klass: '' },
+      { label: 'Overdue',           value: overdue,     klass: overdue > 0 ? 'is-warn' : '' },
+      { label: 'Raised for WIP',    value: raised,      klass: '' },
+      { label: 'Done',              value: done,        klass: done > 0 ? 'is-positive' : '' }
+    ];
+    E.kpis.innerHTML = kpis.map(function(k){
+      return '<div class="wip-actions-kpi ' + k.klass + '">' +
+        '<div class="wip-actions-kpi-label">' + escapeHtml(k.label) + '</div>' +
+        '<div class="wip-actions-kpi-value">' + k.value + '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function renderActionsChips(){
+    var E = getActionsEls(); if (!E) return;
+    var f = state.wipActionFilters;
+    // Counts reflect each quick's own universe (regardless of other filters) so users know what's available.
+    var base = state.actionItems;
+    var counts = {
+      'overdue':  base.filter(function(a){ return actionMatchesQuick(a, 'overdue');  }).length,
+      'due-week': base.filter(function(a){ return actionMatchesQuick(a, 'due-week'); }).length,
+      'blocked':  base.filter(function(a){ return actionMatchesQuick(a, 'blocked');  }).length,
+      'raised':   base.filter(function(a){ return actionMatchesQuick(a, 'raised');   }).length
+    };
+    Array.prototype.forEach.call(E.chips, function(chip){
+      var k = chip.getAttribute('data-wip-actions-quick');
+      var on = (f.quick === k);
+      chip.classList.toggle('is-active', on);
+      chip.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    Object.keys(counts).forEach(function(k){
+      if (E.chipCounts[k]) E.chipCounts[k].textContent = counts[k];
+    });
+  }
+
+  function renderActionsSelects(){
+    var E = getActionsEls(); if (!E) return;
+    var f = state.wipActionFilters;
+    E.selects.owner.value   = f.owner;
+    E.selects.client.value  = f.client;
+    E.selects.channel.value = f.channel;
+    E.selects.status.value  = f.status;
+    var isDefault = (f.owner === 'all' && f.client === 'all' && f.channel === 'all' && f.status === 'open' && f.quick === null);
+    E.clear.disabled = isDefault;
+  }
+
+  function renderActionsRows(){
+    var E = getActionsEls(); if (!E) return;
+    var f = state.wipActionFilters;
+    var today = startOfDay(Date.now());
+    var list = state.actionItems
+      .filter(function(a){ return actionMatchesFilters(a, f); })
+      .sort(function(a, b){
+        var aOver = (a.status !== 'done' && a.dueAt && startOfDay(a.dueAt) < today) ? 0 : 1;
+        var bOver = (b.status !== 'done' && b.dueAt && startOfDay(b.dueAt) < today) ? 0 : 1;
+        if (aOver !== bOver) return aOver - bOver;
+        var aDue = a.dueAt || Infinity;
+        var bDue = b.dueAt || Infinity;
+        if (aDue !== bDue) return aDue - bDue;
+        return (b.createdAt || 0) - (a.createdAt || 0);
+      });
+
+    if (list.length === 0) {
+      E.rows.innerHTML = '';
+      E.empty.hidden = false;
+      var totalOpen = state.actionItems.filter(function(a){ return a.status !== 'done'; }).length;
+      if (state.actionItems.length === 0) {
+        E.emptyT.textContent = 'No action items yet';
+        E.emptyB.textContent = 'Capture actions during the Live meeting \u2014 they will show up here.';
+      } else {
+        E.emptyT.textContent = 'No actions match these filters';
+        E.emptyB.textContent = 'Adjust the filters above or clear them to see all ' + totalOpen + ' open item' + (totalOpen === 1 ? '' : 's') + '.';
+      }
+      return;
+    }
+    E.empty.hidden = true;
+
+    E.rows.innerHTML = list.map(function(a){
+      var due      = fmtActionDue(a.dueAt);
+      var isOver   = a.status !== 'done' && a.dueAt && startOfDay(a.dueAt) < today;
+      var isDone   = a.status === 'done';
+      var isRaised = !!a.raisedForNextWip;
+      var clientMeta = a.clientName || 'No client';
+      var ch = a.channelId ? channel(a.channelId) : null;
+      var channelMeta = ch ? (ch.name + ' \u00b7 ' + ch.manager) : '';
+      var statusOpts = ACTIONS_STATUSES.map(function(s){
+        return '<option value="' + s.value + '"' + (a.status === s.value ? ' selected' : '') + '>' + escapeHtml(s.label) + '</option>';
+      }).join('');
+
+      var rowClasses = 'wip-actions-row'
+        + (isOver ? ' is-overdue' : '')
+        + (isRaised ? ' is-raised' : '')
+        + (isDone ? ' is-done' : '');
+
+      var dueSvg = isOver
+        ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4"/><path d="M12 17h.01"/><circle cx="12" cy="12" r="10"/></svg>'
+        : '';
+
+      var starSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="' + (isRaised ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+
+      return '<div class="' + rowClasses + '" data-wip-actions-row="' + escapeHtml(a.id) + '">' +
+        '<div class="wip-actions-owner">' +
+          '<span class="wip-actions-owner-avatar" aria-hidden="true">' + escapeHtml(ownerInitials(a.owner)) + '</span>' +
+          '<span class="wip-actions-owner-name">' + escapeHtml(a.owner || 'Unassigned') + '</span>' +
+        '</div>' +
+        '<div class="wip-actions-title-cell">' +
+          '<div class="wip-actions-title-text">' +
+            '<span>' + escapeHtml(a.title) + '</span>' +
+            (isRaised ? '<span class="wip-actions-title-raised" title="Raised for next WIP" aria-label="Raised for next WIP">' + starSvg + 'Next WIP</span>' : '') +
+          '</div>' +
+          '<div class="wip-actions-title-meta">' +
+            escapeHtml(clientMeta) +
+            (channelMeta ? '<span class="sep" aria-hidden="true">\u00b7</span>' + escapeHtml(channelMeta) : '') +
+          '</div>' +
+        '</div>' +
+        '<div class="wip-actions-due ' + due.klass + '">' + dueSvg + '<span>' + escapeHtml(due.text) + '</span></div>' +
+        '<select class="wip-actions-status-sel" data-wip-actions-status="' + escapeHtml(a.id) + '" aria-label="Change status">' + statusOpts + '</select>' +
+        '<button class="wip-actions-raise-btn' + (isRaised ? ' is-active' : '') + '" data-wip-actions-raise="' + escapeHtml(a.id) + '" type="button" aria-pressed="' + (isRaised ? 'true' : 'false') + '" title="' + (isRaised ? 'Remove from next WIP' : 'Raise for next WIP') + '">' +
+          starSvg + '<span>' + (isRaised ? 'Raised' : 'Raise') + '</span>' +
+        '</button>' +
+        '<button class="wip-actions-row-del" data-wip-actions-del="' + escapeHtml(a.id) + '" type="button" aria-label="Delete action item">' +
+          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>' +
+        '</button>' +
+      '</div>';
+    }).join('');
+  }
+
+  function renderActions(){
+    ensureActionsDefaults();
+    populateActionsFilterSelects();
+    renderActionsKpis();
+    renderActionsChips();
+    renderActionsSelects();
+    renderActionsRows();
+  }
+
+  // ── Mutators ───────────────────────────────────────────────
+  function setActionStatus(id, status){
+    ensureActionsDefaults();
+    for (var i = 0; i < state.actionItems.length; i++) {
+      if (state.actionItems[i].id === id) {
+        state.actionItems[i].status = status;
+        saveState();
+        renderActions();
+        if (typeof window.showToast === 'function') {
+          window.showToast('Status \u2192 ' + (ACTIONS_STATUS_LABEL[status] || status), { duration: 2600 });
+        }
+        return;
+      }
+    }
+  }
+
+  function toggleRaiseForWip(id){
+    ensureActionsDefaults();
+    for (var i = 0; i < state.actionItems.length; i++) {
+      if (state.actionItems[i].id === id) {
+        var wasOn = !!state.actionItems[i].raisedForNextWip;
+        state.actionItems[i].raisedForNextWip = !wasOn;
+        saveState();
+        renderActions();
+        if (typeof window.showToast === 'function') {
+          var msg = wasOn ? 'Removed from next WIP' : 'Raised for next WIP';
+          window.showToast(msg, {
+            action: 'Undo',
+            onAction: function(){ toggleRaiseForWip(id); },
+            duration: 3600
+          });
+        }
+        return;
+      }
+    }
+  }
+
+  function deleteActionItem(id){
+    ensureActionsDefaults();
+    var idx = -1;
+    for (var i = 0; i < state.actionItems.length; i++) {
+      if (state.actionItems[i].id === id) { idx = i; break; }
+    }
+    if (idx < 0) return;
+    var removed = state.actionItems.splice(idx, 1)[0];
+    saveState();
+    renderActions();
+    if (typeof window.showToast === 'function') {
+      window.showToast('Action deleted', {
+        action: 'Undo',
+        onAction: function(){
+          state.actionItems.splice(idx, 0, removed);
+          saveState();
+          renderActions();
+        },
+        duration: 5000
+      });
+    }
+  }
+
+  // Filter mutators
+  function setActionFilter(key, value){
+    ensureActionsDefaults();
+    state.wipActionFilters[key] = value;
+    saveState();
+    renderActions();
+  }
+  function toggleActionQuick(key){
+    ensureActionsDefaults();
+    state.wipActionFilters.quick = (state.wipActionFilters.quick === key) ? null : key;
+    saveState();
+    renderActions();
+  }
+  function clearActionFilters(){
+    state.wipActionFilters = { owner: 'all', client: 'all', channel: 'all', status: 'open', quick: null };
+    saveState();
+    renderActions();
+  }
+
+  // ── Event wiring ───────────────────────────────────────────
+  (function wireActions(){
+    var E = getActionsEls(); if (!E) return;
+
+    ['owner', 'client', 'channel', 'status'].forEach(function(key){
+      if (!E.selects[key]) return;
+      E.selects[key].addEventListener('change', function(){
+        setActionFilter(key, E.selects[key].value);
+      });
+    });
+
+    Array.prototype.forEach.call(E.chips, function(chip){
+      chip.addEventListener('click', function(){
+        toggleActionQuick(chip.getAttribute('data-wip-actions-quick'));
+      });
+    });
+
+    if (E.clear) E.clear.addEventListener('click', clearActionFilters);
+
+    // Delegated row actions
+    E.rows.addEventListener('change', function(e){
+      var sel = e.target.closest('[data-wip-actions-status]');
+      if (sel) { setActionStatus(sel.getAttribute('data-wip-actions-status'), sel.value); }
+    });
+    E.rows.addEventListener('click', function(e){
+      var raise = e.target.closest('[data-wip-actions-raise]');
+      if (raise) { toggleRaiseForWip(raise.getAttribute('data-wip-actions-raise')); return; }
+      var del = e.target.closest('[data-wip-actions-del]');
+      if (del) { deleteActionItem(del.getAttribute('data-wip-actions-del')); return; }
+    });
+  })();
+
   // ── Public hook for router ──────────────────────────────────
   window.WIP = {
     onRoute: function(sub /* , id */){
@@ -31144,6 +31887,11 @@ window.OPS_TEAM = OPS_TEAM;
         detachLiveKeyboard();
         closeCapture();
         renderRecap();
+      } else if (sub === 'actions') {
+        stopTicking();
+        detachLiveKeyboard();
+        closeCapture();
+        renderActions();
       } else {
         stopTicking();
         detachLiveKeyboard();
