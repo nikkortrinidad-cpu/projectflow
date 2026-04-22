@@ -10241,22 +10241,41 @@
     overflow: hidden;
   }
   .anlx-slipped-row {
+    position: relative;
     display: grid;
-    grid-template-columns: minmax(200px, 2fr) minmax(120px, 1fr) auto 80px 16px;
+    grid-template-columns: minmax(180px, 2fr) minmax(110px, 1fr) auto auto 72px 16px;
     gap: var(--sp-lg);
     align-items: center;
     padding: var(--sp-md) var(--sp-xl);
-    text-decoration: none;
     color: inherit;
     border-bottom: 1px solid var(--hairline-soft);
     transition: background var(--dur-fast) var(--ease-out);
   }
   .anlx-slipped-row:last-child { border-bottom: 0; }
   .anlx-slipped-row:hover { background: var(--bg-soft); }
-  .anlx-slipped-row:focus-visible {
+  /* Full-row overlay anchor — the whole card is clickable except for the
+     reason button, which lives above this layer. */
+  .anlx-slipped-row-overlay {
+    position: absolute; inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    text-decoration: none;
+    color: inherit;
+  }
+  .anlx-slipped-row-overlay:focus-visible {
     outline: none;
-    background: color-mix(in srgb, var(--highlight) 8%, transparent);
     box-shadow: inset 2px 0 0 var(--highlight);
+    background: color-mix(in srgb, var(--highlight) 8%, transparent);
+  }
+  /* Row content sits above the overlay so text stays selectable and the
+     reason button can intercept its own clicks. */
+  .anlx-slipped-row > :not(.anlx-slipped-row-overlay) {
+    position: relative;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .anlx-slipped-row > .anlx-slipped-reason {
+    pointer-events: auto;
   }
   .anlx-slipped-what {
     display: flex; flex-direction: column; gap: 1px;
@@ -10303,6 +10322,119 @@
     letter-spacing: -0.005em;
   }
 
+  /* Slip-reason tag — a small button pill per row. Clicking opens the
+     reason-picker popover. Four tone states via data-reason-tone. */
+  .anlx-slipped-reason {
+    display: inline-flex; align-items: center; gap: var(--sp-xs);
+    padding: 4px var(--sp-sm);
+    border-radius: 6px;
+    border: 1px solid transparent;
+    font-family: inherit;
+    font-size: var(--fs-xs); font-weight: 500;
+    letter-spacing: -0.005em;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background var(--dur-fast) var(--ease-out),
+                border-color var(--dur-fast) var(--ease-out),
+                transform var(--dur-fast) var(--ease-out);
+  }
+  .anlx-slipped-reason:hover { transform: translateY(-1px); }
+  .anlx-slipped-reason:active { transform: scale(0.97); }
+  .anlx-slipped-reason:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--highlight) 30%, transparent);
+  }
+  .anlx-slipped-reason[data-reason-tone="external"] {
+    background: color-mix(in srgb, var(--status-risk) 12%, transparent);
+    color: var(--status-risk);
+  }
+  .anlx-slipped-reason[data-reason-tone="internal"] {
+    background: color-mix(in srgb, var(--status-fire) 12%, transparent);
+    color: var(--status-fire);
+  }
+  .anlx-slipped-reason[data-reason-tone="process"] {
+    background: color-mix(in srgb, var(--highlight) 10%, transparent);
+    color: var(--highlight);
+  }
+  .anlx-slipped-reason[data-reason-tone="unclassified"] {
+    background: var(--bg-soft);
+    color: var(--text-muted);
+    border-color: var(--hairline-soft);
+    border-style: dashed;
+  }
+  .anlx-slipped-reason[aria-expanded="true"] {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--highlight) 30%, transparent);
+  }
+  .anlx-slipped-reason-caret {
+    width: 10px; height: 10px; flex-shrink: 0; opacity: 0.7;
+  }
+
+  /* Reason-picker popover — shared, lazy-injected to body */
+  .anlx-reason-menu {
+    position: absolute;
+    min-width: 240px; max-width: 300px;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    box-shadow: 0 18px 44px -14px rgba(0, 0, 0, 0.55),
+                0 2px 10px rgba(0, 0, 0, 0.2);
+    padding: var(--sp-xs);
+    z-index: 1200;
+    display: none;
+    transform: translateY(-4px);
+    opacity: 0;
+    transition: opacity var(--dur-fast) var(--ease-out),
+                transform var(--dur-fast) var(--ease-out);
+  }
+  .anlx-reason-menu[data-open="true"] {
+    display: block; opacity: 1; transform: translateY(0);
+  }
+  .anlx-reason-menu-label {
+    display: block;
+    padding: var(--sp-xs) var(--sp-md) var(--sp-nano);
+    font-size: var(--fs-nano); font-weight: 600;
+    color: var(--text-faint);
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .anlx-reason-item {
+    display: flex; align-items: center; gap: var(--sp-sm);
+    width: 100%;
+    padding: var(--sp-sm) var(--sp-md);
+    border: 0; background: transparent;
+    font-family: inherit;
+    font-size: var(--fs-sm); color: var(--text);
+    letter-spacing: -0.005em;
+    text-align: left;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background var(--dur-fast) var(--ease-out);
+  }
+  .anlx-reason-item:hover,
+  .anlx-reason-item:focus-visible {
+    outline: none;
+    background: var(--bg-soft);
+  }
+  .anlx-reason-item.current {
+    background: color-mix(in srgb, var(--highlight) 10%, transparent);
+    color: var(--highlight);
+  }
+  .anlx-reason-item-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .anlx-reason-item-dot[data-tone="external"]    { background: var(--status-risk); }
+  .anlx-reason-item-dot[data-tone="internal"]    { background: var(--status-fire); }
+  .anlx-reason-item-dot[data-tone="process"]     { background: var(--highlight); }
+  .anlx-reason-item-dot[data-tone="unclassified"]{
+    background: transparent; border: 1.5px dashed var(--text-faint);
+  }
+  .anlx-reason-item-check {
+    margin-left: auto; width: 14px; height: 14px;
+    color: var(--highlight);
+    opacity: 0;
+  }
+  .anlx-reason-item.current .anlx-reason-item-check { opacity: 1; }
+
   /* Responsive — pack the table into a two-row stack on narrow */
   @media (max-width: 900px) {
     .anlx-load-head { display: none; }
@@ -10326,13 +10458,15 @@
       grid-template-columns: 1fr auto;
       grid-template-areas:
         "name late"
-        "owner owner";
+        "owner reason";
       row-gap: var(--sp-xs);
     }
-    .anlx-slipped-what  { grid-area: name; }
-    .anlx-slipped-late  { grid-area: late; }
-    .anlx-slipped-owner { grid-area: owner; }
-    .anlx-slipped-chev  { display: none; }
+    .anlx-slipped-what   { grid-area: name; }
+    .anlx-slipped-late   { grid-area: late; }
+    .anlx-slipped-owner  { grid-area: owner; }
+    .anlx-slipped-reason { grid-area: reason; justify-self: end; }
+    .anlx-slipped-row .phase-pill { display: none; }
+    .anlx-slipped-chev   { display: none; }
   }
 
   /* ── Landing this week — 5-day weekday grid ── */
@@ -10506,10 +10640,13 @@
     .anlx-load-bar-fill,
     .anlx-load-row, .anlx-flow-cell, .anlx-slipped-row,
     .anlx-slipped-chev,
-    .anlx-land-tile { transition: none; }
+    .anlx-slipped-reason,
+    .anlx-land-tile, .anlx-reason-menu { transition: none; }
     .anlx-pulse-card:hover .stats-hero-card,
     .anlx-flow-cell:hover,
-    .anlx-land-tile:hover { transform: none; }
+    .anlx-land-tile:hover,
+    .anlx-slipped-reason:hover,
+    .anlx-slipped-reason:active { transform: none; }
   }
   </style>
 </head>
@@ -13365,7 +13502,8 @@
       </div>
       <div class="anlx-slipped-card">
 
-        <a class="anlx-slipped-row" href="#clients/acme-corp" data-client-id="acme-corp" role="link" aria-label="Brand Refresh Q2, Acme Corporation, owner Sofia Reyes, 4 days late. Open client.">
+        <div class="anlx-slipped-row">
+          <a class="anlx-slipped-row-overlay" href="#clients/acme-corp" data-client-id="acme-corp" aria-label="Brand Refresh Q2, Acme Corporation, owner Sofia Reyes, 4 days late. Open client."></a>
           <span class="anlx-slipped-what">
             <span class="anlx-slipped-name">Brand Refresh Q2</span>
             <span class="anlx-slipped-client">Acme Corporation · Phase 6 Strategy</span>
@@ -13375,11 +13513,16 @@
             Sofia Reyes
           </span>
           <span class="phase-pill onboard" aria-hidden="true"><span class="phase-pill-num">6</span>Strategy</span>
+          <button type="button" class="anlx-slipped-reason" data-reason-tone="external" data-reason-key="client-unresponsive" aria-haspopup="listbox" aria-expanded="false" aria-label="Slip reason: client unresponsive. Click to change.">
+            <span class="anlx-slipped-reason-label">Client unresponsive</span>
+            <svg class="anlx-slipped-reason-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
           <span class="anlx-slipped-late">4d late</span>
           <span class="anlx-slipped-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
-        </a>
+        </div>
 
-        <a class="anlx-slipped-row" href="#clients/meridian-health" data-client-id="meridian-health" role="link" aria-label="Meridian Health Site, Meridian Health, owner Dev Patel, 2 days late. Open client.">
+        <div class="anlx-slipped-row">
+          <a class="anlx-slipped-row-overlay" href="#clients/meridian-health" data-client-id="meridian-health" aria-label="Meridian Health Site, Meridian Health, owner Dev Patel, 2 days late. Open client."></a>
           <span class="anlx-slipped-what">
             <span class="anlx-slipped-name">Meridian Health Site</span>
             <span class="anlx-slipped-client">Meridian Health · Phase 7 Setup &amp; Build</span>
@@ -13389,11 +13532,16 @@
             Dev Patel
           </span>
           <span class="phase-pill active" aria-hidden="true"><span class="phase-pill-num">7</span>Setup &amp; Build</span>
+          <button type="button" class="anlx-slipped-reason" data-reason-tone="internal" data-reason-key="owner-overloaded" aria-haspopup="listbox" aria-expanded="false" aria-label="Slip reason: owner over-allocated. Click to change.">
+            <span class="anlx-slipped-reason-label">Owner over-allocated</span>
+            <svg class="anlx-slipped-reason-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
           <span class="anlx-slipped-late">2d late</span>
           <span class="anlx-slipped-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
-        </a>
+        </div>
 
-        <a class="anlx-slipped-row" href="#clients/cascade-coffee" data-client-id="cascade-coffee" role="link" aria-label="Cascade Coffee Content, Cascade Coffee, owner Priya Singh, 1 day late. Open client.">
+        <div class="anlx-slipped-row">
+          <a class="anlx-slipped-row-overlay" href="#clients/cascade-coffee" data-client-id="cascade-coffee" aria-label="Cascade Coffee Content, Cascade Coffee, owner Priya Singh, 1 day late. Open client."></a>
           <span class="anlx-slipped-what">
             <span class="anlx-slipped-name">Cascade Coffee Content</span>
             <span class="anlx-slipped-client">Cascade Coffee · Phase 9 Ongoing</span>
@@ -13403,9 +13551,13 @@
             Priya Singh
           </span>
           <span class="phase-pill active" aria-hidden="true"><span class="phase-pill-num">9</span>Ongoing</span>
+          <button type="button" class="anlx-slipped-reason" data-reason-tone="unclassified" data-reason-key="unclassified" aria-haspopup="listbox" aria-expanded="false" aria-label="Slip reason: not yet classified. Click to set.">
+            <span class="anlx-slipped-reason-label">Add reason</span>
+            <svg class="anlx-slipped-reason-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
           <span class="anlx-slipped-late">1d late</span>
           <span class="anlx-slipped-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
-        </a>
+        </div>
 
       </div>
     </section>
@@ -24026,6 +24178,188 @@ window.OPS_TEAM = OPS_TEAM;
       if (typeof window.showToast === 'function') {
         window.showToast('Filter services by Phase ' + phase + ' · ' + label + ' — coming soon', { duration: 2000 });
       }
+    });
+  });
+})();
+</script>
+
+<script>
+/* ─── Slip-reason picker ───
+   Each .anlx-slipped-reason button opens a shared popover to change the
+   slip-reason tag inline. Reasons are grouped into 3 tones: external
+   (amber — client/outside factors), internal (red — our planning /
+   resource issues), process (blue — workflow / dependency issues).
+   "Unclassified" is a stateless starting point that prompts tagging.
+   Picking a reason updates the pill's label, tone, aria-label, and key
+   in place. Matches the phase-picker UX: outside-click, Escape, arrow
+   keys, focus return. No persistence — mockup only.                         */
+(function(){
+  var REASONS = [
+    { key: 'client-unresponsive', label: 'Client unresponsive',  tone: 'external' },
+    { key: 'scope-creep',         label: 'Scope creep',          tone: 'external' },
+    { key: 'under-scoped',        label: 'Under-scoped',         tone: 'internal' },
+    { key: 'owner-overloaded',    label: 'Owner over-allocated', tone: 'internal' },
+    { key: 'dependency-missed',   label: 'Dependency missed',    tone: 'process'  },
+    { key: 'blocked-upstream',    label: 'Blocked by other team',tone: 'process'  },
+    { key: 'unclassified',        label: 'Add reason',           tone: 'unclassified' }
+  ];
+
+  var triggers = document.querySelectorAll('.anlx-slipped-reason');
+  if (!triggers.length) return;
+
+  var menu = null;
+  var current = null;
+
+  function buildMenu(){
+    if (menu) return menu;
+    menu = document.createElement('div');
+    menu.className = 'anlx-reason-menu';
+    menu.setAttribute('role', 'listbox');
+    menu.setAttribute('aria-label', 'Slip reason');
+
+    var label = document.createElement('span');
+    label.className = 'anlx-reason-menu-label';
+    label.textContent = 'Why did this slip?';
+    menu.appendChild(label);
+
+    REASONS.forEach(function(r, i){
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'anlx-reason-item';
+      btn.setAttribute('role', 'option');
+      btn.setAttribute('data-reason-key', r.key);
+      btn.setAttribute('data-reason-tone', r.tone);
+      btn.setAttribute('tabindex', '-1');
+
+      var dot = document.createElement('span');
+      dot.className = 'anlx-reason-item-dot';
+      dot.setAttribute('data-tone', r.tone);
+      btn.appendChild(dot);
+
+      var txt = document.createElement('span');
+      txt.textContent = r.label;
+      btn.appendChild(txt);
+
+      var check = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      check.setAttribute('class', 'anlx-reason-item-check');
+      check.setAttribute('viewBox', '0 0 24 24');
+      check.setAttribute('fill', 'none');
+      check.setAttribute('stroke', 'currentColor');
+      check.setAttribute('stroke-width', '3');
+      check.setAttribute('stroke-linecap', 'round');
+      check.setAttribute('stroke-linejoin', 'round');
+      check.innerHTML = '<polyline points="20 6 9 17 4 12"/>';
+      btn.appendChild(check);
+
+      btn.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        apply(r);
+        close(true);
+      });
+      menu.appendChild(btn);
+    });
+
+    document.body.appendChild(menu);
+    return menu;
+  }
+
+  function position(trigger){
+    var rect = trigger.getBoundingClientRect();
+    var m = menu;
+    m.style.display = 'block';
+    var mw = m.offsetWidth, mh = m.offsetHeight;
+    var top = rect.bottom + 6 + window.scrollY;
+    var left = rect.left + window.scrollX;
+    // flip above if no room below
+    if (rect.bottom + mh + 12 > window.innerHeight && rect.top - mh - 6 > 0) {
+      top = rect.top - mh - 6 + window.scrollY;
+    }
+    // clamp right edge
+    if (left + mw > window.innerWidth - 12) {
+      left = Math.max(12, window.innerWidth - mw - 12) + window.scrollX;
+    }
+    m.style.top = top + 'px';
+    m.style.left = left + 'px';
+  }
+
+  function markCurrent(trigger){
+    var key = trigger.getAttribute('data-reason-key');
+    menu.querySelectorAll('.anlx-reason-item').forEach(function(item){
+      var on = item.getAttribute('data-reason-key') === key;
+      item.classList.toggle('current', on);
+      item.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+  }
+
+  function open(trigger){
+    buildMenu();
+    current = trigger;
+    position(trigger);
+    markCurrent(trigger);
+    menu.setAttribute('data-open', 'true');
+    trigger.setAttribute('aria-expanded', 'true');
+    var first = menu.querySelector('.anlx-reason-item.current') || menu.querySelector('.anlx-reason-item');
+    if (first) setTimeout(function(){ first.focus(); }, 0);
+    window.addEventListener('scroll', reposition, true);
+    window.addEventListener('resize', reposition);
+    document.addEventListener('click', outside, true);
+    document.addEventListener('keydown', keys, true);
+  }
+
+  function close(returnFocus){
+    if (!menu || !current) return;
+    menu.setAttribute('data-open', 'false');
+    current.setAttribute('aria-expanded', 'false');
+    var t = current;
+    current = null;
+    window.removeEventListener('scroll', reposition, true);
+    window.removeEventListener('resize', reposition);
+    document.removeEventListener('click', outside, true);
+    document.removeEventListener('keydown', keys, true);
+    if (returnFocus && t) t.focus();
+    setTimeout(function(){ if (menu) menu.style.display = 'none'; }, 140);
+  }
+
+  function reposition(){ if (current) position(current); }
+  function outside(ev){
+    if (!current) return;
+    if (menu.contains(ev.target) || current.contains(ev.target)) return;
+    close(false);
+  }
+  function keys(ev){
+    if (!current) return;
+    if (ev.key === 'Escape') { ev.preventDefault(); close(true); return; }
+    var items = Array.prototype.slice.call(menu.querySelectorAll('.anlx-reason-item'));
+    var idx = items.indexOf(document.activeElement);
+    if (ev.key === 'ArrowDown') {
+      ev.preventDefault();
+      (items[Math.min(items.length - 1, idx + 1)] || items[0]).focus();
+    } else if (ev.key === 'ArrowUp') {
+      ev.preventDefault();
+      (items[Math.max(0, idx - 1)] || items[items.length - 1]).focus();
+    } else if (ev.key === 'Home') { ev.preventDefault(); items[0] && items[0].focus(); }
+    else if (ev.key === 'End')  { ev.preventDefault(); items[items.length - 1] && items[items.length - 1].focus(); }
+  }
+
+  function apply(r){
+    if (!current) return;
+    current.setAttribute('data-reason-tone', r.tone);
+    current.setAttribute('data-reason-key', r.key);
+    var lbl = current.querySelector('.anlx-slipped-reason-label');
+    if (lbl) lbl.textContent = r.label;
+    var aria = (r.tone === 'unclassified')
+      ? 'Slip reason: not yet classified. Click to set.'
+      : 'Slip reason: ' + r.label.toLowerCase() + '. Click to change.';
+    current.setAttribute('aria-label', aria);
+  }
+
+  triggers.forEach(function(t){
+    t.addEventListener('click', function(ev){
+      ev.preventDefault();
+      ev.stopPropagation();
+      if (current === t) { close(true); return; }
+      if (current) close(false);
+      open(t);
     });
   });
 })();
