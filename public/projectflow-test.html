@@ -10200,6 +10200,224 @@
     .wip-live-tl-item, .wip-live-flag { transition: none; }
   }
 
+  /* ═══════ WEEKLY WIP — Recap (Stage 3) ═══════
+     Core belief: the meeting is over. Make it one clean message the
+     facilitator reviews, edits, and sends to channel managers.
+     Blue hierarchy: Tier 1 = Send recap. Tier 2 ring = Reset to auto.
+     Tier 3 tint = selected recipient pill. Neutral = All/None/inputs. */
+
+  .wip-recap-root {
+    display: flex; flex-direction: column;
+    gap: var(--sp-xl);
+  }
+
+  .wip-recap-head {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--sp-xl);
+    align-items: flex-start;
+    padding: var(--sp-lg) var(--sp-xl);
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
+    background: var(--bg-elev);
+  }
+  .wip-recap-eyebrow {
+    font-size: var(--fs-nano); font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .wip-recap-title {
+    font-size: var(--fs-2xl); font-weight: 700;
+    color: var(--text); margin: 2px 0 0;
+    letter-spacing: -0.02em;
+  }
+  .wip-recap-meta {
+    font-size: var(--fs-sm); color: var(--text-soft);
+    display: flex; gap: var(--sp-xs); align-items: center; flex-wrap: wrap;
+    margin-top: var(--sp-xs);
+  }
+  .wip-recap-meta .sep { color: var(--text-faint); }
+  .wip-recap-meta strong { color: var(--text); font-weight: 600; }
+  .wip-recap-head-actions {
+    display: flex; flex-direction: column; align-items: flex-end;
+    gap: var(--sp-xs);
+  }
+  .wip-recap-sent-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: var(--fs-nano); font-weight: 600;
+    color: var(--status-track);
+    padding: 2px var(--sp-xs);
+    background: color-mix(in srgb, var(--status-track) 12%, transparent);
+    border-radius: 6px;
+  }
+
+  .wip-recap-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: var(--sp-xl);
+    align-items: start;
+  }
+  .wip-recap-content {
+    display: flex; flex-direction: column;
+    gap: var(--sp-lg);
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
+    background: var(--bg-elev);
+    padding: var(--sp-xl) var(--sp-2xl);
+  }
+  .wip-recap-sidebar {
+    position: sticky; top: var(--sp-lg);
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
+    background: var(--bg-elev);
+    padding: var(--sp-lg);
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+  }
+  .wip-recap-sidebar-title {
+    font-size: var(--fs-nano); font-weight: 700;
+    color: var(--text-faint);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    margin: 0 0 var(--sp-xs);
+  }
+  .wip-recap-sidebar-count {
+    font-size: var(--fs-sm); color: var(--text-soft);
+    margin-bottom: var(--sp-sm);
+  }
+  .wip-recap-sidebar-actions {
+    display: flex; gap: var(--sp-xs);
+    margin-bottom: var(--sp-sm);
+  }
+
+  .wip-recap-recipients {
+    list-style: none; margin: 0; padding: 0;
+    display: flex; flex-direction: column;
+    gap: 2px;
+  }
+  .wip-recap-recipient {
+    display: flex; align-items: center; gap: var(--sp-sm);
+    padding: var(--sp-xs) var(--sp-sm);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .wip-recap-recipient:hover { background: color-mix(in srgb, var(--text) 4%, transparent); }
+  .wip-recap-recipient input[type="checkbox"] {
+    appearance: none;
+    width: 16px; height: 16px;
+    border: 1.5px solid var(--hairline);
+    border-radius: 4px;
+    background: var(--bg);
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .wip-recap-recipient input[type="checkbox"]:checked {
+    background: var(--highlight);
+    border-color: var(--highlight);
+  }
+  .wip-recap-recipient input[type="checkbox"]:checked::after {
+    content: '';
+    width: 4px; height: 8px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+    margin-bottom: 2px;
+  }
+  .wip-recap-recipient input[type="checkbox"]:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
+  }
+  .wip-recap-recipient-name { font-size: var(--fs-sm); color: var(--text); font-weight: 600; }
+  .wip-recap-recipient-role { font-size: var(--fs-nano); color: var(--text-faint); margin-left: auto; }
+  .wip-recap-recipient.is-off .wip-recap-recipient-name { color: var(--text-faint); }
+
+  .wip-recap-sidebar-divider {
+    height: 1px; background: var(--hairline);
+    margin: var(--sp-base) 0;
+  }
+  .wip-recap-sidebar-foot {
+    display: flex; flex-direction: column; gap: var(--sp-xs);
+  }
+
+  /* Form fields */
+  .wip-recap-field {
+    display: flex; flex-direction: column;
+    gap: var(--sp-xs);
+  }
+  .wip-recap-field-label {
+    font-size: var(--fs-nano); font-weight: 700;
+    color: var(--text-faint);
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .wip-recap-input,
+  .wip-recap-textarea {
+    width: 100%;
+    font: inherit;
+    font-size: var(--fs-base);
+    color: var(--text);
+    padding: var(--sp-sm) var(--sp-base);
+    background: var(--bg);
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+  }
+  .wip-recap-input:hover,
+  .wip-recap-textarea:hover { border-color: color-mix(in srgb, var(--text) 18%, transparent); }
+  .wip-recap-input:focus,
+  .wip-recap-textarea:focus {
+    outline: none;
+    border-color: var(--highlight);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--highlight) 18%, transparent);
+  }
+  .wip-recap-textarea {
+    resize: vertical;
+    min-height: 72px;
+    line-height: 1.5;
+  }
+  .wip-recap-body {
+    min-height: 420px;
+    font-family: 'SF Mono', Menlo, monospace;
+    font-size: var(--fs-sm);
+    line-height: 1.55;
+  }
+
+  .wip-recap-body-row {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    gap: var(--sp-xs);
+  }
+  .wip-recap-body-hint {
+    font-size: var(--fs-nano); color: var(--text-faint);
+    margin-right: auto;
+  }
+  .wip-recap-body-saved {
+    font-size: var(--fs-nano); color: var(--text-faint);
+  }
+
+  .wip-recap-empty {
+    border: 1px dashed var(--hairline);
+    border-radius: 14px;
+    padding: var(--sp-5xl) var(--sp-3xl);
+    text-align: center;
+    background: var(--bg-elev);
+  }
+  .wip-recap-empty-title {
+    font-size: var(--fs-lg); font-weight: 600;
+    color: var(--text); margin: 0 0 var(--sp-xs);
+    letter-spacing: -0.01em;
+  }
+  .wip-recap-empty-body {
+    font-size: var(--fs-sm); color: var(--text-soft);
+    max-width: 50ch; margin: 0 auto var(--sp-base);
+    line-height: 1.5;
+  }
+
+  @media (max-width: 1024px) {
+    .wip-recap-grid { grid-template-columns: 1fr; }
+    .wip-recap-sidebar { position: static; max-height: none; }
+  }
+
   /* Stubs for other tabs */
   .wip-stub {
     max-width: 520px; margin: 40px auto;
@@ -13987,15 +14205,76 @@
       </div>
     </section>
 
-    <!-- ── RECAPS (stub for Stage 3) ── -->
-    <section class="wip-sub wip-stub-sub" data-wip-sub="recap" aria-label="Recaps" hidden>
-      <div class="wip-stub">
-        <div class="wip-stub-icon" aria-hidden="true">
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    <!-- ── RECAP (Stage 3) ── -->
+    <section class="wip-sub" data-wip-sub="recap" aria-label="Meeting recap" hidden>
+      <div class="wip-recap-root" data-wip-recap-root>
+
+        <!-- Empty state: no meeting data to recap -->
+        <div class="wip-recap-empty" data-wip-recap-empty hidden>
+          <div class="wip-recap-empty-title">Nothing to recap yet</div>
+          <div class="wip-recap-empty-body">Run a Weekly WIP meeting first. The recap auto-drafts from your notes, decisions, and resolved flags — you review and send.</div>
+          <a class="wip-btn wip-btn-primary" href="#wip/agenda" style="text-decoration: none;">Back to agenda builder</a>
         </div>
-        <div class="wip-stub-title">Recaps — builds in the next stage</div>
-        <div class="wip-stub-body">Fellow AI's draft recap + your edits, side-by-side diff, one-click send to channel managers. Coming in Screen 3.</div>
-        <a class="wip-stub-back" href="#wip/agenda">Back to agenda builder</a>
+
+        <!-- Filled state: recap editor -->
+        <div data-wip-recap-filled hidden>
+          <header class="wip-recap-head">
+            <div style="min-width: 0;">
+              <div class="wip-recap-eyebrow">Recap</div>
+              <h1 class="wip-recap-title" data-wip-recap-title>Weekly WIP</h1>
+              <div class="wip-recap-meta" data-wip-recap-meta></div>
+            </div>
+            <div class="wip-recap-head-actions">
+              <button class="wip-btn wip-btn-primary" data-wip-recap-send type="button" aria-label="Send recap to selected recipients">Send recap</button>
+              <div class="wip-recap-sent-badge" data-wip-recap-sent hidden>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                <span data-wip-recap-sent-label>Sent</span>
+              </div>
+            </div>
+          </header>
+
+          <div class="wip-recap-grid" style="margin-top: var(--sp-xl);">
+            <div class="wip-recap-content">
+              <div class="wip-recap-field">
+                <label class="wip-recap-field-label" for="wip-recap-subject">Subject</label>
+                <input class="wip-recap-input" id="wip-recap-subject" data-wip-recap-subject type="text" placeholder="Weekly WIP — recap">
+              </div>
+
+              <div class="wip-recap-field">
+                <label class="wip-recap-field-label" for="wip-recap-opening">Opening note</label>
+                <textarea class="wip-recap-textarea" id="wip-recap-opening" data-wip-recap-opening rows="2" placeholder="One or two sentences setting context. Auto-drafted; edit freely."></textarea>
+              </div>
+
+              <div class="wip-recap-field">
+                <div class="wip-recap-body-row">
+                  <label class="wip-recap-field-label" for="wip-recap-body" style="margin-right: auto;">Body</label>
+                  <span class="wip-recap-body-saved" data-wip-recap-saved>Edits save automatically</span>
+                  <button class="wip-btn wip-btn-ring" data-wip-recap-reset type="button" style="padding: 4px 10px; font-size: var(--fs-sm);">Reset to auto-draft</button>
+                </div>
+                <textarea class="wip-recap-textarea wip-recap-body" id="wip-recap-body" data-wip-recap-body placeholder="Auto-drafted from decisions, actions, and resolved flags. Edit freely."></textarea>
+              </div>
+            </div>
+
+            <aside class="wip-recap-sidebar" aria-label="Recipients">
+              <div class="wip-recap-sidebar-title">Recipients</div>
+              <div class="wip-recap-sidebar-count" data-wip-recap-recipient-count>—</div>
+              <div class="wip-recap-sidebar-actions">
+                <button class="wip-btn wip-btn-ghost" data-wip-recap-all type="button" style="padding: 4px 10px; font-size: var(--fs-sm);">All</button>
+                <button class="wip-btn wip-btn-ghost" data-wip-recap-none type="button" style="padding: 4px 10px; font-size: var(--fs-sm);">None</button>
+              </div>
+              <ul class="wip-recap-recipients" data-wip-recap-recipients></ul>
+              <div class="wip-recap-sidebar-divider"></div>
+              <div class="wip-recap-sidebar-foot">
+                <div class="wip-recap-sidebar-title">Delivery</div>
+                <div style="font-size: var(--fs-sm); color: var(--text-soft); line-height: 1.45;">
+                  Sends to each manager's channel in Slack.<br>
+                  Actions auto-assigned already — recap is the summary.
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+
       </div>
     </section>
 
@@ -30484,6 +30763,370 @@ window.OPS_TEAM = OPS_TEAM;
     }
   });
 
+  // ══════════════════════════════════════════════════════════════
+  //  RECAP (Stage 3) — one clean message to send channel managers.
+  //  Belief: the meeting is over. Auto-draft a recap from captured
+  //  notes / decisions / actions / flag resolutions; make editing
+  //  and sending painless.
+  //  Blue hierarchy: Tier 1 = Send recap. Tier 2 ring = Reset to
+  //  auto-draft. Tier 3 tint = selected recipient (custom checkbox
+  //  fill). Neutral = All / None, form fields, back link.
+  // ══════════════════════════════════════════════════════════════
+
+  function ensureRecapDefaults(){
+    ensureMeetingState();
+    var m = state.meeting;
+    if (typeof m.recapSubject         !== 'string') m.recapSubject = '';
+    if (typeof m.recapOpening         !== 'string') m.recapOpening = '';
+    if (typeof m.recapBody            !== 'string') m.recapBody = '';
+    if (typeof m.recapBodyAutoShadow  !== 'string') m.recapBodyAutoShadow = '';
+    if (!('recapRecipients' in m))    m.recapRecipients = null; // null = "all"
+    if (!('recapSentAt' in m))        m.recapSentAt = null;
+  }
+
+  function hasMeetingData(){
+    var m = state.meeting;
+    if (!m) return false;
+    if (m.endedAt) return true;
+    if (m.notes && m.notes.length > 0) return true;
+    if (m.flagResolutions && Object.keys(m.flagResolutions).length > 0) return true;
+    return false;
+  }
+
+  function recapRecipientsList(){
+    // Distinct manager names from the channels we surfaced this week.
+    // Each manager gets one row with the channel(s) they own.
+    var byName = {};
+    var order = [];
+    state.channelOrder.forEach(function(cid){
+      var ch = channel(cid); if (!ch) return;
+      if (!byName[ch.manager]) {
+        byName[ch.manager] = { name: ch.manager, channels: [], roles: {} };
+        order.push(ch.manager);
+      }
+      byName[ch.manager].channels.push(ch);
+      byName[ch.manager].roles[ch.name] = true;
+    });
+    return order.map(function(n){
+      var r = byName[n];
+      return { name: r.name, role: Object.keys(r.roles).join(' + ') };
+    });
+  }
+
+  function isRecipientSelected(name){
+    var m = state.meeting;
+    if (m.recapRecipients === null) return true;
+    return m.recapRecipients.indexOf(name) >= 0;
+  }
+
+  function setRecipientSelected(name, on){
+    ensureRecapDefaults();
+    var m = state.meeting;
+    if (m.recapRecipients === null) {
+      m.recapRecipients = recapRecipientsList().map(function(r){ return r.name; });
+    }
+    var idx = m.recapRecipients.indexOf(name);
+    if (on) { if (idx < 0) m.recapRecipients.push(name); }
+    else    { if (idx >= 0) m.recapRecipients.splice(idx, 1); }
+    saveState();
+  }
+
+  function setAllRecipients(on){
+    ensureRecapDefaults();
+    var all = recapRecipientsList().map(function(r){ return r.name; });
+    state.meeting.recapRecipients = on ? all.slice() : [];
+    saveState();
+  }
+
+  // ── Auto-draft builder ─────────────────────────────────────
+  function fmtRecapDuration(m){
+    if (!m.startedAt || !m.endedAt) return null;
+    var dur = new Date(m.endedAt).getTime() - new Date(m.startedAt).getTime();
+    dur -= (m.pausedTotalMs || 0);
+    if (dur < 0) dur = 0;
+    var totalMin = Math.round(dur / 60000);
+    if (totalMin < 1) return '< 1 min';
+    if (totalMin < 60) return totalMin + ' min';
+    var h = Math.floor(totalMin / 60);
+    var mm = totalMin % 60;
+    return h + 'h' + (mm > 0 ? ' ' + mm + 'm' : '');
+  }
+
+  function buildAutoDraftSubject(m){
+    var d = m.startedAt ? new Date(m.startedAt) : new Date();
+    var label = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+    return 'Weekly WIP \u2014 ' + label;
+  }
+
+  function buildAutoDraftOpening(m){
+    var dur = fmtRecapDuration(m);
+    var decisions = (m.notes || []).filter(function(n){ return n.kind === 'decision'; }).length;
+    var actions   = (m.notes || []).filter(function(n){ return n.kind === 'action'; }).length;
+    var parts = [];
+    if (dur) parts.push('Meeting ran ' + dur + '.');
+    if (decisions + actions > 0) {
+      parts.push('Captured ' + decisions + ' decision' + (decisions === 1 ? '' : 's') + ' and ' + actions + ' action' + (actions === 1 ? '' : 's') + '.');
+    }
+    parts.push('Details below \u2014 reply with anything missed.');
+    return parts.join(' ');
+  }
+
+  function buildAutoDraftBody(m){
+    var lines = [];
+    var notes = (m.notes || []).slice().sort(function(a, b){ return a.createdAt - b.createdAt; });
+    var decisions  = notes.filter(function(n){ return n.kind === 'decision'; });
+    var actions    = notes.filter(function(n){ return n.kind === 'action'; });
+    var plainNotes = notes.filter(function(n){ return n.kind === 'note'; });
+
+    if (decisions.length > 0) {
+      lines.push('DECISIONS');
+      decisions.forEach(function(n){
+        var meta = getBlockMeta(n.blockKey);
+        var ctx  = meta ? (meta.title || '') : '';
+        lines.push('\u2022 ' + n.text + (ctx ? '  (' + ctx + ')' : ''));
+      });
+      lines.push('');
+    }
+
+    if (actions.length > 0) {
+      lines.push('ACTIONS (new)');
+      actions.forEach(function(n){
+        var meta  = getBlockMeta(n.blockKey);
+        var owner = n.owner || (meta && meta.owner) || 'Unassigned';
+        lines.push('\u2022 [' + owner + '] ' + n.text);
+      });
+      lines.push('');
+    }
+
+    var res = m.flagResolutions || {};
+    var resolvedIds = Object.keys(res).filter(function(id){ return res[id] === 'done'; });
+    if (resolvedIds.length > 0) {
+      lines.push('FLAGS RESOLVED');
+      resolvedIds.forEach(function(id){
+        var f = null;
+        for (var i = 0; i < state.redFlags.length; i++) if (state.redFlags[i].id === id) { f = state.redFlags[i]; break; }
+        if (!f) return;
+        lines.push('\u2022 ' + (f.clientName || '') + ' \u2014 ' + f.title);
+      });
+      lines.push('');
+    }
+
+    var stillOpen = state.redFlags.filter(function(f){ return res[f.id] !== 'done'; });
+    if (stillOpen.length > 0) {
+      lines.push('FLAGS STILL OPEN');
+      stillOpen.forEach(function(f){
+        var sevLabel = SEV_LABEL[f.severity] || 'At Risk';
+        lines.push('\u2022 [' + sevLabel + '] ' + (f.clientName || '') + ' \u2014 ' + f.title);
+      });
+      lines.push('');
+    }
+
+    if (plainNotes.length > 0) {
+      lines.push('NOTES');
+      plainNotes.forEach(function(n){
+        var meta = getBlockMeta(n.blockKey);
+        var ctx  = meta ? (meta.title || '') : '';
+        lines.push('\u2022 ' + n.text + (ctx ? '  (' + ctx + ')' : ''));
+      });
+      lines.push('');
+    }
+
+    while (lines.length > 0 && lines[lines.length - 1] === '') lines.pop();
+    if (lines.length === 0) {
+      lines.push('No decisions, actions, or flag resolutions were captured this week. Meeting summary only.');
+    }
+    return lines.join('\n');
+  }
+
+  function refreshAutoDraftFields(force){
+    ensureRecapDefaults();
+    var m = state.meeting;
+    var fresh = {
+      subject: buildAutoDraftSubject(m),
+      opening: buildAutoDraftOpening(m),
+      body:    buildAutoDraftBody(m)
+    };
+    if (force || !m.recapSubject)                                       m.recapSubject = fresh.subject;
+    if (force || !m.recapOpening)                                       m.recapOpening = fresh.opening;
+    if (force || !m.recapBody || m.recapBody === m.recapBodyAutoShadow) m.recapBody    = fresh.body;
+    m.recapBodyAutoShadow = fresh.body;
+    saveState();
+  }
+
+  // ── DOM refs ───────────────────────────────────────────────
+  var recapEls = null;
+  function getRecapEls(){
+    if (recapEls) return recapEls;
+    var sub = view.querySelector('[data-wip-sub="recap"]');
+    if (!sub) return null;
+    recapEls = {
+      root:         sub.querySelector('[data-wip-recap-root]'),
+      empty:        sub.querySelector('[data-wip-recap-empty]'),
+      filled:       sub.querySelector('[data-wip-recap-filled]'),
+      title:        sub.querySelector('[data-wip-recap-title]'),
+      meta:         sub.querySelector('[data-wip-recap-meta]'),
+      subject:      sub.querySelector('[data-wip-recap-subject]'),
+      opening:      sub.querySelector('[data-wip-recap-opening]'),
+      body:         sub.querySelector('[data-wip-recap-body]'),
+      saved:        sub.querySelector('[data-wip-recap-saved]'),
+      sendBtn:      sub.querySelector('[data-wip-recap-send]'),
+      sentBadge:    sub.querySelector('[data-wip-recap-sent]'),
+      sentLabel:    sub.querySelector('[data-wip-recap-sent-label]'),
+      resetBtn:     sub.querySelector('[data-wip-recap-reset]'),
+      allBtn:       sub.querySelector('[data-wip-recap-all]'),
+      noneBtn:      sub.querySelector('[data-wip-recap-none]'),
+      recipients:   sub.querySelector('[data-wip-recap-recipients]'),
+      recipientCnt: sub.querySelector('[data-wip-recap-recipient-count]')
+    };
+    return recapEls;
+  }
+
+  // ── Renderers ──────────────────────────────────────────────
+  function renderRecap(){
+    var E = getRecapEls(); if (!E) return;
+    ensureRecapDefaults();
+
+    if (!hasMeetingData()) {
+      E.empty.hidden = false;
+      E.filled.hidden = true;
+      return;
+    }
+    E.empty.hidden = true;
+    E.filled.hidden = false;
+
+    refreshAutoDraftFields(false);
+
+    var m = state.meeting;
+    E.title.textContent = buildAutoDraftSubject(m);
+
+    // Meta row
+    var dur = fmtRecapDuration(m);
+    var itemCount = (m.sequence || []).length || 0;
+    var flagsDone = Object.keys(m.flagResolutions || {}).filter(function(k){ return m.flagResolutions[k] === 'done'; }).length;
+    var newActions = (m.notes || []).filter(function(n){ return n.kind === 'action'; }).length;
+    var metaParts = [];
+    if (m.endedAt)        metaParts.push('Ended ' + fmtMeetingTime(m.endedAt));
+    else if (m.startedAt) metaParts.push('Started ' + fmtMeetingTime(m.startedAt));
+    if (dur)              metaParts.push(dur);
+    metaParts.push(itemCount + ' item' + (itemCount === 1 ? '' : 's') + ' covered');
+    metaParts.push(flagsDone + ' flag' + (flagsDone === 1 ? '' : 's') + ' closed');
+    metaParts.push(newActions + ' new action' + (newActions === 1 ? '' : 's'));
+    E.meta.innerHTML = metaParts.map(function(p, i){
+      return (i > 0 ? '<span class="sep" aria-hidden="true">\u00b7</span>' : '') + '<span>' + escapeHtml(p) + '</span>';
+    }).join('');
+
+    // Fields (don't clobber while user is typing)
+    if (document.activeElement !== E.subject) E.subject.value = m.recapSubject || '';
+    if (document.activeElement !== E.opening) E.opening.value = m.recapOpening || '';
+    if (document.activeElement !== E.body)    E.body.value    = m.recapBody    || '';
+
+    // Sent badge
+    if (m.recapSentAt) {
+      E.sentBadge.hidden = false;
+      var t = new Date(m.recapSentAt);
+      E.sentLabel.textContent = 'Sent ' + t.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+      E.sendBtn.textContent = 'Send again';
+    } else {
+      E.sentBadge.hidden = true;
+      E.sendBtn.textContent = 'Send recap';
+    }
+
+    renderRecipients();
+  }
+
+  function renderRecipients(){
+    var E = getRecapEls(); if (!E) return;
+    var list = recapRecipientsList();
+    var selectedCount = list.filter(function(r){ return isRecipientSelected(r.name); }).length;
+    E.recipientCnt.textContent = selectedCount + ' of ' + list.length + ' selected';
+
+    E.recipients.innerHTML = list.map(function(r){
+      var on = isRecipientSelected(r.name);
+      return '<li class="wip-recap-recipient' + (on ? '' : ' is-off') + '">' +
+        '<input type="checkbox" ' + (on ? 'checked' : '') + ' data-wip-recap-recipient="' + escapeHtml(r.name) + '" aria-label="Include ' + escapeHtml(r.name) + '">' +
+        '<span class="wip-recap-recipient-name">' + escapeHtml(r.name) + '</span>' +
+        '<span class="wip-recap-recipient-role">' + escapeHtml(r.role) + '</span>' +
+      '</li>';
+    }).join('');
+  }
+
+  // ── Persistence wiring ─────────────────────────────────────
+  var recapSaveTimer = null;
+  function scheduleRecapSave(){
+    var E = getRecapEls(); if (!E) return;
+    clearTimeout(recapSaveTimer);
+    E.saved.textContent = 'Saving\u2026';
+    recapSaveTimer = setTimeout(function(){
+      ensureRecapDefaults();
+      var m = state.meeting;
+      m.recapSubject = E.subject.value;
+      m.recapOpening = E.opening.value;
+      m.recapBody    = E.body.value;
+      saveState();
+      E.saved.textContent = 'Edits save automatically';
+    }, 450);
+  }
+
+  function resetToAutoDraft(){
+    ensureRecapDefaults();
+    refreshAutoDraftFields(true);
+    renderRecap();
+    if (typeof window.showToast === 'function') {
+      window.showToast('Recap reset to auto-draft.', { duration: 3000 });
+    }
+  }
+
+  function sendRecap(){
+    ensureRecapDefaults();
+    var m = state.meeting;
+    var E = getRecapEls();
+    if (E) {
+      m.recapSubject = E.subject.value;
+      m.recapOpening = E.opening.value;
+      m.recapBody    = E.body.value;
+    }
+    var recipients = (m.recapRecipients === null)
+      ? recapRecipientsList().map(function(r){ return r.name; })
+      : m.recapRecipients.slice();
+    if (recipients.length === 0) {
+      if (typeof window.showToast === 'function') {
+        window.showToast('Pick at least one recipient first.', { duration: 3200 });
+      }
+      return;
+    }
+    m.recapSentAt = new Date().toISOString();
+    saveState();
+    renderRecap();
+    if (typeof window.showToast === 'function') {
+      window.showToast('Recap sent to ' + recipients.length + ' recipient' + (recipients.length === 1 ? '' : 's') + '.', { duration: 4000 });
+    }
+  }
+
+  // ── Recap event wiring ─────────────────────────────────────
+  (function wireRecap(){
+    var E = getRecapEls(); if (!E) return;
+
+    ['input', 'change'].forEach(function(ev){
+      [E.subject, E.opening, E.body].forEach(function(el){
+        if (el) el.addEventListener(ev, scheduleRecapSave);
+      });
+    });
+
+    if (E.resetBtn) E.resetBtn.addEventListener('click', resetToAutoDraft);
+    if (E.sendBtn)  E.sendBtn.addEventListener('click', sendRecap);
+    if (E.allBtn)   E.allBtn.addEventListener('click', function(){ setAllRecipients(true); renderRecap(); });
+    if (E.noneBtn)  E.noneBtn.addEventListener('click', function(){ setAllRecipients(false); renderRecap(); });
+
+    if (E.recipients) {
+      E.recipients.addEventListener('change', function(e){
+        var cb = e.target.closest('[data-wip-recap-recipient]');
+        if (!cb) return;
+        setRecipientSelected(cb.getAttribute('data-wip-recap-recipient'), cb.checked);
+        renderRecap();
+      });
+    }
+  })();
+
   // ── Public hook for router ──────────────────────────────────
   window.WIP = {
     onRoute: function(sub /* , id */){
@@ -30496,6 +31139,11 @@ window.OPS_TEAM = OPS_TEAM;
         renderLive();
         startTicking();
         attachLiveKeyboard();
+      } else if (sub === 'recap') {
+        stopTicking();
+        detachLiveKeyboard();
+        closeCapture();
+        renderRecap();
       } else {
         stopTicking();
         detachLiveKeyboard();
