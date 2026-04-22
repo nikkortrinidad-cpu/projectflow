@@ -10335,14 +10335,181 @@
     .anlx-slipped-chev  { display: none; }
   }
 
+  /* ── Landing this week — 5-day weekday grid ── */
+  .anlx-land-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 14px;
+    padding: var(--sp-lg);
+  }
+  .anlx-land-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--sp-sm);
+  }
+  .anlx-land-day {
+    display: flex; flex-direction: column; gap: var(--sp-sm);
+    min-width: 0;
+  }
+  .anlx-land-day-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    padding: 0 var(--sp-xs);
+  }
+  .anlx-land-day-name {
+    font-size: var(--fs-sm); font-weight: 600;
+    color: var(--text); letter-spacing: -0.005em;
+  }
+  .anlx-land-day-name[data-today="true"] { color: var(--highlight); }
+  .anlx-land-day-date {
+    font-size: var(--fs-xs); color: var(--text-faint);
+    font-variant-numeric: tabular-nums;
+  }
+  .anlx-land-tile {
+    display: flex; flex-direction: column; gap: var(--sp-xs);
+    padding: var(--sp-md);
+    border-radius: 10px;
+    background: var(--bg-soft);
+    border: 1px solid transparent;
+    text-decoration: none; color: inherit;
+    cursor: pointer;
+    transition: background var(--dur-fast) var(--ease-out),
+                border-color var(--dur-fast) var(--ease-out),
+                transform var(--dur-fast) var(--ease-out);
+  }
+  .anlx-land-tile:hover {
+    background: var(--bg);
+    border-color: var(--hairline);
+    transform: translateY(-1px);
+  }
+  .anlx-land-tile:focus-visible {
+    outline: none;
+    border-color: var(--highlight);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--highlight) 30%, transparent);
+  }
+  .anlx-land-tile[data-kind="launch"] {
+    background: color-mix(in srgb, var(--status-track) 9%, transparent);
+    border-color: color-mix(in srgb, var(--status-track) 28%, transparent);
+  }
+  .anlx-land-tile[data-kind="launch"]:hover {
+    background: color-mix(in srgb, var(--status-track) 14%, transparent);
+  }
+  .anlx-land-tile-milestone {
+    font-size: var(--fs-nano); font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .anlx-land-tile[data-kind="launch"] .anlx-land-tile-milestone {
+    color: var(--status-track);
+  }
+  .anlx-land-tile-name {
+    font-size: var(--fs-sm); font-weight: 600;
+    color: var(--text); line-height: var(--lh-hug);
+    letter-spacing: -0.005em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .anlx-land-tile-meta {
+    display: flex; align-items: center; gap: var(--sp-xs);
+    font-size: var(--fs-xs); color: var(--text-soft);
+    min-width: 0;
+  }
+  .anlx-land-tile-meta .anlx-load-avatar {
+    width: 20px; height: 20px; font-size: 9px;
+  }
+  .anlx-land-tile-client {
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    min-width: 0;
+  }
+  .anlx-land-day-empty {
+    padding: var(--sp-md);
+    text-align: center;
+    font-size: var(--fs-xs); color: var(--text-faint);
+    border: 1px dashed var(--hairline-soft);
+    border-radius: 10px;
+    letter-spacing: -0.005em;
+  }
+  @media (max-width: 1000px) {
+    .anlx-land-grid {
+      grid-auto-flow: column;
+      grid-template-columns: none;
+      grid-auto-columns: minmax(200px, 1fr);
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-padding: 0 var(--sp-lg);
+      margin: 0 calc(var(--sp-lg) * -1);
+      padding: 0 var(--sp-lg) var(--sp-xs);
+      -webkit-overflow-scrolling: touch;
+    }
+    .anlx-land-day { scroll-snap-align: start; }
+  }
+
+  /* ── Out this week — compact text strip ── */
+  .anlx-ooo-strip {
+    display: flex; align-items: center; flex-wrap: wrap;
+    gap: var(--sp-md);
+    padding: var(--sp-sm) var(--sp-md);
+    margin-bottom: var(--sp-md);
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 10px;
+    font-size: var(--fs-xs);
+  }
+  .anlx-ooo-label {
+    font-weight: 600; color: var(--text-muted);
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .anlx-ooo-person {
+    display: inline-flex; align-items: center; gap: var(--sp-xs);
+    color: var(--text-soft);
+  }
+  .anlx-ooo-person .anlx-load-avatar {
+    width: 18px; height: 18px; font-size: 8px;
+  }
+  .anlx-ooo-name { color: var(--text); font-weight: 500; }
+  .anlx-ooo-when {
+    color: var(--text-faint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Open capacity chips — one per function ── */
+  .anlx-cap-row {
+    display: flex; flex-wrap: wrap; gap: var(--sp-xs);
+    margin-bottom: var(--sp-md);
+  }
+  .anlx-cap-chip {
+    display: inline-flex; align-items: baseline; gap: var(--sp-xs);
+    padding: 6px var(--sp-sm);
+    border-radius: 8px;
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline-soft);
+    font-size: var(--fs-xs);
+    font-variant-numeric: tabular-nums;
+  }
+  .anlx-cap-chip-fn {
+    font-weight: 600; color: var(--text);
+    letter-spacing: -0.005em;
+  }
+  .anlx-cap-chip-fte {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .anlx-cap-chip-label {
+    color: var(--text-faint);
+    letter-spacing: -0.005em;
+  }
+  .anlx-cap-chip[data-cap="open"]  .anlx-cap-chip-fte { color: var(--status-track); }
+  .anlx-cap-chip[data-cap="tight"] .anlx-cap-chip-fte { color: var(--status-risk); }
+  .anlx-cap-chip[data-cap="over"]  .anlx-cap-chip-fte { color: var(--status-fire); }
+
   @media (prefers-reduced-motion: reduce) {
     .anlx-pulse-card .stats-hero-card,
     .anlx-pulse-bar-fill,
     .anlx-load-bar-fill,
     .anlx-load-row, .anlx-flow-cell, .anlx-slipped-row,
-    .anlx-slipped-chev { transition: none; }
+    .anlx-slipped-chev,
+    .anlx-land-tile { transition: none; }
     .anlx-pulse-card:hover .stats-hero-card,
-    .anlx-flow-cell:hover { transform: none; }
+    .anlx-flow-cell:hover,
+    .anlx-land-tile:hover { transform: none; }
   }
   </style>
 </head>
@@ -12549,11 +12716,12 @@
 <!-- ═══════ END CLIENTS SPLIT VIEW ═══════ -->
 
 <!-- ═══════ ANALYTICS VIEW ═══════
-     Audience: PM / AM (CEO as secondary). Three questions, in order:
+     Audience: PM / AM (CEO as secondary). Five questions, in order:
        1. Pulse     — can we take more on right now?
-       2. Team load — who's stretched? Grouped by function.
-       3. Flow      — where in the delivery line is work stuck?
-       4. Slipped   — what broke this month, click to fix?                    -->
+       2. Landing   — what's crossing a phase boundary in the next 5 biz days?
+       3. Team load — who's stretched? + OOO strip + open-capacity chips
+       4. Flow      — where in the delivery line is work stuck?
+       5. Slipped   — what broke this month, click to fix?                    -->
 <div class="view view-analytics" data-view="analytics">
   <main class="anlx-page">
 
@@ -12643,7 +12811,103 @@
       </div>
     </section>
 
-    <!-- ═══ 2. Team load ═══ -->
+    <!-- ═══ 2. Landing this week — next 5 business days of phase transitions ═══ -->
+    <section class="anlx-section" aria-labelledby="anlxLandingTitle">
+      <div class="anlx-section-head">
+        <div class="anlx-section-title-group">
+          <span class="anlx-section-title" id="anlxLandingTitle">Landing this week</span>
+          <span class="anlx-section-sub">Phase transitions in the next 5 business days — go-lives, reviews, handoffs. Click a tile to open the client.</span>
+        </div>
+      </div>
+      <div class="anlx-land-card">
+        <div class="anlx-land-grid" role="list">
+
+          <!-- Thu Apr 23 -->
+          <div class="anlx-land-day" role="listitem">
+            <div class="anlx-land-day-head">
+              <span class="anlx-land-day-name">Thu</span>
+              <span class="anlx-land-day-date">Apr 23</span>
+            </div>
+            <a class="anlx-land-tile" href="#clients/acme-corp" data-client-id="acme-corp" aria-label="Thursday Apr 23: Strategy approved on Brand Refresh Q2, Acme Corp, phase 6 to 7, owner Sofia Reyes. Open client.">
+              <span class="anlx-land-tile-milestone">Strategy approved</span>
+              <span class="anlx-land-tile-name">Brand Refresh Q2</span>
+              <span class="anlx-land-tile-meta">
+                <span class="anlx-load-avatar" style="background:#0a84ff;" aria-hidden="true">SR</span>
+                <span class="anlx-land-tile-client">Acme · Phase 7</span>
+              </span>
+            </a>
+          </div>
+
+          <!-- Fri Apr 24 -->
+          <div class="anlx-land-day" role="listitem">
+            <div class="anlx-land-day-head">
+              <span class="anlx-land-day-name">Fri</span>
+              <span class="anlx-land-day-date">Apr 24</span>
+            </div>
+            <a class="anlx-land-tile" data-kind="launch" href="#clients/meridian-health" data-client-id="meridian-health" aria-label="Friday Apr 24: Go-live for Meridian Health Site, phase 7 to 8, owner Dev Patel. Open client.">
+              <span class="anlx-land-tile-milestone">Go-live</span>
+              <span class="anlx-land-tile-name">Meridian Health Site</span>
+              <span class="anlx-land-tile-meta">
+                <span class="anlx-load-avatar" style="background:#30d158;" aria-hidden="true">DP</span>
+                <span class="anlx-land-tile-client">Meridian · Phase 8</span>
+              </span>
+            </a>
+          </div>
+
+          <!-- Mon Apr 27 -->
+          <div class="anlx-land-day" role="listitem">
+            <div class="anlx-land-day-head">
+              <span class="anlx-land-day-name">Mon</span>
+              <span class="anlx-land-day-date">Apr 27</span>
+            </div>
+            <div class="anlx-land-day-empty">Nothing scheduled</div>
+          </div>
+
+          <!-- Tue Apr 28 -->
+          <div class="anlx-land-day" role="listitem">
+            <div class="anlx-land-day-head">
+              <span class="anlx-land-day-name">Tue</span>
+              <span class="anlx-land-day-date">Apr 28</span>
+            </div>
+            <a class="anlx-land-tile" href="#clients/cascade-coffee" data-client-id="cascade-coffee" aria-label="Tuesday Apr 28: Monthly report due for Cascade Coffee, phase 9 to 10, owner Priya Singh. Open client.">
+              <span class="anlx-land-tile-milestone">Report due</span>
+              <span class="anlx-land-tile-name">Monthly Report</span>
+              <span class="anlx-land-tile-meta">
+                <span class="anlx-load-avatar" style="background:#bf5af2;" aria-hidden="true">PS</span>
+                <span class="anlx-land-tile-client">Cascade · Phase 10</span>
+              </span>
+            </a>
+            <a class="anlx-land-tile" href="#clients/axiom-labs" data-client-id="axiom-labs" aria-label="Tuesday Apr 28: Kickoff for Paid Social, Axiom Labs, phase 4 to 5, owner Elena Torres. Open client.">
+              <span class="anlx-land-tile-milestone">Kickoff</span>
+              <span class="anlx-land-tile-name">Paid Social</span>
+              <span class="anlx-land-tile-meta">
+                <span class="anlx-load-avatar" style="background:#ff3366;" aria-hidden="true">ET</span>
+                <span class="anlx-land-tile-client">Axiom · Phase 5</span>
+              </span>
+            </a>
+          </div>
+
+          <!-- Wed Apr 29 -->
+          <div class="anlx-land-day" role="listitem">
+            <div class="anlx-land-day-head">
+              <span class="anlx-land-day-name">Wed</span>
+              <span class="anlx-land-day-date">Apr 29</span>
+            </div>
+            <a class="anlx-land-tile" href="#clients/northwind" data-client-id="northwind" aria-label="Wednesday Apr 29: SEO audit report due for Northwind, phase 9 to 10, owner Ryan O'Connor. Open client.">
+              <span class="anlx-land-tile-milestone">Report due</span>
+              <span class="anlx-land-tile-name">SEO Audit</span>
+              <span class="anlx-land-tile-meta">
+                <span class="anlx-load-avatar" style="background:#5e5ce6;" aria-hidden="true">RO</span>
+                <span class="anlx-land-tile-client">Northwind · Phase 10</span>
+              </span>
+            </a>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ 3. Team load ═══ -->
     <section class="anlx-section" id="anlxTeamLoad" aria-labelledby="anlxTeamLoadTitle">
       <div class="anlx-section-head">
         <div class="anlx-section-title-group">
@@ -12654,6 +12918,55 @@
           <span class="anlx-load-legend-chip" data-tone="healthy">&lt;85%</span>
           <span class="anlx-load-legend-chip" data-tone="stretch">85–100%</span>
           <span class="anlx-load-legend-chip" data-tone="over">&gt;100%</span>
+        </div>
+      </div>
+
+      <!-- OOO strip — out-of-office this week -->
+      <div class="anlx-ooo-strip" role="status" aria-label="Team members out of office this week">
+        <span class="anlx-ooo-label">Out this week</span>
+        <span class="anlx-ooo-person">
+          <span class="anlx-load-avatar" style="background:#ff9f0a;" aria-hidden="true">KN</span>
+          <span class="anlx-ooo-name">Kai Nakamura</span>
+          <span class="anlx-ooo-when">Thu–Fri</span>
+        </span>
+        <span class="anlx-ooo-person">
+          <span class="anlx-load-avatar" style="background:#ff3366;" aria-hidden="true">ET</span>
+          <span class="anlx-ooo-name">Elena Torres</span>
+          <span class="anlx-ooo-when">Mon</span>
+        </span>
+      </div>
+
+      <!-- Open capacity chips — aggregate headroom per function, OOO-adjusted -->
+      <div class="anlx-cap-row" role="group" aria-label="Open capacity by function, adjusted for OOO">
+        <div class="anlx-cap-chip" data-cap="open">
+          <span class="anlx-cap-chip-fn">PM</span>
+          <span class="anlx-cap-chip-fte">+0.8</span>
+          <span class="anlx-cap-chip-label">FTE free</span>
+        </div>
+        <div class="anlx-cap-chip" data-cap="open">
+          <span class="anlx-cap-chip-fn">AM</span>
+          <span class="anlx-cap-chip-fte">+0.5</span>
+          <span class="anlx-cap-chip-label">FTE free</span>
+        </div>
+        <div class="anlx-cap-chip" data-cap="tight">
+          <span class="anlx-cap-chip-fn">Strategist</span>
+          <span class="anlx-cap-chip-fte">+0.1</span>
+          <span class="anlx-cap-chip-label">FTE free</span>
+        </div>
+        <div class="anlx-cap-chip" data-cap="tight">
+          <span class="anlx-cap-chip-fn">Designer</span>
+          <span class="anlx-cap-chip-fte">+0.3</span>
+          <span class="anlx-cap-chip-label">FTE free</span>
+        </div>
+        <div class="anlx-cap-chip" data-cap="open">
+          <span class="anlx-cap-chip-fn">Developer</span>
+          <span class="anlx-cap-chip-fte">+0.7</span>
+          <span class="anlx-cap-chip-label">FTE free</span>
+        </div>
+        <div class="anlx-cap-chip" data-cap="tight">
+          <span class="anlx-cap-chip-fn">SEO</span>
+          <span class="anlx-cap-chip-fte">+0.3</span>
+          <span class="anlx-cap-chip-label">FTE free</span>
         </div>
       </div>
 
@@ -12920,7 +13233,7 @@
       </div>
     </section>
 
-    <!-- ═══ 3. Flow — phases 5-12 ═══ -->
+    <!-- ═══ 4. Flow — phases 5-12 ═══ -->
     <section class="anlx-section" id="anlxFlow" aria-labelledby="anlxFlowTitle">
       <div class="anlx-section-head">
         <div class="anlx-section-title-group">
@@ -13042,7 +13355,7 @@
       </div>
     </section>
 
-    <!-- ═══ 4. Slipped this month ═══ -->
+    <!-- ═══ 5. Slipped this month ═══ -->
     <section class="anlx-section" id="anlxSlipped" aria-labelledby="anlxSlippedTitle">
       <div class="anlx-section-head">
         <div class="anlx-section-title-group">
