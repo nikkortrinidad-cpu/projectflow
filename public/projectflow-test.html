@@ -6641,6 +6641,17 @@
     letter-spacing: -0.005em;
     line-height: var(--lh-hug);
     white-space: nowrap;
+    /* Button reset — pill is a button so PM can change phase */
+    border: 0;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background var(--dur-fast) var(--ease-out),
+                transform var(--dur-fast) var(--ease-out);
+  }
+  .phase-pill:hover    { background: color-mix(in srgb, currentColor 18%, transparent); }
+  .phase-pill:active   { transform: scale(0.97); }
+  .phase-pill[aria-expanded="true"] {
+    background: color-mix(in srgb, currentColor 22%, transparent);
   }
   .phase-pill-num {
     font-feature-settings: "tnum";
@@ -6655,6 +6666,96 @@
   .phase-pill.onboard   { color: var(--status-onboard); background: var(--status-onboard-soft); }
   .phase-pill.active    { color: var(--status-track);   background: var(--status-track-soft); }
   .phase-pill.winddown  { color: var(--status-risk);    background: var(--status-risk-soft); }
+
+  /* ─── Phase picker popover ───
+     Single shared popover, lazy-injected into body on first open, positioned
+     next to whichever pill was clicked. Renders all 12 phases grouped by
+     macro-stage so PM can see the full journey and jump to any phase.
+     Kebab-menu visual vocabulary (elevated bg, hairline, soft shadow).      */
+  .phase-picker-menu {
+    position: absolute;
+    min-width: 260px; max-width: 320px;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    box-shadow: 0 18px 44px -14px rgba(0, 0, 0, 0.55),
+                0 2px 10px rgba(0, 0, 0, 0.2);
+    padding: var(--sp-xs);
+    z-index: 1200;
+    display: none;
+    transform: translateY(-4px);
+    opacity: 0;
+    transition: opacity var(--dur-fast) var(--ease-out),
+                transform var(--dur-fast) var(--ease-out);
+    max-height: 70vh; overflow-y: auto;
+  }
+  .phase-picker-menu[data-open="true"] {
+    display: block; opacity: 1; transform: translateY(0);
+  }
+  .phase-picker-group + .phase-picker-group { margin-top: var(--sp-xs); }
+  .phase-picker-group-label {
+    display: block;
+    padding: var(--sp-xs) var(--sp-md) var(--sp-nano);
+    font-size: var(--fs-nano);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+  .phase-picker-item {
+    display: flex; align-items: center; gap: var(--sp-md);
+    width: 100%; text-align: left;
+    padding: var(--sp-sm) var(--sp-md);
+    border: 0; background: transparent;
+    border-radius: 8px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: var(--fs-md); font-weight: 500;
+    letter-spacing: -0.005em;
+    cursor: pointer;
+    transition: background var(--dur-fast) var(--ease-out);
+  }
+  .phase-picker-item:hover,
+  .phase-picker-item:focus-visible {
+    background: var(--bg-soft); outline: none;
+  }
+  .phase-picker-item.current {
+    background: color-mix(in srgb, var(--highlight) 10%, transparent);
+    color: var(--highlight);
+  }
+  .phase-picker-item.current:hover,
+  .phase-picker-item.current:focus-visible {
+    background: color-mix(in srgb, var(--highlight) 16%, transparent);
+  }
+  .phase-picker-item-num {
+    flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 22px; height: 20px;
+    padding: 0 var(--sp-xs);
+    border-radius: 6px;
+    font-size: var(--fs-nano);
+    font-weight: 600;
+    font-feature-settings: "tnum";
+    color: var(--text-muted);
+    background: var(--bg-soft);
+  }
+  .phase-picker-item.current .phase-picker-item-num {
+    color: var(--highlight);
+    background: color-mix(in srgb, var(--highlight) 16%, transparent);
+  }
+  .phase-picker-item-name { flex: 1; min-width: 0; }
+  .phase-picker-item-check {
+    flex-shrink: 0;
+    width: 14px; height: 14px;
+    opacity: 0;
+    color: var(--highlight);
+  }
+  .phase-picker-item.current .phase-picker-item-check { opacity: 1; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .phase-pill, .phase-picker-menu { transition: none; }
+    .phase-pill:active { transform: none; }
+  }
 
   .service-sub {
     font-size: var(--fs-sm); color: var(--text-soft); letter-spacing: -0.005em;
@@ -11155,7 +11256,7 @@
             <div class="service-name-row">
               <div class="service-name">Brand Refresh Q2</div>
               <span class="service-type project">Project</span>
-              <span class="phase-pill onboard" data-tip="Phase 6 of 12 · Strategy &amp; Planning" data-tip-pos="above-start"><span class="phase-pill-num">6</span>Strategy</span>
+              <button type="button" class="phase-pill onboard" data-phase-trigger data-phase="6" aria-haspopup="listbox" aria-expanded="false" aria-label="Lifecycle phase: Strategy &amp; Planning. Click to change." data-tip="Phase 6 of 12 · Strategy &amp; Planning" data-tip-pos="above-start"><span class="phase-pill-num">6</span>Strategy</button>
             </div>
             <div class="service-sub">Template: Brand Refresh<span class="sep">·</span>Kicked off Apr 7<span class="sep">·</span>Moodboards in review</div>
           </div>
@@ -11178,7 +11279,7 @@
             <div class="service-name-row">
               <div class="service-name">Marketing Site v3</div>
               <span class="service-type project">Project</span>
-              <span class="phase-pill active" data-tip="Phase 7 of 12 · Setup &amp; Build" data-tip-pos="above-start"><span class="phase-pill-num">7</span>Setup &amp; Build</span>
+              <button type="button" class="phase-pill active" data-phase-trigger data-phase="7" aria-haspopup="listbox" aria-expanded="false" aria-label="Lifecycle phase: Setup &amp; Build. Click to change." data-tip="Phase 7 of 12 · Setup &amp; Build" data-tip-pos="above-start"><span class="phase-pill-num">7</span>Setup &amp; Build</button>
             </div>
             <div class="service-sub">Template: Web Design — Full Stack<span class="sep">·</span>Due May 5<span class="sep">·</span>Development in flight</div>
           </div>
@@ -11201,7 +11302,7 @@
             <div class="service-name-row">
               <div class="service-name">Website Redesign</div>
               <span class="service-type project">Project</span>
-              <span class="phase-pill active" data-tip="Phase 8 of 12 · Launch &amp; Go-Live" data-tip-pos="above-start"><span class="phase-pill-num">8</span>Launch</span>
+              <button type="button" class="phase-pill active" data-phase-trigger data-phase="8" aria-haspopup="listbox" aria-expanded="false" aria-label="Lifecycle phase: Launch &amp; Go-Live. Click to change." data-tip="Phase 8 of 12 · Launch &amp; Go-Live" data-tip-pos="above-start"><span class="phase-pill-num">8</span>Launch</button>
             </div>
             <div class="service-sub">Template: Web Design — Full Stack<span class="sep">·</span>Due Apr 18<span class="sep">·</span>6 / 14 cards done</div>
           </div>
@@ -11224,7 +11325,7 @@
             <div class="service-name-row">
               <div class="service-name">SEO &amp; Organic Growth</div>
               <span class="service-type retainer">Retainer</span>
-              <span class="phase-pill active" data-tip="Phase 9 of 12 · Ongoing Management &amp; Optimization" data-tip-pos="above-start"><span class="phase-pill-num">9</span>Ongoing</span>
+              <button type="button" class="phase-pill active" data-phase-trigger data-phase="9" aria-haspopup="listbox" aria-expanded="false" aria-label="Lifecycle phase: Ongoing Management &amp; Optimization. Click to change." data-tip="Phase 9 of 12 · Ongoing Management &amp; Optimization" data-tip-pos="above-start"><span class="phase-pill-num">9</span>Ongoing</button>
             </div>
             <div class="service-sub">Template: SEO Retainer — Monthly<span class="sep">·</span>Started Aug 2023<span class="sep">·</span>Next deliverable Apr 22</div>
           </div>
@@ -11247,7 +11348,7 @@
             <div class="service-name-row">
               <div class="service-name">Content Marketing</div>
               <span class="service-type retainer">Retainer</span>
-              <span class="phase-pill active" data-tip="Phase 9 of 12 · Ongoing Management &amp; Optimization" data-tip-pos="above-start"><span class="phase-pill-num">9</span>Ongoing</span>
+              <button type="button" class="phase-pill active" data-phase-trigger data-phase="9" aria-haspopup="listbox" aria-expanded="false" aria-label="Lifecycle phase: Ongoing Management &amp; Optimization. Click to change." data-tip="Phase 9 of 12 · Ongoing Management &amp; Optimization" data-tip-pos="above-start"><span class="phase-pill-num">9</span>Ongoing</button>
             </div>
             <div class="service-sub">Template: Content — 8 articles/mo<span class="sep">·</span>Started Jan 2025<span class="sep">·</span>Next publish Apr 19</div>
           </div>
@@ -22587,6 +22688,213 @@ window.OPS_TEAM = OPS_TEAM;
 </script>
 
 <script>
+/* ─── Lifecycle phase picker ───
+   Any element with [data-phase-trigger] opens a shared popover listing the
+   12 lifecycle phases, grouped by macro-stage. Picking a phase updates the
+   pill's number, short name, full-name tooltip, aria-label, and stage color
+   class in place. Outside-click, Escape, Enter/Space, and arrow keys all
+   behave the way a native listbox should — focus returns to the trigger
+   after selection or dismissal.                                              */
+(function(){
+  var PHASES = [
+    { num:  1, short: 'Prospecting',   full: 'Prospecting',                         stage: 'presale'  },
+    { num:  2, short: 'Discovery',     full: 'Discovery & Qualification',           stage: 'presale'  },
+    { num:  3, short: 'Proposal',      full: 'Proposal & Pitch',                    stage: 'presale'  },
+    { num:  4, short: 'Contracting',   full: 'Contracting & Close',                 stage: 'presale'  },
+    { num:  5, short: 'Onboarding',    full: 'Onboarding & Kickoff',                stage: 'onboard'  },
+    { num:  6, short: 'Strategy',      full: 'Strategy & Planning',                 stage: 'onboard'  },
+    { num:  7, short: 'Setup & Build', full: 'Setup & Build',                       stage: 'active'   },
+    { num:  8, short: 'Launch',        full: 'Launch & Go-Live',                    stage: 'active'   },
+    { num:  9, short: 'Ongoing',       full: 'Ongoing Management & Optimization',   stage: 'active'   },
+    { num: 10, short: 'Reporting',     full: 'Reporting & Review',                  stage: 'active'   },
+    { num: 11, short: 'Growth',        full: 'Growth & Upsell',                     stage: 'active'   },
+    { num: 12, short: 'Offboarding',   full: 'Offboarding / Termination',           stage: 'winddown' }
+  ];
+  var STAGE_LABELS = {
+    presale:  'Pre-sale',
+    onboard:  'Onboarding',
+    active:   'Active delivery',
+    winddown: 'Offboarding'
+  };
+  var STAGE_ORDER = ['presale', 'onboard', 'active', 'winddown'];
+  var STAGE_CLASSES = ['presale', 'onboard', 'active', 'winddown'];
+
+  function esc(s){
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  var menu = null;
+  var activeTrigger = null;
+
+  function buildMenu(){
+    if (menu) return menu;
+    menu = document.createElement('div');
+    menu.className = 'phase-picker-menu';
+    menu.setAttribute('role', 'listbox');
+    menu.setAttribute('aria-label', 'Select lifecycle phase');
+    menu.setAttribute('tabindex', '-1');
+    var html = '';
+    STAGE_ORDER.forEach(function(stage){
+      html += '<div class="phase-picker-group">';
+      html += '<span class="phase-picker-group-label">' + esc(STAGE_LABELS[stage]) + '</span>';
+      PHASES.filter(function(p){ return p.stage === stage; }).forEach(function(p){
+        html +=
+          '<button type="button" class="phase-picker-item" role="option"' +
+            ' data-phase="' + p.num + '" aria-selected="false">' +
+            '<span class="phase-picker-item-num">' + p.num + '</span>' +
+            '<span class="phase-picker-item-name">' + esc(p.full) + '</span>' +
+            '<svg class="phase-picker-item-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>' +
+          '</button>';
+      });
+      html += '</div>';
+    });
+    menu.innerHTML = html;
+    document.body.appendChild(menu);
+
+    // Prevent clicks inside the menu from bubbling up and triggering the
+    // outside-click dismiss handler.
+    menu.addEventListener('click', function(e){
+      var item = e.target.closest('.phase-picker-item');
+      if (!item) return;
+      e.stopPropagation();
+      var num = Number(item.getAttribute('data-phase'));
+      if (activeTrigger) applyPhase(activeTrigger, num);
+      close(true);
+    });
+
+    menu.addEventListener('keydown', function(e){
+      var items = Array.prototype.slice.call(menu.querySelectorAll('.phase-picker-item'));
+      var i = items.indexOf(document.activeElement);
+      if (e.key === 'ArrowDown') { e.preventDefault(); items[Math.min(i + 1, items.length - 1)].focus(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); items[Math.max(i - 1, 0)].focus(); }
+      else if (e.key === 'Home') { e.preventDefault(); items[0].focus(); }
+      else if (e.key === 'End') { e.preventDefault(); items[items.length - 1].focus(); }
+    });
+
+    return menu;
+  }
+
+  function applyPhase(trigger, num){
+    var p = PHASES[num - 1];
+    if (!p) return;
+    STAGE_CLASSES.forEach(function(c){ trigger.classList.remove(c); });
+    trigger.classList.add(p.stage);
+    trigger.setAttribute('data-phase', String(p.num));
+    trigger.setAttribute('data-tip', 'Phase ' + p.num + ' of 12 · ' + p.full);
+    trigger.setAttribute('aria-label', 'Lifecycle phase: ' + p.full + '. Click to change.');
+    trigger.innerHTML =
+      '<span class="phase-pill-num">' + p.num + '</span>' + esc(p.short);
+    // Announce to users who just selected — toast is defined elsewhere in
+    // the file; swallow silently if it isn't loaded yet.
+    if (typeof window.showToast === 'function') {
+      window.showToast('Phase updated · ' + p.full, { duration: 1600 });
+    }
+  }
+
+  function position(trigger){
+    var m = buildMenu();
+    var rect = trigger.getBoundingClientRect();
+    // Temporarily make menu measurable without showing it.
+    m.style.visibility = 'hidden';
+    m.setAttribute('data-open', 'true');
+    var mw = m.offsetWidth;
+    var mh = m.offsetHeight;
+    m.removeAttribute('data-open');
+    m.style.visibility = '';
+
+    var pad = 8;
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+
+    // Horizontal: align to trigger's left, clamp so it stays on screen.
+    var left = rect.left + window.scrollX;
+    if (left + mw > window.scrollX + vw - pad) {
+      left = window.scrollX + vw - mw - pad;
+    }
+    if (left < window.scrollX + pad) left = window.scrollX + pad;
+
+    // Vertical: prefer below the trigger; flip above if it would overflow.
+    var top = rect.bottom + window.scrollY + 6;
+    if (top + mh > window.scrollY + vh - pad && rect.top > mh + pad) {
+      top = rect.top + window.scrollY - mh - 6;
+    }
+
+    m.style.left = left + 'px';
+    m.style.top  = top + 'px';
+  }
+
+  function markCurrent(trigger){
+    var current = Number(trigger.getAttribute('data-phase')) || 0;
+    menu.querySelectorAll('.phase-picker-item').forEach(function(item){
+      var n = Number(item.getAttribute('data-phase'));
+      var isCurrent = n === current;
+      item.classList.toggle('current', isCurrent);
+      item.setAttribute('aria-selected', isCurrent ? 'true' : 'false');
+    });
+  }
+
+  function open(trigger){
+    buildMenu();
+    activeTrigger = trigger;
+    position(trigger);
+    markCurrent(trigger);
+    menu.setAttribute('data-open', 'true');
+    trigger.setAttribute('aria-expanded', 'true');
+
+    // Focus the current option if there is one, else the first.
+    var current = menu.querySelector('.phase-picker-item.current')
+      || menu.querySelector('.phase-picker-item');
+    if (current) setTimeout(function(){ current.focus(); }, 20);
+
+    setTimeout(function(){
+      document.addEventListener('click', onDocClick, true);
+      document.addEventListener('keydown', onDocKey, true);
+      window.addEventListener('resize', onWinChange, true);
+      window.addEventListener('scroll', onWinChange, true);
+    }, 0);
+  }
+
+  function close(returnFocus){
+    if (!menu) return;
+    menu.removeAttribute('data-open');
+    if (activeTrigger) {
+      activeTrigger.setAttribute('aria-expanded', 'false');
+      if (returnFocus) activeTrigger.focus();
+    }
+    activeTrigger = null;
+    document.removeEventListener('click', onDocClick, true);
+    document.removeEventListener('keydown', onDocKey, true);
+    window.removeEventListener('resize', onWinChange, true);
+    window.removeEventListener('scroll', onWinChange, true);
+  }
+
+  function onDocClick(e){
+    if (menu && menu.contains(e.target)) return;
+    if (activeTrigger && activeTrigger.contains(e.target)) return;
+    close(false);
+  }
+  function onDocKey(e){
+    if (e.key === 'Escape') { e.preventDefault(); close(true); }
+  }
+  function onWinChange(){ if (activeTrigger) position(activeTrigger); }
+
+  // Delegated trigger — handles the 5 pre-rendered pills plus any pill
+  // added later by the add-service template.
+  document.addEventListener('click', function(e){
+    var trigger = e.target.closest('[data-phase-trigger]');
+    if (!trigger) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (trigger === activeTrigger) { close(true); return; }
+    if (activeTrigger) close(false);
+    open(trigger);
+  }, true);
+})();
+</script>
+
+<script>
 /* Swap Mac-only ⌘ keyboard hints to Ctrl on Windows/Linux. The handlers
    already accept both modifiers — only the visible labels need adapting. */
 (function(){
@@ -25365,7 +25673,7 @@ window.OPS_TEAM = OPS_TEAM;
         '<div class="service-name-row">' +
           '<div class="service-name">' + esc(svc.name) + '</div>' +
           '<span class="service-type ' + typeClass + '">' + typeLabel + '</span>' +
-          '<span class="phase-pill onboard" data-tip="Phase 5 of 12 · Onboarding &amp; Kickoff" data-tip-pos="above-start"><span class="phase-pill-num">5</span>Onboarding</span>' +
+          '<button type="button" class="phase-pill onboard" data-phase-trigger data-phase="5" aria-haspopup="listbox" aria-expanded="false" aria-label="Lifecycle phase: Onboarding &amp; Kickoff. Click to change." data-tip="Phase 5 of 12 · Onboarding &amp; Kickoff" data-tip-pos="above-start"><span class="phase-pill-num">5</span>Onboarding</button>' +
         '</div>' +
         '<div class="service-sub">Template: ' + esc(svc.template.name) + '<span class="sep">·</span>Onboarding in progress</div>' +
       '</div>' +
