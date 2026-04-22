@@ -3,23 +3,67 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>·</title>
+<title>Weekly WIP</title>
 <style>
   :root {
+    /* Colors — tuned for WCAG AA body contrast */
     --bg: #FBFAF8;
-    --text: #1D1D1F;
-    --text-2: #86868B;
-    --text-3: #A1A1A6;
-    --text-4: #C7C7CC;
+    --text: #1D1D1F;            /* primary */
+    --text-2: #55555A;          /* secondary — 7.4:1 AA ✓ */
+    --text-3: #6E6E73;          /* tertiary content — 4.6:1 AA ✓ */
+    --text-4: #86868B;          /* small labels (≥ AA Large Text) */
+    --text-5: #C7C7CC;          /* decorative / quiet */
     --line: rgba(0,0,0,0.06);
     --line-2: #E5E5EA;
     --tint: rgba(0,0,0,0.03);
     --tint-2: rgba(0,0,0,0.05);
     --accent: #0066CC;
+    --accent-hover: #0055AA;
+    --accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
+    --on-accent: #FFFFFF;
     --warm: #8B4A3B;
-    --warm-soft: #A06B5E;
+
+    /* Type — Apple SF scale */
+    --fs-micro: 11px;
+    --fs-caption: 13px;
+    --fs-footnote: 15px;
+    --fs-body: 17px;
+    --fs-title: 19px;
+    --fs-heading: 22px;
+    --fs-title-2: 28px;
+    --fs-display: 48px;
+    --fs-display-2: 60px;
+
+    /* Spacing — 8px grid */
+    --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px;
+    --sp-6: 24px; --sp-8: 32px; --sp-10: 40px; --sp-12: 48px; --sp-14: 56px;
+    --sp-16: 64px; --sp-18: 72px; --sp-20: 80px; --sp-24: 96px;
+
+    /* Motion */
     --ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --dur-hover: 160ms;
+    --dur-ui: 240ms;
+    --dur-expand: 280ms;
+    --dur-scene: 320ms;
+
+    /* Focus */
+    --focus-ring: 0 0 0 3px color-mix(in srgb, var(--accent) 28%, transparent);
   }
+
+  /* Accessibility — reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Focus-visible */
+  :focus { outline: none; }
+  :focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: 6px; }
+  .toggle button:focus-visible { box-shadow: var(--focus-ring); border-radius: 50%; }
 
   *, *::before, *::after { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
@@ -103,10 +147,10 @@
      SCENE 1 — Monday afternoon
      ———————————————————————————————————————— */
 
-  .s1 { padding: 56px 64px 160px; }
+  .s1 { padding: var(--sp-14) var(--sp-16) var(--sp-20); }
 
   .s1 .date {
-    font-size: 13px;
+    font-size: var(--fs-caption);
     color: var(--text-3);
     letter-spacing: 0.005em;
     font-weight: 400;
@@ -115,34 +159,34 @@
   }
 
   .s1 .lede {
-    max-width: 760px;
-    margin: 80px auto 112px;
-    font-size: 30px;
-    line-height: 1.45;
+    max-width: 720px;
+    margin: var(--sp-20) auto var(--sp-24);
+    font-size: var(--fs-title-2);
+    line-height: 1.4;
     font-weight: 400;
     letter-spacing: -0.018em;
     color: var(--text);
     text-wrap: balance;
   }
   .s1 .lede .warm { color: var(--warm); }
-  .s1 .lede .meta { color: var(--text-2); }
+  .s1 .lede .meta { color: var(--text-3); }
 
   .s1 .list {
     max-width: 1040px;
     margin: 0 auto;
   }
 
-  .s1 .group { margin-bottom: 56px; }
+  .s1 .group { margin-bottom: var(--sp-14); }
   .s1 .group:last-child { margin-bottom: 0; }
 
   .s1 .manager {
-    font-size: 11px;
+    font-size: var(--fs-micro);
     text-transform: uppercase;
     letter-spacing: 0.12em;
     font-weight: 500;
-    color: var(--text-3);
-    padding-bottom: 20px;
-    margin-bottom: 4px;
+    color: var(--text-4);
+    padding-bottom: var(--sp-5);
+    margin-bottom: var(--sp-1);
     border-bottom: 1px solid var(--line);
   }
 
@@ -150,9 +194,9 @@
     display: grid;
     grid-template-columns: 264px 116px 1fr 28px;
     align-items: baseline;
-    gap: 24px;
-    padding: 20px 20px;
-    margin: 0 -20px;
+    gap: var(--sp-6);
+    padding: var(--sp-5) var(--sp-5);
+    margin: 0 calc(-1 * var(--sp-5));
     border-radius: 8px;
     cursor: pointer;
     transition: background 160ms var(--ease);
@@ -186,19 +230,20 @@
   }
   .s1 .item.flagged .client { color: var(--warm); }
   .s1 .item .channel {
-    font-size: 14px;
+    font-size: var(--fs-caption);
     color: var(--text-2);
     font-weight: 400;
   }
   .s1 .item .issue {
-    font-size: 15px;
+    font-size: var(--fs-footnote);
     color: var(--text-3);
     line-height: 1.5;
     text-wrap: pretty;
+    max-width: 58ch;
   }
   .s1 .item .chev {
-    color: var(--text-3);
-    font-size: 16px;
+    color: var(--text-4);
+    font-size: var(--fs-footnote);
     opacity: 0;
     transform: translateX(-4px);
     transition: opacity 160ms var(--ease), transform 240ms var(--ease);
@@ -230,37 +275,41 @@
     align-items: start;
   }
   .s1 .details .context {
-    font-size: 14px;
-    color: var(--text-2);
+    font-size: var(--fs-caption);
+    color: var(--text-3);
     line-height: 1.55;
   }
-  .s1 .details .context div + div { margin-top: 6px; }
+  .s1 .details .context div + div { margin-top: var(--sp-1); }
   .s1 .details .note {
-    font-size: 15px;
-    color: var(--text-3);
-    padding: 10px 0 12px;
-    border-bottom: 1px solid var(--line);
+    font-size: var(--fs-footnote);
+    color: var(--text-2);
+    padding: var(--sp-3) var(--sp-3);
+    margin: 0 calc(-1 * var(--sp-3));
+    border-radius: 6px;
     outline: none;
     caret-color: var(--accent);
-    min-height: 28px;
+    min-height: 36px;
+    cursor: text;
+    box-shadow: inset 0 0 0 1px transparent;
+    transition: background var(--dur-hover) var(--ease), box-shadow var(--dur-hover) var(--ease);
   }
-  .s1 .details .note:empty::before {
-    content: "Note for the meeting";
-    color: var(--text-4);
-  }
+  .s1 .details .note:hover { background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--line-2); }
+  .s1 .details .note:focus-visible,
+  .s1 .details .note:focus { background: transparent; box-shadow: inset 0 0 0 1.5px var(--accent); }
   .s1 .details .pills {
     display: flex;
-    gap: 8px;
-    margin-top: 14px;
+    gap: var(--sp-2);
+    margin-top: var(--sp-3);
   }
   .s1 .details .pill {
     font-size: 12px;
-    color: var(--text-2);
-    padding: 4px 10px;
+    color: var(--text-3);
+    padding: var(--sp-1) var(--sp-3);
     border-radius: 99px;
     background: var(--tint);
     letter-spacing: -0.005em;
-    transition: background 160ms var(--ease);
+    transition: background var(--dur-hover) var(--ease);
+    cursor: pointer;
   }
   .s1 .details .pill:hover { background: var(--tint-2); }
 
@@ -271,7 +320,7 @@
   .s2 { padding: 0; }
 
   .s2 .top {
-    padding: 18px 56px 0;
+    padding: var(--sp-5) var(--sp-14) 0;
   }
   .s2 .meet-rail {
     position: relative;
@@ -292,33 +341,35 @@
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    margin-top: 10px;
+    margin-top: var(--sp-3);
     font-size: 12px;
     color: var(--text-3);
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.01em;
   }
   .s2 .timer { font-weight: 500; letter-spacing: 0.02em; }
-  .s2 .listening { font-style: italic; }
+  .s2 .listening { font-style: normal; color: var(--text-3); }
 
   .s2 .client-rail {
     position: fixed;
-    left: 28px;
+    left: var(--sp-8);
     top: 50%;
     transform: translateY(-50%);
     display: flex;
     flex-direction: column;
     gap: 0;
-    padding: 16px 8px;
+    padding: var(--sp-4) var(--sp-2);
     z-index: 20;
   }
   .s2 .dot {
     position: relative;
     width: 8px;
     height: 8px;
-    margin: 10px 0;
+    margin: var(--sp-2) 0;
     display: flex;
     align-items: center;
+    cursor: pointer;
+    border-radius: 50%;
   }
   .s2 .dot::before {
     content: "";
@@ -327,7 +378,7 @@
     border-radius: 50%;
     background: var(--text);
     opacity: 0.22;
-    transition: all 240ms var(--ease);
+    transition: all var(--dur-ui) var(--ease);
     margin-left: 1px;
   }
   .s2 .dot.done::before { opacity: 0.14; }
@@ -338,102 +389,102 @@
     opacity: 1;
     margin-left: -1px;
   }
+  .s2 .dot:focus-visible::before { box-shadow: var(--focus-ring); }
   .s2 .dot .label {
     position: absolute;
-    left: 24px;
+    left: var(--sp-6);
     top: 50%;
     transform: translateY(-50%) translateX(-4px);
     white-space: nowrap;
     font-size: 12px;
-    color: var(--text-2);
+    color: var(--text-3);
     opacity: 0;
     transition: opacity 200ms var(--ease), transform 200ms var(--ease);
     pointer-events: none;
     letter-spacing: -0.002em;
   }
-  .s2 .dot:hover .label {
+  .s2 .dot:hover .label,
+  .s2 .dot:focus-visible .label {
     opacity: 1;
-    transform: translateY(-50%) translateX(0);
-  }
-  .s2 .dot.active .label {
-    opacity: 0.6;
     transform: translateY(-50%) translateX(0);
   }
 
   .s2 .canvas {
-    padding: 72px 140px 160px;
+    padding: var(--sp-18) var(--sp-14) var(--sp-20);
     max-width: 1280px;
     margin: 0 auto;
   }
 
-  .s2 .client-head { margin-bottom: 56px; }
+  .s2 .client-head { margin-bottom: var(--sp-14); }
   .s2 .client-name {
-    font-size: 56px;
+    font-size: var(--fs-display-2);
     font-weight: 600;
     line-height: 1.05;
     letter-spacing: -0.028em;
   }
   .s2 .client-meta {
-    margin-top: 10px;
-    font-size: 15px;
-    color: var(--text-2);
+    margin-top: var(--sp-3);
+    font-size: var(--fs-footnote);
+    color: var(--text-3);
     letter-spacing: -0.005em;
   }
 
   .s2 .channels {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 48px;
-    padding-bottom: 72px;
+    gap: var(--sp-12);
+    padding-bottom: var(--sp-18);
     border-bottom: 1px solid var(--line);
   }
   .s2 .ch-head {
-    font-size: 11px;
+    font-size: var(--fs-micro);
     text-transform: uppercase;
     letter-spacing: 0.12em;
     font-weight: 500;
-    color: var(--text-3);
-    margin-bottom: 6px;
+    color: var(--text-4);
+    margin-bottom: var(--sp-1);
   }
   .s2 .ch-owner {
-    font-size: 14px;
-    color: var(--text-2);
+    font-size: var(--fs-caption);
+    color: var(--text-3);
     font-weight: 400;
-    margin-bottom: 22px;
+    margin-bottom: var(--sp-6);
   }
   .s2 .channel.quiet .ch-head,
-  .s2 .channel.quiet .ch-owner { color: var(--text-4); }
+  .s2 .channel.quiet .ch-owner { color: var(--text-5); }
   .s2 .ch-status {
-    font-size: 17px;
+    font-size: var(--fs-body);
     color: var(--text);
     font-weight: 450;
     line-height: 1.45;
-    margin-bottom: 14px;
+    margin-bottom: var(--sp-3);
     letter-spacing: -0.008em;
+    max-width: 38ch;
   }
   .s2 .ch-sub {
-    font-size: 14px;
-    color: var(--text-2);
+    font-size: var(--fs-caption);
+    color: var(--text-3);
     line-height: 1.55;
-    margin-bottom: 4px;
+    margin-bottom: var(--sp-1);
+    max-width: 38ch;
   }
-  .s2 .ch-sub.next { color: var(--text-3); }
+  .s2 .ch-sub.next { color: var(--text-4); }
 
   .s2 .notes-area {
-    padding-top: 56px;
+    padding-top: var(--sp-14);
     display: grid;
     grid-template-columns: 1fr;
-    gap: 40px;
+    gap: var(--sp-10);
   }
 
   .s2 .notes {
-    min-height: 88px;
-    font-size: 19px;
-    line-height: 1.6;
+    min-height: 80px;
+    font-size: var(--fs-title);
+    line-height: 1.55;
     color: var(--text);
     letter-spacing: -0.01em;
     position: relative;
-    padding: 4px 0;
+    padding: var(--sp-1) 0;
   }
   .s2 .notes .typed { white-space: pre; }
   .s2 .notes .caret {
@@ -460,31 +511,31 @@
 
   .chip {
     display: inline-block;
-    padding: 2px 9px;
+    padding: 2px var(--sp-2);
     border-radius: 10px;
-    background: rgba(29, 29, 31, 0.06);
+    background: var(--tint-2);
     color: var(--text);
-    font-size: 15px;
+    font-size: var(--fs-footnote);
     font-weight: 500;
     letter-spacing: -0.003em;
     margin: 0 1px;
     line-height: 1.5;
   }
-  .chip.person { background: rgba(0, 102, 204, 0.08); color: #0A4D9A; }
-  .chip.date { background: rgba(29, 29, 31, 0.06); color: var(--text); }
+  .chip.person { background: var(--accent-soft); color: var(--accent); }
+  .chip.date { background: var(--tint-2); color: var(--text); }
 
   .s2 .todos { }
   .s2 .todo-head {
-    font-size: 11px;
+    font-size: var(--fs-micro);
     text-transform: uppercase;
     letter-spacing: 0.12em;
     font-weight: 500;
-    color: var(--text-3);
-    margin-bottom: 18px;
+    color: var(--text-4);
+    margin-bottom: var(--sp-4);
   }
-  .s2 .todo-list { display: flex; flex-direction: column; gap: 14px; }
+  .s2 .todo-list { display: flex; flex-direction: column; gap: var(--sp-3); }
   .s2 .todo {
-    font-size: 17px;
+    font-size: var(--fs-body);
     line-height: 1.55;
     color: var(--text);
     letter-spacing: -0.007em;
@@ -502,31 +553,33 @@
     left: 0;
     right: 0;
     bottom: 0;
-    padding: 18px 56px 22px;
-    background: linear-gradient(to top, var(--bg) 70%, rgba(251,250,248,0));
+    padding: var(--sp-5) var(--sp-14) var(--sp-6);
+    background: var(--bg);
     z-index: 15;
     pointer-events: none;
   }
   .s2 .fellow-inner {
     max-width: 1000px;
     margin: 0 auto;
-    padding-top: 14px;
+    padding-top: var(--sp-3);
     border-top: 1px solid var(--line);
     display: flex;
     justify-content: center;
-    font-size: 13px;
+    font-size: var(--fs-caption);
     color: var(--text-3);
     letter-spacing: -0.002em;
     pointer-events: auto;
   }
-  .s2 .fellow-inner em { font-style: normal; color: var(--text-2); }
+  .s2 .fellow-inner .heard { color: var(--text-4); margin-right: var(--sp-1); }
   .s2 .fellow-inner .add {
     color: var(--accent);
-    margin-left: 10px;
+    margin-left: var(--sp-3);
     cursor: pointer;
-    transition: opacity 160ms var(--ease);
+    padding: 2px var(--sp-2);
+    border-radius: 6px;
+    transition: background var(--dur-hover) var(--ease);
   }
-  .s2 .fellow-inner .add:hover { opacity: 0.7; }
+  .s2 .fellow-inner .add:hover { background: var(--accent-soft); }
 
   /* ————————————————————————————————————————
      SCENE 3 — Meeting complete
@@ -549,7 +602,7 @@
     max-width: 480px;
     width: 100%;
     text-align: center;
-    padding: 48px 40px;
+    padding: var(--sp-12) var(--sp-10);
     transition: opacity 400ms var(--ease), transform 400ms var(--ease);
   }
   .s3 .card.gone {
@@ -558,42 +611,45 @@
     pointer-events: none;
   }
   .s3 .card h1 {
-    font-size: 48px;
+    font-size: var(--fs-display);
     font-weight: 600;
     letter-spacing: -0.026em;
     line-height: 1.1;
   }
   .s3 .card .stats {
-    margin-top: 18px;
-    font-size: 16px;
-    color: var(--text-2);
+    margin-top: var(--sp-4);
+    font-size: var(--fs-footnote);
+    color: var(--text-3);
     letter-spacing: -0.005em;
     font-weight: 400;
   }
+  /* Tier 1 — primary CTA, solid accent fill */
   .s3 .send {
-    margin-top: 40px;
-    color: var(--accent);
-    font-size: 16px;
+    margin-top: var(--sp-10);
+    color: var(--on-accent);
+    background: var(--accent);
+    font-size: var(--fs-footnote);
     font-weight: 500;
-    padding: 10px 22px;
+    padding: var(--sp-3) var(--sp-6);
     border-radius: 10px;
-    transition: background 160ms var(--ease);
-    letter-spacing: -0.005em;
+    transition: background var(--dur-hover) var(--ease), transform var(--dur-hover) var(--ease);
+    letter-spacing: -0.003em;
   }
-  .s3 .send:hover { background: rgba(0, 102, 204, 0.08); }
+  .s3 .send:hover { background: var(--accent-hover); }
+  .s3 .send:active { transform: translateY(0.5px); }
+  .s3 .send:focus-visible { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 36%, transparent); }
 
   .s3 .farewell {
     position: absolute;
     left: 50%;
     top: 50%;
-    font-size: 22px;
-    color: var(--text-2);
+    font-size: var(--fs-heading);
+    color: var(--text-3);
     font-weight: 400;
     letter-spacing: -0.012em;
     opacity: 0;
     transform: translate(-50%, calc(-50% + 4px));
     transition: opacity 400ms var(--ease) 200ms, transform 400ms var(--ease) 200ms;
-    font-style: italic;
     pointer-events: none;
     white-space: nowrap;
   }
@@ -605,18 +661,20 @@
 
   .s3 .undo {
     position: fixed;
-    bottom: 28px;
-    right: 32px;
-    font-size: 12px;
+    bottom: var(--sp-6);
+    right: var(--sp-8);
+    font-size: var(--fs-caption);
     color: var(--text-3);
-    letter-spacing: 0.005em;
+    letter-spacing: 0;
     cursor: pointer;
     opacity: 0;
-    transition: opacity 280ms var(--ease);
-    padding: 4px 6px;
+    transition: opacity var(--dur-expand) var(--ease), color var(--dur-hover) var(--ease);
+    padding: var(--sp-1) var(--sp-2);
+    border-radius: 6px;
   }
   .s3 .undo.on { opacity: 1; }
-  .s3 .undo:hover { color: var(--text-2); }
+  .s3 .undo:hover { color: var(--text); background: var(--tint); }
+  .s3 .undo:focus-visible { box-shadow: var(--focus-ring); }
 
   /* ————————————————————————————————————————
      Responsive
@@ -1008,15 +1066,15 @@
       </div>
     </div>
 
-    <aside class="client-rail">
-      <div class="dot done"><span class="label">Gorilla Glue Australia</span></div>
-      <div class="dot done"><span class="label">O'Keefe's</span></div>
-      <div class="dot active"><span class="label">Bujairami Perfumes</span></div>
-      <div class="dot"><span class="label">Fatz Fabrication</span></div>
-      <div class="dot"><span class="label">Czarina</span></div>
-      <div class="dot"><span class="label">Urban Goddess</span></div>
-      <div class="dot"><span class="label">Capo Property Group</span></div>
-      <div class="dot"><span class="label">RG Enterprise</span></div>
+    <aside class="client-rail" aria-label="Meeting order">
+      <button type="button" class="dot done" tabindex="0" aria-label="Gorilla Glue Australia (done)"><span class="label">Gorilla Glue Australia</span></button>
+      <button type="button" class="dot done" tabindex="0" aria-label="O'Keefe's (done)"><span class="label">O'Keefe's</span></button>
+      <button type="button" class="dot active" tabindex="0" aria-current="true" aria-label="Bujairami Perfumes (current)"><span class="label">Bujairami Perfumes</span></button>
+      <button type="button" class="dot" tabindex="0" aria-label="Fatz Fabrication (upcoming)"><span class="label">Fatz Fabrication</span></button>
+      <button type="button" class="dot" tabindex="0" aria-label="Czarina (upcoming)"><span class="label">Czarina</span></button>
+      <button type="button" class="dot" tabindex="0" aria-label="Urban Goddess (upcoming)"><span class="label">Urban Goddess</span></button>
+      <button type="button" class="dot" tabindex="0" aria-label="Capo Property Group (upcoming)"><span class="label">Capo Property Group</span></button>
+      <button type="button" class="dot" tabindex="0" aria-label="RG Enterprise (upcoming)"><span class="label">RG Enterprise</span></button>
     </aside>
 
     <div class="canvas">
@@ -1075,8 +1133,8 @@
 
     <div class="fellow">
       <div class="fellow-inner">
-        <span><em>Fellow heard:</em> &ldquo;Raman to check pixel tracking.&rdquo;</span>
-        <a class="add" href="#" id="fellow-add">Add</a>
+        <span><span class="heard">Fellow heard</span> &nbsp;&ldquo;Raman to check pixel tracking.&rdquo;</span>
+        <a class="add" href="#" id="fellow-add" role="button" aria-label="Add suggested to-do">Add</a>
       </div>
     </div>
   </section>
@@ -1089,12 +1147,12 @@
     <div class="card" id="recap-card">
       <h1>Meeting complete.</h1>
       <p class="stats">47 minutes · 18 items discussed · 23 to-dos captured.</p>
-      <button class="send" id="send-btn">Send recap</button>
+      <button type="button" class="send" id="send-btn">Send recap</button>
     </div>
 
     <p class="farewell" id="farewell">All set. See you next Tuesday.</p>
 
-    <div class="undo" id="undo">Undo</div>
+    <button type="button" class="undo" id="undo">Undo</button>
 
   </section>
 
@@ -1141,12 +1199,24 @@
     else if (e.key === '3') showScene(3);
   });
 
-  // ————— Scene 1: accordion —————
+  // ————— Scene 1: accordion + keyboard —————
   document.querySelectorAll('[data-item]').forEach(item => {
-    item.addEventListener('click', (e) => {
-      // Don't collapse if clicking the contenteditable or pills
-      if (e.target.closest('.note') || e.target.closest('.pill')) return;
-      item.classList.toggle('open');
+    item.setAttribute('role', 'button');
+    item.setAttribute('tabindex', '0');
+    item.setAttribute('aria-expanded', 'false');
+
+    const toggle = (e) => {
+      if (e && e.target && (e.target.closest('.note') || e.target.closest('.pill'))) return;
+      const open = item.classList.toggle('open');
+      item.setAttribute('aria-expanded', open ? 'true' : 'false');
+    };
+    item.addEventListener('click', toggle);
+    item.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        if (e.target.closest('.note') || e.target.closest('.pill')) return;
+        e.preventDefault();
+        toggle(e);
+      }
     });
   });
 
