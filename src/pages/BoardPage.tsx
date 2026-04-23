@@ -205,7 +205,7 @@ function BoardBody({
 
   return (
     <>
-      <Breadcrumb client={client} service={service} />
+      <Breadcrumb client={client} service={service} members={members} />
       <FiltersBar
         search={search}
         onSearch={setSearch}
@@ -269,7 +269,7 @@ function BoardBody({
 
 // ── Breadcrumb ───────────────────────────────────────────────────────
 
-function Breadcrumb({ client, service }: { client: Client; service: Service }) {
+function Breadcrumb({ client, service, members }: { client: Client; service: Service; members: Member[] }) {
   // Inline rename on the current-page crumb. Same pattern as the client
   // hero rename: cursor:text + hover tint + ring on focus, no pencil icon.
   // This is where users land right after the Add Service modal closes, so
@@ -280,8 +280,22 @@ function Breadcrumb({ client, service }: { client: Client; service: Service }) {
   const [draft, setDraft] = useState(service.name);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [membersOpen, setMembersOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const menuWrapRef = useRef<HTMLDivElement>(null);
+  const membersWrapRef = useRef<HTMLDivElement>(null);
+
+  // Resolve the client's team roster: AM on top, operators below. We
+  // read from client.amId + client.teamIds (the "Project team" on the
+  // client About tab) so the same source of truth powers both views.
+  const am = useMemo(
+    () => client.amId ? members.find(m => m.id === client.amId) ?? null : null,
+    [client.amId, members],
+  );
+  const team = useMemo(
+    () => client.teamIds.map(id => members.find(m => m.id === id)).filter((m): m is Member => !!m),
+    [client.teamIds, members],
+  );
 
   // Sync draft when the service id changes (user navigated to a different
   // board mid-edit, unlikely but cheap to guard).
@@ -289,6 +303,7 @@ function Breadcrumb({ client, service }: { client: Client; service: Service }) {
     setDraft(service.name);
     setEditing(false);
     setMenuOpen(false);
+    setMembersOpen(false);
   }, [service.id, service.name]);
 
   useEffect(() => {
@@ -318,6 +333,25 @@ function Breadcrumb({ client, service }: { client: Client; service: Service }) {
       document.removeEventListener('keydown', onKey);
     };
   }, [menuOpen]);
+
+  // Same outside-click + Esc pattern for the Members popover.
+  useEffect(() => {
+    if (!membersOpen) return;
+    function onPointer(e: PointerEvent) {
+      if (membersWrapRef.current && !membersWrapRef.current.contains(e.target as Node)) {
+        setMembersOpen(false);
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setMembersOpen(false);
+    }
+    document.addEventListener('pointerdown', onPointer);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerdown', onPointer);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [membersOpen]);
 
   function commit() {
     const next = draft.trim();
@@ -437,10 +471,35 @@ function Breadcrumb({ client, service }: { client: Client; service: Service }) {
           <SettingsIcon />
           Board Settings
         </button>
-        <button type="button" className="btn-sm" disabled title="Members (coming soon)">
-          <PeopleIcon />
-          Members
-        </button>
+        <div ref={membersWrapRef} className="board-members-wrap">
+          <button
+            type="button"
+            className="btn-sm"
+            aria-haspopup="dialog"
+            aria-expanded={membersOpen}
+            title={`${(am ? 1 : 0) + team.length} on this client's team`}
+            onClick={() => setMembersOpen(v => !v)}
+          >
+            <PeopleIcon />
+            Members
+            {(am || team.length > 0) && (
+              <span className="members-count-pill" aria-hidden="true">
+                {(am ? 1 : 0) + team.length}
+              </span>
+            )}
+          </button>
+          {membersOpen && (
+            <BoardMembersPopover
+              am={am}
+              team={team}
+              clientName={client.name}
+              onManage={() => {
+                setMembersOpen(false);
+                navigate(`#clients/${client.id}`);
+              }}
+            />
+          )}
+        </div>
         <button type="button" className="btn-sm" disabled title="Analytics (coming soon)">
           <BarsIcon />
           Analytics
@@ -453,6 +512,90 @@ function Breadcrumb({ client, service }: { client: Client; service: Service }) {
           onClose={() => setShowEditModal(false)}
         />
       )}
+    </div>
+  );
+}
+
+// ── Members popover (board toolbar) ──────────────────────────────────
+
+/**
+ * Shows who's on the client's team, scoped to this board. The AM lives
+ * on top as a solid-fill avatar (the one person we always escalate to);
+ * operators below in a compact grid. The footer punts to the client's
+ * About tab for actual team management — this popover is read-only,
+ * because the board toolbar isn't the right place to hire/fire.
+ */
+function BoardMembersPopover({ am, team, clientName, onManage }: {
+  am: Member | null;
+  team: Member[];
+  clientName: string;
+  onManage: () => void;
+}) {
+  const empty = !am && team.length === 0;
+  return (
+    <div
+      className="board-members-pop"
+      role="dialog"
+      aria-label={`Team on ${clientName}`}
+    >
+      <div className="board-members-head">
+        <div className="board-members-title">Team on {clientName}</div>
+        <div className="board-members-sub">
+          {empty
+            ? 'No one assigned yet'
+            : `${(am ? 1 : 0) + team.length} ${(am ? 1 : 0) + team.length === 1 ? 'person' : 'people'}`}
+        </div>
+      </div>
+      {empty ? (
+        <div className="board-members-empty">
+          Nobody's on this client yet. Assign an AM or add operators from the client profile.
+        </div>
+      ) : (
+        <>
+          <div className="board-members-group">
+            <div className="board-members-label">Account manager</div>
+            {am ? (
+              <MembersRow member={am} solid />
+            ) : (
+              <div className="board-members-muted">No AM assigned</div>
+            )}
+          </div>
+          {team.length > 0 && (
+            <div className="board-members-group">
+              <div className="board-members-label">
+                Project team <span className="board-members-count">{team.length}</span>
+              </div>
+              <div className="board-members-list">
+                {team.map(m => <MembersRow key={m.id} member={m} />)}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+      <button
+        type="button"
+        className="board-members-manage"
+        onClick={onManage}
+      >
+        Manage team in client profile →
+      </button>
+    </div>
+  );
+}
+
+function MembersRow({ member, solid = false }: { member: Member; solid?: boolean }) {
+  const avatarStyle = solid
+    ? { background: member.color, color: '#fff' }
+    : { background: member.bg ?? 'var(--bg-soft)', color: member.color };
+  return (
+    <div className="board-members-row">
+      <span className="board-members-avatar" style={avatarStyle} aria-hidden="true">
+        {member.initials}
+      </span>
+      <div className="board-members-body">
+        <div className="board-members-name">{member.name}</div>
+        {member.role && <div className="board-members-role">{member.role}</div>}
+      </div>
     </div>
   );
 }
