@@ -62,11 +62,28 @@ type ModalState =
   | { kind: 'add' }
   | { kind: 'edit'; item: ManualAgendaItem };
 
+/**
+ * Live meeting session state.
+ *
+ *   - idle: no meeting running. Live tab shows the pre-start gate.
+ *   - active: meeting is running. currentKey = which agenda item is on
+ *     the stage; doneKeys tracks what's been marked complete;
+ *     itemStartedAt = when the current item became current (for the
+ *     per-item elapsed timer).
+ *
+ * State lives in the parent so switching to the Agenda tab mid-meeting
+ * doesn't blow it away.
+ */
+type LiveMeetingState =
+  | { phase: 'idle' }
+  | { phase: 'active'; currentKey: string; doneKeys: Set<string>; itemStartedAt: number };
+
 export function WipPage() {
   const { data } = useFlizow();
   const [tab, setTab] = useState<Tab>('agenda');
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [modal, setModal] = useState<ModalState>({ kind: 'closed' });
+  const [meeting, setMeeting] = useState<LiveMeetingState>({ phase: 'idle' });
 
   const groups = useMemo(
     () => buildAgenda(
@@ -83,7 +100,16 @@ export function WipPage() {
     items: g.items.filter(i => !dismissed.has(i.key)),
   })), [groups, dismissed]);
 
-  const itemCount = visibleGroups.reduce((n, g) => n + g.items.length, 0);
+  // Flat order for the live meeting timeline: new-clients → urgent →
+  // ontrack → manual. The Live Meeting component treats this as the
+  // run-of-show.
+  const flatAgenda = useMemo(() => {
+    const out: AgendaItem[] = [];
+    for (const g of visibleGroups) out.push(...g.items);
+    return out;
+  }, [visibleGroups]);
+
+  const itemCount = flatAgenda.length;
   const estMinutes = itemCount === 0 ? 0 : Math.max(15, itemCount * 2);
 
   function handleRemove(item: AgendaItem) {
@@ -103,6 +129,46 @@ export function WipPage() {
     const found = data.manualAgendaItems.find(m => m.id === item.manualId);
     if (!found) return;
     setModal({ kind: 'edit', item: found });
+  }
+
+  function startMeeting() {
+    if (flatAgenda.length === 0) return;
+    setMeeting({
+      phase: 'active',
+      currentKey: flatAgenda[0].key,
+      doneKeys: new Set(),
+      itemStartedAt: Date.now(),
+    });
+    setTab('live');
+  }
+
+  function endMeeting() {
+    setMeeting({ phase: 'idle' });
+    setTab('agenda');
+  }
+
+  function jumpTo(key: string) {
+    if (meeting.phase !== 'active') return;
+    // Jumping to the currently-focused item is a no-op — don't reset the timer.
+    if (meeting.currentKey === key) return;
+    setMeeting({ ...meeting, currentKey: key, itemStartedAt: Date.now() });
+  }
+
+  function toggleDone(key: string) {
+    if (meeting.phase !== 'active') return;
+    const next = new Set(meeting.doneKeys);
+    if (next.has(key)) next.delete(key);
+    else next.add(key);
+    setMeeting({ ...meeting, doneKeys: next });
+  }
+
+  function advance(direction: 1 | -1) {
+    if (meeting.phase !== 'active') return;
+    const i = flatAgenda.findIndex(it => it.key === meeting.currentKey);
+    if (i === -1) return;
+    const next = flatAgenda[i + direction];
+    if (!next) return;
+    setMeeting({ ...meeting, currentKey: next.key, itemStartedAt: Date.now() });
   }
 
   return (
@@ -135,7 +201,7 @@ export function WipPage() {
               count={itemCount}
               minutes={estMinutes}
               onAdd={() => setModal({ kind: 'add' })}
-              onStart={() => setTab('live')}
+              onStart={startMeeting}
             />
 
             {itemCount === 0 ? (
@@ -162,16 +228,29 @@ export function WipPage() {
         )}
 
         {tab === 'live' && (
-          <section className="wip-sub" aria-label="Live meeting">
-            <div className="wip-agenda-empty" style={{ maxWidth: 720, margin: '40px auto' }}>
-              <div className="wip-empty-title">Live meeting mode lands next</div>
-              <div className="wip-empty-body">
-                The run-of-show timer, per-item notes capture, and talking-point
-                prompts come in the next pass. For now, prep the agenda on the
-                Agenda tab and walk it yourself.
-              </div>
-            </div>
-          </section>
+          meeting.phase === 'active'
+            ? (
+              <LiveMeeting
+                flatAgenda={flatAgenda}
+                currentKey={meeting.currentKey}
+                doneKeys={meeting.doneKeys}
+                itemStartedAt={meeting.itemStartedAt}
+                estMinutes={estMinutes}
+                onJump={jumpTo}
+                onToggleDone={toggleDone}
+                onPrev={() => advance(-1)}
+                onNext={() => advance(1)}
+                onEnd={endMeeting}
+              />
+            )
+            : (
+              <LiveMeetingPrestart
+                itemCount={itemCount}
+                estMinutes={estMinutes}
+                nextMeeting={nextMeetingLabel(data.today)}
+                onStart={startMeeting}
+              />
+            )
         )}
       </main>
 
@@ -800,4 +879,285 @@ function AddAgendaItemModal({ clients, existing, hasManualItems, onClose }: {
       </div>
     </div>
   );
+}
+
+// ── Live meeting: pre-start gate ─────────────────────────────────────────
+
+/**
+ * What the user sees on the Live tab when a meeting hasn't been started
+ * yet. Three stat tiles (items / est minutes / next meeting time) plus
+ * the Start button — same button they can click from the Agenda tab, but
+ * reachable here too for the case where they navigate straight to the
+ * Live tab.
+ */
+function LiveMeetingPrestart({ itemCount, estMinutes, nextMeeting, onStart }: {
+  itemCount: number;
+  estMinutes: number;
+  nextMeeting: string;
+  onStart: () => void;
+}) {
+  const hasAgenda = itemCount > 0;
+  return (
+    <section className="wip-sub" aria-label="Live meeting">
+      <div className="wip-live-prestart">
+        <div className="wip-live-prestart-eyebrow">Live meeting</div>
+        <h2 className="wip-live-prestart-title">
+          {hasAgenda ? 'Ready when you are' : 'No agenda yet'}
+        </h2>
+        <p className="wip-live-prestart-body">
+          {hasAgenda
+            ? 'Starting will walk the agenda top-to-bottom with a per-item timer. You can jump around, mark items complete, and end the meeting whenever you like.'
+            : "Head back to the Agenda tab, raise what you want to cover, then come back here to start."
+          }
+        </p>
+        <div className="wip-live-prestart-stats">
+          <div className="wip-live-prestart-stat">
+            <strong>{itemCount}</strong>
+            <span>item{itemCount === 1 ? '' : 's'}</span>
+          </div>
+          <div className="wip-live-prestart-stat">
+            <strong>{hasAgenda ? `~${estMinutes}` : '—'}</strong>
+            <span>est. minutes</span>
+          </div>
+          <div className="wip-live-prestart-stat">
+            <strong style={{ fontSize: 'var(--fs-base)' }}>{nextMeeting.split(' · ')[0]}</strong>
+            <span>{nextMeeting.split(' · ')[1] ?? 'scheduled for'}</span>
+          </div>
+        </div>
+        <div className="wip-live-prestart-actions">
+          <button
+            type="button"
+            className="wip-btn wip-btn-primary wip-live-prestart-cta"
+            onClick={onStart}
+            disabled={!hasAgenda}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <polygon points="6 4 20 12 6 20 6 4" />
+            </svg>
+            <span>Start meeting</span>
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── Live meeting: in-session stage ───────────────────────────────────────
+
+/**
+ * The live meeting surface — top bar with wall clock and End control, a
+ * sticky timeline sidebar on the left (jump to any item), and a stage on
+ * the right showing the focused item with a per-item elapsed timer and
+ * Prev / Mark done / Next controls.
+ *
+ * Keyboard: Space = mark current item done, ← / → = prev/next, Esc =
+ * prompt to end meeting. Keeps the facilitator's eyes on the team, not
+ * the UI.
+ */
+function LiveMeeting({
+  flatAgenda, currentKey, doneKeys, itemStartedAt, estMinutes,
+  onJump, onToggleDone, onPrev, onNext, onEnd,
+}: {
+  flatAgenda: AgendaItem[];
+  currentKey: string;
+  doneKeys: Set<string>;
+  itemStartedAt: number;
+  estMinutes: number;
+  onJump: (key: string) => void;
+  onToggleDone: (key: string) => void;
+  onPrev: () => void;
+  onNext: () => void;
+  onEnd: () => void;
+}) {
+  const [now, setNow] = useState(() => Date.now());
+
+  // One-second tick for the wall clock and per-item elapsed timer. A
+  // single interval powers both — no need for two.
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  // Keyboard shortcuts. Ignore when the focused element is an input or
+  // textarea so we never steal keystrokes from a Send pre-read composer
+  // (not yet built) or a future notes field.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null;
+      if (target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return;
+      if (e.key === 'ArrowRight' || e.key === 'j') { e.preventDefault(); onNext(); return; }
+      if (e.key === 'ArrowLeft' || e.key === 'k')  { e.preventDefault(); onPrev(); return; }
+      if (e.key === ' ') { e.preventDefault(); onToggleDone(currentKey); return; }
+      if (e.key === 'Escape') { e.preventDefault(); onEnd(); return; }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [currentKey, onNext, onPrev, onToggleDone, onEnd]);
+
+  const current = flatAgenda.find(it => it.key === currentKey);
+  const currentIndex = Math.max(0, flatAgenda.findIndex(it => it.key === currentKey));
+  const isFirst = currentIndex === 0;
+  const isLast = currentIndex === flatAgenda.length - 1;
+
+  const elapsedSec = Math.max(0, Math.floor((now - itemStartedAt) / 1000));
+  // Target per-item = total estimate / count, rounded to whole minutes.
+  const perItemSec = flatAgenda.length > 0 ? Math.round((estMinutes * 60) / flatAgenda.length) : 0;
+  const isOverTime = perItemSec > 0 && elapsedSec > perItemSec;
+
+  const dateLabel = new Date(now).toLocaleDateString(undefined, {
+    weekday: 'long', month: 'short', day: 'numeric',
+  });
+  const clockLabel = new Date(now).toLocaleTimeString(undefined, {
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+  });
+
+  return (
+    <section className="wip-sub" aria-label="Live meeting in progress">
+      <div className="wip-live-root">
+        <header className="wip-live-topbar">
+          <span className="wip-live-topbar-kicker">Weekly WIP · In session</span>
+          <span className="wip-live-topbar-date">{dateLabel}</span>
+          <span className="wip-live-topbar-clock" aria-label="Current time">{clockLabel}</span>
+          <div className="wip-live-topbar-ctrls">
+            <button
+              type="button"
+              className="wip-btn wip-btn-ghost"
+              onClick={onPrev}
+              disabled={isFirst}
+              aria-label="Previous item"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+              <span>Prev</span>
+            </button>
+            <button
+              type="button"
+              className="wip-btn wip-btn-ring"
+              onClick={() => onToggleDone(currentKey)}
+            >
+              {doneKeys.has(currentKey) ? 'Reopen' : 'Mark done'}
+            </button>
+            <button
+              type="button"
+              className="wip-btn wip-btn-primary"
+              onClick={onNext}
+              disabled={isLast}
+              aria-label="Next item"
+            >
+              <span>Next</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              className="wip-btn wip-btn-ghost"
+              onClick={onEnd}
+            >
+              End meeting
+            </button>
+          </div>
+        </header>
+
+        <div className="wip-live-grid">
+          <aside className="wip-live-timeline" aria-label="Run of show">
+            <div className="wip-live-timeline-head">Run of show</div>
+            {flatAgenda.map((it, idx) => {
+              const isDone = doneKeys.has(it.key);
+              const isCurrent = it.key === currentKey;
+              const cls = [
+                'wip-live-tl-item',
+                isCurrent && 'is-current',
+                isDone && !isCurrent && 'is-done',
+              ].filter(Boolean).join(' ');
+              return (
+                <button
+                  type="button"
+                  key={it.key}
+                  className={cls}
+                  onClick={() => onJump(it.key)}
+                  aria-current={isCurrent ? 'step' : undefined}
+                >
+                  <span className="wip-live-tl-state">
+                    {isDone ? '✓' : idx + 1}
+                  </span>
+                  <span className="wip-live-tl-body">
+                    <div className="wip-live-tl-title">{it.label}</div>
+                    <div className="wip-live-tl-sub">{it.meta}</div>
+                  </span>
+                  <span className="wip-live-tl-time">
+                    {statusLabel(it.status)}
+                  </span>
+                </button>
+              );
+            })}
+          </aside>
+
+          <div className="wip-live-stage" aria-live="polite">
+            {current ? (
+              <>
+                <div className="wip-live-stage-head">
+                  <div>
+                    <div className="wip-live-stage-eyebrow">
+                      Item {currentIndex + 1} of {flatAgenda.length} · {statusLabel(current.status)}
+                    </div>
+                    <h2 className="wip-live-stage-title">{current.label}</h2>
+                    <div className="wip-live-stage-meta">
+                      <span className="owner">{current.meta}</span>
+                      {current.serviceName && current.kind === 'task' && (
+                        <>
+                          <span className="sep">·</span>
+                          <span>{current.serviceName}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <div
+                    className={`wip-live-stage-timer${isOverTime ? ' is-over' : ''}`}
+                    aria-label={`Elapsed on this item: ${formatElapsed(elapsedSec)}`}
+                  >
+                    {formatElapsed(elapsedSec)}
+                  </div>
+                </div>
+
+                {current.note && (
+                  <div>
+                    <div className="wip-live-section-label">Context</div>
+                    <p style={{ margin: 0, color: 'var(--text-soft)', lineHeight: 1.55 }}>
+                      {current.note}
+                    </p>
+                  </div>
+                )}
+
+                <div>
+                  <div className="wip-live-section-label">Keyboard</div>
+                  <p style={{ margin: 0, color: 'var(--text-faint)', fontSize: 'var(--fs-sm)' }}>
+                    <kbd>←</kbd> prev · <kbd>→</kbd> next · <kbd>Space</kbd> toggle done · <kbd>Esc</kbd> end meeting
+                  </p>
+                </div>
+              </>
+            ) : (
+              <div className="wip-agenda-empty" style={{ margin: 0 }}>
+                <div className="wip-empty-title">All items covered</div>
+                <div className="wip-empty-body">
+                  Nothing left on the run of show. Click End meeting when the room is ready.
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/** Format seconds as m:ss or h:mm:ss. Tabular-nums in CSS keeps the width stable. */
+function formatElapsed(totalSec: number): string {
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  const mm = String(m).padStart(h > 0 ? 2 : 1, '0');
+  const ss = String(s).padStart(2, '0');
+  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
 }
