@@ -356,6 +356,14 @@ class FlizowStore {
   reset() {
     this.replaceAll(emptyData());
   }
+
+  /** Dev helper: seed the workspace with the 50 demo clients from the
+   *  mockup. Dynamic import so the demo bundle only loads when the user
+   *  actually clicks "Load demo data" — keeps the main chunk lean. */
+  async loadDemoData() {
+    const { generateDemoData } = await import('../data/demoData');
+    this.replaceAll(generateDemoData());
+  }
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────
