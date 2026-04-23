@@ -30,9 +30,10 @@ import { ConfirmDangerDialog } from '../components/ConfirmDangerDialog';
  *   - Full card detail modal (FlizowCardModal) — open on click or
  *     on mount via sessionStorage / route deep-link
  *   - Archive / unarchive flow with triage modal from Board Settings
+ *   - Per-column WIP limits via the column ⋯ popover
  *
  * Not yet:
- *   - Per-column WIP limits and column color / reorder editing
+ *   - Column color / reorder editing
  *   - Swimlanes (group-by assignee / priority)
  */
 
