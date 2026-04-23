@@ -905,6 +905,8 @@ function OnboardingRow({ item, onToggle }: {
 function AboutSection({ client, data }: { client: Client; data: FlizowData }) {
   const [showAddContact, setShowAddContact] = useState(false);
   const [showAddQuickLink, setShowAddQuickLink] = useState(false);
+  const [showAddOperator, setShowAddOperator] = useState(false);
+  const [teamEditMode, setTeamEditMode] = useState(false);
 
   const contacts = useMemo(
     () => data.contacts.filter(c => c.clientId === client.id)
@@ -939,15 +941,48 @@ function AboutSection({ client, data }: { client: Client; data: FlizowData }) {
         </div>
       </div>
 
-      <div className="detail-section" data-tab="about" data-team-section>
+      <div
+        className="detail-section"
+        data-tab="about"
+        data-team-section
+        data-edit={teamEditMode ? 'true' : undefined}
+      >
         <div className="detail-section-header">
           <div className="detail-section-title">Team</div>
           <div className="detail-section-sub">
             {am ? '1 account manager' : 'No account manager'}
             {team.length > 0 && ` · ${team.length} operator${team.length === 1 ? '' : 's'}`}
           </div>
+          {/* Wrap the two right-side buttons so the CSS rule
+              `.detail-section-header > *:last-child { margin-left: auto }`
+              pushes both of them to the right as a pair. */}
+          <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+            {team.length > 0 && (
+              <button
+                type="button"
+                className="detail-section-link"
+                onClick={() => setTeamEditMode(v => !v)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', font: 'inherit', padding: 0 }}
+              >
+                {teamEditMode ? 'Done' : 'Edit'}
+              </button>
+            )}
+            <button
+              type="button"
+              className="detail-section-link"
+              onClick={() => setShowAddOperator(true)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', font: 'inherit', padding: 0 }}
+            >
+              + Add operator
+            </button>
+          </div>
         </div>
-        <TeamGrid am={am} team={team} />
+        <TeamGrid
+          am={am}
+          team={team}
+          onAdd={() => setShowAddOperator(true)}
+          onRemove={(memberId) => flizowStore.removeTeamMember(client.id, memberId)}
+        />
       </div>
 
       {showAddContact && (
@@ -962,6 +997,15 @@ function AboutSection({ client, data }: { client: Client; data: FlizowData }) {
         <AddQuickLinkModal
           clientId={client.id}
           onClose={() => setShowAddQuickLink(false)}
+        />
+      )}
+
+      {showAddOperator && (
+        <AddOperatorModal
+          clientId={client.id}
+          allMembers={data.members}
+          currentTeamIds={client.teamIds}
+          onClose={() => setShowAddOperator(false)}
         />
       )}
     </>
@@ -1124,7 +1168,12 @@ function QuickLinksCard({ links, onAdd }: { links: QuickLink[]; onAdd: () => voi
   );
 }
 
-function TeamGrid({ am, team }: { am: Member | null; team: Member[] }) {
+function TeamGrid({ am, team, onAdd, onRemove }: {
+  am: Member | null;
+  team: Member[];
+  onAdd: () => void;
+  onRemove: (memberId: string) => void;
+}) {
   return (
     <div className="team-section-grid">
       <div className="team-group">
@@ -1147,10 +1196,23 @@ function TeamGrid({ am, team }: { am: Member | null; team: Member[] }) {
         <div className="team-group-row">
           {team.length === 0 ? (
             <span style={{ color: 'var(--text-soft)', fontSize: 14 }}>
-              No operators attached yet.
+              No operators attached yet.{' '}
+              <button
+                type="button"
+                onClick={onAdd}
+                style={{
+                  background: 'none', border: 'none', padding: 0,
+                  color: 'var(--highlight)', fontSize: 'inherit', font: 'inherit',
+                  cursor: 'pointer', textDecoration: 'underline',
+                }}
+              >
+                Add the first one
+              </button>.
             </span>
           ) : (
-            team.map(m => <MemberCard key={m.id} member={m} />)
+            team.map(m => (
+              <MemberCard key={m.id} member={m} onRemove={() => onRemove(m.id)} />
+            ))
           )}
         </div>
       </div>
@@ -1158,7 +1220,11 @@ function TeamGrid({ am, team }: { am: Member | null; team: Member[] }) {
   );
 }
 
-function MemberCard({ member, solid = false }: { member: Member; solid?: boolean }) {
+function MemberCard({ member, solid = false, onRemove }: {
+  member: Member;
+  solid?: boolean;
+  onRemove?: () => void;
+}) {
   // AMs use a solid avatar fill; operators use a soft background with
   // coloured text. Mirrors the mockup's visual split between the two roles
   // so you can tell roles apart at a glance.
@@ -1172,6 +1238,20 @@ function MemberCard({ member, solid = false }: { member: Member; solid?: boolean
         <div className="team-member-name">{member.name}</div>
         {member.role && <div className="team-member-role">{member.role}</div>}
       </div>
+      {onRemove && (
+        <button
+          type="button"
+          className="team-remove-btn"
+          onClick={onRemove}
+          aria-label={`Remove ${member.name} from team`}
+          title={`Remove ${member.name}`}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      )}
     </div>
   );
 }
@@ -1795,6 +1875,174 @@ function AddQuickLinkModal({ clientId, onClose }: {
           </button>
           <button type="button" className="wip-btn wip-btn-primary" onClick={handleSave}>
             Add link
+          </button>
+        </footer>
+      </div>
+    </div>
+  );
+}
+
+// ── Add Operator Modal ────────────────────────────────────────────────────
+
+function AddOperatorModal({ clientId, allMembers, currentTeamIds, onClose }: {
+  clientId: string;
+  allMembers: Member[];
+  currentTeamIds: string[];
+  onClose: () => void;
+}) {
+  // Only operators can join the project team — AMs go through `amId` on
+  // the client itself. Hide anyone already on the team so the list only
+  // shows people the user can actually act on.
+  const available = useMemo(
+    () => allMembers.filter(m =>
+      m.type === 'operator' && !currentTeamIds.includes(m.id),
+    ),
+    [allMembers, currentTeamIds],
+  );
+
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+
+  function toggle(id: string) {
+    setPicked(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function handleSave() {
+    if (picked.size === 0) {
+      onClose();
+      return;
+    }
+    // Loop through addTeamMember so the store's dedupe + array-replace
+    // logic runs per id. The store is cheap and the list is small.
+    picked.forEach(id => flizowStore.addTeamMember(clientId, id));
+    onClose();
+  }
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleSave();
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onClose, picked]);
+
+  function handleBackdropClick(e: React.MouseEvent<HTMLDivElement>) {
+    if (e.target === e.currentTarget) onClose();
+  }
+
+  return (
+    <div
+      className="wip-modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="add-operator-title"
+      onClick={handleBackdropClick}
+    >
+      <div className="wip-modal" role="document" style={{ maxWidth: 460 }}>
+        <header className="wip-modal-head">
+          <h2 className="wip-modal-title" id="add-operator-title">Add operators</h2>
+          <button type="button" className="wip-modal-close" onClick={onClose} aria-label="Close">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </header>
+
+        <div className="wip-modal-body">
+          {available.length === 0 ? (
+            <div style={{ padding: 12, color: 'var(--text-soft)', fontSize: 14 }}>
+              Every operator is already on this team. Add a new team member in
+              Settings, then come back.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2, maxHeight: 360, overflowY: 'auto' }}>
+              {available.map(m => {
+                const checked = picked.has(m.id);
+                return (
+                  <label
+                    key={m.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      padding: '10px 12px',
+                      borderRadius: 8,
+                      border: checked
+                        ? '2px solid var(--highlight)'
+                        : '1px solid var(--hairline-soft)',
+                      background: checked ? 'var(--highlight-soft)' : 'var(--bg-elev)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggle(m.id)}
+                      style={{ margin: 0, cursor: 'pointer' }}
+                    />
+                    <span
+                      className="team-member-avatar"
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: '50%',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 12,
+                        fontWeight: 600,
+                        background: m.bg ?? 'var(--bg-soft)',
+                        color: m.color,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {m.initials}
+                    </span>
+                    <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                      <span style={{ fontSize: 'var(--fs-md)', color: 'var(--text)', fontWeight: 500 }}>
+                        {m.name}
+                      </span>
+                      {m.role && (
+                        <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-soft)' }}>
+                          {m.role}
+                        </span>
+                      )}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <footer className="wip-modal-foot">
+          <button type="button" className="wip-btn wip-btn-ghost" onClick={onClose}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="wip-btn wip-btn-primary"
+            onClick={handleSave}
+            disabled={picked.size === 0 || available.length === 0}
+            style={(picked.size === 0 || available.length === 0)
+              ? { opacity: 0.5, cursor: 'not-allowed' }
+              : undefined}
+          >
+            {picked.size > 1 ? `Add ${picked.size} operators` : 'Add operator'}
           </button>
         </footer>
       </div>

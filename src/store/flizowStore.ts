@@ -795,21 +795,33 @@ class FlizowStore {
   }
 
   /** Add a member to a client's project team. AMs go through `amId`
-   *  on the Client object, not through here — this is for operators. */
+   *  on the Client object, not through here — this is for operators.
+   *  Replaces the clients array ref so useMemo([data.clients]) consumers
+   *  (e.g. the About tab's TeamGrid) recompute. */
   addTeamMember(clientId: string, memberId: string) {
-    const client = this.data.clients.find(c => c.id === clientId);
-    if (!client) return;
-    if (client.teamIds.includes(memberId)) return;
-    client.teamIds.push(memberId);
+    let changed = false;
+    const clients = this.data.clients.map(c => {
+      if (c.id !== clientId) return c;
+      if (c.teamIds.includes(memberId)) return c;
+      changed = true;
+      return { ...c, teamIds: [...c.teamIds, memberId] };
+    });
+    if (!changed) return;
+    this.data.clients = clients;
     this.save();
   }
 
   removeTeamMember(clientId: string, memberId: string) {
-    const client = this.data.clients.find(c => c.id === clientId);
-    if (!client) return;
-    const next = client.teamIds.filter(id => id !== memberId);
-    if (next.length === client.teamIds.length) return;
-    client.teamIds = next;
+    let changed = false;
+    const clients = this.data.clients.map(c => {
+      if (c.id !== clientId) return c;
+      const next = c.teamIds.filter(id => id !== memberId);
+      if (next.length === c.teamIds.length) return c;
+      changed = true;
+      return { ...c, teamIds: next };
+    });
+    if (!changed) return;
+    this.data.clients = clients;
     this.save();
   }
 
