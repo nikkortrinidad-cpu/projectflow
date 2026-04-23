@@ -3,7 +3,8 @@ import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, closestC
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { useRoute, navigate } from '../router';
 import { useFlizow } from '../store/useFlizow';
-import type { ColumnId, Priority, Task, Client, Service, Member } from '../types/flizow';
+import { flizowStore } from '../store/flizowStore';
+import type { ColumnId, Priority, Task, Client, Service, Member, TaskComment } from '../types/flizow';
 import { daysBetween, formatMonthDay } from '../utils/dateFormat';
 import FlizowCardModal from '../components/FlizowCardModal';
 import { BoardFilters, applyFilters, EMPTY_FILTERS, type BoardFilterState } from '../components/BoardFilters';
@@ -68,6 +69,7 @@ export function BoardPage() {
         service={service}
         tasks={data.tasks.filter(t => t.serviceId === service.id)}
         members={data.members}
+        taskComments={data.taskComments}
         todayISO={data.today}
       />
     </div>
@@ -105,12 +107,14 @@ function BoardBody({
   service,
   tasks,
   members,
+  taskComments,
   todayISO,
 }: {
   client: Client;
   service: Service;
   tasks: Task[];
   members: Member[];
+  taskComments: TaskComment[];
   todayISO: string;
 }) {
   const { store } = useFlizow();
@@ -120,6 +124,16 @@ function BoardBody({
   // Selected card in the detail modal. null = modal closed. Reset any
   // time the user navigates away from this page (unmount handles it).
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+
+  // Per-task comment count. Built once per comment-array change so card
+  // tiles don't each scan the whole list — O(n+m) instead of O(n*m).
+  const commentCountByTask = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const c of taskComments) {
+      map.set(c.taskId, (map.get(c.taskId) ?? 0) + 1);
+    }
+    return map;
+  }, [taskComments]);
 
   const sensors = useSensors(
     // Small activation distance so clicks on cards still open them while
@@ -203,6 +217,7 @@ function BoardBody({
                 tasks={colTasks}
                 todayISO={todayISO}
                 assigneeOf={assigneeOf}
+                commentCountByTask={commentCountByTask}
                 serviceId={service.id}
                 clientId={client.id}
                 onOpenCard={setSelectedTaskId}
@@ -217,6 +232,7 @@ function BoardBody({
               task={activeTask}
               assignee={assigneeOf(activeTask)}
               todayISO={todayISO}
+              commentCount={commentCountByTask.get(activeTask.id) ?? 0}
               dragging
             />
           ) : null}
@@ -236,6 +252,43 @@ function BoardBody({
 // ── Breadcrumb ───────────────────────────────────────────────────────
 
 function Breadcrumb({ client, service }: { client: Client; service: Service }) {
+  // Inline rename on the current-page crumb. Same pattern as the client
+  // hero rename: cursor:text + hover tint + ring on focus, no pencil icon.
+  // This is where users land right after the Add Service modal closes, so
+  // rename-in-place here beats a separate "Edit service" modal.
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(service.name);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Sync draft when the service id changes (user navigated to a different
+  // board mid-edit, unlikely but cheap to guard).
+  useEffect(() => {
+    setDraft(service.name);
+    setEditing(false);
+  }, [service.id, service.name]);
+
+  useEffect(() => {
+    if (!editing) return;
+    const t = window.setTimeout(() => {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }, 20);
+    return () => window.clearTimeout(t);
+  }, [editing]);
+
+  function commit() {
+    const next = draft.trim();
+    if (!next) {
+      setDraft(service.name);
+      setEditing(false);
+      return;
+    }
+    if (next !== service.name) {
+      flizowStore.updateService(service.id, { name: next });
+    }
+    setEditing(false);
+  }
+
   return (
     <div className="breadcrumb-bar">
       <nav className="breadcrumb" aria-label="Breadcrumb">
@@ -256,7 +309,45 @@ function Breadcrumb({ client, service }: { client: Client; service: Service }) {
               {client.name}
             </a>
           </li>
-          <li><span aria-current="page">{service.name}</span></li>
+          <li>
+            {editing ? (
+              <input
+                ref={inputRef}
+                className="breadcrumb-rename-input"
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onBlur={commit}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    (e.target as HTMLInputElement).blur();
+                  } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    setDraft(service.name);
+                    setEditing(false);
+                  }
+                }}
+                aria-label="Service name"
+              />
+            ) : (
+              <span
+                className="breadcrumb-rename"
+                aria-current="page"
+                role="button"
+                tabIndex={0}
+                title="Click to rename"
+                onClick={() => setEditing(true)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setEditing(true);
+                  }
+                }}
+              >
+                {service.name}
+              </span>
+            )}
+          </li>
         </ol>
       </nav>
       <div className="board-actions">
@@ -326,6 +417,7 @@ function Column({
   tasks,
   todayISO,
   assigneeOf,
+  commentCountByTask,
   serviceId,
   clientId,
   onOpenCard,
@@ -336,6 +428,7 @@ function Column({
   tasks: Task[];
   todayISO: string;
   assigneeOf: (t: Task) => Member | undefined;
+  commentCountByTask: Map<string, number>;
   serviceId: string;
   clientId: string;
   onOpenCard: (taskId: string) => void;
@@ -359,6 +452,7 @@ function Column({
             key={task.id}
             task={task}
             assignee={assigneeOf(task)}
+            commentCount={commentCountByTask.get(task.id) ?? 0}
             todayISO={todayISO}
             onOpen={onOpenCard}
           />
@@ -376,11 +470,13 @@ function Column({
 function DraggableCard({
   task,
   assignee,
+  commentCount,
   todayISO,
   onOpen,
 }: {
   task: Task;
   assignee: Member | undefined;
+  commentCount: number;
   todayISO: string;
   onOpen: (taskId: string) => void;
 }) {
@@ -392,7 +488,7 @@ function DraggableCard({
       {...listeners}
       style={{ opacity: isDragging ? 0 : 1 }}
     >
-      <CardTile task={task} assignee={assignee} todayISO={todayISO} onOpen={onOpen} />
+      <CardTile task={task} assignee={assignee} commentCount={commentCount} todayISO={todayISO} onOpen={onOpen} />
     </div>
   );
 }
@@ -400,12 +496,14 @@ function DraggableCard({
 function CardTile({
   task,
   assignee,
+  commentCount,
   todayISO,
   dragging,
   onOpen,
 }: {
   task: Task;
   assignee: Member | undefined;
+  commentCount: number;
   todayISO: string;
   dragging?: boolean;
   onOpen?: (taskId: string) => void;
@@ -446,10 +544,15 @@ function CardTile({
       <div className="card-title">{task.title}</div>
       <div className="card-footer">
         <div className="card-meta">
-          <span>
-            <CommentIcon />
-            0
-          </span>
+          {/* Hide the comment chip entirely when zero — a "0" next to an
+              icon reads like a dead stat. Show it once there's something
+              to show. */}
+          {commentCount > 0 && (
+            <span title={`${commentCount} comment${commentCount === 1 ? '' : 's'}`}>
+              <CommentIcon />
+              {commentCount}
+            </span>
+          )}
         </div>
         {assignee ? (
           <div className="card-assignee" title={assignee.name}>{assignee.initials}</div>
