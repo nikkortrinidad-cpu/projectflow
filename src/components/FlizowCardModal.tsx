@@ -1,24 +1,25 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFlizow } from '../store/useFlizow';
-import type { ColumnId, Priority } from '../types/flizow';
+import type { ColumnId, Priority, Member } from '../types/flizow';
+import { BOARD_LABELS, labelById } from '../constants/labels';
 
 /**
  * FlizowCardModal — the per-card detail overlay on top of the service
  * kanban board. Matches the mockup's `.card-modal` shell so the CSS in
  * src/styles/flizow.css renders it without extra styling work.
  *
- * First-pass scope:
+ * Current scope:
  *   • Inline-editable title (commit on blur/Enter)
  *   • Status / Priority dropdowns (mutate store via moveTask / setTaskPriority)
  *   • Start + Due date inputs
- *   • Read-only assignee + label chips (edit pickers land later)
+ *   • Assignee picker: search members, multi-select, remove via chip hover
+ *   • Label picker: search BOARD_LABELS, multi-select, remove via chip
  *   • Click-to-edit description
  *   • Checklist: add / toggle / delete / rename
  *   • Sidebar tabs (Comments, Activity) — empty-state placeholders
  *   • Close via X button, overlay click, or Esc
  *
  * Out of scope for this pass (stubbed as "coming soon"):
- *   • Label / assignee pickers
  *   • Comment input + threading
  *   • Activity log entries
  *   • Share modal, Duplicate / Archive menu actions
@@ -116,10 +117,21 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
   // ── Status / Priority dropdown toggles ────────────────────────────
   const [statusOpen, setStatusOpen] = useState(false);
   const [priorityOpen, setPriorityOpen] = useState(false);
+
+  // ── Assignee + Label pickers ──────────────────────────────────────
+  const [assigneePickerOpen, setAssigneePickerOpen] = useState(false);
+  const [assigneeQuery, setAssigneeQuery] = useState('');
+  const [labelPickerOpen, setLabelPickerOpen] = useState(false);
+  const [labelQuery, setLabelQuery] = useState('');
+
   useEffect(() => {
-    // Close dropdowns when switching tasks.
+    // Close every inline picker when switching tasks.
     setStatusOpen(false);
     setPriorityOpen(false);
+    setAssigneePickerOpen(false);
+    setAssigneeQuery('');
+    setLabelPickerOpen(false);
+    setLabelQuery('');
   }, [taskId]);
 
   // ── Sidebar tabs ──────────────────────────────────────────────────
@@ -153,6 +165,34 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
   const checklist = task?.checklist ?? [];
   const doneCount = checklist.filter(i => i.done).length;
   const pct = checklist.length > 0 ? Math.round((doneCount / checklist.length) * 100) : 0;
+
+  // ── Mutators for assignees + labels ───────────────────────────────
+  // Both fields live on the Task as arrays and are flipped via
+  // updateTask. We keep the legacy single-assignee fallback intact by
+  // always writing the new list to `assigneeIds` — older seeds still
+  // read through the `assigneeId || assigneeIds` guard above.
+  function toggleAssignee(memberId: string) {
+    if (!task) return;
+    const current = task.assigneeIds && task.assigneeIds.length
+      ? task.assigneeIds
+      : (task.assigneeId ? [task.assigneeId] : []);
+    const next = current.includes(memberId)
+      ? current.filter(id => id !== memberId)
+      : [...current, memberId];
+    store.updateTask(task.id, {
+      assigneeIds: next,
+      // Keep the singleton field synced so older readers still work.
+      assigneeId: next[0] ?? null,
+    });
+  }
+
+  function toggleLabel(labelId: string) {
+    if (!task) return;
+    const next = task.labels.includes(labelId)
+      ? task.labels.filter(l => l !== labelId)
+      : [...task.labels, labelId];
+    store.updateTask(task.id, { labels: next });
+  }
 
   // ── Guard: task vanished (deleted elsewhere) ──────────────────────
   if (!task) {
@@ -339,27 +379,58 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
                     Assignees
                   </div>
                   <div className="meta-value">
-                    <div className="assignee-container">
+                    <div className="assignee-container" style={{ position: 'relative' }}>
                       {assignees.map(m => (
                         <span
                           key={m.id}
-                          className="card-assignee"
+                          className="assignee-chip"
                           style={m.type === 'operator'
                             ? { background: m.bg, color: m.color }
                             : { background: m.color, color: '#fff' }
                           }
                           title={m.name}
                         >
-                          {m.initials}
+                          <span
+                            className="assignee-chip-avatar"
+                            style={m.type === 'operator'
+                              ? { background: m.bg, color: m.color }
+                              : { background: 'rgba(255,255,255,0.2)', color: '#fff' }
+                            }
+                          >
+                            {m.initials}
+                          </span>
+                          <span>{m.name}</span>
+                          <button
+                            type="button"
+                            className="assignee-chip-remove"
+                            aria-label={`Remove ${m.name}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleAssignee(m.id);
+                            }}
+                          >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                          </button>
                         </span>
                       ))}
                       <button
                         type="button"
                         className="assignee-add"
-                        aria-label="Add assignee (coming soon)"
-                        title="Add assignee (coming soon)"
-                        disabled
+                        aria-label="Add assignee"
+                        aria-haspopup="listbox"
+                        aria-expanded={assigneePickerOpen}
+                        onClick={() => setAssigneePickerOpen(v => !v)}
                       >+</button>
+                      {assigneePickerOpen && (
+                        <AssigneePicker
+                          members={data.members}
+                          selectedIds={assignees.map(a => a.id)}
+                          query={assigneeQuery}
+                          onQueryChange={setAssigneeQuery}
+                          onToggle={toggleAssignee}
+                          onClose={() => { setAssigneePickerOpen(false); setAssigneeQuery(''); }}
+                        />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -369,21 +440,56 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
                     Labels
                   </div>
-                  <div className="meta-value">
+                  <div className="meta-value" style={{ position: 'relative', display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
                     {task.labels.length === 0 && (
                       <span style={{ color: 'var(--text-faint)', fontSize: 13 }}>No labels</span>
                     )}
-                    {task.labels.map(l => (
-                      <span key={l} className="label-pill" data-label={l}>{l}</span>
-                    ))}
+                    {task.labels.map(id => {
+                      const lbl = labelById(id);
+                      if (!lbl) {
+                        // Orphaned label id — still show the raw token so
+                        // the data stays visible, just without a colour.
+                        return (
+                          <span key={id} className="label-pill" data-label={id}>
+                            {id}
+                          </span>
+                        );
+                      }
+                      return (
+                        <span key={id} className={`label-pill ${lbl.cls}`} data-label={lbl.name}>
+                          {lbl.name}
+                          <button
+                            type="button"
+                            className="label-pill-remove"
+                            aria-label={`Remove ${lbl.name}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleLabel(id);
+                            }}
+                          >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                          </button>
+                        </span>
+                      );
+                    })}
                     <button
                       type="button"
                       className="assignee-add"
-                      aria-label="Add label (coming soon)"
-                      title="Add label (coming soon)"
-                      disabled
+                      aria-label="Add label"
+                      aria-haspopup="listbox"
+                      aria-expanded={labelPickerOpen}
+                      onClick={() => setLabelPickerOpen(v => !v)}
                       style={{ marginLeft: 6 }}
                     >+</button>
+                    {labelPickerOpen && (
+                      <LabelPicker
+                        selectedIds={task.labels}
+                        query={labelQuery}
+                        onQueryChange={setLabelQuery}
+                        onToggle={toggleLabel}
+                        onClose={() => { setLabelPickerOpen(false); setLabelQuery(''); }}
+                      />
+                    )}
                   </div>
                 </div>
 
@@ -736,4 +842,179 @@ function TaskMissingAutoClose({ onClose }: { onClose: () => void }) {
     return () => window.clearTimeout(t);
   }, [onClose]);
   return null;
+}
+
+/** Searchable multi-select for task assignees. Mirrors the mockup's
+ *  `.assignee-dropdown` — anchored under the + button, closes on outside
+ *  click or Esc, autofocuses its search field so the user can type
+ *  immediately after clicking. */
+function AssigneePicker({
+  members, selectedIds, query, onQueryChange, onToggle, onClose,
+}: {
+  members: Member[];
+  selectedIds: string[];
+  query: string;
+  onQueryChange: (q: string) => void;
+  onToggle: (id: string) => void;
+  onClose: () => void;
+}) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const searchRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    // Autofocus on open so the user can start typing immediately.
+    searchRef.current?.focus();
+    function onDoc(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') { e.stopPropagation(); onClose(); }
+    }
+    const t = window.setTimeout(() => {
+      document.addEventListener('mousedown', onDoc);
+      document.addEventListener('keydown', onKey, true);
+    }, 0);
+    return () => {
+      window.clearTimeout(t);
+      document.removeEventListener('mousedown', onDoc);
+      document.removeEventListener('keydown', onKey, true);
+    };
+  }, [onClose]);
+
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? members.filter(m =>
+        m.name.toLowerCase().includes(q) ||
+        m.initials.toLowerCase().includes(q) ||
+        (m.role || '').toLowerCase().includes(q),
+      )
+    : members;
+
+  return (
+    <div ref={ref} className="assignee-dropdown open" onClick={(e) => e.stopPropagation()}>
+      <input
+        ref={searchRef}
+        type="text"
+        className="assignee-search"
+        placeholder="Search team members…"
+        value={query}
+        onChange={(e) => onQueryChange(e.target.value)}
+      />
+      <div className="assignee-list">
+        {filtered.length === 0 ? (
+          <div className="assignee-empty">No matches</div>
+        ) : (
+          filtered.map(m => {
+            const selected = selectedIds.includes(m.id);
+            return (
+              <button
+                key={m.id}
+                type="button"
+                className={`assignee-option${selected ? ' is-selected' : ''}`}
+                onClick={() => onToggle(m.id)}
+                // Keep it a proper button rather than a div so it's
+                // keyboard-activatable out of the box.
+                style={{ width: '100%', textAlign: 'left', background: 'transparent', border: 0, padding: 'var(--sp-xs) var(--sp-sm)', cursor: 'pointer', font: 'inherit', color: 'inherit' }}
+              >
+                <span
+                  className="assignee-option-avatar"
+                  style={m.type === 'operator'
+                    ? { background: m.bg, color: m.color }
+                    : { background: m.color, color: '#fff' }}
+                >
+                  {m.initials}
+                </span>
+                <span className="assignee-option-name">
+                  {m.name}
+                  {m.role && (
+                    <span style={{ color: 'var(--text-soft)', fontSize: 'var(--fs-xs)', marginLeft: 6 }}>
+                      · {m.role}
+                    </span>
+                  )}
+                </span>
+                <svg className="assignee-option-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </button>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Searchable multi-select for board labels. Same shell as the assignee
+ *  picker — same classes, so the CSS file does all the styling work. */
+function LabelPicker({
+  selectedIds, query, onQueryChange, onToggle, onClose,
+}: {
+  selectedIds: string[];
+  query: string;
+  onQueryChange: (q: string) => void;
+  onToggle: (id: string) => void;
+  onClose: () => void;
+}) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const searchRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    searchRef.current?.focus();
+    function onDoc(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') { e.stopPropagation(); onClose(); }
+    }
+    const t = window.setTimeout(() => {
+      document.addEventListener('mousedown', onDoc);
+      document.addEventListener('keydown', onKey, true);
+    }, 0);
+    return () => {
+      window.clearTimeout(t);
+      document.removeEventListener('mousedown', onDoc);
+      document.removeEventListener('keydown', onKey, true);
+    };
+  }, [onClose]);
+
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? BOARD_LABELS.filter(l => l.name.toLowerCase().includes(q))
+    : BOARD_LABELS;
+
+  return (
+    <div ref={ref} className="label-dropdown open" onClick={(e) => e.stopPropagation()}>
+      <input
+        ref={searchRef}
+        type="text"
+        className="label-dropdown-search"
+        placeholder="Search labels…"
+        value={query}
+        onChange={(e) => onQueryChange(e.target.value)}
+      />
+      <div className="label-dropdown-list">
+        {filtered.length === 0 ? (
+          <div className="label-empty">No matches</div>
+        ) : (
+          filtered.map(l => {
+            const selected = selectedIds.includes(l.id);
+            return (
+              <button
+                key={l.id}
+                type="button"
+                className={`label-option${selected ? ' is-selected' : ''}`}
+                onClick={() => onToggle(l.id)}
+                style={{ width: '100%', textAlign: 'left', background: 'transparent', border: 0, padding: 'var(--sp-xs) var(--sp-sm)', cursor: 'pointer', font: 'inherit', color: 'inherit' }}
+              >
+                <span className={`label-pill ${l.cls}`}>{l.name}</span>
+                <svg className="label-option-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </button>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
 }
