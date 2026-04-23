@@ -350,6 +350,49 @@ class FlizowStore {
     this.save();
   }
 
+  // ── Task checklist ──────────────────────────────────────────────────
+  //
+  // Checklists live on Task.checklist (optional). We initialise the
+  // array lazily so older tasks don't need a migration step — first
+  // write creates it, subsequent writes mutate in place.
+
+  addChecklistItem(taskId: string, text: string): string | null {
+    const t = this.data.tasks.find(t => t.id === taskId);
+    if (!t) return null;
+    if (!t.checklist) t.checklist = [];
+    const id = `ck-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+    t.checklist.push({ id, text: text.trim(), done: false, assigneeId: null });
+    this.save();
+    return id;
+  }
+
+  toggleChecklistItem(taskId: string, itemId: string) {
+    const t = this.data.tasks.find(t => t.id === taskId);
+    if (!t || !t.checklist) return;
+    const item = t.checklist.find(i => i.id === itemId);
+    if (!item) return;
+    item.done = !item.done;
+    this.save();
+  }
+
+  updateChecklistItemText(taskId: string, itemId: string, text: string) {
+    const t = this.data.tasks.find(t => t.id === taskId);
+    if (!t || !t.checklist) return;
+    const item = t.checklist.find(i => i.id === itemId);
+    if (!item) return;
+    const trimmed = text.trim();
+    if (!trimmed) return; // empty text = ignore; deletion is a separate call
+    item.text = trimmed;
+    this.save();
+  }
+
+  deleteChecklistItem(taskId: string, itemId: string) {
+    const t = this.data.tasks.find(t => t.id === taskId);
+    if (!t || !t.checklist) return;
+    t.checklist = t.checklist.filter(i => i.id !== itemId);
+    this.save();
+  }
+
   // ── Members ──────────────────────────────────────────────────────────
 
   addMember(member: Member) {

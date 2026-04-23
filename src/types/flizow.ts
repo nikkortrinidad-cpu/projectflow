@@ -164,6 +164,16 @@ export interface ScheduleMeta {
   done: boolean;
 }
 
+/** A checklist row on a card. The UI groups them under the card's
+ *  Checklist section and shows a "X of Y · N%" progress indicator. */
+export interface TaskChecklistItem {
+  id: string;
+  text: string;
+  done: boolean;
+  /** Optional Member id. Unassigned items show a generic avatar glyph. */
+  assigneeId: string | null;
+}
+
 export interface Task {
   id: string;
   serviceId: string;
@@ -186,6 +196,18 @@ export interface Task {
    *  leading underscore matches the mockup's naming — kept to make diffs
    *  against the mockup's JSON easy to spot. */
   _schedule?: ScheduleMeta;
+  // ── Card detail fields (optional — cards that never opened the
+  //    detail modal may not have any of these yet) ──────────────────
+  /** ISO date. When work is expected to start. Optional. */
+  startDate?: string;
+  /** Free text. Rich text comes later. Empty string = "no description". */
+  description?: string;
+  /** Ordered checklist. Empty array = no checklist section shown. */
+  checklist?: TaskChecklistItem[];
+  /** Pool of assignees — a task can have more than one teammate on it.
+   *  Kept separate from `assigneeId` (the legacy single-owner field)
+   *  so the card tile can still show the primary owner. */
+  assigneeIds?: string[];
 }
 
 export interface Member {

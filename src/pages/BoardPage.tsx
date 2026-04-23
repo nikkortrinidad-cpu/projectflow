@@ -5,6 +5,7 @@ import { useRoute, navigate } from '../router';
 import { useFlizow } from '../store/useFlizow';
 import type { ColumnId, Priority, Task, Client, Service, Member } from '../types/flizow';
 import { daysBetween, formatMonthDay } from '../utils/dateFormat';
+import FlizowCardModal from '../components/FlizowCardModal';
 
 /**
  * Service Kanban board — per-client workspace for a single service. Shows
@@ -114,6 +115,9 @@ function BoardBody({
   const { store } = useFlizow();
   const [search, setSearch] = useState('');
   const [activeId, setActiveId] = useState<string | null>(null);
+  // Selected card in the detail modal. null = modal closed. Reset any
+  // time the user navigates away from this page (unmount handles it).
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
   const sensors = useSensors(
     // Small activation distance so clicks on cards still open them while
@@ -194,6 +198,7 @@ function BoardBody({
                 assigneeOf={assigneeOf}
                 serviceId={service.id}
                 clientId={client.id}
+                onOpenCard={setSelectedTaskId}
               />
             );
           })}
@@ -210,6 +215,13 @@ function BoardBody({
           ) : null}
         </DragOverlay>
       </DndContext>
+
+      {selectedTaskId && (
+        <FlizowCardModal
+          taskId={selectedTaskId}
+          onClose={() => setSelectedTaskId(null)}
+        />
+      )}
     </>
   );
 }
@@ -312,6 +324,7 @@ function Column({
   assigneeOf,
   serviceId,
   clientId,
+  onOpenCard,
 }: {
   columnId: ColumnId;
   title: string;
@@ -321,6 +334,7 @@ function Column({
   assigneeOf: (t: Task) => Member | undefined;
   serviceId: string;
   clientId: string;
+  onOpenCard: (taskId: string) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `col:${columnId}` });
   return (
@@ -342,6 +356,7 @@ function Column({
             task={task}
             assignee={assigneeOf(task)}
             todayISO={todayISO}
+            onOpen={onOpenCard}
           />
         ))}
         {columnId === 'todo' && (
@@ -354,7 +369,17 @@ function Column({
 
 // ── Draggable Card ───────────────────────────────────────────────────
 
-function DraggableCard({ task, assignee, todayISO }: { task: Task; assignee: Member | undefined; todayISO: string }) {
+function DraggableCard({
+  task,
+  assignee,
+  todayISO,
+  onOpen,
+}: {
+  task: Task;
+  assignee: Member | undefined;
+  todayISO: string;
+  onOpen: (taskId: string) => void;
+}) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: task.id });
   return (
     <div
@@ -363,7 +388,7 @@ function DraggableCard({ task, assignee, todayISO }: { task: Task; assignee: Mem
       {...listeners}
       style={{ opacity: isDragging ? 0 : 1 }}
     >
-      <CardTile task={task} assignee={assignee} todayISO={todayISO} />
+      <CardTile task={task} assignee={assignee} todayISO={todayISO} onOpen={onOpen} />
     </div>
   );
 }
@@ -373,11 +398,13 @@ function CardTile({
   assignee,
   todayISO,
   dragging,
+  onOpen,
 }: {
   task: Task;
   assignee: Member | undefined;
   todayISO: string;
   dragging?: boolean;
+  onOpen?: (taskId: string) => void;
 }) {
   const due = dueDescriptor(task, todayISO);
   const isDone = task.columnId === 'done';
@@ -391,9 +418,9 @@ function CardTile({
         // Disable navigation while a drag is in motion.
         if (dragging) return;
         e.stopPropagation();
-        // Until the Card Detail modal lands, jump to the client detail so
-        // the user sees the surrounding context.
-        navigate(`#clients/${task.clientId}`);
+        // Open the card detail modal. The DragOverlay instance passes no
+        // onOpen, so this is a no-op there.
+        if (onOpen) onOpen(task.id);
       }}
     >
       <div className="card-top">
