@@ -6015,25 +6015,25 @@
     overflow: hidden;
   }
 
-  /* Today highlight */
+  /* Today highlight — monochrome: uses value contrast + weight, no blue */
   .week-col.is-today {
-    border-color: var(--highlight);
-    box-shadow: 0 0 0 1px var(--highlight), var(--shadow);
+    border-color: color-mix(in srgb, var(--text) 45%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--text) 35%, transparent), var(--shadow);
   }
   .week-col.is-today .week-col-header {
-    background: color-mix(in srgb, var(--highlight) 12%, transparent);
+    background: color-mix(in srgb, var(--text) 6%, transparent);
   }
   .week-col.is-today .week-col-day,
   .week-col.is-today .week-col-date {
-    color: var(--highlight);
-    font-weight: 600;
+    color: var(--text);
+    font-weight: 700;
   }
   .week-col.is-today::before {
     content: "";
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 3px;
-    background: var(--highlight);
+    background: var(--text);
     border-radius: 16px 16px 0 0;
     z-index: 2;
   }
