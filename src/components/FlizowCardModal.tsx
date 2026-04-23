@@ -4,6 +4,7 @@ import type { ColumnId, Priority, Member, TaskComment, TaskActivity } from '../t
 import { flizowStore } from '../store/flizowStore';
 import { BOARD_LABELS, labelById } from '../constants/labels';
 import { ConfirmDangerDialog } from './ConfirmDangerDialog';
+import FlizowShareModal from './FlizowShareModal';
 
 /**
  * FlizowCardModal — the per-card detail overlay on top of the service
@@ -146,10 +147,15 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
   // Flips true for ~1.6s after a successful clipboard write so the
   // label reads "Link copied" instead of snapping back to "Copy link".
   const [copiedLink, setCopiedLink] = useState(false);
+  // Share modal — opens from the title-bar share button. Kept as local
+  // state rather than a store-global so two card modals (one per tab,
+  // later) can share independently.
+  const [shareOpen, setShareOpen] = useState(false);
   useEffect(() => {
     setMoreOpen(false);
     setShowDeleteConfirm(false);
     setCopiedLink(false);
+    setShareOpen(false);
   }, [taskId]);
 
   // ── New-checklist-item input state ────────────────────────────────
@@ -231,9 +237,15 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
             <button
               type="button"
               className="tb-btn"
-              aria-label="Share (coming soon)"
-              title="Share (coming soon)"
-              disabled
+              aria-label="Share card"
+              title="Share card"
+              onClick={(e) => {
+                e.stopPropagation();
+                // Closing the More menu first keeps the titlebar state
+                // consistent — only one overlay pops at a time.
+                setMoreOpen(false);
+                setShareOpen(true);
+              }}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
             </button>
@@ -835,6 +847,13 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
             onClose();
           }}
           onClose={() => setShowDeleteConfirm(false)}
+        />
+      )}
+
+      {shareOpen && task && (
+        <FlizowShareModal
+          taskId={task.id}
+          onClose={() => setShareOpen(false)}
         />
       )}
     </div>
