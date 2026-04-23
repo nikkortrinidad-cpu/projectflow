@@ -8373,6 +8373,51 @@
   }
   .log-suggest-chip:hover { background: var(--bg-soft); color: var(--text); border-color: var(--hairline-strong); }
 
+  /* Attendee picker dropdown — hangs off the chips field in
+     TouchpointModal. Candidates are members + contacts filtered by the
+     query input. Full-width so the role + group badge have room. */
+  .attendee-picker-menu {
+    padding: var(--sp-xs);
+  }
+  .attendee-picker-item {
+    gap: var(--sp-sm);
+  }
+  .attendee-picker-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+  .attendee-picker-role {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    flex-shrink: 0;
+    margin-right: var(--sp-sm);
+  }
+  .attendee-picker-group {
+    font-size: var(--fs-nano);
+    font-weight: 600;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--bg-soft);
+    flex-shrink: 0;
+  }
+  .attendee-picker-item:hover .attendee-picker-role,
+  .attendee-picker-item:hover .attendee-picker-group {
+    color: var(--text-soft);
+  }
+  .attendee-picker-more {
+    padding: 6px 12px;
+    font-size: var(--fs-xs);
+    color: var(--text-faint);
+    font-style: italic;
+  }
+
   .log-actions-list {
     display: flex; flex-direction: column; gap: var(--sp-xs);
   }

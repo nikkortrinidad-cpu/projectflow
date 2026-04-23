@@ -6,6 +6,7 @@ import type { FlizowStore } from '../store/flizowStore';
 import { navigate } from '../router';
 import { formatMonthDay, daysBetween } from '../utils/dateFormat';
 import { ConfirmDangerDialog } from './ConfirmDangerDialog';
+import { TouchpointModal } from './TouchpointModal';
 
 /**
  * Touchpoints tab — the meeting paper trail for a client.
@@ -70,49 +71,18 @@ export function TouchpointsTab({
   }, [clientTps, todayISO]);
   const openActions = clientActions.filter(a => !a.done).length;
 
-  const handleLog = () => {
-    const topic = window.prompt('What was the meeting about?');
-    if (!topic?.trim()) return;
-    const id = `${client.id}-tp-${Date.now().toString(36)}`;
-    const now = new Date().toISOString();
-    store.addTouchpoint({
-      id,
-      clientId: client.id,
-      topic: topic.trim(),
-      occurredAt: now,
-      kind: 'meeting',
-      scheduled: false,
-      attendeeIds: client.amId ? [client.amId] : [],
-      tldr: '',
-      tldrLocked: false,
-      createdAt: now,
-    });
-  };
+  // Modal state:
+  //   - `newScheduled` is a boolean: the modal is open for a new meeting,
+  //     `true` means schedule flow (defaults to a future date), `false`
+  //     means log flow (defaults to now). null = modal closed.
+  //   - `editingTouchpointId` is the id of a touchpoint being edited;
+  //     non-null opens the modal in edit mode. null = not editing.
+  // One modal component handles all three flows — see TouchpointModal.
+  const [newScheduled, setNewScheduled] = useState<boolean | null>(null);
+  const [editingTouchpointId, setEditingTouchpointId] = useState<string | null>(null);
 
-  const handleSchedule = () => {
-    const topic = window.prompt('Topic for the upcoming meeting?');
-    if (!topic?.trim()) return;
-    const when = window.prompt('When? (YYYY-MM-DD HH:MM, 24h)', defaultWhen(todayISO));
-    if (!when) return;
-    const iso = parseWhen(when);
-    if (!iso) {
-      window.alert("Sorry, I couldn't read that date. Use YYYY-MM-DD HH:MM.");
-      return;
-    }
-    const id = `${client.id}-tp-sched-${Date.now().toString(36)}`;
-    store.addTouchpoint({
-      id,
-      clientId: client.id,
-      topic: topic.trim(),
-      occurredAt: iso,
-      kind: 'meeting',
-      scheduled: true,
-      attendeeIds: client.amId ? [client.amId] : [],
-      tldr: '',
-      calendarUrl: 'https://calendar.google.com/calendar',
-      createdAt: new Date().toISOString(),
-    });
-  };
+  const handleLog = () => setNewScheduled(false);
+  const handleSchedule = () => setNewScheduled(true);
 
   return (
     <div className="detail-section" data-tab="touchpoints">
@@ -175,18 +145,43 @@ export function TouchpointsTab({
                 clientServices={clientServices}
                 store={store}
                 todayISO={todayISO}
+                onEdit={() => setEditingTouchpointId(tp.id)}
               />
             ))}
           </div>
         )}
       </div>
+
+      {newScheduled !== null && (
+        <TouchpointModal
+          client={client}
+          defaultScheduled={newScheduled}
+          members={members}
+          contacts={contacts}
+          onClose={() => setNewScheduled(null)}
+        />
+      )}
+
+      {editingTouchpointId && (() => {
+        const tp = clientTps.find(t => t.id === editingTouchpointId);
+        if (!tp) return null;
+        return (
+          <TouchpointModal
+            client={client}
+            touchpoint={tp}
+            members={members}
+            contacts={contacts}
+            onClose={() => setEditingTouchpointId(null)}
+          />
+        );
+      })()}
     </div>
   );
 }
 
 // ── Meeting entry ─────────────────────────────────────────────────────────
 
-function MeetingEntry({ touchpoint, actions, members, contacts, clientServices, store, todayISO }: {
+function MeetingEntry({ touchpoint, actions, members, contacts, clientServices, store, todayISO, onEdit }: {
   touchpoint: Touchpoint;
   actions: ActionItem[];
   members: Member[];
@@ -194,6 +189,7 @@ function MeetingEntry({ touchpoint, actions, members, contacts, clientServices, 
   clientServices: Service[];
   store: FlizowStore;
   todayISO: string;
+  onEdit: () => void;
 }) {
   const attendees = useMemo(
     () => touchpoint.attendeeIds
@@ -331,11 +327,38 @@ function MeetingEntry({ touchpoint, actions, members, contacts, clientServices, 
           </button>
           <div className={`tb-menu${menuOpen ? ' open' : ''}`} role="menu">
             <div
+              className="tb-menu-item"
+              role="menuitem"
+              tabIndex={0}
+              onClick={() => {
+                setMenuOpen(false);
+                onEdit();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setMenuOpen(false);
+                  onEdit();
+                }
+              }}
+            >
+              Edit meeting…
+            </div>
+            <div className="tb-menu-divider" />
+            <div
               className="tb-menu-item danger"
               role="menuitem"
+              tabIndex={0}
               onClick={() => {
                 setMenuOpen(false);
                 setShowDeleteConfirm(true);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setMenuOpen(false);
+                  setShowDeleteConfirm(true);
+                }
               }}
             >
               Delete meeting…
@@ -844,24 +867,6 @@ function buildActionsLabel(open: number, done: number, overdue: number): string 
   return parts.join(' · ');
 }
 
-function defaultWhen(todayISO: string): string {
-  // Default the schedule prompt to tomorrow at 10:00 — the most
-  // conservative "I need a default, not a decision" pick.
-  const d = new Date(todayISO);
-  d.setDate(d.getDate() + 1);
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd} 10:00`;
-}
-
-function parseWhen(input: string): string | null {
-  const m = input.trim().match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{1,2}):(\d{2})$/);
-  if (!m) return null;
-  const [, y, mo, d, h, mi] = m;
-  const date = new Date(
-    Number(y), Number(mo) - 1, Number(d), Number(h), Number(mi), 0, 0,
-  );
-  if (isNaN(date.getTime())) return null;
-  return date.toISOString();
-}
+// The old defaultWhen/parseWhen helpers were retired when the
+// window.prompt flows moved into TouchpointModal. The new modal uses a
+// datetime-local picker so there's no free-form string to parse.
