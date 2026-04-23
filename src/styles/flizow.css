@@ -9392,6 +9392,41 @@
     cursor: default;
   }
 
+  /* Reorder nudges. Paired in the top-left so they share a spot with
+     the "move this thing around" intent. Hidden outside edit mode and
+     end-of-strip spacers keep the row height stable when only one
+     direction is available. */
+  .service-reorder-wrap {
+    position: absolute;
+    top: -6px; left: -6px;
+    display: none;
+    gap: 4px;
+    z-index: 2;
+  }
+  .service-reorder-btn,
+  .service-reorder-spacer {
+    width: 22px; height: 22px;
+  }
+  .service-reorder-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    color: var(--text-soft);
+    cursor: pointer;
+    padding: 0;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    transition: background 0.12s ease, color 0.12s ease, transform 0.12s ease;
+  }
+  .service-reorder-btn svg { width: 12px; height: 12px; }
+  .service-reorder-btn:hover {
+    background: var(--highlight);
+    color: #fff;
+    border-color: var(--highlight);
+    transform: scale(1.08);
+  }
+  [data-services-list][data-edit="true"] .service-reorder-wrap { display: inline-flex; }
+
   /* Notes — Apple Notes-style 2-pane */
   .notes-section .detail-section-header { align-items: center; gap: var(--sp-base); }
   .notes-new-btn {

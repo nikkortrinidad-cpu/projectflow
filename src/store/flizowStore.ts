@@ -403,6 +403,32 @@ class FlizowStore {
     this.save();
   }
 
+  /**
+   * Move a service one step up or down within its client's serviceIds
+   * list. The list is the documented source of truth for display order
+   * (see Client.serviceIds in types/flizow). A bounded nudge is easier
+   * to reason about than full drag-drop for a strip of 3–6 services —
+   * and a lot harder to get wrong with a slip of the mouse.
+   *
+   * No-op when the service is already at the edge in the requested
+   * direction, so the caller can wire ↑/↓ buttons without needing to
+   * check bounds itself.
+   */
+  reorderService(serviceId: string, direction: 'up' | 'down') {
+    const svc = this.data.services.find(s => s.id === serviceId);
+    if (!svc) return;
+    const client = this.data.clients.find(c => c.id === svc.clientId);
+    if (!client) return;
+    const ids = client.serviceIds.slice();
+    const i = ids.indexOf(serviceId);
+    if (i === -1) return;
+    const j = direction === 'up' ? i - 1 : i + 1;
+    if (j < 0 || j >= ids.length) return;
+    [ids[i], ids[j]] = [ids[j], ids[i]];
+    client.serviceIds = ids;
+    this.save();
+  }
+
   // ── Activity log helper ─────────────────────────────────────────────
   //
   // Called from every task-level mutation. The entry's `text` is the

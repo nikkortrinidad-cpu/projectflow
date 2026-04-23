@@ -99,10 +99,21 @@ function ClientDetail({ client, data, store }: DetailProps) {
   }, [client.id]);
 
   const am = client.amId ? data.members.find(m => m.id === client.amId) ?? null : null;
-  const services = useMemo(
-    () => data.services.filter(s => s.clientId === client.id),
-    [data.services, client.id],
-  );
+  // Client.serviceIds is the documented source of truth for display order.
+  // Sorting by its position lets reorderService nudge a service without
+  // touching the global services array. Defensive fallback: anything that
+  // exists under this client but isn't listed in serviceIds drops to the
+  // end of the strip rather than disappearing.
+  const services = useMemo(() => {
+    const owned = data.services.filter(s => s.clientId === client.id);
+    const order = client.serviceIds;
+    const indexOf = new Map(order.map((id, i) => [id, i]));
+    return owned.slice().sort((a, b) => {
+      const ai = indexOf.has(a.id) ? (indexOf.get(a.id) as number) : Infinity;
+      const bi = indexOf.has(b.id) ? (indexOf.get(b.id) as number) : Infinity;
+      return ai - bi;
+    });
+  }, [data.services, client.id, client.serviceIds]);
   const openTasks = useMemo(
     () => data.tasks.filter(t => t.clientId === client.id && t.columnId !== 'done'),
     [data.tasks, client.id],
@@ -130,6 +141,8 @@ function ClientDetail({ client, data, store }: DetailProps) {
             editing={servicesEditMode}
             onToggleEdit={() => setServicesEditMode(v => !v)}
             onDelete={(id) => setDeleteServiceId(id)}
+            onMoveUp={(id) => store.reorderService(id, 'up')}
+            onMoveDown={(id) => store.reorderService(id, 'down')}
           />
           <ActivitySection client={client} tasks={data.tasks} members={data.members} todayISO={data.today} />
         </>
@@ -696,12 +709,14 @@ function buildAttentionChips(
 
 // ── Overview · Active Services ────────────────────────────────────────────
 
-function ServicesSection({ services, onAdd, editing, onToggleEdit, onDelete }: {
+function ServicesSection({ services, onAdd, editing, onToggleEdit, onDelete, onMoveUp, onMoveDown }: {
   services: Service[];
   onAdd: () => void;
   editing: boolean;
   onToggleEdit: () => void;
   onDelete: (id: string) => void;
+  onMoveUp: (id: string) => void;
+  onMoveDown: (id: string) => void;
 }) {
   if (services.length === 0) {
     // Empty state: the "Add a service" hint becomes the CTA itself. A button
@@ -781,12 +796,14 @@ function ServicesSection({ services, onAdd, editing, onToggleEdit, onDelete }: {
         </div>
       </div>
       <div className="services-list" data-services-list data-edit={editing ? 'true' : 'false'}>
-        {services.map(s => (
+        {services.map((s, i) => (
           <ServiceCard
             key={s.id}
             service={s}
             editing={editing}
             onRemove={editing ? () => onDelete(s.id) : undefined}
+            onMoveUp={editing && i > 0 ? () => onMoveUp(s.id) : undefined}
+            onMoveDown={editing && i < services.length - 1 ? () => onMoveDown(s.id) : undefined}
           />
         ))}
       </div>
@@ -794,10 +811,15 @@ function ServicesSection({ services, onAdd, editing, onToggleEdit, onDelete }: {
   );
 }
 
-function ServiceCard({ service, editing, onRemove }: {
+function ServiceCard({ service, editing, onRemove, onMoveUp, onMoveDown }: {
   service: Service;
   editing?: boolean;
   onRemove?: () => void;
+  /** Undefined when the card is already at the top — lets this component
+   *  stay dumb about bounds. */
+  onMoveUp?: () => void;
+  /** Undefined when the card is already at the bottom. */
+  onMoveDown?: () => void;
 }) {
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     // In edit mode the card is a management surface, not a link — clicks
@@ -828,6 +850,45 @@ function ServiceCard({ service, editing, onRemove }: {
       onClick={handleClick}
       onKeyDown={handleKey}
     >
+      {editing && (onMoveUp || onMoveDown) && (
+        // Reorder nudges sit in the top-left — paired so they share one
+        // mental spot ("move this around") without crowding the × button
+        // in the top-right. Disabled-looking buttons at the ends of the
+        // strip are hidden outright (handler undefined) rather than
+        // rendered disabled, keeping the edit UI less noisy.
+        <div className="service-reorder-wrap">
+          {onMoveUp ? (
+            <button
+              type="button"
+              className="service-reorder-btn"
+              aria-label={`Move ${service.name} up`}
+              title="Move up"
+              onClick={(e) => { e.stopPropagation(); onMoveUp(); }}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polyline points="18 15 12 9 6 15" />
+              </svg>
+            </button>
+          ) : (
+            <span className="service-reorder-spacer" aria-hidden="true" />
+          )}
+          {onMoveDown ? (
+            <button
+              type="button"
+              className="service-reorder-btn"
+              aria-label={`Move ${service.name} down`}
+              title="Move down"
+              onClick={(e) => { e.stopPropagation(); onMoveDown(); }}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+          ) : (
+            <span className="service-reorder-spacer" aria-hidden="true" />
+          )}
+        </div>
+      )}
       {editing && onRemove && (
         <button
           type="button"
