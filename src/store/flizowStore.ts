@@ -2,7 +2,7 @@ import { doc, setDoc, onSnapshot, type Unsubscribe } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import type {
   FlizowData, Client, Service, Task, Member, Contact, QuickLink, Note,
-  Touchpoint, ActionItem,
+  Touchpoint, ActionItem, TaskComment,
   ColumnId, Priority,
 } from '../types/flizow';
 
@@ -42,6 +42,7 @@ function emptyData(): FlizowData {
     notes: [],
     touchpoints: [],
     actionItems: [],
+    taskComments: [],
     today: todayISO(),
     scheduleTaskMap: {},
   };
@@ -89,6 +90,7 @@ function migrate(parsed: Partial<FlizowData>): FlizowData {
     notes: parsed.notes ?? base.notes,
     touchpoints: parsed.touchpoints ?? base.touchpoints,
     actionItems: parsed.actionItems ?? base.actionItems,
+    taskComments: parsed.taskComments ?? base.taskComments,
     // `today` always refreshes on load — we never trust a stale anchor.
     today: todayISO(),
     scheduleTaskMap: parsed.scheduleTaskMap ?? base.scheduleTaskMap,
@@ -260,6 +262,11 @@ class FlizowStore {
     // stays consistent. No soft-delete yet — add when the UI does.
     const services = this.data.services.filter(s => s.clientId === id);
     const serviceIds = new Set(services.map(s => s.id));
+    // Snapshot task ids BEFORE we filter the task list — we need them to
+    // cascade the comments.
+    const taskIds = new Set(
+      this.data.tasks.filter(t => serviceIds.has(t.serviceId)).map(t => t.id),
+    );
     this.data.clients = this.data.clients.filter(c => c.id !== id);
     this.data.services = this.data.services.filter(s => !serviceIds.has(s.id));
     this.data.tasks = this.data.tasks.filter(t => !serviceIds.has(t.serviceId));
@@ -272,6 +279,7 @@ class FlizowStore {
     this.data.notes = this.data.notes.filter(n => n.clientId !== id);
     this.data.touchpoints = this.data.touchpoints.filter(t => t.clientId !== id);
     this.data.actionItems = this.data.actionItems.filter(a => a.clientId !== id);
+    this.data.taskComments = this.data.taskComments.filter(c => !taskIds.has(c.taskId));
     this.save();
   }
 
@@ -296,9 +304,13 @@ class FlizowStore {
   deleteService(id: string) {
     const svc = this.data.services.find(s => s.id === id);
     if (!svc) return;
+    const taskIds = new Set(
+      this.data.tasks.filter(t => t.serviceId === id).map(t => t.id),
+    );
     this.data.services = this.data.services.filter(s => s.id !== id);
     this.data.tasks = this.data.tasks.filter(t => t.serviceId !== id);
     this.data.onboardingItems = this.data.onboardingItems.filter(o => o.serviceId !== id);
+    this.data.taskComments = this.data.taskComments.filter(c => !taskIds.has(c.taskId));
     const client = this.data.clients.find(c => c.id === svc.clientId);
     if (client) {
       client.serviceIds = client.serviceIds.filter(sid => sid !== id);
@@ -339,6 +351,8 @@ class FlizowStore {
     const t = this.data.tasks.find(t => t.id === id);
     if (!t) return;
     this.data.tasks = this.data.tasks.filter(t => t.id !== id);
+    // Drop every comment + reply hanging off this card.
+    this.data.taskComments = this.data.taskComments.filter(c => c.taskId !== id);
     const service = this.data.services.find(s => s.id === t.serviceId);
     if (service) {
       service.taskIds = service.taskIds.filter(tid => tid !== id);
@@ -390,6 +404,74 @@ class FlizowStore {
     const t = this.data.tasks.find(t => t.id === taskId);
     if (!t || !t.checklist) return;
     t.checklist = t.checklist.filter(i => i.id !== itemId);
+    this.save();
+  }
+
+  // ── Task comments ───────────────────────────────────────────────────
+  //
+  // Flat storage — every comment on every task lives in
+  // `data.taskComments`. The modal filters by taskId at read time. One
+  // level of threading: `parentId` points at the top-level comment a
+  // reply is attached to. Top-level comments omit parentId.
+  //
+  // authorId is always the signed-in user for now. Later, when we add
+  // @mentions or bot-posted activity, we'll widen this to accept any
+  // Member id.
+
+  /** Post a new comment or reply. Returns the generated id so the caller
+   *  can focus the new entry or navigate to its anchor. */
+  addComment(
+    taskId: string,
+    text: string,
+    parentId: string | null = null,
+  ): string | null {
+    const trimmed = text.trim();
+    if (!trimmed) return null;
+    const task = this.data.tasks.find(t => t.id === taskId);
+    if (!task) return null;
+    // Authorship falls back to a synthetic "you" id if no user is signed
+    // in — the seed demo data uses the same fallback so the UI renders
+    // consistently out of the box.
+    const authorId = this.userId ?? 'user-1';
+    const id = `cm-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+    const comment: TaskComment = {
+      id,
+      taskId,
+      authorId,
+      text: trimmed,
+      createdAt: new Date().toISOString(),
+      parentId: parentId || undefined,
+    };
+    this.data.taskComments.push(comment);
+    this.save();
+    return id;
+  }
+
+  /** Rewrite a comment's body. Bumps `updatedAt` so the UI can show an
+   *  "Edited" hint. No-ops if the id is stale. */
+  updateComment(id: string, text: string) {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    const c = this.data.taskComments.find(c => c.id === id);
+    if (!c) return;
+    if (c.text === trimmed) return; // no-op guard keeps `updatedAt` honest
+    c.text = trimmed;
+    c.updatedAt = new Date().toISOString();
+    this.save();
+  }
+
+  /** Delete a comment. If the comment is a top-level entry, its replies
+   *  are deleted too — an orphaned reply with no parent has nowhere to
+   *  render. */
+  deleteComment(id: string) {
+    const c = this.data.taskComments.find(c => c.id === id);
+    if (!c) return;
+    const isTopLevel = !c.parentId;
+    this.data.taskComments = this.data.taskComments.filter((other) => {
+      if (other.id === id) return false;
+      if (isTopLevel && other.parentId === id) return false;
+      return true;
+    });
     this.save();
   }
 

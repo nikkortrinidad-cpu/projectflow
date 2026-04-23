@@ -1,6 +1,6 @@
 import type {
   FlizowData, Client, Service, Task, Integration, OnboardingItem,
-  Contact, QuickLink, Note, Touchpoint, ActionItem,
+  Contact, QuickLink, Note, Touchpoint, ActionItem, TaskComment,
   ColumnId, Priority, IndustryCategory, TemplateKey,
   ServiceType, TaskSeverity, ScheduleMeta,
 } from '../types/flizow';
@@ -778,6 +778,7 @@ export function generateDemoData(): FlizowData {
   const notes: Note[] = [];
   const touchpoints: Touchpoint[] = [];
   const actionItems: ActionItem[] = [];
+  const taskComments: TaskComment[] = [];
 
   const members = [...DEMO_AMS, ...OPS_TEAM];
   const operatorIds = OPS_TEAM.map(m => m.id);
@@ -1045,6 +1046,46 @@ export function generateDemoData(): FlizowData {
         ]),
       }),
     );
+
+    // Demo comments on a handful of Acme tasks so anyone loading the
+    // seed sees the threaded conversation UI populated out of the box.
+    // `isoAt` builds a stable ISO timestamp N days before `today` at a
+    // plausible hour — we anchor to `today` so comment order stays
+    // consistent with the rest of the dataset.
+    const isoAt = (daysAgo: number, hour: number, minute = 0) => {
+      const d = new Date(today);
+      d.setDate(d.getDate() - daysAgo);
+      d.setHours(hour, minute, 0, 0);
+      return d.toISOString();
+    };
+    const mkComment = (
+      id: string, taskId: string, authorId: string, text: string,
+      daysAgo: number, hour: number, parentId: string | null = null,
+    ): TaskComment => ({
+      id, taskId, authorId, text,
+      createdAt: isoAt(daysAgo, hour),
+      ...(parentId ? { parentId } : {}),
+    });
+
+    taskComments.push(
+      // Homepage visual design — in review, a small back-and-forth.
+      mkComment('acme-cmt-ms3-1', `${msId}-t3`, 'hs',
+        'Round 2 is uploaded — focused on the hero and the "what we do" strip. Curious what you think about the gradient direction.', 2, 9),
+      mkComment('acme-cmt-ms3-2', `${msId}-t3`, 'nt',
+        'Loving the hero. The gradient reads a touch too pink on the lower half — can we pull it back toward the brand indigo?', 2, 11, 'acme-cmt-ms3-1'),
+      mkComment('acme-cmt-ms3-3', `${msId}-t3`, 'hs',
+        'Good call. I\'ll push an updated version by EOD with the indigo shift.', 1, 14, 'acme-cmt-ms3-1'),
+      mkComment('acme-cmt-ms3-4', `${msId}-t3`, 'cc',
+        'Also flagging: tag verification plan is going to need the final page slugs from this round before I can map events.', 1, 16),
+
+      // Component library build — in progress, one-off status comment.
+      mkComment('acme-cmt-ms3-5', `${msId}-t4`, 'hs',
+        'Tokens + button variants are done. Starting on form inputs + modals next.', 0, 10),
+
+      // Brand Refresh — moodboard review.
+      mkComment('acme-cmt-br-1', `${brId}-t2`, 'nt',
+        'Moodboard round 1 is solid. Direction B feels the most aligned with the leadership interviews — want to push that one further?', 1, 13),
+    );
   }
 
   return {
@@ -1059,6 +1100,7 @@ export function generateDemoData(): FlizowData {
     notes,
     touchpoints,
     actionItems,
+    taskComments,
     today: todayStr,
     scheduleTaskMap,
   };

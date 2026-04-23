@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFlizow } from '../store/useFlizow';
-import type { ColumnId, Priority, Member } from '../types/flizow';
+import type { ColumnId, Priority, Member, TaskComment } from '../types/flizow';
+import { flizowStore } from '../store/flizowStore';
 import { BOARD_LABELS, labelById } from '../constants/labels';
 
 /**
@@ -691,13 +692,9 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
               role="tabpanel"
               hidden={tab !== 'comments'}
             >
-              <EmptyTab
-                icon={(
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                )}
-                title="No comments yet"
-                body="Threaded comments and @mentions are coming in the next pass."
-              />
+              {task ? (
+                <CommentsPanel taskId={task.id} members={data.members} comments={data.taskComments} />
+              ) : null}
             </div>
 
             <div
@@ -1017,4 +1014,428 @@ function LabelPicker({
       </div>
     </div>
   );
+}
+
+/* ── Comments panel ──────────────────────────────────────────────────
+ *
+ * Right-sidebar tab content. Top-level comments render in chronological
+ * order (oldest first, which reads like a conversation). Each comment
+ * shows a collapsed "N replies" toggle; opening it reveals the thread +
+ * an inline reply composer. The bottom of the panel hosts the top-level
+ * composer — a plain <textarea> with ⌘/Ctrl+Enter to send.
+ *
+ * Not in this first pass:
+ *   - @mentions (needs a picker + token rendering in the stored text)
+ *   - Reactions (needs a picker + optimistic count render)
+ *   - Editing own comments (toggle to textarea, save via updateComment)
+ *   - Rich formatting (bold / italic / code)
+ *   - Attachments
+ * All of those are additive later; the shapes + mutators already support
+ * them without a migration.
+ */
+function CommentsPanel({
+  taskId,
+  members,
+  comments,
+}: {
+  taskId: string;
+  members: Member[];
+  comments: TaskComment[];
+}) {
+  const selfId = flizowStore.getCurrentMemberId();
+
+  // Bucket into top-level + per-parent replies in one pass. We keep the
+  // same chronological order the array already has so re-renders don't
+  // jump things around.
+  const { tops, repliesByParent } = useMemo(() => {
+    const tops: TaskComment[] = [];
+    const repliesByParent = new Map<string, TaskComment[]>();
+    for (const c of comments) {
+      if (c.taskId !== taskId) continue;
+      if (c.parentId) {
+        const bucket = repliesByParent.get(c.parentId);
+        if (bucket) bucket.push(c);
+        else repliesByParent.set(c.parentId, [c]);
+      } else {
+        tops.push(c);
+      }
+    }
+    tops.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    for (const list of repliesByParent.values()) {
+      list.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    }
+    return { tops, repliesByParent };
+  }, [comments, taskId]);
+
+  // Which top-level threads are expanded. We default to collapsed —
+  // the mockup shows a "Show N replies" chevron until the user clicks.
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
+  // Which top-level comment has the inline reply composer open. Only
+  // one at a time; opening a second replaces the first so the panel
+  // doesn't turn into a wall of textareas.
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+
+  // Reset UI state whenever the modal switches to a different card.
+  useEffect(() => {
+    setExpanded(new Set());
+    setReplyingTo(null);
+  }, [taskId]);
+
+  function toggleExpanded(id: string) {
+    setExpanded(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function membersById(id: string): Member | null {
+    return members.find(m => m.id === id) ?? null;
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div style={{ flex: 1, overflow: 'auto', padding: '16px 16px 8px' }}>
+        {tops.length === 0 ? (
+          <div style={{
+            padding: '24px 8px',
+            textAlign: 'center',
+            color: 'var(--text-faint)',
+            fontSize: 13,
+            lineHeight: 1.5,
+          }}>
+            No comments yet. Start the conversation below.
+          </div>
+        ) : (
+          tops.map(c => {
+            const replies = repliesByParent.get(c.id) ?? [];
+            const isOpen = expanded.has(c.id);
+            const isReplying = replyingTo === c.id;
+            return (
+              <CommentItem
+                key={c.id}
+                comment={c}
+                author={membersById(c.authorId)}
+                selfId={selfId}
+                replies={replies}
+                repliesOpen={isOpen}
+                onToggleReplies={() => toggleExpanded(c.id)}
+                isReplying={isReplying}
+                onStartReply={() => {
+                  // Opening a reply composer also expands the thread so the
+                  // user can see siblings while typing.
+                  setExpanded(prev => {
+                    const next = new Set(prev);
+                    next.add(c.id);
+                    return next;
+                  });
+                  setReplyingTo(c.id);
+                }}
+                onCancelReply={() => setReplyingTo(null)}
+                onSendReply={(text) => {
+                  flizowStore.addComment(taskId, text, c.id);
+                  setReplyingTo(null);
+                }}
+                membersById={membersById}
+              />
+            );
+          })
+        )}
+      </div>
+      <TopLevelComposer
+        onSend={(text) => { flizowStore.addComment(taskId, text); }}
+      />
+    </div>
+  );
+}
+
+/** A single top-level comment + its optional reply thread. */
+function CommentItem({
+  comment,
+  author,
+  selfId,
+  replies,
+  repliesOpen,
+  onToggleReplies,
+  isReplying,
+  onStartReply,
+  onCancelReply,
+  onSendReply,
+  membersById,
+}: {
+  comment: TaskComment;
+  author: Member | null;
+  selfId: string | null;
+  replies: TaskComment[];
+  repliesOpen: boolean;
+  onToggleReplies: () => void;
+  isReplying: boolean;
+  onStartReply: () => void;
+  onCancelReply: () => void;
+  onSendReply: (text: string) => void;
+  membersById: (id: string) => Member | null;
+}) {
+  const isOwn = !!selfId && selfId === comment.authorId;
+  const showRepliesToggle = replies.length > 0;
+
+  function onDelete() {
+    if (!confirm('Delete this comment? Any replies will be removed too.')) return;
+    flizowStore.deleteComment(comment.id);
+  }
+
+  return (
+    <div className="comment">
+      <Avatar member={author} />
+      <div className="comment-body">
+        {/* Bridge line — rendered when replies are open so the CSS vertical
+            spine connects parent → child. The `:has(> .replies.open)`
+            selector in flizow.css does the reveal; we always include the
+            div so the selector has something to toggle. */}
+        <div className="bridge-line" />
+        <div className={`comment-bubble${isOwn ? ' you' : ''}`}>
+          <div className="comment-author">
+            {author?.name ?? 'Deleted user'}
+            {isOwn && <span className="you-badge">You</span>}
+          </div>
+          <div className="comment-text">{comment.text}</div>
+        </div>
+        <div className="comment-meta">
+          <span>{formatCommentTime(comment.createdAt)}</span>
+          {comment.updatedAt && <span>· Edited</span>}
+          <button type="button" className="reply-btn" onClick={onStartReply}>Reply</button>
+          {isOwn && (
+            <button type="button" className="reply-btn" onClick={onDelete}>Delete</button>
+          )}
+        </div>
+
+        {showRepliesToggle && (
+          <button
+            type="button"
+            className={`replies-toggle${repliesOpen ? ' expanded' : ''}`}
+            onClick={onToggleReplies}
+            aria-expanded={repliesOpen}
+          >
+            <svg className="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+            {repliesOpen ? `Hide ${replies.length} ${replies.length === 1 ? 'reply' : 'replies'}` : `Show ${replies.length} ${replies.length === 1 ? 'reply' : 'replies'}`}
+          </button>
+        )}
+
+        {(repliesOpen || isReplying) && (
+          <div className={`replies${repliesOpen || isReplying ? ' open' : ''}`} data-reply-count={replies.length}>
+            {repliesOpen && replies.map(r => (
+              <ReplyItem
+                key={r.id}
+                comment={r}
+                author={membersById(r.authorId)}
+                selfId={selfId}
+              />
+            ))}
+            {isReplying && (
+              <ReplyComposer
+                onCancel={onCancelReply}
+                onSend={onSendReply}
+              />
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** A single reply row inside an expanded thread. No nested replies. */
+function ReplyItem({
+  comment,
+  author,
+  selfId,
+}: {
+  comment: TaskComment;
+  author: Member | null;
+  selfId: string | null;
+}) {
+  const isOwn = !!selfId && selfId === comment.authorId;
+  function onDelete() {
+    if (!confirm('Delete this reply?')) return;
+    flizowStore.deleteComment(comment.id);
+  }
+  return (
+    <div className="comment">
+      <Avatar member={author} />
+      <div className="comment-body">
+        <div className={`comment-bubble${isOwn ? ' you' : ''}`}>
+          <div className="comment-author">
+            {author?.name ?? 'Deleted user'}
+            {isOwn && <span className="you-badge">You</span>}
+          </div>
+          <div className="comment-text">{comment.text}</div>
+        </div>
+        <div className="comment-meta">
+          <span>{formatCommentTime(comment.createdAt)}</span>
+          {comment.updatedAt && <span>· Edited</span>}
+          {isOwn && (
+            <button type="button" className="reply-btn" onClick={onDelete}>Delete</button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** The bottom-of-panel textarea for posting a new top-level comment.
+ *  Uses a plain `<textarea>` (not contenteditable) for the first pass —
+ *  we'll trade up to a rich editor once the surrounding flows are stable. */
+function TopLevelComposer({ onSend }: { onSend: (text: string) => void }) {
+  const [value, setValue] = useState('');
+  const canSend = value.trim().length > 0;
+  function send() {
+    if (!canSend) return;
+    onSend(value);
+    setValue('');
+  }
+  function onKey(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    // Cmd/Ctrl+Enter sends. Plain Enter still makes a newline so users
+    // can write multi-paragraph comments without fighting the keybind.
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      e.preventDefault();
+      send();
+    }
+  }
+  return (
+    <div className="comment-input-wrap" style={{ borderTop: '1px solid var(--hairline)' }}>
+      <div className="comment-input-area">
+        <textarea
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={onKey}
+          placeholder="Write a comment…  (⌘/Ctrl+Enter to send)"
+          rows={3}
+          aria-label="Write a comment"
+        />
+        <div className="comment-toolbar" style={{ justifyContent: 'flex-end' }}>
+          <button
+            type="button"
+            className="reply-send"
+            disabled={!canSend}
+            onClick={send}
+          >
+            Send
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Inline reply composer — slimmer than the top-level one. Esc cancels,
+ *  Enter sends (Shift+Enter inserts a newline) to match the mockup's hint. */
+function ReplyComposer({
+  onCancel,
+  onSend,
+}: {
+  onCancel: () => void;
+  onSend: (text: string) => void;
+}) {
+  const [value, setValue] = useState('');
+  const ref = useRef<HTMLTextAreaElement | null>(null);
+  const canSend = value.trim().length > 0;
+
+  useEffect(() => {
+    ref.current?.focus();
+  }, []);
+
+  function send() {
+    if (!canSend) return;
+    onSend(value);
+    setValue('');
+  }
+
+  function onKey(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      onCancel();
+    }
+  }
+
+  return (
+    <div className="reply-composer">
+      <textarea
+        ref={ref}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={onKey}
+        placeholder="Write a reply…"
+        rows={2}
+        aria-label="Write a reply"
+      />
+      <div className="reply-composer-actions">
+        <span className="reply-hint">Enter to send · Shift+Enter for newline</span>
+        <button type="button" className="reply-cancel" onClick={onCancel}>Cancel</button>
+        <button type="button" className="reply-send" disabled={!canSend} onClick={send}>Send</button>
+      </div>
+    </div>
+  );
+}
+
+/** Circular avatar matching the mockup's `.comment-avatar`. Shows member
+ *  initials with the same colour scheme used on the card footer; falls
+ *  back to a neutral "?" tile when the author has been removed. */
+function Avatar({ member }: { member: Member | null }) {
+  if (!member) {
+    return (
+      <div
+        className="comment-avatar"
+        style={{ background: 'var(--bg-faint)', color: 'var(--text-faint)' }}
+        aria-hidden
+      >
+        ?
+      </div>
+    );
+  }
+  const isOperator = member.type === 'operator';
+  return (
+    <div
+      className="comment-avatar"
+      style={{
+        background: isOperator ? (member.bg ?? 'var(--bg-faint)') : member.color,
+        color: isOperator ? member.color : '#fff',
+      }}
+      title={member.name}
+      aria-label={member.name}
+    >
+      {member.initials}
+    </div>
+  );
+}
+
+/** Short, human-friendly timestamp for comment meta rows.
+ *    0–59 sec → "just now"
+ *    1–59 min → "12m"
+ *    1–23 hr  → "3h"
+ *    <7 days  → "Mon 2:15pm"
+ *    older    → "Mar 4, 2:15pm" */
+function formatCommentTime(iso: string): string {
+  const t = new Date(iso).getTime();
+  if (!Number.isFinite(t)) return '';
+  const now = Date.now();
+  const diffSec = Math.round((now - t) / 1000);
+  if (diffSec < 60) return 'just now';
+  const diffMin = Math.round(diffSec / 60);
+  if (diffMin < 60) return `${diffMin}m`;
+  const diffHr = Math.round(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h`;
+  const d = new Date(iso);
+  const diffDays = Math.round((now - t) / 86_400_000);
+  const timePart = d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }).toLowerCase();
+  if (diffDays < 7) {
+    const day = d.toLocaleDateString(undefined, { weekday: 'short' });
+    return `${day} ${timePart}`;
+  }
+  const datePart = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return `${datePart}, ${timePart}`;
 }

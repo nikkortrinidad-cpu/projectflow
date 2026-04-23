@@ -233,6 +233,36 @@ export interface Integration {
   status: IntegrationStatus;
 }
 
+// ── Task comments ────────────────────────────────────────────────────────
+
+/**
+ * A comment posted on a task's Card Detail modal. One level of threading
+ * (top-level → reply) — matches the mockup; deeper nesting is a separate
+ * pass when we need it.
+ *
+ * `authorId` is a Member id. When the member is later removed we leave
+ * the comment in place and render a generic "Deleted user" fallback so
+ * the conversation still reads.
+ *
+ * `parentId` is the comment id the reply hangs under, or null/undefined
+ * for a top-level post. We index by `taskId` first at read time and then
+ * bucket by `parentId` — no tree structure stored on disk.
+ */
+export interface TaskComment {
+  id: string;
+  taskId: string;
+  authorId: string;
+  /** Plain text. Rich text / @mentions are a follow-up pass. */
+  text: string;
+  /** ISO timestamp. */
+  createdAt: string;
+  /** ISO timestamp, only set if the comment was edited after posting.
+   *  We show "Edited" in the meta row when this is present. */
+  updatedAt?: string;
+  /** Comment id the reply hangs under. Null/undefined = top-level. */
+  parentId?: string | null;
+}
+
 // ── Notifications ────────────────────────────────────────────────────────
 
 export type NotificationType =
@@ -462,6 +492,10 @@ export interface FlizowData {
   notes: Note[];
   touchpoints: Touchpoint[];
   actionItems: ActionItem[];
+  /** Flat list of every comment on every task. We bucket by taskId at
+   *  read time rather than nesting under Task so a single
+   *  update-comment call is a simple array patch. */
+  taskComments: TaskComment[];
   /** The "today" reference the mockup uses for all date math. A single
    *  anchor keeps the UI stable across re-renders. */
   today: string;
