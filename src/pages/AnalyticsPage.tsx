@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { navigate } from '../router';
 import { useFlizow } from '../store/useFlizow';
 import type { Task, Member, Client, Service } from '../types/flizow';
@@ -29,14 +29,37 @@ import { formatMonthDay, daysBetween } from '../utils/dateFormat';
  *   (green), soft (blue). Same palette everywhere this shape shows up.
  */
 
+type DateWindow = '7d' | '30d' | '90d' | 'all';
+
+interface AnalyticsFilters {
+  assigneeId: string | null;   // null = anyone
+  serviceId: string | null;    // null = all projects
+  dateWindow: DateWindow;
+}
+
+const DEFAULT_FILTERS: AnalyticsFilters = {
+  assigneeId: null,
+  serviceId: null,
+  dateWindow: '30d',
+};
+
+const DATE_OPTIONS: Array<{ value: DateWindow; label: string }> = [
+  { value: '7d',  label: 'Next 7 days' },
+  { value: '30d', label: 'Next 30 days' },
+  { value: '90d', label: 'Next 90 days' },
+  { value: 'all', label: 'All time' },
+];
+
 export function AnalyticsPage() {
   const { data } = useFlizow();
   const todayISO = data.today;
 
-  // Filters are visual-only this pass — the dropdowns open in a later
-  // commit once the filter menus are ported. For now, all-person / all-
-  // project / next-30-days is the default view.
-  const filteredTasks = useMemo(() => data.tasks, [data.tasks]);
+  const [filters, setFilters] = useState<AnalyticsFilters>(DEFAULT_FILTERS);
+
+  const filteredTasks = useMemo(
+    () => applyAnalyticsFilters(data.tasks, filters, todayISO),
+    [data.tasks, filters, todayISO],
+  );
 
   const kpis = useMemo(
     () => computeKpis(filteredTasks, data.members, data.clients, todayISO),
@@ -59,7 +82,13 @@ export function AnalyticsPage() {
           </div>
         </header>
 
-        <FiltersBar />
+        <FiltersBar
+          filters={filters}
+          onChange={setFilters}
+          members={data.members}
+          services={data.services}
+          clients={data.clients}
+        />
 
         <div className="anlx-kpi-grid" role="list" aria-label="Delivery health KPIs">
           {kpis.map(k => <KpiCard key={k.key} kpi={k} />)}
@@ -79,34 +108,275 @@ export function AnalyticsPage() {
   );
 }
 
+function applyAnalyticsFilters(
+  tasks: Task[],
+  filters: AnalyticsFilters,
+  todayISO: string,
+): Task[] {
+  let out = tasks;
+
+  if (filters.assigneeId) {
+    const id = filters.assigneeId;
+    out = out.filter(t => t.assigneeId === id);
+  }
+
+  if (filters.serviceId) {
+    const id = filters.serviceId;
+    out = out.filter(t => t.serviceId === id);
+  }
+
+  if (filters.dateWindow !== 'all') {
+    const days = filters.dateWindow === '7d' ? 7 : filters.dateWindow === '30d' ? 30 : 90;
+    // Include tasks without a due date (they can still be open WIP) and
+    // tasks whose due date is in [today - 14, today + N]. -14 keeps recent
+    // overdues visible so they can still register as blocked/at-risk.
+    out = out.filter(t => {
+      if (!t.dueDate) return true;
+      const diff = daysBetween(todayISO, t.dueDate);
+      return diff >= -14 && diff <= days;
+    });
+  }
+
+  return out;
+}
+
 // ── Filters bar ──────────────────────────────────────────────────────────
 
-/** Visual filter chrome. The dropdowns open in a later pass; for now this
- *  just mirrors the static shell of the mockup so the page doesn't feel
- *  half-finished. Clicking does nothing on purpose — no phantom menu. */
-function FiltersBar() {
+/** Three interactive pills + a Reset link. Each pill opens a fixed-position
+ *  popover anchored below it. State lives in the AnalyticsPage parent so
+ *  the KPI / Upcoming / Workload sections all recompute together. */
+function FiltersBar({ filters, onChange, members, services, clients }: {
+  filters: AnalyticsFilters;
+  onChange: (next: AnalyticsFilters) => void;
+  members: Member[];
+  services: Service[];
+  clients: Client[];
+}) {
+  const [open, setOpen] = useState<'assignee' | 'service' | 'date' | null>(null);
+
+  const dirty = filters.assigneeId !== null || filters.serviceId !== null || filters.dateWindow !== '30d';
+
+  const assigneeLabel = filters.assigneeId
+    ? members.find(m => m.id === filters.assigneeId)?.name ?? 'Unknown'
+    : 'Anyone';
+  const serviceLabel = filters.serviceId
+    ? (() => {
+        const svc = services.find(s => s.id === filters.serviceId);
+        if (!svc) return 'Unknown';
+        const client = clients.find(c => c.id === svc.clientId);
+        return client ? `${client.name} · ${svc.name}` : svc.name;
+      })()
+    : 'All projects';
+  const dateLabel = DATE_OPTIONS.find(o => o.value === filters.dateWindow)?.label ?? 'Next 30 days';
+
+  // Sort members alphabetically for the assignee picker. Services are
+  // grouped by client name so "Acme · SEO" and "Acme · Content" cluster.
+  const memberOptions = useMemo(
+    () => [...members].sort((a, b) => a.name.localeCompare(b.name)),
+    [members],
+  );
+  const serviceOptions = useMemo(() => {
+    const byClient = new Map<string, Client>();
+    for (const c of clients) byClient.set(c.id, c);
+    const rows = services.map(s => ({
+      service: s,
+      client: byClient.get(s.clientId) ?? null,
+    }));
+    rows.sort((a, b) => {
+      const ca = a.client?.name ?? 'zzz';
+      const cb = b.client?.name ?? 'zzz';
+      if (ca !== cb) return ca.localeCompare(cb);
+      return a.service.name.localeCompare(b.service.name);
+    });
+    return rows;
+  }, [services, clients]);
+
   return (
     <div className="anlx-filters" role="toolbar" aria-label="Filter analytics">
       <span className="anlx-filter-label">Filter</span>
-      <button type="button" className="anlx-filter-pill" aria-haspopup="listbox" aria-expanded={false} disabled>
-        <span className="anlx-filter-pill-text">Anyone</span>
-        <svg className="anlx-filter-pill-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
-      </button>
-      <button type="button" className="anlx-filter-pill" aria-haspopup="listbox" aria-expanded={false} disabled>
-        <span className="anlx-filter-pill-text">All projects</span>
-        <svg className="anlx-filter-pill-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
-      </button>
-      <button type="button" className="anlx-filter-pill" aria-haspopup="listbox" aria-expanded={false} disabled>
-        <span className="anlx-filter-pill-text">Next 30 days</span>
-        <svg className="anlx-filter-pill-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
+
+      <AnalyticsFilterPill
+        label={assigneeLabel}
+        active={filters.assigneeId !== null}
+        open={open === 'assignee'}
+        onToggle={() => setOpen(v => v === 'assignee' ? null : 'assignee')}
+        onClose={() => setOpen(null)}
+      >
+        <OptionRow
+          label="Anyone"
+          selected={filters.assigneeId === null}
+          onSelect={() => { onChange({ ...filters, assigneeId: null }); setOpen(null); }}
+        />
+        <div className="anlx-filter-divider" />
+        {memberOptions.map(m => (
+          <OptionRow
+            key={m.id}
+            label={m.name}
+            subLabel={m.role}
+            avatar={<span className="anlx-filter-option-avatar" style={{ background: m.color }}>{m.initials}</span>}
+            selected={filters.assigneeId === m.id}
+            onSelect={() => { onChange({ ...filters, assigneeId: m.id }); setOpen(null); }}
+          />
+        ))}
+      </AnalyticsFilterPill>
+
+      <AnalyticsFilterPill
+        label={serviceLabel}
+        active={filters.serviceId !== null}
+        open={open === 'service'}
+        onToggle={() => setOpen(v => v === 'service' ? null : 'service')}
+        onClose={() => setOpen(null)}
+      >
+        <OptionRow
+          label="All projects"
+          selected={filters.serviceId === null}
+          onSelect={() => { onChange({ ...filters, serviceId: null }); setOpen(null); }}
+        />
+        <div className="anlx-filter-divider" />
+        {serviceOptions.map(({ service, client }) => (
+          <OptionRow
+            key={service.id}
+            label={service.name}
+            subLabel={client?.name ?? undefined}
+            selected={filters.serviceId === service.id}
+            onSelect={() => { onChange({ ...filters, serviceId: service.id }); setOpen(null); }}
+          />
+        ))}
+      </AnalyticsFilterPill>
+
+      <AnalyticsFilterPill
+        label={dateLabel}
+        active={filters.dateWindow !== '30d'}
+        open={open === 'date'}
+        onToggle={() => setOpen(v => v === 'date' ? null : 'date')}
+        onClose={() => setOpen(null)}
+      >
+        {DATE_OPTIONS.map(opt => (
+          <OptionRow
+            key={opt.value}
+            label={opt.label}
+            selected={filters.dateWindow === opt.value}
+            onSelect={() => { onChange({ ...filters, dateWindow: opt.value }); setOpen(null); }}
+          />
+        ))}
+      </AnalyticsFilterPill>
+
+      <button
+        type="button"
+        className="anlx-filter-reset"
+        hidden={!dirty}
+        onClick={() => { onChange(DEFAULT_FILTERS); setOpen(null); }}
+      >
+        Reset
       </button>
     </div>
+  );
+}
+
+/** A single filter pill with an anchored popover. Popover uses
+ *  position: fixed and recomputes its top/left from the pill's bounding
+ *  rect on open, so horizontal scroll / reflow doesn't drift it. */
+function AnalyticsFilterPill({ label, active, open, onToggle, onClose, children }: {
+  label: string;
+  active: boolean;
+  open: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+
+  // Compute anchor position just after the pill renders open. useLayoutEffect
+  // ensures the menu is placed before the browser paints, preventing a
+  // one-frame flash at the wrong spot.
+  useLayoutEffect(() => {
+    if (!open) {
+      setPos(null);
+      return;
+    }
+    const btn = btnRef.current;
+    if (!btn) return;
+    const r = btn.getBoundingClientRect();
+    setPos({ top: r.bottom + 6, left: r.left });
+  }, [open]);
+
+  // Dismiss on outside click or Escape.
+  useEffect(() => {
+    if (!open) return;
+    function onPointer(e: PointerEvent) {
+      const btn = btnRef.current;
+      const menu = menuRef.current;
+      const target = e.target as Node;
+      if (btn && btn.contains(target)) return;
+      if (menu && menu.contains(target)) return;
+      onClose();
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose();
+    }
+    document.addEventListener('pointerdown', onPointer);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerdown', onPointer);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open, onClose]);
+
+  return (
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        className={`anlx-filter-pill${active ? ' is-active' : ''}`}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={onToggle}
+      >
+        <span className="anlx-filter-pill-text">{label}</span>
+        <svg className="anlx-filter-pill-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+      {open && pos && (
+        <div
+          ref={menuRef}
+          className="anlx-filter-menu open"
+          role="listbox"
+          style={{ top: pos.top, left: pos.left }}
+        >
+          {children}
+        </div>
+      )}
+    </>
+  );
+}
+
+function OptionRow({ label, subLabel, avatar, selected, onSelect }: {
+  label: string;
+  subLabel?: string;
+  avatar?: React.ReactNode;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="option"
+      aria-selected={selected}
+      className={`anlx-filter-option${selected ? ' selected' : ''}`}
+      onClick={onSelect}
+    >
+      {avatar}
+      <span className="anlx-filter-option-text">
+        <span className="anlx-filter-option-label">{label}</span>
+        {subLabel && <span className="anlx-filter-option-sub">{subLabel}</span>}
+      </span>
+      <svg className="anlx-filter-option-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <polyline points="20 6 9 17 4 12" />
+      </svg>
+    </button>
   );
 }
 

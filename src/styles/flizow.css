@@ -12586,6 +12586,29 @@
     font-size: var(--fs-nano); font-weight: 600; color: #fff;
     flex-shrink: 0;
   }
+  /* Option text column: stacks label + optional secondary line (role /
+     client name). Takes the remaining width so the check icon can sit
+     at the right edge without letting labels push it around. */
+  .anlx-filter-option-text {
+    display: flex; flex-direction: column; gap: 2px;
+    min-width: 0;
+    flex: 1;
+  }
+  .anlx-filter-option-label {
+    font-size: var(--fs-sm); color: inherit;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    letter-spacing: -0.005em;
+  }
+  .anlx-filter-option-sub {
+    font-size: 11px; color: var(--text-soft);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    letter-spacing: 0;
+  }
+  .anlx-filter-option.selected .anlx-filter-option-sub { color: var(--highlight); opacity: 0.7; }
+  .anlx-filter-divider {
+    height: 1px; background: var(--hairline-soft);
+    margin: 4px 2px;
+  }
 
   /* ── KPI row ──
      5 cards. Value is big (fs-3xl), label is uppercase micro, delta is
