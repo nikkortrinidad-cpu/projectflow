@@ -164,8 +164,62 @@ function ClientDetail({ client, data, store }: DetailProps) {
 
 // ── Hero ──────────────────────────────────────────────────────────────────
 
+/**
+ * Mirror of ClientsPage.deriveInitials — re-derives the two-letter initials
+ * used on the hero logo when a user renames the client inline. Kept local
+ * rather than extracted to a util because it's only two call sites; if a
+ * third shows up, move this to src/utils.
+ */
+function deriveInitialsLocal(name: string): string {
+  const trimmed = name.trim();
+  if (!trimmed) return 'NC';
+  const words = trimmed.split(/\s+/).filter(Boolean);
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return (words[0][0] + words[1][0]).toUpperCase();
+}
+
 function Hero({ client, am }: { client: Client; am: Member | null }) {
   const statusLabel = statusChipLabel(client.status);
+  // Inline rename: click the name to edit, Enter/blur to commit, Esc to
+  // cancel. No pencil icon — cursor:text + hover tint + ring on focus do
+  // the affordance work (house rule).
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState(client.name);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  // Keep the draft in sync when the user switches clients without leaving
+  // edit mode (unlikely but cheap to guard against).
+  useEffect(() => {
+    setNameDraft(client.name);
+    setEditingName(false);
+  }, [client.id, client.name]);
+
+  useEffect(() => {
+    if (!editingName) return;
+    // Focus + select on next tick so the transition doesn't eat the focus.
+    const t = window.setTimeout(() => {
+      nameInputRef.current?.focus();
+      nameInputRef.current?.select();
+    }, 20);
+    return () => window.clearTimeout(t);
+  }, [editingName]);
+
+  function commitName() {
+    const next = nameDraft.trim();
+    if (!next) {
+      setNameDraft(client.name);
+      setEditingName(false);
+      return;
+    }
+    if (next !== client.name) {
+      // Also refresh initials so the hero logo stays in sync with the name.
+      flizowStore.updateClient(client.id, {
+        name: next,
+        initials: deriveInitialsLocal(next),
+      });
+    }
+    setEditingName(false);
+  }
 
   return (
     <div className="client-hero">
@@ -174,7 +228,62 @@ function Hero({ client, am }: { client: Client; am: Member | null }) {
       </div>
       <div className="hero-body">
         <div className="hero-name-row">
-          <span className="hero-name">{client.name}</span>
+          {editingName ? (
+            <input
+              ref={nameInputRef}
+              className="hero-name"
+              value={nameDraft}
+              onChange={(e) => setNameDraft(e.target.value)}
+              onBlur={commitName}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  (e.target as HTMLInputElement).blur();
+                } else if (e.key === 'Escape') {
+                  e.preventDefault();
+                  setNameDraft(client.name);
+                  setEditingName(false);
+                }
+              }}
+              style={{
+                background: 'var(--bg-elev)',
+                border: '1px solid var(--hairline)',
+                borderRadius: 8,
+                padding: '2px 8px',
+                outline: 'none',
+                boxShadow: '0 0 0 3px var(--highlight-soft)',
+                font: 'inherit',
+                color: 'inherit',
+                minWidth: 240,
+              }}
+              aria-label="Rename client"
+            />
+          ) : (
+            <span
+              className="hero-name"
+              role="button"
+              tabIndex={0}
+              title="Click to rename"
+              onClick={() => setEditingName(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setEditingName(true);
+                }
+              }}
+              style={{
+                cursor: 'text',
+                borderRadius: 6,
+                padding: '0 4px',
+                margin: '0 -4px',
+                transition: 'background 0.12s',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-soft)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+            >
+              {client.name}
+            </span>
+          )}
           <span
             className={`status-chip ${client.status}`}
             title="Auto-computed from attention items, onboarding progress, and activity"
