@@ -83,6 +83,12 @@ export function AnalyticsPage() {
     [filteredTasks, data.members],
   );
 
+  // Which KPI's drill-down panel is open. null = collapsed. Clicking the same
+  // card twice toggles it off; clicking a different card swaps content in
+  // place. Lives here (not on the card) because the panel renders outside
+  // the KPI grid — hoisting state is the cheapest way to keep them in sync.
+  const [drillKpi, setDrillKpi] = useState<Kpi['key'] | null>(null);
+
   return (
     <div className="view view-analytics active" data-view="analytics">
       <main className="anlx-page">
@@ -103,8 +109,28 @@ export function AnalyticsPage() {
         />
 
         <div className="anlx-kpi-grid" role="list" aria-label="Delivery health KPIs">
-          {kpis.map(k => <KpiCard key={k.key} kpi={k} />)}
+          {kpis.map(k => (
+            <KpiCard
+              key={k.key}
+              kpi={k}
+              isOpen={drillKpi === k.key}
+              onClick={() => setDrillKpi(prev => (prev === k.key ? null : k.key))}
+            />
+          ))}
         </div>
+
+        {drillKpi && (
+          <DrillDownPanel
+            kpiKey={drillKpi}
+            tasks={filteredTasks}
+            services={data.services}
+            members={data.members}
+            clients={data.clients}
+            workload={workload}
+            todayISO={todayISO}
+            onClose={() => setDrillKpi(null)}
+          />
+        )}
 
         <UpcomingSection
           tasks={filteredTasks}
@@ -410,9 +436,20 @@ interface Kpi {
   spark: number[];
 }
 
-function KpiCard({ kpi }: { kpi: Kpi }) {
+function KpiCard({ kpi, isOpen, onClick }: {
+  kpi: Kpi;
+  isOpen: boolean;
+  onClick: () => void;
+}) {
   return (
-    <button type="button" className="anlx-kpi-card" role="listitem">
+    <button
+      type="button"
+      className={`anlx-kpi-card${isOpen ? ' is-open' : ''}`}
+      role="listitem"
+      aria-expanded={isOpen}
+      aria-label={`${kpi.label}. ${kpi.foot}. ${isOpen ? 'Drill-down open.' : 'Open drill-down.'}`}
+      onClick={onClick}
+    >
       <span className="anlx-kpi-label">{kpi.label}</span>
       <div className="anlx-kpi-value">
         {kpi.value}
@@ -543,6 +580,330 @@ function computeKpis(
       foot: atRisk.slice(0, 3).map(c => c.name).join(' · ') || 'All clients on track',
     },
   ];
+}
+
+// ── KPI drill-down panel ─────────────────────────────────────────────────
+
+/**
+ * Inline panel that drops in under the KPI grid when a card is clicked.
+ * Lists the rows behind the number — clicking a task row opens its card
+ * on the relevant board, clicking a client row jumps to client detail.
+ *
+ * Shape decision: no modal. The panel lives on the same page so the
+ * operator keeps the KPIs in view while drilling, which is how the
+ * mockup originally read. CSS for this pattern (`.anlx-drill*`) is
+ * already in flizow.css.
+ */
+function DrillDownPanel({
+  kpiKey, tasks, services, members, clients, workload, todayISO, onClose,
+}: {
+  kpiKey: Kpi['key'];
+  tasks: Task[];
+  services: Service[];
+  members: Member[];
+  clients: Client[];
+  workload: WorkloadRow[];
+  todayISO: string;
+  onClose: () => void;
+}) {
+  // Per-KPI: compute the rows to render + the panel title. Each branch
+  // returns a `DrillContent`, which is either a list of task rows or
+  // a list of client rows (the two disjoint shapes the grid handles).
+  const content = useMemo<DrillContent>(() => {
+    switch (kpiKey) {
+      case 'ontime': return buildOnTimeDrill(tasks, todayISO);
+      case 'cap':    return buildCapacityDrill(tasks, workload);
+      case 'blocked': return buildBlockedDrill(tasks);
+      case 'deadlines': return buildDeadlinesDrill(tasks, todayISO);
+      case 'clients': return buildClientsDrill(tasks, clients);
+    }
+  }, [kpiKey, tasks, clients, workload, todayISO]);
+
+  // Dismiss on Escape — same convention as the filter popovers and the
+  // card modal. Outside-click dismissal doesn't apply here because the
+  // panel is a peer section, not an overlay.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose();
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  return (
+    <section className="anlx-drill open" aria-labelledby="anlx-drill-title">
+      <div className="anlx-drill-head">
+        <div className="anlx-drill-title" id="anlx-drill-title">{content.title}</div>
+        <div className="anlx-drill-count">
+          {content.rows.length} {content.rows.length === 1 ? content.unit : content.unitPlural}
+        </div>
+        <button
+          type="button"
+          className="anlx-drill-close"
+          aria-label="Close drill-down"
+          onClick={onClose}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      {content.rows.length === 0 ? (
+        <div className="anlx-drill-empty">{content.empty}</div>
+      ) : (
+        <div className="anlx-drill-list">
+          {content.kind === 'tasks'
+            ? content.rows.map(r => (
+                <DrillTaskRow
+                  key={r.task.id}
+                  task={r.task}
+                  service={services.find(s => s.id === r.task.serviceId) ?? null}
+                  client={clients.find(c => c.id === r.task.clientId) ?? null}
+                  owner={r.task.assigneeId ? members.find(m => m.id === r.task.assigneeId) ?? null : null}
+                  status={r.status}
+                />
+              ))
+            : content.rows.map(r => (
+                <DrillClientRow key={r.client.id} client={r.client} openCount={r.openCount} />
+              ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+type DrillContent =
+  | {
+      kind: 'tasks';
+      title: string;
+      unit: string;
+      unitPlural: string;
+      empty: string;
+      rows: Array<{ task: Task; status: { label: string; tone?: 'late' | 'soon' } }>;
+    }
+  | {
+      kind: 'clients';
+      title: string;
+      unit: string;
+      unitPlural: string;
+      empty: string;
+      rows: Array<{ client: Client; openCount: number }>;
+    };
+
+function buildOnTimeDrill(tasks: Task[], todayISO: string): DrillContent {
+  const closed = tasks.filter(t => t.columnId === 'done' && t.dueDate);
+  // Late-first so the worst offenders read first. Ties by most-recent due.
+  const sorted = closed.slice().sort((a, b) => {
+    const aLate = daysBetween(todayISO, a.dueDate) < 0 ? 0 : 1;
+    const bLate = daysBetween(todayISO, b.dueDate) < 0 ? 0 : 1;
+    if (aLate !== bLate) return aLate - bLate;
+    return b.dueDate.localeCompare(a.dueDate);
+  });
+  return {
+    kind: 'tasks',
+    title: 'Closed tasks — on time vs. late',
+    unit: 'task', unitPlural: 'tasks',
+    empty: 'No closed tasks in this window yet.',
+    rows: sorted.map(t => {
+      const delta = daysBetween(todayISO, t.dueDate);
+      if (delta >= 0) return { task: t, status: { label: 'On time' } };
+      return { task: t, status: { label: `${-delta}d late`, tone: 'late' as const } };
+    }),
+  };
+}
+
+function buildCapacityDrill(tasks: Task[], workload: WorkloadRow[]): DrillContent {
+  // Open tasks assigned to anyone currently over 100%. No open-task view
+  // of capacity would leave the operator staring at a number with no way
+  // to act — this turns the KPI into a to-do for rebalancing.
+  const overIds = new Set(workload.filter(r => r.pct > 100).map(r => r.id));
+  const rows = tasks.filter(t => isOpen(t) && t.assigneeId && overIds.has(t.assigneeId));
+  rows.sort((a, b) => {
+    const pa = workload.find(r => r.id === a.assigneeId)?.pct ?? 0;
+    const pb = workload.find(r => r.id === b.assigneeId)?.pct ?? 0;
+    if (pa !== pb) return pb - pa; // most-overloaded first
+    return (a.dueDate || '9999').localeCompare(b.dueDate || '9999');
+  });
+  return {
+    kind: 'tasks',
+    title: 'Open tasks owned by over-capacity teammates',
+    unit: 'task', unitPlural: 'tasks',
+    empty: 'No one is over capacity — nothing to rebalance.',
+    rows: rows.map(t => ({
+      task: t,
+      status: {
+        label: (() => {
+          const pct = workload.find(r => r.id === t.assigneeId)?.pct ?? 0;
+          return `${pct}% load`;
+        })(),
+        tone: 'late',
+      },
+    })),
+  };
+}
+
+function buildBlockedDrill(tasks: Task[]): DrillContent {
+  const blocked = tasks.filter(t =>
+    isOpen(t) && (t.columnId === 'blocked' || t.severity === 'critical'),
+  );
+  // Oldest stuck first — if something has been sitting a week, it deserves
+  // top billing over something blocked this morning.
+  blocked.sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''));
+  return {
+    kind: 'tasks',
+    title: 'Blocked or critical right now',
+    unit: 'task', unitPlural: 'tasks',
+    empty: 'Nothing is stuck. Enjoy it.',
+    rows: blocked.map(t => ({
+      task: t,
+      status: {
+        label: t.severity === 'critical' ? 'Critical' : 'Blocked',
+        tone: 'late' as const,
+      },
+    })),
+  };
+}
+
+function buildDeadlinesDrill(tasks: Task[], todayISO: string): DrillContent {
+  const open = tasks.filter(isOpen).filter(t => t.dueDate);
+  // Overdues first (they're already late and matter most), then this-week
+  // in calendar order.
+  const overdue = open.filter(t => daysBetween(todayISO, t.dueDate) < 0);
+  const soon = open.filter(t => {
+    const d = daysBetween(todayISO, t.dueDate);
+    return d >= 0 && d <= 7;
+  });
+  overdue.sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+  soon.sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+  const combined = [...overdue, ...soon];
+  return {
+    kind: 'tasks',
+    title: 'Due in the next 7 days',
+    unit: 'task', unitPlural: 'tasks',
+    empty: 'No deadlines in the next 7 days.',
+    rows: combined.map(t => {
+      const d = daysBetween(todayISO, t.dueDate);
+      if (d < 0) return { task: t, status: { label: `${-d}d overdue`, tone: 'late' as const } };
+      if (d === 0) return { task: t, status: { label: 'Today', tone: 'late' as const } };
+      if (d === 1) return { task: t, status: { label: 'Tomorrow', tone: 'soon' as const } };
+      return { task: t, status: { label: `In ${d}d`, tone: 'soon' as const } };
+    }),
+  };
+}
+
+function buildClientsDrill(tasks: Task[], clients: Client[]): DrillContent {
+  const flagged = clients.filter(c => c.status === 'fire' || c.status === 'risk');
+  // Fire before risk so the burning clients read first.
+  flagged.sort((a, b) => {
+    const rank = (s: Client['status']) => (s === 'fire' ? 0 : s === 'risk' ? 1 : 2);
+    const dr = rank(a.status) - rank(b.status);
+    if (dr !== 0) return dr;
+    return a.name.localeCompare(b.name);
+  });
+  const openByClient = new Map<string, number>();
+  for (const t of tasks) {
+    if (!isOpen(t)) continue;
+    openByClient.set(t.clientId, (openByClient.get(t.clientId) ?? 0) + 1);
+  }
+  return {
+    kind: 'clients',
+    title: 'Clients flagged — fire or risk',
+    unit: 'client', unitPlural: 'clients',
+    empty: 'All clients on track. Nice.',
+    rows: flagged.map(c => ({ client: c, openCount: openByClient.get(c.id) ?? 0 })),
+  };
+}
+
+function DrillTaskRow({ task, service, client, owner, status }: {
+  task: Task;
+  service: Service | null;
+  client: Client | null;
+  owner: Member | null;
+  status: { label: string; tone?: 'late' | 'soon' };
+}) {
+  const open = (e: React.MouseEvent) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+    e.preventDefault();
+    // Auto-open the card on landing — same one-shot handoff the
+    // touchpoint "On board ↗" button uses. BoardPage clears the key
+    // immediately on mount so a refresh doesn't re-trigger it.
+    sessionStorage.setItem('flizow-open-card', task.id);
+    navigate(`#board/${task.serviceId}`);
+  };
+  return (
+    <a
+      href={service ? `#board/${service.id}/card/${task.id}` : '#'}
+      className="anlx-drill-row"
+      onClick={open}
+    >
+      <div>
+        <div className="anlx-drill-row-title">{task.title}</div>
+        <div className="anlx-drill-row-client">
+          {client?.name ?? 'Unknown client'}
+          {service && ` · ${service.name}`}
+        </div>
+      </div>
+      <div className="anlx-drill-row-owner">
+        {owner ? (
+          <>
+            <span className="anlx-av sm" style={{ background: owner.color }}>
+              {owner.initials}
+            </span>
+            <span>{owner.name.split(' ')[0]}</span>
+          </>
+        ) : (
+          <span style={{ color: 'var(--text-faint)' }}>Unassigned</span>
+        )}
+      </div>
+      <div className={`anlx-drill-row-status${status.tone ? ` ${status.tone}` : ''}`}>
+        {status.label}
+      </div>
+      <div className="anlx-up-phase">{phaseOf(task)}</div>
+      <div className="anlx-drill-row-chev">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      </div>
+    </a>
+  );
+}
+
+function DrillClientRow({ client, openCount }: {
+  client: Client;
+  openCount: number;
+}) {
+  const open = (e: React.MouseEvent) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+    e.preventDefault();
+    navigate(`#clients/${client.id}`);
+  };
+  const statusLabel = client.status === 'fire' ? 'On fire' : 'At risk';
+  const tone = client.status === 'fire' ? 'late' : 'soon';
+  return (
+    <a
+      href={`#clients/${client.id}`}
+      className="anlx-drill-row"
+      onClick={open}
+    >
+      <div>
+        <div className="anlx-drill-row-title">{client.name}</div>
+        <div className="anlx-drill-row-client">
+          {openCount} open {openCount === 1 ? 'task' : 'tasks'}
+        </div>
+      </div>
+      <div className="anlx-drill-row-owner">
+        <span style={{ color: 'var(--text-faint)' }}>—</span>
+      </div>
+      <div className={`anlx-drill-row-status ${tone}`}>{statusLabel}</div>
+      <div className="anlx-up-phase">CLIENT</div>
+      <div className="anlx-drill-row-chev">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      </div>
+    </a>
+  );
 }
 
 // ── Upcoming section ─────────────────────────────────────────────────────
