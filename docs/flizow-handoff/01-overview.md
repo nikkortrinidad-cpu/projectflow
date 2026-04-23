@@ -1,4 +1,4 @@
-# ProjectFlow — Product Overview
+# Flizow — Product Overview
 
 ## What it is
 
@@ -6,7 +6,7 @@ A client-services operations tool for an agency. It tracks every client account,
 
 ## Live URL
 
-https://nikkortrinidad-cpu.github.io/kanban-website/projectflow-test.html
+https://nikkortrinidad-cpu.github.io/kanban-website/flizow-test.html
 
 Click through every view before reading the rest of this doc — the interactions tell the story faster than text can.
 
@@ -38,7 +38,7 @@ Kanban boards are reached by clicking a service inside a client detail page (rou
 
 ## What's in this mockup file
 
-`public/projectflow-test.html` is a **single self-contained HTML file**. No build step, no external JS/CSS. All styles live in one `<style>` block; all logic lives in inline `<script>` blocks. Data is generated at page load (deterministic — same seed produces same output).
+`public/flizow-test.html` is a **single self-contained HTML file**. No build step, no external JS/CSS. All styles live in one `<style>` block; all logic lives in inline `<script>` blocks. Data is generated at page load (deterministic — same seed produces same output).
 
 This was built as a clickable prototype for stakeholder review and to lock in the interaction model. It is **not the production code** — you'll rebuild against your stack of choice, using the data layer shape and view structure as the spec.
 

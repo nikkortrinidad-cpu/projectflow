@@ -1,11 +1,11 @@
 # Data Model
 
-The entire data layer is synthesized at page load into `window.PROJECTFLOW_DATA`. Open the live mockup, run `console.log(window.PROJECTFLOW_DATA)`, and you'll see the exact shape described below. Use this as the source of truth for your schema.
+The entire data layer is synthesized at page load into `window.FLIZOW_DATA`. Open the live mockup, run `console.log(window.FLIZOW_DATA)`, and you'll see the exact shape described below. Use this as the source of truth for your schema.
 
 ## Top-level shape
 
 ```js
-window.PROJECTFLOW_DATA = {
+window.FLIZOW_DATA = {
   clients: [...],          // 50
   services: [...],         // ~150 (1–4 per client)
   tasks: [...],            // ~1000 (5–8 per service)
@@ -168,7 +168,7 @@ The mockup uses `localStorage`. Your production app should replace these with pr
 
 | Key | What it stores |
 |---|---|
-| `projectflow-favorite-boards` | Array of service IDs the current user has favorited. |
+| `flizow-favorite-boards` | Array of service IDs the current user has favorited. |
 | `overview-block-order` | Array of block IDs in the user's preferred render order. |
 | `refined-theme` | `'dark'` or `'light'`. |
 

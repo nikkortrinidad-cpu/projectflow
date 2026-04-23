@@ -79,7 +79,7 @@ function App() {
             </svg>
           </div>
           <div>
-            <h1 className={`text-sm font-semibold leading-snug tracking-tight ${isDark ? 'text-gray-100' : 'text-[#1d1d1f]'}`}>ProjectFlow</h1>
+            <h1 className={`text-sm font-semibold leading-snug tracking-tight ${isDark ? 'text-gray-100' : 'text-[#1d1d1f]'}`}>Flizow</h1>
             <p className={`text-xs leading-normal ${isDark ? 'text-[#86868b]' : 'text-[#86868b]'}`}>Project Management</p>
           </div>
         </div>

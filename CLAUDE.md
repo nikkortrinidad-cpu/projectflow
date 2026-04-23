@@ -4,15 +4,15 @@
 
 A kanban-style project management tool built with React, TypeScript, and Tailwind CSS. Deployed on GitHub Pages with Firebase as the cloud backend. The user (Nikko) does not code — all development is done through Claude.
 
-**Live URL:** Deployed via GitHub Pages at `https://nikkortrinidad-cpu.github.io/projectflow/`
-**Repository:** `https://github.com/nikkortrinidad-cpu/projectflow`
+**Live URL:** Deployed via GitHub Pages at `https://nikkortrinidad-cpu.github.io/flizow/`
+**Repository:** `https://github.com/nikkortrinidad-cpu/flizow`
 
 ---
 
 ## Tech Stack
 
 - **Framework:** React 19 with TypeScript (~5.9)
-- **Build Tool:** Vite 8 (base path: `/projectflow/`)
+- **Build Tool:** Vite 8 (base path: `/flizow/`)
 - **Styling:** Tailwind CSS v4 with class-based dark mode (`@custom-variant dark`)
 - **Backend:** Firebase (Firestore for cloud sync, Google Auth for login)
 - **Rich Text:** TipTap editor (StarterKit, Link, Image, Placeholder extensions)

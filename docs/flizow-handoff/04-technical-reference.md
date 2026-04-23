@@ -2,7 +2,7 @@
 
 A catalog of how the mockup is wired so you can find the reference implementation for any piece you're rebuilding.
 
-All line numbers refer to `public/projectflow-test.html`.
+All line numbers refer to `public/flizow-test.html`.
 
 ## Routing
 
@@ -75,7 +75,7 @@ Views are shown/hidden via `display` — only one is active at a time. The Clien
 
 ### Favorites (pinned boards)
 
-- Storage: `localStorage['projectflow-favorite-boards']` — array of service IDs.
+- Storage: `localStorage['flizow-favorite-boards']` — array of service IDs.
 - Max pinned: `MAX_PINNED = 8`.
 - Defaults: `['acme-corp-svc-0', 'bloom-retail-svc-0', 'techstart-inc-svc-0']`.
 - Toggle UI: `.service-star` on service cards (delegated click handler, line ~15642).
@@ -140,14 +140,14 @@ Views are shown/hidden via `display` — only one is active at a time. The Clien
 | Key | Shape | Notes |
 |---|---|---|
 | `refined-theme` | `'dark'` \| `'light'` | User theme preference. |
-| `projectflow-favorite-boards` | `string[]` of service IDs | Max 8 entries. |
+| `flizow-favorite-boards` | `string[]` of service IDs | Max 8 entries. |
 | `overview-block-order` | `string[]` of block IDs | Persists Overview block order. |
 | `_TEST_COMMENTS_KEY` | JSON array | Mockup-only — test comments for the card panel. |
 | `_SEED_MUT_KEY` | JSON | Mockup-only — tracks which seed cards have been mutated. |
 | `_DRAFT_KEY` | string | Mockup-only — in-progress card description draft. |
 | `GIPHY_KEY_STORAGE` | string | Mockup-only — Giphy API key for comment editor. |
 
-The first three (`refined-theme`, `projectflow-favorite-boards`, `overview-block-order`) are real user preferences — move these to per-user server-side storage in production. The rest are mockup scaffolding and can be dropped.
+The first three (`refined-theme`, `flizow-favorite-boards`, `overview-block-order`) are real user preferences — move these to per-user server-side storage in production. The rest are mockup scaffolding and can be dropped.
 
 ## Block IDs (Overview)
 
@@ -161,12 +161,12 @@ Use these as stable keys for the block-order preference.
 
 ## Build / run (mockup)
 
-No build required. Open `public/projectflow-test.html` in any modern browser. To serve locally:
+No build required. Open `public/flizow-test.html` in any modern browser. To serve locally:
 
 ```bash
 cd kanban-website
 PATH="/Users/nikko/local/node/bin:$PATH" npm run dev
-# then open http://localhost:5173/kanban-website/projectflow-test.html
+# then open http://localhost:5173/kanban-website/flizow-test.html
 ```
 
 ## Known rough edges in the mockup
@@ -183,6 +183,6 @@ Flagging these so you don't mistake them for intentional behavior:
 
 You will **rebuild**: every component, in whatever framework the team picks. The mockup's DOM is not meant to be copied.
 
-You will **reuse**: the data shape (`PROJECTFLOW_DATA`), the interaction patterns (favorite sync, block reorder, Cmd+K), the copy, the visual language (colors, spacing, typography), and the view-to-route mapping.
+You will **reuse**: the data shape (`FLIZOW_DATA`), the interaction patterns (favorite sync, block reorder, Cmd+K), the copy, the visual language (colors, spacing, typography), and the view-to-route mapping.
 
 If anything in this doc contradicts what you see in the running mockup, the mockup is authoritative — flag the doc for update.

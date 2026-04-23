@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ProjectFlow — Home & Board</title>
+<title>Flizow — Home & Board</title>
 <script>(function(){var s=localStorage.getItem('refined-theme')||'dark';document.documentElement.setAttribute('data-theme',s);})();</script>
 <style>
   :root {
@@ -12769,14 +12769,14 @@
       var url = new URLSearchParams(location.search);
       if (url.has('testers')) {
         var v = url.get('testers');
-        if (v === '1' || v === 'true') localStorage.setItem('projectflow.testers.enabled', '1');
-        else localStorage.removeItem('projectflow.testers.enabled');
+        if (v === '1' || v === 'true') localStorage.setItem('flizow.testers.enabled', '1');
+        else localStorage.removeItem('flizow.testers.enabled');
         // Strip the flag so reloads don't re-process it (preserves the hash).
         var clean = new URL(location.href);
         clean.searchParams.delete('testers');
         history.replaceState({}, '', clean.pathname + clean.search + clean.hash);
       }
-      if (localStorage.getItem('projectflow.testers.enabled') === '1') {
+      if (localStorage.getItem('flizow.testers.enabled') === '1') {
         document.documentElement.setAttribute('data-testers-state', 'pending');
       }
     } catch (e) { /* fail open — public demo keeps working */ }
@@ -12805,7 +12805,7 @@
         <path d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/>
       </svg>
     </div>
-    <h1 class="tg-title" id="testersGateTitle">ProjectFlow</h1>
+    <h1 class="tg-title" id="testersGateTitle">Flizow</h1>
     <p class="tg-sub">Sign in to run your test session. Your work syncs so the team can see how it went.</p>
     <button type="button" class="tg-btn" id="testersSignInBtn">
       <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
@@ -12848,7 +12848,7 @@
 
 <div class="header">
   <div class="header-left">
-    <a href="#overview" class="header-logo" data-view-target="overview" aria-label="ProjectFlow home" data-tip="Home" data-tip-pos="below-start">ProjectFlow</a>
+    <a href="#overview" class="header-logo" data-view-target="overview" aria-label="Flizow home" data-tip="Home" data-tip-pos="below-start">Flizow</a>
     <nav class="header-nav">
       <a href="#overview" data-view-target="overview" class="on" aria-current="page">Home</a>
       <a href="#clients" data-view-target="clients">Clients</a>
@@ -12969,7 +12969,7 @@
         <section class="acct-section" data-acct-panel="profile" data-active="true" role="tabpanel" id="acct-panel-profile" aria-labelledby="acct-tab-profile">
           <div class="acct-section-header">
             <h3 class="acct-section-title">Profile</h3>
-            <p class="acct-section-sub">How you appear across ProjectFlow — visible to your team and clients you share work with.</p>
+            <p class="acct-section-sub">How you appear across Flizow — visible to your team and clients you share work with.</p>
           </div>
 
           <div class="acct-avatar-block">
@@ -13113,7 +13113,7 @@
         <section class="acct-section" data-acct-panel="signin" role="tabpanel" id="acct-panel-signin" aria-labelledby="acct-tab-signin" hidden>
           <div class="acct-section-header">
             <h3 class="acct-section-title">Sign-in</h3>
-            <p class="acct-section-sub">ProjectFlow uses Google to sign you in. Your password lives with Google.</p>
+            <p class="acct-section-sub">Flizow uses Google to sign you in. Your password lives with Google.</p>
           </div>
           <div class="acct-connected">
             <div class="acct-connected-logo" aria-hidden="true">
@@ -13154,7 +13154,7 @@
       <span class="cmdk-esc">ESC</span>
     </div>
     <div class="cmdk-results" id="cmdkResults">
-      <!-- Populated at runtime from PROJECTFLOW_DATA (clients, tasks, members, commands). -->
+      <!-- Populated at runtime from FLIZOW_DATA (clients, tasks, members, commands). -->
     </div>
   </div>
 </div>
@@ -13220,7 +13220,7 @@
       <a href="#" class="block-link" id="attnToggle" aria-expanded="false" onclick="toggleAttn(event)">View all 6 →</a>
     </div>
     <div class="attention-list" id="attentionList">
-      <!-- Populated at runtime from PROJECTFLOW_DATA.tasks (critical + warning severity). -->
+      <!-- Populated at runtime from FLIZOW_DATA.tasks (critical + warning severity). -->
     </div>
   </div>
 
@@ -13274,7 +13274,7 @@
       </div>
     </div>
     <div class="week-board" id="weekBoard">
-      <!-- Populated at runtime by renderSchedule() — see PROJECTFLOW_DATA. -->
+      <!-- Populated at runtime by renderSchedule() — see FLIZOW_DATA. -->
     </div>
 
   </div>
@@ -18524,11 +18524,11 @@
 </div>
 
 <script>
-/* ═══════ PROJECTFLOW_TEMPLATES — catalog used by the Add Service picker
+/* ═══════ FLIZOW_TEMPLATES — catalog used by the Add Service picker
    Mirrors the 5 hardcoded template panels (#templates/...). Editing
    templates in the admin should one day update this map, but for now the
    admin is read-only and this is the single source for service creation. */
-window.PROJECTFLOW_TEMPLATES = {
+window.FLIZOW_TEMPLATES = {
   'web-design-full-stack': {
     id: 'web-design-full-stack',
     name: 'Web Design — Full Stack',
@@ -23668,11 +23668,11 @@ function openAttentionTask(e, btn) {
 /* ── Delegate popover ──
    TEAM is derived from OPS_TEAM (defined in the workload script below)
    so the delegate dropdown and Team Workload share the same roster.
-   When PROJECTFLOW_DATA loads, members[type='operator'] takes priority
+   When FLIZOW_DATA loads, members[type='operator'] takes priority
    for name/role so any future edits to the central data layer flow
    through to delegate suggestions automatically. */
 function getTeamRoster() {
-  var D = window.PROJECTFLOW_DATA;
+  var D = window.FLIZOW_DATA;
   if (D && D.members) {
     var ops = D.members.filter(function(m){ return m.type === 'operator'; });
     if (ops.length) {
@@ -24055,7 +24055,7 @@ function openDelegate(e, btn) {
 })();
 
 /* ── Week board: dynamic schedule renderer + day progression ──
-   The grid is built from PROJECTFLOW_DATA every load, anchored to the
+   The grid is built from FLIZOW_DATA every load, anchored to the
    user's local "this week's Monday". 10 columns: Mon–Fri this week
    (data-week="current") + Mon–Fri next week (data-week="next").
    Tasks come from seeded entries (carrying _schedule metadata so each
@@ -24082,7 +24082,7 @@ function _ddEsc(s){
 function renderSchedule() {
   var board = document.getElementById('weekBoard');
   if (!board) return;
-  var D = window.PROJECTFLOW_DATA;
+  var D = window.FLIZOW_DATA;
   if (!D) return;
 
   var monday = _ddMondayOf(D.today);
@@ -24170,7 +24170,7 @@ function renderSchedule() {
 }
 
 function applyToday() {
-  var D = window.PROJECTFLOW_DATA;
+  var D = window.FLIZOW_DATA;
   if (!D) return;
   var todayIso = _ddIso(new Date(D.today));
 
@@ -24231,7 +24231,7 @@ function applyToday() {
   });
 }
 
-// First-run no-op until PROJECTFLOW_DATA is built (see end of that IIFE,
+// First-run no-op until FLIZOW_DATA is built (see end of that IIFE,
 // which calls renderSchedule() + applyToday() once data is ready).
 applyToday();
 
@@ -24273,7 +24273,7 @@ applyToday();
 })();
 
 /* OPS_TEAM is the single source of truth for the operator team. Pushed
-   into PROJECTFLOW_DATA.members with `type: 'operator'` so the delegate
+   into FLIZOW_DATA.members with `type: 'operator'` so the delegate
    popover, future assignee pickers, and reporting all resolve the same
    employee records by id. (Team Workload widget was retired in favour
    of the My Boards block on Overview, but the roster stays — it's used
@@ -24608,7 +24608,7 @@ window.OPS_TEAM = OPS_TEAM;
     var taskId = weekTask.getAttribute('data-id');
     var serviceId = weekTask.getAttribute('data-service-id');
     if (!serviceId) {
-      var D = window.PROJECTFLOW_DATA;
+      var D = window.FLIZOW_DATA;
       serviceId = (D && D.scheduleTaskMap) ? D.scheduleTaskMap[taskId] : null;
     }
     if (!serviceId) return; // fall through to client-detail handler below
@@ -25012,12 +25012,12 @@ window.OPS_TEAM = OPS_TEAM;
 </script>
 
 <script>
-/* ═══════ PROJECTFLOW_DATA — unified data model (Phase 1: seed + synthesize)
+/* ═══════ FLIZOW_DATA — unified data model (Phase 1: seed + synthesize)
    Scrapes the 50 client rows, enriches each with industry-template-driven
-   services / tasks / integrations, and exposes window.PROJECTFLOW_DATA.
+   services / tasks / integrations, and exposes window.FLIZOW_DATA.
    No view reads from this yet; later phases will migrate renderers. */
 (function(){
-  if (window.PROJECTFLOW_DATA) return;
+  if (window.FLIZOW_DATA) return;
 
   // TODAY = the user's local "today" at midnight, so all derived dates
   // (due dates, renewals, schedule columns) move with the calendar.
@@ -25377,14 +25377,14 @@ window.OPS_TEAM = OPS_TEAM;
     acme.serviceIds.unshift(brId);
   })();
 
-  window.PROJECTFLOW_DATA = {
+  window.FLIZOW_DATA = {
     clients: clients, services: services, tasks: tasks,
     members: members, integrations: integrations, today: TODAY,
     scheduleTaskMap: scheduleTaskMap
   };
 
   // Schedule grid wasn't built yet when the schedule JS module loaded
-  // (PROJECTFLOW_DATA is built lazily after page DOM). Render now.
+  // (FLIZOW_DATA is built lazily after page DOM). Render now.
   if (typeof renderSchedule === 'function') renderSchedule();
   if (typeof applyToday === 'function') applyToday();
   if (typeof renderPinnedStrip === 'function') renderPinnedStrip();
@@ -25395,9 +25395,9 @@ window.OPS_TEAM = OPS_TEAM;
 /* ═══════ Clients Split View — My Boards (favorited services), saved views, search ═══════ */
 (function(){
   /* Favorites store: array of service IDs (one per board).
-     Migrated from legacy 'projectflow-pinned-clients' key (which stored
+     Migrated from legacy 'flizow-pinned-clients' key (which stored
      client IDs) — old data is ignored on the next load. */
-  var STORAGE_KEY = 'projectflow-favorite-boards';
+  var STORAGE_KEY = 'flizow-favorite-boards';
   var MAX_PINNED = 8;
   var DEFAULT_PINNED = ['acme-corp-svc-0', 'bloom-retail-svc-0', 'techstart-inc-svc-0'];
 
@@ -25416,10 +25416,10 @@ window.OPS_TEAM = OPS_TEAM;
 
   var pinned = loadPinned();
 
-  /* Read client metadata from PROJECTFLOW_DATA (single source of truth).
+  /* Read client metadata from FLIZOW_DATA (single source of truth).
      rowEl is looked up at adapter time so applyFilter() can still hide/show. */
   function readClients() {
-    var D = window.PROJECTFLOW_DATA;
+    var D = window.FLIZOW_DATA;
     if (!D || !D.clients) return [];
     var memberById = {};
     D.members.forEach(function(m){ memberById[m.id] = m; });
@@ -25517,7 +25517,7 @@ window.OPS_TEAM = OPS_TEAM;
     updateSavedViewsOverflow();
   }
   /* Expose so the New Client modal (and future flows) can refresh counts
-     + row visibility after mutating PROJECTFLOW_DATA.clients. */
+     + row visibility after mutating FLIZOW_DATA.clients. */
   window.applyClientsFilter = applyFilter;
 
   function updateSavedViewsOverflow() {
@@ -25552,7 +25552,7 @@ window.OPS_TEAM = OPS_TEAM;
   function renderPinnedStrip() {
     var strips = document.querySelectorAll('.pinned-strip');
     if (!strips.length) return;
-    var D = window.PROJECTFLOW_DATA;
+    var D = window.FLIZOW_DATA;
     if (!D) return;
     var clientById = {};
     D.clients.forEach(function(c) { clientById[c.id] = c; });
@@ -25927,7 +25927,7 @@ window.OPS_TEAM = OPS_TEAM;
   }
 
   function render(){
-    var D = window.PROJECTFLOW_DATA;
+    var D = window.FLIZOW_DATA;
     var list = document.getElementById('attentionList');
     var toggle = document.getElementById('attnToggle');
     if (!D || !list) return;
@@ -26137,9 +26137,9 @@ window.OPS_TEAM = OPS_TEAM;
 </script>
 
 <script>
-/* Phase 4: Kanban board renderer — cards come from PROJECTFLOW_DATA.tasks */
+/* Phase 4: Kanban board renderer — cards come from FLIZOW_DATA.tasks */
 (function(){
-  var D = window.PROJECTFLOW_DATA;
+  var D = window.FLIZOW_DATA;
   if (!D || !D.tasks || !D.services || !D.clients) return;
 
   var COL_TO_DOT = {
@@ -26572,10 +26572,10 @@ window.OPS_TEAM = OPS_TEAM;
 </script>
 
 <script>
-/* Phase 6: Cmd+K — live search against PROJECTFLOW_DATA (clients, tasks, people)
+/* Phase 6: Cmd+K — live search against FLIZOW_DATA (clients, tasks, people)
    plus a small fixed set of navigation commands. */
 (function(){
-  var D = window.PROJECTFLOW_DATA;
+  var D = window.FLIZOW_DATA;
   if (!D) return;
 
   var overlay = document.getElementById('cmdkOverlay');
@@ -26764,10 +26764,10 @@ window.OPS_TEAM = OPS_TEAM;
 </script>
 
 <script>
-/* Phase 5: Align Acme's hardcoded service-card names with PROJECTFLOW_DATA so
+/* Phase 5: Align Acme's hardcoded service-card names with FLIZOW_DATA so
    clicking a service card opens a board whose breadcrumb matches the card. */
 (function(){
-  var D = window.PROJECTFLOW_DATA;
+  var D = window.FLIZOW_DATA;
   if (!D) return;
 
   function apply(){
@@ -26828,7 +26828,7 @@ window.OPS_TEAM = OPS_TEAM;
 
 <script>
 /* ═══════ Analytics v1 — delivery-health rendering + interactions ═══════
-   Reads PROJECTFLOW_DATA synchronously (set earlier in the document body)
+   Reads FLIZOW_DATA synchronously (set earlier in the document body)
    and renders the KPI row, Upcoming list, and Workload grid. Filters
    (person / project / window) update every widget. KPI cards are
    drill-down triggers; clicking one opens an inline task list.
@@ -26843,7 +26843,7 @@ window.OPS_TEAM = OPS_TEAM;
 (function(){
   var view = document.querySelector('.view-analytics');
   if (!view) return;
-  var DATA = window.PROJECTFLOW_DATA;
+  var DATA = window.FLIZOW_DATA;
   if (!DATA || !Array.isArray(DATA.tasks)) return;
 
   // ────────────────────────────────────────────────────────────────────
@@ -26876,7 +26876,7 @@ window.OPS_TEAM = OPS_TEAM;
   })();
 
   // ────────────────────────────────────────────────────────────────────
-  // Members — AM pool from PROJECTFLOW_DATA.members, operators from OPS_TEAM.
+  // Members — AM pool from FLIZOW_DATA.members, operators from OPS_TEAM.
   // Pick a co-owner (operator) by title regex for any task whose assignee
   // is an AM. This is a derived view — original data stays intact.
   // ────────────────────────────────────────────────────────────────────
@@ -28076,7 +28076,7 @@ window.OPS_TEAM = OPS_TEAM;
    Each tab has data-tab-target="X"; panel sets data-active-tab="X".
    Active tab is persisted per-client in localStorage. */
 (function(){
-  var STORAGE_KEY = 'projectflow-client-tab';
+  var STORAGE_KEY = 'flizow-client-tab';
   function loadStored(){
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') || {}; }
     catch (e) { return {}; }
@@ -28772,9 +28772,9 @@ window.OPS_TEAM = OPS_TEAM;
     { name: 'Jessica Park',    initials: 'JP', color: '#ff375f', email: 'jessica@acmecorp.example' },
     { name: 'Ray Ortiz',       initials: 'RO', color: '#30d158', email: 'ray@acmecorp.example' },
     { name: 'Elena Martinez',  initials: 'EM', color: '#bf5af2', email: 'elena@acmecorp.example' },
-    { name: 'Nikko Trinidad',  initials: 'NT', color: '#0a84ff', email: 'nikko@projectflow.example' },
-    { name: 'Marcus Alvarado', initials: 'MA', color: '#ff9f0a', email: 'marcus@projectflow.example' },
-    { name: 'Kenji Chen',      initials: 'KC', color: '#5e5ce6', email: 'kenji@projectflow.example' }
+    { name: 'Nikko Trinidad',  initials: 'NT', color: '#0a84ff', email: 'nikko@flizow.example' },
+    { name: 'Marcus Alvarado', initials: 'MA', color: '#ff9f0a', email: 'marcus@flizow.example' },
+    { name: 'Kenji Chen',      initials: 'KC', color: '#5e5ce6', email: 'kenji@flizow.example' }
   ];
   var FALLBACK_COLORS = ['#0a84ff', '#5e5ce6', '#30d158', '#ff9f0a', '#bf5af2', '#ff375f'];
   var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -29948,7 +29948,7 @@ window.OPS_TEAM = OPS_TEAM;
 
 /* ═══════ Clients split-view list-pane collapse toggle ═══════ */
 (function(){
-  var STORAGE_KEY = 'projectflow-list-pane-collapsed';
+  var STORAGE_KEY = 'flizow-list-pane-collapsed';
   function apply(collapsed){
     document.body.setAttribute('data-list-collapsed', collapsed ? 'true' : 'false');
     var btn = document.querySelector('[data-list-pane-toggle]');
@@ -29976,7 +29976,7 @@ window.OPS_TEAM = OPS_TEAM;
 (function(){
   var IS_MAC = /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent || '');
   var MOD_LABEL = IS_MAC ? '⌘' : 'Ctrl+';
-  var STORAGE_PREFIX = 'projectflow-notes:';
+  var STORAGE_PREFIX = 'flizow-notes:';
 
   // Localize all kbd hints in the notes HTML
   function localizeKbdHints(){
@@ -30606,7 +30606,7 @@ window.OPS_TEAM = OPS_TEAM;
 
     // Push into the single source of truth so saved-view chips, search,
     // and downstream analytics all pick up the new client.
-    var D = window.PROJECTFLOW_DATA;
+    var D = window.FLIZOW_DATA;
     if (D && Array.isArray(D.clients)) {
       D.clients.push({
         id: data.id,
@@ -30683,7 +30683,7 @@ window.OPS_TEAM = OPS_TEAM;
   function open(clientId){
     currentClientId = clientId;
     renderPicker();
-    var firstId = Object.keys(window.PROJECTFLOW_TEMPLATES)[0];
+    var firstId = Object.keys(window.FLIZOW_TEMPLATES)[0];
     selectTemplate(firstId);
     modal.setAttribute('data-open', 'true');
     modal.setAttribute('aria-hidden', 'false');
@@ -30698,7 +30698,7 @@ window.OPS_TEAM = OPS_TEAM;
   }
 
   function renderPicker(){
-    var T = window.PROJECTFLOW_TEMPLATES;
+    var T = window.FLIZOW_TEMPLATES;
     picker.innerHTML = Object.keys(T).map(function(id){
       var t = T[id];
       var onbCount = t.onboarding.fromClient.length + t.onboarding.fromUs.length;
@@ -30714,7 +30714,7 @@ window.OPS_TEAM = OPS_TEAM;
 
   function selectTemplate(id){
     currentTemplateId = id;
-    var t = window.PROJECTFLOW_TEMPLATES[id];
+    var t = window.FLIZOW_TEMPLATES[id];
     if (!t) return;
     picker.querySelectorAll('.as-template-row').forEach(function(r){
       r.classList.toggle('selected', r.getAttribute('data-as-template-id') === id);
@@ -30754,7 +30754,7 @@ window.OPS_TEAM = OPS_TEAM;
     if (!currentTemplateId || !currentClientId) return;
     var name = (nameInput.value || '').trim();
     if (!name) { nameInput.focus(); return; }
-    var template = window.PROJECTFLOW_TEMPLATES[currentTemplateId];
+    var template = window.FLIZOW_TEMPLATES[currentTemplateId];
     var serviceId = addServiceToClient(currentClientId, {
       template: template,
       name: name,
@@ -30929,13 +30929,13 @@ window.OPS_TEAM = OPS_TEAM;
 
     updateOnboardingAggregate(onbSection);
 
-    // Register into PROJECTFLOW_DATA so the board view can render this
+    // Register into FLIZOW_DATA so the board view can render this
     // newly-created service (and find its client on back-nav). Each phase
     // becomes a card in the To Do column with the phase's subtasks as the
     // card's checklist; every other field stays empty so the owning manager
     // fills in assignees, priority, labels, and dates manually.
-    if (window.PROJECTFLOW_DATA) {
-      var D = window.PROJECTFLOW_DATA;
+    if (window.FLIZOW_DATA) {
+      var D = window.FLIZOW_DATA;
       D.services = D.services || [];
       D.tasks = D.tasks || [];
       var taskIds = [];
@@ -31112,7 +31112,7 @@ window.OPS_TEAM = OPS_TEAM;
   var view = document.querySelector('.view-wip');
   if (!view) return;
 
-  var STORAGE_KEY = 'projectflow.wip.v1';
+  var STORAGE_KEY = 'flizow.wip.v1';
   var STATE_VERSION = 4;
   var DEFAULT_MEETING_DAY  = 1;   // 0=Sun, 1=Mon
   var DEFAULT_MEETING_HOUR = 11;  // 11:30 local
@@ -31211,7 +31211,7 @@ window.OPS_TEAM = OPS_TEAM;
     return null;
   }
   function readClients(){
-    var D = window.PROJECTFLOW_DATA;
+    var D = window.FLIZOW_DATA;
     return (D && D.clients) ? D.clients.slice() : [];
   }
   function uid(pfx){
@@ -31394,7 +31394,7 @@ window.OPS_TEAM = OPS_TEAM;
   }
 
   // ═════════════════════════════════════════════════════════════
-  //  NEW HIERARCHICAL AGENDA (auto-populated from PROJECTFLOW_DATA)
+  //  NEW HIERARCHICAL AGENDA (auto-populated from FLIZOW_DATA)
   // ═════════════════════════════════════════════════════════════
   //  Belief: the PM is prepping in 5 minutes. Show what the kanban
   //  already knows — new clients, urgent cards, on-track work —
@@ -31424,7 +31424,7 @@ window.OPS_TEAM = OPS_TEAM;
   };
 
   function computeAutoAgenda(){
-    var D = window.PROJECTFLOW_DATA;
+    var D = window.FLIZOW_DATA;
     var clients  = (D && D.clients)  ? D.clients  : [];
     var services = (D && D.services) ? D.services : [];
     var tasks    = (D && D.tasks)    ? D.tasks    : [];
@@ -32482,7 +32482,7 @@ window.OPS_TEAM = OPS_TEAM;
     // --- New agenda item keys ---
     if (typeof blockKey === 'string' && blockKey.indexOf('agenda:newclient:') === 0) {
       var cid = blockKey.slice('agenda:newclient:'.length);
-      var D = window.PROJECTFLOW_DATA || {};
+      var D = window.FLIZOW_DATA || {};
       var clients0 = D.clients || [];
       var c0 = null;
       for (var i = 0; i < clients0.length; i++) if (clients0[i].id === cid) { c0 = clients0[i]; break; }
@@ -32491,7 +32491,7 @@ window.OPS_TEAM = OPS_TEAM;
     }
     if (typeof blockKey === 'string' && blockKey.indexOf('agenda:card:') === 0) {
       var tid = blockKey.slice('agenda:card:'.length);
-      var D2 = window.PROJECTFLOW_DATA || {};
+      var D2 = window.FLIZOW_DATA || {};
       var t = null;
       for (var j = 0; j < (D2.tasks || []).length; j++) if (D2.tasks[j].id === tid) { t = D2.tasks[j]; break; }
       if (!t) return null;
@@ -33353,7 +33353,7 @@ window.OPS_TEAM = OPS_TEAM;
   var tabs  = panel.querySelectorAll('[data-notif-filter]');
   if (!btn || !panel || !body) return;
 
-  var STORAGE_KEY = 'projectflow-notifs-v1';
+  var STORAGE_KEY = 'flizow-notifs-v1';
   var currentFilter = 'all';
 
   /* ---------- Seed feed. Ordered newest → oldest. Every id is stable
@@ -33380,10 +33380,10 @@ window.OPS_TEAM = OPS_TEAM;
       context:'Cascade Coffee · Paid',          href:'#clients/cascade-coffee' },
     { id:'n-digest',          type:'system',   group:'Earlier',   ago:'Mon',
       text:'Daily digest — <strong>4 items</strong> need you today',
-      context:'ProjectFlow · System',           href:'#wip/agenda' },
+      context:'Flizow · System',           href:'#wip/agenda' },
     { id:'n-wip',             type:'system',   group:'Earlier',   ago:'Mon',
       text:'Weekly WIP agenda ready to review',
-      context:'ProjectFlow · System',           href:'#wip/agenda' }
+      context:'Flizow · System',           href:'#wip/agenda' }
   ];
 
   /* ---------- Persisted state: per-id read + dismissed flags only.
@@ -33666,7 +33666,7 @@ window.OPS_TEAM = OPS_TEAM;
   var avatarPreview = document.getElementById('settingsAvatarPreview');
   var headerAvatarBtn = document.getElementById('accountMenuBtn');
 
-  var STORAGE_KEY = 'projectflow-acct-v1';
+  var STORAGE_KEY = 'flizow-acct-v1';
   var prefsOrig = {};      // snapshot on open (for cancel/dirty diff)
   var prefsCurrent = {};   // live form state
 
@@ -33961,20 +33961,20 @@ window.OPS_TEAM = OPS_TEAM;
 <script type="module" id="testersBoot">
 /* ═══════ Peer testing — auth + Firestore sync boot ═══════
    Runs only when tester mode is active (pre-flight in <head> sets the state).
-   On sign-in: fetches the tester's Firestore doc, clears local projectflow.*
+   On sign-in: fetches the tester's Firestore doc, clears local flizow.*
    keys, replaces them with cloud values, writes a profile, then reloads so
    the mockup IIFEs start fresh against the hydrated state. After that, every
-   projectflow.* localStorage write is mirrored to Firestore (debounced) so
+   flizow.* localStorage write is mirrored to Firestore (debounced) so
    the admin can see the session live. */
 
 const TESTERS_MODE = document.documentElement.getAttribute('data-testers-state') != null;
 if (TESTERS_MODE) {
   const ADMIN_EMAIL    = 'nikkortrinidad@gmail.com';
-  const HYDRATION_FLAG = 'projectflow.testers.hydratedUid';
+  const HYDRATION_FLAG = 'flizow.testers.hydratedUid';
   // sessionStorage — per-tab. Present when the admin is viewing another
   // tester's session (read-only). Cleared when admin returns to self.
-  const VIEWING_FLAG   = 'projectflow.testers.viewingUid';
-  const VIEWING_NAME   = 'projectflow.testers.viewingName';
+  const VIEWING_FLAG   = 'flizow.testers.viewingUid';
+  const VIEWING_NAME   = 'flizow.testers.viewingName';
   const FLUSH_DELAY_MS = 1200;
   const FIREBASE_CONFIG = {
     apiKey: "AIzaSyBncwf9Qi8vkNKeRrE1jrjJDr5eI-RJP5k",
@@ -34009,8 +34009,8 @@ if (TESTERS_MODE) {
     // Firestore: they belong to the device, not the session.
     function isSyncedKey(k) {
       return !!k
-        && k.startsWith('projectflow.')
-        && k !== 'projectflow.testers.enabled'
+        && k.startsWith('flizow.')
+        && k !== 'flizow.testers.enabled'
         && k !== HYDRATION_FLAG;
     }
     function allSyncedKeys() {
@@ -34031,7 +34031,7 @@ if (TESTERS_MODE) {
     }
 
     async function hydrateFromCloud(uid) {
-      const ref  = doc(db, 'projectflow-testers', uid);
+      const ref  = doc(db, 'flizow-testers', uid);
       const snap = await getDoc(ref);
       const data = snap.exists() ? snap.data() : null;
       const store = (data && data.store) || {};
@@ -34043,7 +34043,7 @@ if (TESTERS_MODE) {
     }
 
     async function writeProfile(user, firstTime) {
-      const ref = doc(db, 'projectflow-testers', user.uid);
+      const ref = doc(db, 'flizow-testers', user.uid);
       const profile = {
         email:    user.email     || null,
         name:     user.displayName || null,
@@ -34058,7 +34058,7 @@ if (TESTERS_MODE) {
     async function flushNow() {
       const user = window.__pfTesters && window.__pfTesters.user;
       if (!user) return;
-      const ref = doc(db, 'projectflow-testers', user.uid);
+      const ref = doc(db, 'flizow-testers', user.uid);
       await setDoc(ref, {
         store:   snapshotStore(),
         profile: { lastSeen: serverTimestamp() }
@@ -34142,7 +34142,7 @@ if (TESTERS_MODE) {
 
       async function loadList() {
         try {
-          const snap = await getDocs(collection(db, 'projectflow-testers'));
+          const snap = await getDocs(collection(db, 'flizow-testers'));
           const testers = [];
           snap.forEach(d => testers.push({ uid: d.id, ...d.data() }));
           // Sort by lastSeen desc client-side so we don't need a Firestore index.

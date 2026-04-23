@@ -20,7 +20,7 @@ This is the only doc that actively changes as Nikko finalizes design decisions. 
 | **Clients — split-pane detail** | `.clients-split-wrapper` | List on left, client detail on right. |
 | **Client detail page** | `.view-client-detail` | Services list, integrations, onboarding checklist, team, activity. |
 | **Service card → Kanban board** | `.service-card[data-service-id]` | Click navigates to `#board/<serviceId>`. |
-| **Favorites (star a board)** | `.service-star` | Adds to `localStorage['projectflow-favorite-boards']`. Synced to both Overview and Clients strips. |
+| **Favorites (star a board)** | `.service-star` | Adds to `localStorage['flizow-favorite-boards']`. Synced to both Overview and Clients strips. |
 | **Kanban board** | `.view-board` | Columns, cards, sidebar metadata. |
 | Kanban — card detail modal | `openCardPanel()` | Title, description, comments, checklist, assignees, dates, labels. |
 | Status taxonomy | See `04-technical-reference.md` § Taxonomies | Five client statuses, five Kanban columns, four priorities. |
