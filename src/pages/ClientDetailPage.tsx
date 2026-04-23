@@ -144,6 +144,7 @@ function ClientDetail({ client, data, store }: DetailProps) {
             store.addOnboardingItem({ id, serviceId, group, label, done: false });
           }}
           onDelete={(id) => store.deleteOnboardingItem(id)}
+          onRename={(id, label) => store.updateOnboardingItem(id, label)}
         />
       )}
 
@@ -1034,12 +1035,13 @@ function quickTime(createdAt: string, todayISO: string): string {
  *   click to fix.
  * - Keyboard: head is a <button>, each check is a <button aria-pressed>.
  */
-function OnboardingSection({ services, items, onToggle, onAdd, onDelete }: {
+function OnboardingSection({ services, items, onToggle, onAdd, onDelete, onRename }: {
   services: Service[];
   items: OnboardingItem[];
   onToggle: (id: string) => void;
   onAdd: (serviceId: string, group: 'client' | 'us', label: string) => void;
   onDelete: (id: string) => void;
+  onRename: (id: string, label: string) => void;
 }) {
   const groups = useMemo(() => groupByService(services, items), [services, items]);
 
@@ -1104,6 +1106,7 @@ function OnboardingSection({ services, items, onToggle, onAdd, onDelete }: {
             onToggle={onToggle}
             onAdd={onAdd}
             onDelete={onDelete}
+            onRename={onRename}
           />
         ))}
       </div>
@@ -1129,11 +1132,12 @@ function groupByService(services: Service[], items: OnboardingItem[]): Onboardin
   });
 }
 
-function OnboardingServiceCard({ group, onToggle, onAdd, onDelete }: {
+function OnboardingServiceCard({ group, onToggle, onAdd, onDelete, onRename }: {
   group: OnboardingGroup;
   onToggle: (id: string) => void;
   onAdd: (serviceId: string, group: 'client' | 'us', label: string) => void;
   onDelete: (id: string) => void;
+  onRename: (id: string, label: string) => void;
 }) {
   const { service, client, us, doneCount, total } = group;
   const complete = total > 0 && doneCount === total;
@@ -1198,7 +1202,7 @@ function OnboardingServiceCard({ group, onToggle, onAdd, onDelete }: {
               land. */}
           <div className="onboarding-group-label">Needed from client</div>
           {client.map(item => (
-            <OnboardingRow key={item.id} item={item} onToggle={onToggle} onDelete={onDelete} />
+            <OnboardingRow key={item.id} item={item} onToggle={onToggle} onDelete={onDelete} onRename={onRename} />
           ))}
           <OnboardingAddItem
             serviceId={service.id}
@@ -1208,7 +1212,7 @@ function OnboardingServiceCard({ group, onToggle, onAdd, onDelete }: {
 
           <div className="onboarding-group-label" style={{ marginTop: 16 }}>We take care of</div>
           {us.map(item => (
-            <OnboardingRow key={item.id} item={item} onToggle={onToggle} onDelete={onDelete} />
+            <OnboardingRow key={item.id} item={item} onToggle={onToggle} onDelete={onDelete} onRename={onRename} />
           ))}
           <OnboardingAddItem
             serviceId={service.id}
@@ -1221,14 +1225,57 @@ function OnboardingServiceCard({ group, onToggle, onAdd, onDelete }: {
   );
 }
 
-function OnboardingRow({ item, onToggle, onDelete }: {
+function OnboardingRow({ item, onToggle, onDelete, onRename }: {
   item: OnboardingItem;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
+  onRename: (id: string, label: string) => void;
 }) {
+  // Double-click on the label text enters edit mode. Single click still
+  // toggles the row (via the <label> wrapping). Apple Finder pattern —
+  // single click for the primary action, double click to rename. Keeps
+  // the most-common gesture (check off an item) one click away while
+  // making the rarer gesture (fix a typo) discoverable through OS habit.
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(item.label);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editing) {
+      const t = window.setTimeout(() => {
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      }, 40);
+      return () => window.clearTimeout(t);
+    }
+  }, [editing]);
+
+  // Reset the draft if the underlying label changes from elsewhere (e.g.
+  // another tab). Without this the input would cling to the old value
+  // when the user reopens it.
+  useEffect(() => {
+    if (!editing) setDraft(item.label);
+  }, [item.label, editing]);
+
+  const commitRename = () => {
+    const trimmed = draft.trim();
+    if (!trimmed || trimmed === item.label) {
+      setEditing(false);
+      setDraft(item.label);
+      return;
+    }
+    onRename(item.id, trimmed);
+    setEditing(false);
+  };
+
+  const cancelRename = () => {
+    setDraft(item.label);
+    setEditing(false);
+  };
+
   return (
     <label
-      className={`onboarding-item${item.done ? ' done' : ''}`}
+      className={`onboarding-item${item.done ? ' done' : ''}${editing ? ' editing' : ''}`}
       // The whole row is clickable for the same reason toggles on iOS let
       // you tap anywhere on the row: bigger target, fewer missed taps.
     >
@@ -1239,6 +1286,8 @@ function OnboardingRow({ item, onToggle, onDelete }: {
         aria-checked={item.done}
         aria-label={`${item.done ? 'Mark as not done' : 'Mark as done'}: ${item.label}`}
         onClick={(e) => { e.preventDefault(); onToggle(item.id); }}
+        // Disabled during rename — the input owns the row until Enter/Esc.
+        disabled={editing}
       >
         {item.done && (
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -1246,29 +1295,62 @@ function OnboardingRow({ item, onToggle, onDelete }: {
           </svg>
         )}
       </button>
-      <span>{item.label}</span>
+      {editing ? (
+        <input
+          ref={inputRef}
+          type="text"
+          className="onboarding-rename-input"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              commitRename();
+            } else if (e.key === 'Escape') {
+              e.preventDefault();
+              cancelRename();
+            }
+          }}
+          onBlur={commitRename}
+          onClick={(e) => e.preventDefault()}
+          aria-label="Rename onboarding item"
+        />
+      ) : (
+        <span
+          className="onboarding-item-label"
+          onDoubleClick={(e) => {
+            e.preventDefault();
+            setEditing(true);
+          }}
+          title="Double-click to rename"
+        >
+          {item.label}
+        </span>
+      )}
 
       {/* × lives on the right edge, far from the checkbox on the left,
           and only fades in on row hover. Low-cost data — no confirm
           dialog. If a user regrets the delete they can just re-add it. */}
-      <button
-        type="button"
-        className="onboarding-delete-btn"
-        aria-label={`Delete "${item.label}"`}
-        title="Delete item"
-        onClick={(e) => {
-          // stopPropagation because the row <label> would otherwise
-          // treat the click as a toggle on the checkbox.
-          e.preventDefault();
-          e.stopPropagation();
-          onDelete(item.id);
-        }}
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <line x1="18" y1="6" x2="6" y2="18" />
-          <line x1="6" y1="6" x2="18" y2="18" />
-        </svg>
-      </button>
+      {!editing && (
+        <button
+          type="button"
+          className="onboarding-delete-btn"
+          aria-label={`Delete "${item.label}"`}
+          title="Delete item"
+          onClick={(e) => {
+            // stopPropagation because the row <label> would otherwise
+            // treat the click as a toggle on the checkbox.
+            e.preventDefault();
+            e.stopPropagation();
+            onDelete(item.id);
+          }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      )}
     </label>
   );
 }

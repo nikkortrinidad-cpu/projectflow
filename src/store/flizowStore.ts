@@ -834,6 +834,18 @@ class FlizowStore {
     this.save();
   }
 
+  /** Rename an onboarding item. Used by the double-click-to-edit
+   *  affordance on OnboardingRow. Ignored if the new label is empty —
+   *  the caller is expected to validate but this method hardens it. */
+  updateOnboardingItem(id: string, label: string) {
+    const trimmed = label.trim();
+    if (!trimmed) return;
+    const item = this.data.onboardingItems.find(o => o.id === id);
+    if (!item) return;
+    item.label = trimmed;
+    this.save();
+  }
+
   // ── Client directory: contacts, quick links, team ────────────────────
 
   addContact(contact: Contact) {

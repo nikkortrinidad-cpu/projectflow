@@ -9045,6 +9045,49 @@
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--highlight) 18%, transparent);
   }
 
+  /* Double-click the label text to rename. The span wears the text
+     cursor + hover tint so the affordance is discoverable without a
+     pencil icon. The row is still click-to-toggle — the dblclick
+     gesture is what promotes the span into rename mode. */
+  .onboarding-item-label {
+    flex: 1 1 auto;
+    min-width: 0;
+    cursor: text;
+    padding: 2px 4px;
+    margin: -2px -4px;
+    border-radius: 4px;
+    transition: background 0.12s;
+  }
+  .onboarding-item-label:hover {
+    background: color-mix(in srgb, var(--highlight) 6%, transparent);
+  }
+  .onboarding-item.done .onboarding-item-label:hover {
+    /* Completed rows don't invite rename — dim the hover so it reads
+       as "settled" rather than "come edit me". */
+    background: color-mix(in srgb, var(--highlight) 3%, transparent);
+  }
+  /* Input takes the same row slot as the label span so the layout
+     doesn't jump. Focus ring matches the app standard. */
+  .onboarding-rename-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 4px 8px;
+    margin: -4px -8px;
+    font: inherit;
+    font-size: var(--fs-md);
+    color: var(--text);
+    background: var(--bg-faint);
+    border: 1px solid var(--highlight);
+    border-radius: 6px;
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--highlight) 18%, transparent);
+  }
+  .onboarding-item.editing {
+    /* While editing, kill the strikethrough that .done would otherwise
+       apply to child text — the input should read as a normal field. */
+    text-decoration: none;
+  }
+
   /* Service-scoped onboarding — aggregated stack, one collapsible card per service */
   .onboarding-service-stack {
     display: flex; flex-direction: column; gap: var(--sp-md);
