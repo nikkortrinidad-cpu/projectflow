@@ -12826,7 +12826,10 @@
     </div>
   </div>
 
-  <!-- BLOCK 3: WEEKLY WIP PREVIEW — mirrors the Agenda tab counts + next meeting -->
+  <!-- BLOCK 3: WEEKLY WIP PREVIEW — conditional. Only renders when the meeting
+       is today or within 48 hours. Day-of, the CTA flips to "Start meeting"
+       and routes to Live. Outside the window the block is hidden entirely so
+       Home stays quiet. See the Option B gate in the render script below. -->
   <div class="block" data-block-id="wipnext">
     <div class="block-header">
       <button class="block-drag-handle" data-tip="Drag to reorder" aria-label="Drag to reorder"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></button>
@@ -25600,10 +25603,11 @@ window.OPS_TEAM = OPS_TEAM;
 </script>
 
 <script>
-/* ═══════ Home — Weekly WIP preview block ═══════
-   Mirrors the Agenda tab's live counts so the PM sees meeting prep status
-   on the Home page without switching tabs. Reads through window.WIP API so
-   the WIP IIFE stays the single source of truth for agenda state. */
+/* ═══════ Home — Weekly WIP preview block (Option B: conditional) ═══════
+   Reads through window.WIP.getAgendaSummary() so the WIP IIFE stays the single
+   source of truth for agenda state. Only renders when the meeting is today or
+   within the next 48 hours — otherwise the block is hidden. Day-of, the CTA
+   flips from "Review agenda" to "Start meeting" and routes to #wip/live. */
 (function(){
   function fmtWhen(iso){
     if (!iso) return { full: '\u2014', rel: '' };
@@ -25639,6 +25643,25 @@ window.OPS_TEAM = OPS_TEAM;
     // WIP IIFE not parsed yet — leave placeholders; it calls us back once ready.
     if (!api) return;
 
+    // ── Option B gate ─────────────────────────────────────────────────────
+    // The WIP meeting is weekly. A static preview burns attention 6 days a
+    // week for a 1-day payoff. Hide the block unless the meeting is today or
+    // within the next 48 hours. When it surfaces, it actually means something.
+    var block      = document.querySelector('[data-block-id="wipnext"]');
+    var meeting    = api.nextMeetingAt ? new Date(api.nextMeetingAt) : null;
+    var now        = new Date();
+    var isToday    = !!(meeting
+                      && meeting.getFullYear() === now.getFullYear()
+                      && meeting.getMonth()    === now.getMonth()
+                      && meeting.getDate()     === now.getDate());
+    var hoursUntil = meeting ? (meeting.getTime() - now.getTime()) / 3600000 : Infinity;
+    // Window: today (any hour) OR within next 48h in the future.
+    var inWindow   = isToday || (hoursUntil > 0 && hoursUntil <= 48);
+    if (block) {
+      block.hidden = !(meeting && inWindow);
+      if (block.hidden) return;
+    }
+
     var w = fmtWhen(api.nextMeetingAt);
     if (whenEl) whenEl.textContent = w.full;
     if (relEl)  relEl.textContent  = w.rel;
@@ -25668,6 +25691,19 @@ window.OPS_TEAM = OPS_TEAM;
       newEl.textContent = nc;
       newEl.classList.toggle('is-muted', nc === 0);
     }
+
+    // Day-of swap: the CTA flips from "review" to "start". Same cell click
+    // routes accordingly so the block's job is unambiguous for the day.
+    var link   = document.getElementById('wipNextReviewLink');
+    var cell   = document.querySelector('[data-wipnext-open]');
+    var title  = block && block.querySelector('.block-title');
+    var target = isToday ? '#wip/live' : '#wip/agenda';
+    if (link) {
+      link.textContent = isToday ? 'Start meeting \u2192' : 'Review agenda \u2192';
+      link.setAttribute('href', target);
+    }
+    if (cell) cell.setAttribute('data-wipnext-target', target);
+    if (title) title.textContent = isToday ? 'Weekly WIP today' : 'Weekly WIP';
   }
 
   // Click/Enter on the "when" cell jumps to Agenda — direct manipulation.
@@ -25675,7 +25711,12 @@ window.OPS_TEAM = OPS_TEAM;
     var cell = document.querySelector('[data-wipnext-open]');
     if (!cell || cell.__wired) return;
     cell.__wired = true;
-    function go(){ window.location.hash = '#wip/agenda'; }
+    function go(){
+      // Read the current target set by render() — day-of goes to Live,
+      // otherwise Agenda. Fallback keeps the cell from dead-ending.
+      var target = cell.getAttribute('data-wipnext-target') || '#wip/agenda';
+      window.location.hash = target;
+    }
     cell.addEventListener('click', go);
     cell.addEventListener('keydown', function(e){
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); }
@@ -25690,6 +25731,10 @@ window.OPS_TEAM = OPS_TEAM;
   } else {
     render(); wireOpen();
   }
+
+  // Re-check the window every 5 minutes so the block surfaces / hides as
+  // the 48-hour boundary rolls over without requiring a page refresh.
+  setInterval(render, 5 * 60 * 1000);
 })();
 </script>
 
