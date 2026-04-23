@@ -505,57 +505,91 @@ function ActionItemRow({ item, members, store, todayISO }: {
 }) {
   const assignee = item.assigneeId ? members.find(m => m.id === item.assigneeId) ?? null : null;
   const dueStatus = dueChipStatus(item.dueDate, todayISO, item.done);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // If the action item has a promoted kanban card, delete surfaces that
+  // fact in the confirm body so the user isn't surprised the card survives.
+  const wasPromoted = !!item.promotedCardId;
 
   return (
-    <div className="meeting-action" data-action-item data-done={item.done ? 'true' : 'false'}>
-      <button
-        type="button"
-        className="meeting-action-check"
-        role="checkbox"
-        aria-checked={item.done}
-        aria-label={item.done ? 'Mark not done' : 'Mark done'}
-        onClick={() => store.toggleActionItem(item.id)}
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <polyline points="20 6 9 17 4 12" />
-        </svg>
-      </button>
-      <div className="meeting-action-text">{item.text}</div>
-      {assignee && (
-        <span
-          className="meeting-action-assignee"
-          style={{ background: assignee.color }}
-          title={assignee.name}
-        >
-          {assignee.initials}
-        </span>
-      )}
-      <span className="meeting-action-due" data-status={dueStatus}>
-        {dueChipLabel(item.dueDate, todayISO, item.done)}
-      </span>
-      {item.promotedCardId ? (
-        <span
-          className="meeting-action-promote"
-          title="Already promoted to a card"
-          style={{ opacity: 0.6, pointerEvents: 'none' }}
-        >
-          On board
-        </span>
-      ) : (
+    <>
+      <div className="meeting-action" data-action-item data-done={item.done ? 'true' : 'false'}>
         <button
           type="button"
-          className="meeting-action-promote"
-          onClick={() => {
-            // Promotion to a kanban card lands once the board is wired.
-            // For now the button stays visible but is a deliberate stub so
-            // the interaction is discoverable before the wire-up.
-            window.alert('Promotion to a kanban card ships with the Service board pass.');
-          }}
+          className="meeting-action-check"
+          role="checkbox"
+          aria-checked={item.done}
+          aria-label={item.done ? 'Mark not done' : 'Mark done'}
+          onClick={() => store.toggleActionItem(item.id)}
         >
-          Promote to card
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
         </button>
+        <div className="meeting-action-text">{item.text}</div>
+        {assignee && (
+          <span
+            className="meeting-action-assignee"
+            style={{ background: assignee.color }}
+            title={assignee.name}
+          >
+            {assignee.initials}
+          </span>
+        )}
+        <span className="meeting-action-due" data-status={dueStatus}>
+          {dueChipLabel(item.dueDate, todayISO, item.done)}
+        </span>
+        {item.promotedCardId ? (
+          <span
+            className="meeting-action-promote"
+            title="Already promoted to a card"
+            style={{ opacity: 0.6, pointerEvents: 'none' }}
+          >
+            On board
+          </span>
+        ) : (
+          <button
+            type="button"
+            className="meeting-action-promote"
+            onClick={() => {
+              // Promotion to a kanban card lands once the board is wired.
+              // For now the button stays visible but is a deliberate stub so
+              // the interaction is discoverable before the wire-up.
+              window.alert('Promotion to a kanban card ships with the Service board pass.');
+            }}
+          >
+            Promote to card
+          </button>
+        )}
+        <button
+          type="button"
+          className="meeting-action-delete"
+          aria-label={`Delete action item: ${item.text}`}
+          onClick={() => setShowDeleteConfirm(true)}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      {showDeleteConfirm && (
+        <ConfirmDangerDialog
+          title="Delete action item?"
+          body={
+            wasPromoted
+              ? "Removes this row from the meeting's follow-ups. The kanban card it was promoted to stays on the board."
+              : "Removes this follow-up from the meeting. This can't be undone."
+          }
+          confirmLabel="Delete action item"
+          onConfirm={() => {
+            store.deleteActionItem(item.id);
+            setShowDeleteConfirm(false);
+          }}
+          onClose={() => setShowDeleteConfirm(false)}
+        />
       )}
-    </div>
+    </>
   );
 }
 
