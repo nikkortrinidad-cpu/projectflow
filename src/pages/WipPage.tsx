@@ -84,6 +84,7 @@ export function WipPage() {
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [modal, setModal] = useState<ModalState>({ kind: 'closed' });
   const [meeting, setMeeting] = useState<LiveMeetingState>({ phase: 'idle' });
+  const [showPreRead, setShowPreRead] = useState(false);
 
   const groups = useMemo(
     () => buildAgenda(
@@ -202,6 +203,7 @@ export function WipPage() {
               minutes={estMinutes}
               onAdd={() => setModal({ kind: 'add' })}
               onStart={startMeeting}
+              onSendPreRead={() => setShowPreRead(true)}
             />
 
             {itemCount === 0 ? (
@@ -262,17 +264,29 @@ export function WipPage() {
           onClose={() => setModal({ kind: 'closed' })}
         />
       )}
+
+      {showPreRead && (
+        <PreReadModal
+          groups={visibleGroups}
+          todayISO={data.today}
+          nextMeeting={nextMeetingLabel(data.today)}
+          itemCount={itemCount}
+          estMinutes={estMinutes}
+          onClose={() => setShowPreRead(false)}
+        />
+      )}
     </div>
   );
 }
 
 // ── Toolbar ──────────────────────────────────────────────────────────────
 
-function AgendaToolbar({ count, minutes, onAdd, onStart }: {
+function AgendaToolbar({ count, minutes, onAdd, onStart, onSendPreRead }: {
   count: number;
   minutes: number;
   onAdd: () => void;
   onStart: () => void;
+  onSendPreRead: () => void;
 }) {
   return (
     <div className="wip-agenda-toolbar">
@@ -288,7 +302,13 @@ function AgendaToolbar({ count, minutes, onAdd, onStart }: {
           </svg>
           <span>Add agenda item</span>
         </button>
-        <button type="button" className="wip-btn wip-btn-ring" disabled>
+        <button
+          type="button"
+          className="wip-btn wip-btn-ring"
+          onClick={onSendPreRead}
+          disabled={count === 0}
+          title={count === 0 ? 'Nothing on the agenda to pre-read' : 'Preview and send a pre-read'}
+        >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M22 2 11 13" />
             <path d="M22 2 15 22l-4-9-9-4 20-7z" />
@@ -879,6 +899,195 @@ function AddAgendaItemModal({ clients, existing, hasManualItems, onClose }: {
       </div>
     </div>
   );
+}
+
+// ── Pre-read modal ───────────────────────────────────────────────────────
+
+/**
+ * Preview of the meeting pre-read. Shows the compiled text in a
+ * read-only textarea, with two actions at the bottom: copy to
+ * clipboard (the fast path — paste into whatever tool the team uses)
+ * and open in email (mailto: — opens the default client with the
+ * subject and body pre-filled). Close dismisses.
+ *
+ * We don't actually "send" anything — the button label is honest
+ * ("Copy" / "Open email"), because "Send" would imply this app knows
+ * the team's email addresses, which it doesn't. Design rule: never
+ * promise something the software can't deliver.
+ */
+function PreReadModal({ groups, todayISO, nextMeeting, itemCount, estMinutes, onClose }: {
+  groups: AgendaGroup[];
+  todayISO: string;
+  nextMeeting: string;
+  itemCount: number;
+  estMinutes: number;
+  onClose: () => void;
+}) {
+  const body = useMemo(
+    () => buildPreRead(groups, todayISO, nextMeeting, itemCount, estMinutes),
+    [groups, todayISO, nextMeeting, itemCount, estMinutes],
+  );
+  const subject = `Weekly WIP pre-read — ${formatPreReadDate(todayISO)}`;
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') { e.preventDefault(); onClose(); }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  async function handleCopy() {
+    const text = body;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else if (textareaRef.current) {
+        // Fallback for older/insecure contexts where the Clipboard API
+        // isn't available. Select the textarea contents and exec copy.
+        textareaRef.current.focus();
+        textareaRef.current.select();
+        document.execCommand('copy');
+      }
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      // Swallow — the textarea is already selectable, so the user can
+      // manual-copy as a last resort. Showing an error would be noisier
+      // than the actual failure mode is worth.
+    }
+  }
+
+  function handleEmail() {
+    const href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    // Open in new tab so we don't navigate the app itself if the user's
+    // OS doesn't have a mail client registered.
+    window.open(href, '_blank', 'noopener,noreferrer');
+  }
+
+  function handleBackdropClick(e: React.MouseEvent<HTMLDivElement>) {
+    if (e.target === e.currentTarget) onClose();
+  }
+
+  return (
+    <div
+      className="wip-modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="wip-preread-title"
+      onClick={handleBackdropClick}
+    >
+      <div className="wip-modal" role="document" style={{ maxWidth: 640 }}>
+        <header className="wip-modal-head">
+          <h2 className="wip-modal-title" id="wip-preread-title">Pre-read preview</h2>
+          <button type="button" className="wip-modal-close" onClick={onClose} aria-label="Close">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </header>
+
+        <div className="wip-modal-body">
+          <div style={{ fontSize: 12, color: 'var(--text-soft)', marginBottom: 8 }}>
+            Copy this into Slack/email or open in your mail client. We don't
+            send from here — the team's addresses live elsewhere.
+          </div>
+          <label className="wip-field" style={{ marginBottom: 0 }}>
+            <span className="wip-field-label">Subject</span>
+            <input
+              type="text"
+              readOnly
+              className="wip-field-input"
+              value={subject}
+              onFocus={(e) => e.currentTarget.select()}
+            />
+          </label>
+          <label className="wip-field" style={{ marginTop: 12 }}>
+            <span className="wip-field-label">Body</span>
+            <textarea
+              ref={textareaRef}
+              readOnly
+              className="wip-field-input wip-field-textarea"
+              value={body}
+              rows={14}
+              style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 12, lineHeight: 1.55 }}
+              onFocus={(e) => e.currentTarget.select()}
+            />
+          </label>
+        </div>
+
+        <footer className="wip-modal-foot">
+          <button type="button" className="wip-btn wip-btn-ghost" onClick={onClose}>
+            Close
+          </button>
+          <button type="button" className="wip-btn wip-btn-ring" onClick={handleEmail}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="14" rx="2" />
+              <polyline points="3 7 12 13 21 7" />
+            </svg>
+            Open in email
+          </button>
+          <button type="button" className="wip-btn wip-btn-primary" onClick={handleCopy}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              {copied ? (
+                <polyline points="20 6 9 17 4 12" />
+              ) : (
+                <>
+                  <rect x="9" y="9" width="13" height="13" rx="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </>
+              )}
+            </svg>
+            {copied ? 'Copied' : 'Copy to clipboard'}
+          </button>
+        </footer>
+      </div>
+    </div>
+  );
+}
+
+/** Plain-text body for the pre-read. Markdown would be nicer in Slack
+ *  but breaks mailto encoding, and the AM is usually pasting into a
+ *  channel or Gmail compose either way. Text is the lowest-common-
+ *  denominator that survives both paths cleanly. */
+function buildPreRead(
+  groups: AgendaGroup[],
+  todayISO: string,
+  nextMeeting: string,
+  itemCount: number,
+  estMinutes: number,
+): string {
+  const lines: string[] = [];
+  lines.push(`Weekly WIP pre-read — ${formatPreReadDate(todayISO)}`);
+  lines.push(`Next meeting: ${nextMeeting}`);
+  lines.push('');
+  lines.push(`${itemCount} item${itemCount === 1 ? '' : 's'} · est. ${estMinutes} min`);
+
+  for (const g of groups) {
+    if (g.items.length === 0) continue;
+    lines.push('');
+    lines.push(`${g.title} (${g.items.length})`);
+    for (const item of g.items) {
+      lines.push(`• ${item.label} — ${item.meta}`);
+      if (item.note) lines.push(`  Context: ${item.note}`);
+    }
+  }
+
+  lines.push('');
+  lines.push('—');
+  lines.push('Sent from Flizow');
+  return lines.join('\n');
+}
+
+function formatPreReadDate(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString(undefined, {
+    weekday: 'short', month: 'short', day: 'numeric',
+  });
 }
 
 // ── Live meeting: pre-start gate ─────────────────────────────────────────
