@@ -3,6 +3,7 @@ import { useFlizow } from '../store/useFlizow';
 import type { ColumnId, Priority, Member, TaskComment, TaskActivity } from '../types/flizow';
 import { flizowStore } from '../store/flizowStore';
 import { BOARD_LABELS, labelById } from '../constants/labels';
+import { ConfirmDangerDialog } from './ConfirmDangerDialog';
 
 /**
  * FlizowCardModal — the per-card detail overlay on top of the service
@@ -140,7 +141,8 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
 
   // ── More (titlebar kebab) menu ────────────────────────────────────
   const [moreOpen, setMoreOpen] = useState(false);
-  useEffect(() => { setMoreOpen(false); }, [taskId]);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  useEffect(() => { setMoreOpen(false); setShowDeleteConfirm(false); }, [taskId]);
 
   // ── New-checklist-item input state ────────────────────────────────
   const [newCheckText, setNewCheckText] = useState('');
@@ -253,10 +255,11 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
                 <div
                   className="tb-menu-item danger"
                   onClick={() => {
-                    const ok = window.confirm(`Delete "${task.title}"?\n\nThis removes it from the board permanently.`);
-                    if (!ok) return;
-                    store.deleteTask(task.id);
-                    onClose();
+                    // Close the menu first so the confirm dialog paints on top
+                    // of a clean toolbar, then open the in-app confirm. No more
+                    // native window.confirm — design system owns this dialog.
+                    setMoreOpen(false);
+                    setShowDeleteConfirm(true);
                   }}
                 >
                   Delete card
@@ -709,6 +712,20 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
           </div>
         </div>
       </div>
+
+      {showDeleteConfirm && task && (
+        <ConfirmDangerDialog
+          title={`Delete "${task.title}"?`}
+          body="This removes the card from the board permanently. Any comments and activity on it go with it."
+          confirmLabel="Delete card"
+          onConfirm={() => {
+            setShowDeleteConfirm(false);
+            store.deleteTask(task.id);
+            onClose();
+          }}
+          onClose={() => setShowDeleteConfirm(false)}
+        />
+      )}
     </div>
   );
 }
