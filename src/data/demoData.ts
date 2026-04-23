@@ -1106,6 +1106,11 @@ export function generateDemoData(): FlizowData {
     // historical activity would feel artificial next to the comment
     // seeds (which are explicitly conversational).
     taskActivity: [],
+    // No manual agenda items in the demo — the "Added by hand" group
+    // only shows up after the user raises something from the WIP page
+    // itself. Keeps the section quiet on first load so the auto-built
+    // agenda is what the user sees first.
+    manualAgendaItems: [],
     today: todayStr,
     scheduleTaskMap,
   };

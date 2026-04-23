@@ -3,7 +3,7 @@ import { db } from '../lib/firebase';
 import type {
   FlizowData, Client, Service, Task, Member, Contact, QuickLink, Note,
   Touchpoint, ActionItem, TaskComment, TaskActivity, TaskActivityKind,
-  ColumnId, Priority,
+  ManualAgendaItem, ColumnId, Priority,
 } from '../types/flizow';
 
 /**
@@ -44,6 +44,7 @@ function emptyData(): FlizowData {
     actionItems: [],
     taskComments: [],
     taskActivity: [],
+    manualAgendaItems: [],
     today: todayISO(),
     scheduleTaskMap: {},
   };
@@ -93,6 +94,7 @@ function migrate(parsed: Partial<FlizowData>): FlizowData {
     actionItems: parsed.actionItems ?? base.actionItems,
     taskComments: parsed.taskComments ?? base.taskComments,
     taskActivity: parsed.taskActivity ?? base.taskActivity,
+    manualAgendaItems: parsed.manualAgendaItems ?? base.manualAgendaItems,
     // `today` always refreshes on load — we never trust a stale anchor.
     today: todayISO(),
     scheduleTaskMap: parsed.scheduleTaskMap ?? base.scheduleTaskMap,
@@ -643,6 +645,62 @@ class FlizowStore {
       isTopLevel ? 'deleted a comment' : 'deleted a reply',
     );
     this.save();
+  }
+
+  // ── Manual agenda items (WIP) ────────────────────────────────────────
+
+  /**
+   * Add a manual agenda item raised via the "Add agenda item" modal on
+   * the Weekly WIP page.
+   *
+   * `position` is either 'top' (rank below the lowest existing rank) or
+   * 'bottom' (rank above the highest existing rank). We keep ranks dense
+   * and unique per-user; no attempt to gap them for later inserts. The
+   * UI only surfaces top/bottom for now — fine-grained inserts are a
+   * follow-up.
+   */
+  addManualAgendaItem(input: {
+    title: string;
+    clientId?: string | null;
+    note?: string;
+    position?: 'top' | 'bottom';
+  }): ManualAgendaItem {
+    const ranks = this.data.manualAgendaItems.map(m => m.rank);
+    const minRank = ranks.length ? Math.min(...ranks) : 1;
+    const maxRank = ranks.length ? Math.max(...ranks) : 0;
+    const position = input.position ?? 'bottom';
+    const rank = position === 'top' ? minRank - 1 : maxRank + 1;
+
+    const item: ManualAgendaItem = {
+      id: `ma-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+      title: input.title,
+      clientId: input.clientId ?? null,
+      note: input.note ?? '',
+      rank,
+      createdAt: new Date().toISOString(),
+    };
+    // Replace the array so useMemo([manualAgendaItems]) consumers recompute.
+    this.data.manualAgendaItems = [...this.data.manualAgendaItems, item];
+    this.save();
+    return item;
+  }
+
+  updateManualAgendaItem(id: string, patch: Partial<Omit<ManualAgendaItem, 'id' | 'createdAt'>>) {
+    const idx = this.data.manualAgendaItems.findIndex(m => m.id === id);
+    if (idx === -1) return;
+    const next = { ...this.data.manualAgendaItems[idx], ...patch };
+    this.data.manualAgendaItems = [
+      ...this.data.manualAgendaItems.slice(0, idx),
+      next,
+      ...this.data.manualAgendaItems.slice(idx + 1),
+    ];
+    this.save();
+  }
+
+  deleteManualAgendaItem(id: string) {
+    const before = this.data.manualAgendaItems.length;
+    this.data.manualAgendaItems = this.data.manualAgendaItems.filter(m => m.id !== id);
+    if (this.data.manualAgendaItems.length !== before) this.save();
   }
 
   // ── Members ──────────────────────────────────────────────────────────

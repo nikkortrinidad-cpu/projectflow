@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { navigate } from '../router';
+import { flizowStore } from '../store/flizowStore';
 import { useFlizow } from '../store/useFlizow';
-import type { Client, Service, Task } from '../types/flizow';
+import type { Client, ManualAgendaItem, Service, Task } from '../types/flizow';
 import { daysBetween } from '../utils/dateFormat';
 
 /**
@@ -25,16 +26,24 @@ type Tab = 'agenda' | 'live';
 
 interface AgendaItem {
   key: string;
-  kind: 'client' | 'task';
+  kind: 'client' | 'task' | 'manual';
   label: string;
   meta: string;
   status: AgendaStatus;
+  /** Empty string for manual items with no client link. */
   clientId: string;
   serviceId?: string;
   taskId?: string;
   /** For the urgent/ontrack groups we also surface the parent service so
    *  the agenda reads as "Service · Card". */
   serviceName?: string;
+  /** Only set on `kind: 'manual'`. Points back at the row in
+   *  data.manualAgendaItems so Edit and Remove can patch/delete
+   *  directly. */
+  manualId?: string;
+  /** Free text context for manual items. Rendered under the title in
+   *  the flat row so the AM has the reminder at a glance. */
+  note?: string;
 }
 
 type AgendaStatus =
@@ -47,17 +56,28 @@ interface AgendaGroup {
   items: AgendaItem[];
 }
 
+/** Modal state: closed, open for a new item, or open editing an existing item. */
+type ModalState =
+  | { kind: 'closed' }
+  | { kind: 'add' }
+  | { kind: 'edit'; item: ManualAgendaItem };
+
 export function WipPage() {
   const { data } = useFlizow();
   const [tab, setTab] = useState<Tab>('agenda');
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  const [modal, setModal] = useState<ModalState>({ kind: 'closed' });
 
   const groups = useMemo(
-    () => buildAgenda(data.clients, data.services, data.tasks, data.today),
-    [data.clients, data.services, data.tasks, data.today],
+    () => buildAgenda(
+      data.clients, data.services, data.tasks, data.manualAgendaItems, data.today,
+    ),
+    [data.clients, data.services, data.tasks, data.manualAgendaItems, data.today],
   );
 
-  // Apply per-session dismissals so removing an item sticks until reload.
+  // Apply per-session dismissals so removing an auto item sticks until
+  // reload. Manual items delete from the store and never hit the dismiss
+  // set — they vanish naturally on the next render.
   const visibleGroups = useMemo(() => groups.map(g => ({
     ...g,
     items: g.items.filter(i => !dismissed.has(i.key)),
@@ -66,12 +86,23 @@ export function WipPage() {
   const itemCount = visibleGroups.reduce((n, g) => n + g.items.length, 0);
   const estMinutes = itemCount === 0 ? 0 : Math.max(15, itemCount * 2);
 
-  function handleRemove(key: string) {
+  function handleRemove(item: AgendaItem) {
+    if (item.kind === 'manual' && item.manualId) {
+      flizowStore.deleteManualAgendaItem(item.manualId);
+      return;
+    }
     setDismissed(prev => {
       const next = new Set(prev);
-      next.add(key);
+      next.add(item.key);
       return next;
     });
+  }
+
+  function handleEditManual(item: AgendaItem) {
+    if (item.kind !== 'manual' || !item.manualId) return;
+    const found = data.manualAgendaItems.find(m => m.id === item.manualId);
+    if (!found) return;
+    setModal({ kind: 'edit', item: found });
   }
 
   return (
@@ -103,6 +134,7 @@ export function WipPage() {
             <AgendaToolbar
               count={itemCount}
               minutes={estMinutes}
+              onAdd={() => setModal({ kind: 'add' })}
               onStart={() => setTab('live')}
             />
 
@@ -121,6 +153,7 @@ export function WipPage() {
                     key={g.key}
                     group={g}
                     onRemove={handleRemove}
+                    onEditManual={handleEditManual}
                   />
                 ))}
               </div>
@@ -141,15 +174,25 @@ export function WipPage() {
           </section>
         )}
       </main>
+
+      {modal.kind !== 'closed' && (
+        <AddAgendaItemModal
+          clients={data.clients}
+          existing={modal.kind === 'edit' ? modal.item : null}
+          hasManualItems={data.manualAgendaItems.length > 0}
+          onClose={() => setModal({ kind: 'closed' })}
+        />
+      )}
     </div>
   );
 }
 
 // ── Toolbar ──────────────────────────────────────────────────────────────
 
-function AgendaToolbar({ count, minutes, onStart }: {
+function AgendaToolbar({ count, minutes, onAdd, onStart }: {
   count: number;
   minutes: number;
+  onAdd: () => void;
   onStart: () => void;
 }) {
   return (
@@ -159,7 +202,7 @@ function AgendaToolbar({ count, minutes, onStart }: {
         <span className="wip-save-hint">· Saved just now</span>
       </div>
       <div className="wip-agenda-actions">
-        <button type="button" className="wip-btn wip-btn-ring" disabled>
+        <button type="button" className="wip-btn wip-btn-ring" onClick={onAdd}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
@@ -206,9 +249,10 @@ function TabLink({ active, children, onClick }: {
 
 // ── Groups ───────────────────────────────────────────────────────────────
 
-function AgendaGroupBlock({ group, onRemove }: {
+function AgendaGroupBlock({ group, onRemove, onEditManual }: {
   group: AgendaGroup;
-  onRemove: (key: string) => void;
+  onRemove: (item: AgendaItem) => void;
+  onEditManual: (item: AgendaItem) => void;
 }) {
   const cls = `wip-agenda-group wip-agenda-group--${group.key === 'new-clients' ? 'new-clients' : group.key === 'urgent' ? 'urgent' : group.key === 'ontrack' ? 'ontrack' : 'manual'}`;
 
@@ -229,7 +273,12 @@ function AgendaGroupBlock({ group, onRemove }: {
           ? (
             // Flat list — no client/service hierarchy needed
             group.items.map(it => (
-              <FlatRow key={it.key} item={it} onRemove={() => onRemove(it.key)} />
+              <FlatRow
+                key={it.key}
+                item={it}
+                onRemove={() => onRemove(it)}
+                onActivate={it.kind === 'manual' ? () => onEditManual(it) : undefined}
+              />
             ))
           )
           : (
@@ -244,7 +293,7 @@ function AgendaGroupBlock({ group, onRemove }: {
 
 function ClientGrouped({ items, onRemove }: {
   items: AgendaItem[];
-  onRemove: (key: string) => void;
+  onRemove: (item: AgendaItem) => void;
 }) {
   const byClient = useMemo(() => {
     const map = new Map<string, { label: string; services: Map<string, { name: string; items: AgendaItem[] }> }>();
@@ -271,7 +320,7 @@ function ClientGrouped({ items, onRemove }: {
             <div className="wip-agenda-service" key={svcKey}>
               <div className="wip-agenda-service-name">{svc.name}</div>
               {svc.items.map(it => (
-                <CardRow key={it.key} item={it} onRemove={() => onRemove(it.key)} />
+                <CardRow key={it.key} item={it} onRemove={() => onRemove(it)} />
               ))}
             </div>
           ))}
@@ -281,21 +330,34 @@ function ClientGrouped({ items, onRemove }: {
   );
 }
 
-function FlatRow({ item, onRemove }: {
+/**
+ * Renders a row in the new-clients or manual group. `onActivate` is
+ * what happens when the row is clicked (anywhere but the remove
+ * button) — manual items hand this to the edit modal; new-client rows
+ * leave it null and fall back to navigating to the client page.
+ */
+function FlatRow({ item, onRemove, onActivate }: {
   item: AgendaItem;
   onRemove: () => void;
+  onActivate?: () => void;
 }) {
+  function handleClick(e: React.MouseEvent) {
+    // Skip clicks that land on the remove button — they handle themselves.
+    if ((e.target as HTMLElement).closest('.wip-agenda-remove')) return;
+    if (onActivate) {
+      onActivate();
+    } else if (item.clientId) {
+      navigate(`#clients/${item.clientId}`);
+    }
+  }
   return (
     <div
       className="wip-agenda-flat-row"
-      onClick={(e) => {
-        // Click the row (not the remove button) jumps to the client.
-        if ((e.target as HTMLElement).closest('.wip-agenda-remove')) return;
-        navigate(`#clients/${item.clientId}`);
-      }}
+      onClick={handleClick}
       role="button"
       tabIndex={0}
       style={{ cursor: 'pointer' }}
+      aria-label={item.kind === 'manual' ? `Edit agenda item: ${item.label}` : undefined}
     >
       <DragHandle />
       <span className="wip-agenda-status" data-status={item.status}>{statusLabel(item.status)}</span>
@@ -305,6 +367,11 @@ function FlatRow({ item, onRemove }: {
           <span style={{ color: 'var(--text-soft)', marginLeft: 8, fontWeight: 400 }}>
             {item.meta}
           </span>
+        )}
+        {item.note && (
+          <div style={{ color: 'var(--text-soft)', marginTop: 4, fontWeight: 400, fontSize: 'var(--fs-sm)', lineHeight: 1.45 }}>
+            {item.note}
+          </div>
         )}
       </span>
       <RemoveButton onClick={onRemove} />
@@ -377,7 +444,13 @@ function RemoveButton({ onClick }: { onClick: () => void }) {
 
 // ── Agenda builder ───────────────────────────────────────────────────────
 
-function buildAgenda(clients: Client[], services: Service[], tasks: Task[], todayISO: string): AgendaGroup[] {
+function buildAgenda(
+  clients: Client[],
+  services: Service[],
+  tasks: Task[],
+  manualItems: ManualAgendaItem[],
+  todayISO: string,
+): AgendaGroup[] {
   // 1. New clients: onboard status or started in the last 30 days
   const newClients = clients
     .filter(c => {
@@ -468,7 +541,23 @@ function buildAgenda(clients: Client[], services: Service[], tasks: Task[], toda
     {
       key: 'manual',
       title: 'Added by hand',
-      items: [], // Populated by the (not-yet-built) Add agenda item flow
+      items: [...manualItems]
+        // Rank ascending = top-of-manual first. Fall back to createdAt
+        // so two items with identical rank sort deterministically.
+        .sort((a, b) => (a.rank - b.rank) || a.createdAt.localeCompare(b.createdAt))
+        .map(m => {
+          const client = m.clientId ? clients.find(c => c.id === m.clientId) : null;
+          return {
+            key: `mn-${m.id}`,
+            kind: 'manual' as const,
+            label: m.title,
+            meta: client ? client.name : 'Cross-cutting',
+            status: 'manual' as const,
+            clientId: m.clientId ?? '',
+            manualId: m.id,
+            note: m.note,
+          };
+        }),
     },
   ];
 }
@@ -518,4 +607,197 @@ function nextMeetingLabel(todayISO: string): string {
   const next = new Date(today);
   next.setDate(today.getDate() + daysToMon);
   return next.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' }) + ' · 10:00 AM';
+}
+
+// ── Add / Edit agenda item modal ─────────────────────────────────────────
+
+/**
+ * The modal for raising something by hand. Four fields (client / title /
+ * context / position), clean footer (Cancel + Save). Two modes driven by
+ * the `existing` prop:
+ *
+ *   - existing == null → Add flow. Position defaults to "bottom" (below
+ *     what's already been added by hand). Only shows the position field
+ *     when there's at least one existing manual item to position
+ *     against.
+ *   - existing != null → Edit flow. Fields pre-fill; the position field
+ *     is hidden because reorder doesn't belong in the edit modal — it
+ *     belongs to a later drag-to-reorder pass.
+ *
+ * Validation is intentionally thin: title is required, everything else
+ * is optional. We trim on save so an all-whitespace title is rejected.
+ */
+function AddAgendaItemModal({ clients, existing, hasManualItems, onClose }: {
+  clients: Client[];
+  existing: ManualAgendaItem | null;
+  hasManualItems: boolean;
+  onClose: () => void;
+}) {
+  const isEdit = existing != null;
+  const [clientId, setClientId] = useState<string>(existing?.clientId ?? '');
+  const [title, setTitle] = useState<string>(existing?.title ?? '');
+  const [note, setNote] = useState<string>(existing?.note ?? '');
+  const [position, setPosition] = useState<'top' | 'bottom'>('bottom');
+  const [titleError, setTitleError] = useState(false);
+  const titleRef = useRef<HTMLInputElement>(null);
+
+  // Auto-focus the title field after the overlay mounts. Small delay so
+  // the transition doesn't eat the focus ring.
+  useEffect(() => {
+    const timer = window.setTimeout(() => titleRef.current?.focus(), 80);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  function handleSave() {
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) {
+      setTitleError(true);
+      titleRef.current?.focus();
+      // Auto-clear the red outline after a moment so it feels like a
+      // nudge, not a permanent error state.
+      window.setTimeout(() => setTitleError(false), 1400);
+      return;
+    }
+    const patch = {
+      title: trimmedTitle,
+      clientId: clientId || null,
+      note: note.trim(),
+    };
+    if (isEdit && existing) {
+      flizowStore.updateManualAgendaItem(existing.id, patch);
+    } else {
+      flizowStore.addManualAgendaItem({ ...patch, position });
+    }
+    onClose();
+  }
+
+  // Global keys while the modal is open: Escape closes, ⌘/Ctrl+Enter
+  // saves from anywhere (not just the title field). Bound at window
+  // level so either works no matter which input is focused.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleSave();
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+    // handleSave closes over title/clientId/note/position/isEdit/existing, so
+    // rebind whenever any of those change. Cheap — the modal's input set is small.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onClose, title, clientId, note, position, isEdit, existing]);
+
+  function handleBackdropClick(e: React.MouseEvent<HTMLDivElement>) {
+    if (e.target === e.currentTarget) onClose();
+  }
+
+  return (
+    <div
+      className="wip-modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="wip-flag-modal-title"
+      onClick={handleBackdropClick}
+    >
+      <div className="wip-modal" role="document">
+        <header className="wip-modal-head">
+          <h2 className="wip-modal-title" id="wip-flag-modal-title">
+            {isEdit ? 'Edit agenda item' : 'Add agenda item'}
+          </h2>
+          <button
+            type="button"
+            className="wip-modal-close"
+            onClick={onClose}
+            aria-label="Close"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </header>
+
+        <div className="wip-modal-body">
+          <label className="wip-field">
+            <span className="wip-field-label">Client (optional)</span>
+            <select
+              className="wip-field-input"
+              value={clientId}
+              onChange={(e) => setClientId(e.target.value)}
+            >
+              <option value="">No specific client</option>
+              {clients.slice().sort((a, b) => a.name.localeCompare(b.name)).map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </label>
+
+          <label className="wip-field">
+            <span className="wip-field-label">Title</span>
+            <input
+              ref={titleRef}
+              type="text"
+              className="wip-field-input"
+              value={title}
+              onChange={(e) => { setTitle(e.target.value); if (titleError) setTitleError(false); }}
+              placeholder="e.g. Q2 OKRs — confirm team commitments"
+              style={titleError ? { borderColor: 'var(--status-fire)' } : undefined}
+              aria-invalid={titleError || undefined}
+            />
+          </label>
+
+          <label className="wip-field">
+            <span className="wip-field-label">Context</span>
+            <textarea
+              className="wip-field-input wip-field-textarea"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              rows={3}
+              placeholder="What the team needs to know — shows up in the pre-read."
+            />
+          </label>
+
+          {/* Hide position in the edit flow — reordering is a different
+              motion (drag-to-reorder) that lands in a later pass. */}
+          {!isEdit && hasManualItems && (
+            <label className="wip-field">
+              <span className="wip-field-label">Insert position</span>
+              <select
+                className="wip-field-input"
+                value={position}
+                onChange={(e) => setPosition(e.target.value as 'top' | 'bottom')}
+                aria-label="Where in the manual agenda group to insert this item"
+              >
+                <option value="bottom">Bottom of manual items</option>
+                <option value="top">Top of manual items</option>
+              </select>
+            </label>
+          )}
+        </div>
+
+        <footer className="wip-modal-foot">
+          <button
+            type="button"
+            className="wip-btn wip-btn-ghost"
+            onClick={onClose}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="wip-btn wip-btn-primary"
+            onClick={handleSave}
+          >
+            {isEdit ? 'Save changes' : 'Save item'}
+          </button>
+        </footer>
+      </div>
+    </div>
+  );
 }

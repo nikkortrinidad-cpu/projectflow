@@ -518,6 +518,35 @@ export interface WipAgendaItem {
   covered: boolean;
 }
 
+/**
+ * An agenda item raised by hand via the Add agenda item modal. These
+ * persist across sessions (unlike the auto-generated new-clients /
+ * urgent / on-track rows, which are derived at render time from live
+ * client + task state).
+ *
+ * `clientId` is optional — some items are cross-cutting ("Team Q2
+ * planning") and don't live under a single client. `note` is the free
+ * text the user types in the Context field; it's what ends up in the
+ * pre-read email.
+ *
+ * `rank` is kept separate from list position so reorder is a single
+ * field patch, not an array rewrite. Lower rank = higher in the list.
+ * We assign rank on create as (max existing rank) + 1, so new items
+ * land at the bottom of the Manual group by default.
+ */
+export interface ManualAgendaItem {
+  id: string;
+  title: string;
+  clientId: string | null;
+  /** Free text. Shown under the item title in the agenda and in the
+   *  pre-read email. Empty string = no context. */
+  note: string;
+  /** Sort order within the manual group. */
+  rank: number;
+  /** ISO timestamp — used as a stable secondary sort when ranks tie. */
+  createdAt: string;
+}
+
 // ── Aggregate ────────────────────────────────────────────────────────────
 
 /**
@@ -544,6 +573,11 @@ export interface FlizowData {
   /** Flat list of every activity entry. Append-only — we never edit an
    *  existing row. Cascade-deleted when its task goes away. */
   taskActivity: TaskActivity[];
+  /** Manual agenda items added via the WIP page's "Add agenda item"
+   *  button. The auto-generated agenda groups (new-clients / urgent /
+   *  on-track) derive from live data at render time and don't live in
+   *  the store. */
+  manualAgendaItems: ManualAgendaItem[];
   /** The "today" reference the mockup uses for all date math. A single
    *  anchor keeps the UI stable across re-renders. */
   today: string;
