@@ -5,6 +5,7 @@ import { PageShell } from './components/PageShell';
 import { useAuth } from './contexts/AuthContext';
 import { useBoard } from './store/useStore';
 import { store } from './store/boardStore';
+import { flizowStore } from './store/flizowStore';
 
 function App() {
   const { user, loading } = useAuth();
@@ -19,15 +20,18 @@ function App() {
     document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
   }, [isDark]);
 
-  // Connect the legacy kanban store to Firebase for the existing board data.
-  // The unified Flizow store lands in a later pass; until then, this keeps
-  // the old data available.
+  // Hook up both stores to the signed-in user. The legacy BoardStore still
+  // backs the old /board route until the Flizow kanban reaches parity; the
+  // new FlizowStore backs Overview, Clients, Analytics, the new board, etc.
+  // They write to different Firestore docs (`boards/{uid}` vs `flizow/{uid}`)
+  // so they can't interfere with each other.
   useEffect(() => {
-    if (user) {
-      store.setUser(user.uid, user.displayName || undefined, user.email || undefined, user.photoURL || undefined);
-    } else {
-      store.setUser(null);
-    }
+    const uid = user?.uid ?? null;
+    const displayName = user?.displayName || undefined;
+    const email = user?.email || undefined;
+    const photoURL = user?.photoURL || undefined;
+    store.setUser(uid, displayName, email, photoURL);
+    flizowStore.setUser(uid, displayName, email, photoURL);
   }, [user]);
 
   if (loading) {
