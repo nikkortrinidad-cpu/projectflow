@@ -277,7 +277,7 @@ git push origin main
 
 ## Firebase Configuration
 
-- **Project:** kanban-5f0f4
+- **Project:** flizow
 - **Auth:** Google Sign-In (popup flow)
 - **Firestore:** Document per user at `boards/{userId}`, stores serialized BoardState
 - **Sync:** Real-time via `onSnapshot`, debounced writes (1s), filters/theme excluded from cloud sync

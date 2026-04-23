@@ -3,12 +3,12 @@ import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBncwf9Qi8vkNKeRrE1jrjJDr5eI-RJP5k",
-  authDomain: "kanban-5f0f4.firebaseapp.com",
-  projectId: "kanban-5f0f4",
-  storageBucket: "kanban-5f0f4.firebasestorage.app",
-  messagingSenderId: "209234941977",
-  appId: "1:209234941977:web:6189232c2db32f82b37288"
+  apiKey: "AIzaSyB3m0UFv_f0Wfh5mOoY9bhQ9X2te46Ejz4",
+  authDomain: "flizow.firebaseapp.com",
+  projectId: "flizow",
+  storageBucket: "flizow.firebasestorage.app",
+  messagingSenderId: "356054513186",
+  appId: "1:356054513186:web:cace4fb361c4725bbebc7b"
 };
 
 const app = initializeApp(firebaseConfig);
