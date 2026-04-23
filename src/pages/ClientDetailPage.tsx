@@ -1117,6 +1117,9 @@ function AboutSection({ client, data }: { client: Client; data: FlizowData }) {
   const [showAddQuickLink, setShowAddQuickLink] = useState(false);
   const [showAddOperator, setShowAddOperator] = useState(false);
   const [teamEditMode, setTeamEditMode] = useState(false);
+  const [contactsEditMode, setContactsEditMode] = useState(false);
+  const [linksEditMode, setLinksEditMode] = useState(false);
+  const [deleteContactId, setDeleteContactId] = useState<string | null>(null);
 
   const contacts = useMemo(
     () => data.contacts.filter(c => c.clientId === client.id)
@@ -1146,8 +1149,21 @@ function AboutSection({ client, data }: { client: Client; data: FlizowData }) {
           <div className="detail-section-sub">Who we talk to, and where to find their stuff</div>
         </div>
         <div className="relationship-grid">
-          <ContactsCard contacts={contacts} onAdd={() => setShowAddContact(true)} />
-          <QuickLinksCard links={quickLinks} onAdd={() => setShowAddQuickLink(true)} />
+          <ContactsCard
+            contacts={contacts}
+            onAdd={() => setShowAddContact(true)}
+            editing={contactsEditMode}
+            onToggleEdit={() => setContactsEditMode(v => !v)}
+            onRemove={(id) => setDeleteContactId(id)}
+            onTogglePrimary={(id, primary) => flizowStore.updateContact(id, { primary })}
+          />
+          <QuickLinksCard
+            links={quickLinks}
+            onAdd={() => setShowAddQuickLink(true)}
+            editing={linksEditMode}
+            onToggleEdit={() => setLinksEditMode(v => !v)}
+            onRemove={(id) => flizowStore.deleteQuickLink(id)}
+          />
         </div>
       </div>
 
@@ -1218,23 +1234,74 @@ function AboutSection({ client, data }: { client: Client; data: FlizowData }) {
           onClose={() => setShowAddOperator(false)}
         />
       )}
+
+      {deleteContactId && (() => {
+        const c = contacts.find(c => c.id === deleteContactId);
+        if (!c) return null;
+        return (
+          <ConfirmDangerDialog
+            title={`Remove ${c.name}?`}
+            body={
+              <>
+                This removes their contact row for this client. Stored email,
+                phone, and role go with it.
+                {c.primary && (
+                  <>
+                    {' '}They're currently the <strong>primary contact</strong> —
+                    set someone else as primary before removing them if you
+                    want the "primary" flag on another person.
+                  </>
+                )}
+              </>
+            }
+            confirmLabel="Remove contact"
+            onConfirm={() => {
+              flizowStore.deleteContact(c.id);
+              setDeleteContactId(null);
+            }}
+            onClose={() => setDeleteContactId(null)}
+          />
+        );
+      })()}
     </>
   );
 }
 
-function ContactsCard({ contacts, onAdd }: { contacts: Contact[]; onAdd: () => void }) {
+function ContactsCard({ contacts, onAdd, editing, onToggleEdit, onRemove, onTogglePrimary }: {
+  contacts: Contact[];
+  onAdd: () => void;
+  editing: boolean;
+  onToggleEdit: () => void;
+  onRemove: (id: string) => void;
+  onTogglePrimary: (id: string, primary: boolean) => void;
+}) {
   return (
     <div className="relationship-card">
       <div className="relationship-card-head">
         <div className="relationship-card-label">Client contacts</div>
-        <button
-          type="button"
-          className="relationship-card-link"
-          onClick={onAdd}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', font: 'inherit', padding: 0 }}
-        >
-          + Add contact
-        </button>
+        {/* Two-button right side wrapped in a flex group. Edit button hides
+            when the list is empty — nothing to edit, and the button would
+            just add noise. */}
+        <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+          {contacts.length > 0 && (
+            <button
+              type="button"
+              className="relationship-card-link"
+              onClick={onToggleEdit}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', font: 'inherit', padding: 0 }}
+            >
+              {editing ? 'Done' : 'Edit'}
+            </button>
+          )}
+          <button
+            type="button"
+            className="relationship-card-link"
+            onClick={onAdd}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', font: 'inherit', padding: 0 }}
+          >
+            + Add contact
+          </button>
+        </div>
       </div>
 
       {contacts.length === 0 ? (
@@ -1254,7 +1321,7 @@ function ContactsCard({ contacts, onAdd }: { contacts: Contact[]; onAdd: () => v
           we work with here.
         </div>
       ) : (
-        <div className="contacts-list">
+        <div className="contacts-list" data-edit={editing ? 'true' : undefined}>
           {contacts.map(c => (
             <div
               key={c.id}
@@ -1285,7 +1352,11 @@ function ContactsCard({ contacts, onAdd }: { contacts: Contact[]; onAdd: () => v
                 </div>
                 {c.role && <div className="contact-role">{c.role}</div>}
               </div>
-              <div className="contact-actions">
+
+              {/* View actions — email + phone shortcuts. Hidden in edit mode
+                  via .contacts-list[data-edit="true"] [data-contact-view-actions]
+                  rule in flizow.css. */}
+              <div className="contact-actions" data-contact-view-actions>
                 {c.email && (
                   <a
                     className="contact-icon-btn"
@@ -1312,6 +1383,36 @@ function ContactsCard({ contacts, onAdd }: { contacts: Contact[]; onAdd: () => v
                   </a>
                 )}
               </div>
+
+              {/* Edit actions — star-to-primary toggle + × remove. Shown in
+                  edit mode via the same CSS rule. Star click toggles
+                  primary (store handles demoting the existing primary). */}
+              <div className="contact-edit-actions" data-contact-edit-actions>
+                <button
+                  type="button"
+                  className="contact-icon-btn contact-primary-btn"
+                  aria-label={c.primary ? 'Primary contact' : 'Set as primary'}
+                  aria-pressed={c.primary ? 'true' : 'false'}
+                  title={c.primary ? 'Primary contact' : 'Set as primary'}
+                  onClick={() => onTogglePrimary(c.id, !c.primary)}
+                >
+                  <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <polygon points="12 2 15 9 22 9.5 17 14.5 18.5 22 12 18 5.5 22 7 14.5 2 9.5 9 9" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  className="contact-icon-btn contact-delete-btn"
+                  aria-label={`Remove ${c.name}`}
+                  title="Remove contact"
+                  onClick={() => onRemove(c.id)}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -1320,19 +1421,37 @@ function ContactsCard({ contacts, onAdd }: { contacts: Contact[]; onAdd: () => v
   );
 }
 
-function QuickLinksCard({ links, onAdd }: { links: QuickLink[]; onAdd: () => void }) {
+function QuickLinksCard({ links, onAdd, editing, onToggleEdit, onRemove }: {
+  links: QuickLink[];
+  onAdd: () => void;
+  editing: boolean;
+  onToggleEdit: () => void;
+  onRemove: (id: string) => void;
+}) {
   return (
     <div className="relationship-card">
       <div className="relationship-card-head">
         <div className="relationship-card-label">Quick links</div>
-        <button
-          type="button"
-          className="relationship-card-link"
-          onClick={onAdd}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', font: 'inherit', padding: 0 }}
-        >
-          + Add link
-        </button>
+        <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+          {links.length > 0 && (
+            <button
+              type="button"
+              className="relationship-card-link"
+              onClick={onToggleEdit}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', font: 'inherit', padding: 0 }}
+            >
+              {editing ? 'Done' : 'Edit'}
+            </button>
+          )}
+          <button
+            type="button"
+            className="relationship-card-link"
+            onClick={onAdd}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', font: 'inherit', padding: 0 }}
+          >
+            + Add link
+          </button>
+        </div>
       </div>
 
       {links.length === 0 ? (
@@ -1351,26 +1470,55 @@ function QuickLinksCard({ links, onAdd }: { links: QuickLink[]; onAdd: () => voi
           </button>.
         </div>
       ) : (
-        <div className="quick-links-list">
+        <div className="quick-links-list" data-edit={editing ? 'true' : undefined}>
           {links.map(l => (
-            <a
-              key={l.id}
-              className="quick-link"
-              href={l.url}
-              target="_blank"
-              rel="noreferrer noopener"
-            >
-              <span className="quick-link-icon" aria-hidden="true">
-                {renderLinkIcon(l.icon)}
-              </span>
-              <span>
-                <span className="quick-link-label">{l.label}</span>
-                <span className="quick-link-host">{hostOf(l.url)}</span>
-              </span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" width="14" height="14" style={{ color: 'var(--text-faint)' }}>
-                <path d="M7 17L17 7M9 7h8v8" />
-              </svg>
-            </a>
+            // In edit mode we drop the <a> so an accidental click doesn't
+            // rip the user out of the app. The row becomes a plain div and
+            // the trailing chevron swaps for a × remove button. Low-info
+            // data so no confirm dialog — consistent with Team removal,
+            // and if you wanted the link back you'd just re-add it.
+            editing ? (
+              <div key={l.id} className="quick-link">
+                <span className="quick-link-icon" aria-hidden="true">
+                  {renderLinkIcon(l.icon)}
+                </span>
+                <span>
+                  <span className="quick-link-label">{l.label}</span>
+                  <span className="quick-link-host">{hostOf(l.url)}</span>
+                </span>
+                <button
+                  type="button"
+                  className="quick-link-remove-btn"
+                  aria-label={`Remove ${l.label}`}
+                  title="Remove link"
+                  onClick={() => onRemove(l.id)}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              <a
+                key={l.id}
+                className="quick-link"
+                href={l.url}
+                target="_blank"
+                rel="noreferrer noopener"
+              >
+                <span className="quick-link-icon" aria-hidden="true">
+                  {renderLinkIcon(l.icon)}
+                </span>
+                <span>
+                  <span className="quick-link-label">{l.label}</span>
+                  <span className="quick-link-host">{hostOf(l.url)}</span>
+                </span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" width="14" height="14" style={{ color: 'var(--text-faint)' }}>
+                  <path d="M7 17L17 7M9 7h8v8" />
+                </svg>
+              </a>
+            )
           ))}
         </div>
       )}

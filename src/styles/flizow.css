@@ -7778,6 +7778,34 @@
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
 
+  /* Quick-link edit mode — row becomes a management surface. The link
+     itself is swapped to a non-interactive container by JS (we can't
+     nest a button inside an <a>, so edit mode swaps <a> → <div>). The
+     trailing external-link chevron is replaced with a red × button. */
+  .quick-link-remove-btn {
+    width: 26px; height: 26px; border-radius: 6px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: transparent; border: none; color: var(--text-faint);
+    cursor: pointer; padding: 0;
+    transition: background 0.15s, color 0.15s;
+  }
+  .quick-link-remove-btn svg { width: 13px; height: 13px; }
+  .quick-link-remove-btn:hover {
+    background: color-mix(in srgb, #ff453a 10%, transparent);
+    color: #ff453a;
+  }
+  .quick-links-list[data-edit="true"] .quick-link {
+    background: color-mix(in srgb, #ff453a 3%, transparent);
+    cursor: default;
+  }
+  .quick-links-list[data-edit="true"] .quick-link:hover {
+    background: color-mix(in srgb, #ff453a 6%, transparent);
+  }
+  .quick-links-list[data-edit="true"] .quick-link:hover .quick-link-icon {
+    /* Kill the blue tint in edit mode — red is the vibe now. */
+    background: var(--bg-soft); color: var(--text-muted);
+  }
+
   /* ── Meetings section — paper trail with TL;DRs and action items ── */
   .meetings-section {
     display: flex; flex-direction: column; gap: var(--sp-xl);
