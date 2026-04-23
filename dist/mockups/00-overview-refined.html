@@ -503,9 +503,7 @@
     position: fixed; inset: 0; z-index: 998;
   }
   .delegate-pop {
-    position: absolute;
-    bottom: calc(100% + 8px);
-    right: 0;
+    position: fixed;
     width: 340px;
     background: var(--bg-elev);
     border: 1px solid var(--hairline);
@@ -563,18 +561,25 @@
     display: flex; align-items: center; gap: 10px;
     transition: background 0.15s, color 0.15s;
   }
+  .dp-combo-item * { pointer-events: none; }
   .dp-combo-item:first-child { border-radius: 10px 10px 0 0; }
   .dp-combo-item:last-child { border-radius: 0 0 10px 10px; }
-  .dp-combo-item:hover { background: var(--highlight-soft); color: var(--highlight); }
-  .dp-combo-item.selected { background: var(--highlight-soft); color: var(--highlight); }
+  .dp-combo-item:hover { background: var(--highlight); color: #fff; }
+  .dp-combo-item:hover .dp-combo-avatar { background: #fff; color: var(--highlight); }
+  .dp-combo-item:hover .dp-combo-role { color: rgba(255,255,255,0.7); }
+  .dp-combo-item.selected { background: var(--highlight); color: #fff; }
+  .dp-combo-item.selected .dp-combo-avatar { background: #fff; color: var(--highlight); }
+  .dp-combo-item.selected .dp-combo-role { color: rgba(255,255,255,0.7); }
   .dp-combo-avatar {
     width: 24px; height: 24px; border-radius: 50%;
     background: var(--avatar-bg); color: var(--avatar-fg);
     display: flex; align-items: center; justify-content: center;
     font-size: 10px; font-weight: 700; flex-shrink: 0;
+    transition: background 0.15s, color 0.15s;
   }
   .dp-combo-role {
     font-size: 11px; color: var(--text-faint); margin-left: auto;
+    transition: color 0.15s;
   }
   .dp-textarea {
     width: 100%; padding: 9px 12px;
@@ -685,6 +690,15 @@
   .dp-cal-day.selected { background: var(--highlight); color: #fff; font-weight: 700; }
   .dp-cal-day.past { color: var(--text-faint); opacity: 0.5; }
   .dp-cal-day.past:hover { background: transparent; color: var(--text-faint); }
+  .dp-cal-today-link {
+    display: block; text-align: center;
+    margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid var(--hairline-soft);
+    font-size: 12px; font-weight: 600;
+    color: var(--highlight);
+    cursor: default; transition: opacity 0.15s;
+  }
+  .dp-cal-today-link:hover { opacity: 0.7; }
   .dp-actions {
     display: flex; gap: 8px; margin-top: 18px;
     justify-content: flex-end;
@@ -693,13 +707,13 @@
     padding: 9px 20px; border-radius: 980px;
     font-size: 13px; font-weight: 600;
     border: 1px solid var(--hairline);
-    background: var(--btn-bg); color: var(--text);
-    cursor: default; transition: all 0.15s;
+    background-color: var(--btn-bg); color: var(--text);
+    cursor: default; transition: background-color 0.15s, border-color 0.15s, color 0.15s;
     letter-spacing: -0.01em;
   }
-  .dp-btn:not(.dp-submit):hover { background: var(--highlight) !important; border-color: var(--highlight) !important; color: #fff !important; }
+  .dp-btn.dp-cancel:hover { background-color: var(--highlight-soft); border-color: var(--highlight); color: var(--highlight); }
   .dp-btn.dp-submit {
-    background: var(--highlight); border-color: var(--highlight); color: #fff;
+    background-color: var(--highlight); border-color: var(--highlight); color: #fff;
   }
   .dp-btn.dp-submit:hover { opacity: 0.9; }
   .dp-btn.dp-submit:disabled {
@@ -847,7 +861,7 @@
     margin-bottom: 4px;
   }
   .week-col-day {
-    font-size: 22px; font-weight: 600; line-height: 1.1;
+    font-size: 21px; font-weight: 600; line-height: 1.1;
     letter-spacing: -0.02em;
     color: var(--text);
   }
@@ -868,6 +882,10 @@
     border-radius: 4px;
   }
   .week-col-body::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
+  .week-col-body.has-overflow {
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent 100%);
+  }
   .week-task {
     background: var(--bg-soft);
     border-radius: 10px;
@@ -899,6 +917,7 @@
     margin-top: 8px;
     background: var(--bg-elev);
     color: var(--text-soft);
+    white-space: nowrap;
   }
   .week-task-tag.deadline { background: var(--accent-soft); color: var(--accent); }
   .week-task-tag.meeting { color: var(--text-muted); }
@@ -952,6 +971,18 @@
     box-shadow: var(--shadow);
     overflow: visible;
     pointer-events: auto;
+  }
+  .attn-more {
+    text-align: center;
+    padding: 10px;
+    font-size: 12px; font-weight: 600;
+    color: var(--text-faint);
+    cursor: default;
+    transition: color 0.15s;
+    letter-spacing: -0.005em;
+  }
+  .attn-more:hover { color: var(--highlight); }
+  .attention-list.expanded .attn-more { display: none;
   }
 
   /* --- BLOCK 4: TEAM WORKLOAD --- */
@@ -1218,6 +1249,49 @@
     .page-title { font-size: 28px; }
   }
 
+  /*
+   * ═══════════════════════════════════════════════════════
+   * DEVELOPER HANDOFF NOTES
+   * ═══════════════════════════════════════════════════════
+   *
+   * FOCUS TRAPS
+   * - Delegate popover (.delegate-pop) needs a focus trap.
+   *   Tab should cycle within the popover, not escape to the page behind the backdrop.
+   * - Team workload panel (.wl-panel) also needs a focus trap when open.
+   *
+   * UNDO ON DELEGATION
+   * - After a successful delegation, the toast should include an "Undo" link
+   *   with a 5-second countdown. Clicking Undo reverts the delegation.
+   *
+   * ARIA ROLES ON WEEK TASKS
+   * - Each .week-task toggles data-done on click but has no role="checkbox"
+   *   or aria-checked attribute. Add these for screen reader support.
+   *
+   * SKIP-TO-CONTENT
+   * - Add a visually-hidden skip link before the header for keyboard users:
+   *   <a href="#main" class="sr-only focus:not-sr-only">Skip to content</a>
+   *
+   * EMPTY STATES (design these for each section)
+   * - Portfolio Health: "No active clients yet — add your first client to see health metrics."
+   * - Attention: "Nothing needs your attention right now. Nice work!"
+   * - Schedule: "No tasks scheduled this week. Enjoy the breathing room."
+   * - Team Workload: "No team members assigned yet."
+   *
+   * RESPONSIVE BREAKPOINTS (not implemented in mockup)
+   * - 768px (tablet): Health strip → 2x2 grid. Week board → horizontal scroll
+   *   with snap. Attention card actions → stack below content. Workload → 3+2 wrap.
+   * - 480px (mobile): Single column everything. Week board → swipeable single-day
+   *   view. Nav → hamburger menu. Health strip → vertical stack.
+   *
+   * STUB INTERACTIONS (these do nothing in the mockup — implement in production)
+   * - Review button on attention cards
+   * - Clicking an attention card body
+   * - Clicking a week task (should open task detail)
+   * - Search bar
+   * - Notification bell
+   * ═══════════════════════════════════════════════════════
+   */
+
 </style>
 </head>
 <body>
@@ -1368,6 +1442,8 @@
           <button class="attn-btn primary" onclick="event.stopPropagation()">Review<span class="tooltip">Open this item and take action now</span></button>
         </div>
       </div>
+
+      <div class="attn-more" onclick="toggleAttn(event)">3 more items</div>
 
       <div class="attn-card attn-hidden">
         <div class="attn-content">
@@ -1752,7 +1828,7 @@ function openDelegate(e, btn) {
       '</div>' +
     '</div>' +
     '<div class="dp-actions">' +
-      '<button class="dp-btn" onclick="closeDelegate()">Cancel</button>' +
+      '<button class="dp-btn dp-cancel" onclick="closeDelegate()">Cancel</button>' +
       '<button class="dp-btn dp-submit" id="dpSubmit" disabled>Delegate</button>' +
     '</div>';
 
@@ -1760,7 +1836,14 @@ function openDelegate(e, btn) {
   backdrop.className = 'delegate-backdrop';
   backdrop.addEventListener('click', closeDelegate);
   document.body.appendChild(backdrop);
-  actions.appendChild(pop);
+  document.body.appendChild(pop);
+
+  /* Position the popover above the Delegate button */
+  var btnRect = btn.getBoundingClientRect();
+  var popRight = window.innerWidth - btnRect.right;
+  var popBottom = window.innerHeight - btnRect.top + 8;
+  pop.style.right = popRight + 'px';
+  pop.style.bottom = popBottom + 'px';
 
   activeDelegatePop = { pop: pop, backdrop: backdrop };
 
@@ -1883,6 +1966,7 @@ function openDelegate(e, btn) {
       }
 
       html += '</div>';
+      html += '<div class="dp-cal-today-link" id="dpCalToday">Today</div>';
       cal.innerHTML = html;
 
       /* Attach nav events */
@@ -1901,16 +1985,28 @@ function openDelegate(e, btn) {
       });
 
       /* Attach day click events */
+      var calIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
       cal.querySelectorAll('.dp-cal-day:not(.other-month):not(.past)').forEach(function(btn) {
         btn.addEventListener('click', function(ev) {
           ev.stopPropagation();
           var day = parseInt(btn.dataset.day);
           selectedDate = new Date(viewYear, viewMonth, day);
-          trigger.innerHTML = '<span>' + fmt(selectedDate) + '</span>' +
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+          trigger.innerHTML = '<span>' + fmt(selectedDate) + '</span>' + calIcon;
           cal.classList.remove('open');
         });
       });
+
+      /* "Today" quick action */
+      var todayLink = cal.querySelector('#dpCalToday');
+      if (todayLink) {
+        todayLink.addEventListener('click', function(ev) {
+          ev.stopPropagation();
+          selectedDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          viewYear = now.getFullYear(); viewMonth = now.getMonth();
+          trigger.innerHTML = '<span>' + fmt(selectedDate) + '</span>' + calIcon;
+          cal.classList.remove('open');
+        });
+      }
     }
 
     trigger.addEventListener('click', function(ev) {
@@ -2107,6 +2203,22 @@ function applyToday() {
 
 applyToday();
 
+/* ── Mark week columns that have overflow for scroll fade ── */
+(function() {
+  var bodies = document.querySelectorAll('.week-col-body');
+  function check() {
+    bodies.forEach(function(b) {
+      if (b.scrollHeight > b.clientHeight + 4) {
+        b.classList.add('has-overflow');
+      } else {
+        b.classList.remove('has-overflow');
+      }
+    });
+  }
+  check();
+  window.addEventListener('resize', check);
+})();
+
 /* ── Week tabs: switch between this week / next week ── */
 (function() {
   var tabs = document.querySelectorAll('#weekTabs .week-tab');
@@ -2293,14 +2405,21 @@ document.addEventListener('keydown', function(e) {
 
     /* Measure bubble to avoid overflow */
     var bw = bubble.offsetWidth;
+    var bh = bubble.offsetHeight;
     var left = rect.left;
     if (left + bw > window.innerWidth - 8) {
       left = window.innerWidth - bw - 8;
     }
     if (left < 8) left = 8;
 
+    /* Vertical: above by default; flip below if not enough room
+       (e.g. header icons near the top of the viewport) */
+    var topAbove = rect.top - bh - 6;
+    var topBelow = rect.bottom + 6;
+    var top = topAbove < 8 ? topBelow : topAbove;
+
     bubble.style.left = left + 'px';
-    bubble.style.top = (rect.top - bubble.offsetHeight - 6) + 'px';
+    bubble.style.top = top + 'px';
     bubble.style.visibility = '';
 
     /* Delay before showing */

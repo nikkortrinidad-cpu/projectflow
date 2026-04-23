@@ -10216,9 +10216,9 @@
 
   .wip-page {
     flex: 1; min-height: 0; overflow-y: auto;
-    max-width: 1280px; width: 100%;
+    max-width: 1440px; width: 100%;
     margin: 0 auto;
-    padding: var(--sp-36) var(--sp-4xl) 96px;
+    padding: var(--sp-36) var(--sp-5xl) 96px;
     display: flex; flex-direction: column; gap: var(--sp-3xl);
   }
   .wip-header {
@@ -10251,12 +10251,12 @@
 
   /* Tab row — Tier 3 tint for active, neutral hover for inactive */
   .wip-tabs {
-    display: flex; gap: var(--sp-micro);
+    display: flex; gap: var(--sp-xs);
     border-bottom: 1px solid var(--hairline);
     padding-bottom: var(--sp-micro);
   }
   .wip-tab {
-    padding: var(--sp-sm) var(--sp-base);
+    padding: var(--sp-sm) var(--sp-lg);
     font-size: var(--fs-md); font-weight: 500; color: var(--text-soft);
     text-decoration: none; border-radius: 8px;
     letter-spacing: -0.01em;
@@ -10280,6 +10280,162 @@
     display: grid; grid-template-columns: 380px 1fr;
     gap: var(--sp-3xl);
     align-items: start;
+  }
+
+  /* ── New single-column hierarchical agenda ───────────────────── */
+  .wip-agenda-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: var(--sp-lg); flex-wrap: wrap;
+    padding: var(--sp-lg) var(--sp-2xl);
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+  }
+  .wip-agenda-meta {
+    font-size: var(--fs-sm); color: var(--text-soft);
+    font-variant-numeric: tabular-nums;
+  }
+  .wip-agenda-meta .wip-save-hint {
+    margin-left: var(--sp-xs); color: var(--text-faint);
+  }
+  .wip-agenda-actions {
+    display: flex; gap: var(--sp-sm); flex-wrap: wrap;
+  }
+  .wip-agenda-list {
+    display: flex; flex-direction: column; gap: var(--sp-xl);
+  }
+  .wip-agenda-group {
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
+    padding: var(--sp-xl) var(--sp-2xl);
+    display: flex; flex-direction: column; gap: var(--sp-base);
+  }
+  .wip-agenda-group-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: var(--sp-sm);
+    padding-bottom: var(--sp-sm);
+    border-bottom: 1px solid var(--hairline-soft);
+  }
+  .wip-agenda-group-title {
+    font-size: var(--fs-lg); font-weight: 600; color: var(--text);
+    letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: var(--sp-sm);
+  }
+  .wip-agenda-group-title .wip-agenda-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    display: inline-block;
+    background: var(--text-faint);
+  }
+  .wip-agenda-group--new-clients .wip-agenda-dot { background: #22a559; }
+  .wip-agenda-group--urgent      .wip-agenda-dot { background: #d93025; }
+  .wip-agenda-group--ontrack     .wip-agenda-dot { background: #0b84ff; }
+  .wip-agenda-group--manual      .wip-agenda-dot { background: #8e4ec6; }
+  .wip-agenda-group-count {
+    font-size: var(--fs-xs); color: var(--text-soft);
+    font-variant-numeric: tabular-nums;
+  }
+  .wip-agenda-group-body { display: flex; flex-direction: column; gap: var(--sp-sm); }
+
+  /* Client > Service > Card tree */
+  .wip-agenda-client {
+    display: flex; flex-direction: column; gap: var(--sp-xs);
+    padding: var(--sp-sm) 0;
+  }
+  .wip-agenda-client + .wip-agenda-client {
+    border-top: 1px dashed var(--hairline-soft);
+    padding-top: var(--sp-base);
+  }
+  .wip-agenda-client-name {
+    font-size: var(--fs-base); font-weight: 600; color: var(--text);
+    letter-spacing: -0.005em;
+  }
+  .wip-agenda-service {
+    display: flex; flex-direction: column; gap: 2px;
+    padding: var(--sp-xs) 0 var(--sp-xs) var(--sp-lg);
+  }
+  .wip-agenda-service-name {
+    font-size: var(--fs-sm); font-weight: 500; color: var(--text-muted);
+    letter-spacing: -0.005em;
+    padding-bottom: 2px;
+  }
+  .wip-agenda-card-row {
+    display: grid; grid-template-columns: 96px 1fr auto;
+    align-items: center; gap: var(--sp-sm);
+    padding: var(--sp-xs) var(--sp-sm);
+    border-radius: 8px;
+    margin-left: var(--sp-xl);
+    transition: background var(--dur-fast);
+  }
+  .wip-agenda-card-row:hover {
+    background: color-mix(in srgb, var(--text) 4%, transparent);
+  }
+  .wip-agenda-status {
+    font-size: var(--fs-nano); font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 2px var(--sp-sm);
+    border-radius: 6px;
+    text-align: center;
+    line-height: 1.3;
+    font-variant-numeric: tabular-nums;
+  }
+  .wip-agenda-status[data-status="blocked"]     { background: color-mix(in srgb, #d93025 14%, transparent); color: #c92a1e; }
+  .wip-agenda-status[data-status="overdue"]     { background: color-mix(in srgb, #d93025 12%, transparent); color: #c92a1e; }
+  .wip-agenda-status[data-status="review"]      { background: color-mix(in srgb, #b54708 14%, transparent); color: #b54708; }
+  .wip-agenda-status[data-status="due-this"]    { background: color-mix(in srgb, #0b84ff 14%, transparent); color: #0a6edb; }
+  .wip-agenda-status[data-status="due-next"]    { background: color-mix(in srgb, #5e5ce6 14%, transparent); color: #5e5ce6; }
+  .wip-agenda-status[data-status="on-track"]    { background: color-mix(in srgb, var(--text) 6%, transparent); color: var(--text-muted); }
+  .wip-agenda-status[data-status="new"]         { background: color-mix(in srgb, #22a559 14%, transparent); color: #15833f; }
+  .wip-agenda-status[data-status="manual"]      { background: color-mix(in srgb, #8e4ec6 14%, transparent); color: #8e4ec6; }
+  :root[data-theme="dark"] .wip-agenda-status[data-status="blocked"],
+  :root[data-theme="dark"] .wip-agenda-status[data-status="overdue"] { color: #ff6961; }
+  :root[data-theme="dark"] .wip-agenda-status[data-status="review"]  { color: #ffb266; }
+  :root[data-theme="dark"] .wip-agenda-status[data-status="due-this"] { color: #5eadff; }
+  :root[data-theme="dark"] .wip-agenda-status[data-status="due-next"] { color: #a2a0ff; }
+  :root[data-theme="dark"] .wip-agenda-status[data-status="new"]      { color: #7fdda0; }
+  .wip-agenda-card-title {
+    font-size: var(--fs-sm); color: var(--text);
+    letter-spacing: -0.005em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    min-width: 0;
+  }
+  .wip-agenda-remove {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 6px;
+    background: transparent; border: none; cursor: pointer;
+    color: var(--text-faint);
+    opacity: 0; transition: opacity var(--dur-fast), background var(--dur-fast), color var(--dur-fast);
+  }
+  .wip-agenda-card-row:hover .wip-agenda-remove,
+  .wip-agenda-card-row:focus-within .wip-agenda-remove { opacity: 1; }
+  .wip-agenda-remove:hover {
+    background: color-mix(in srgb, #d93025 14%, transparent); color: #c92a1e;
+  }
+
+  /* Flat rows for new-clients and manual items (no service layer) */
+  .wip-agenda-flat-row {
+    display: grid; grid-template-columns: 96px 1fr auto;
+    align-items: center; gap: var(--sp-sm);
+    padding: var(--sp-sm) var(--sp-sm);
+    border-radius: 8px;
+    transition: background var(--dur-fast);
+  }
+  .wip-agenda-flat-row:hover {
+    background: color-mix(in srgb, var(--text) 4%, transparent);
+  }
+  .wip-agenda-flat-row .wip-agenda-remove { opacity: 0; }
+  .wip-agenda-flat-row:hover .wip-agenda-remove { opacity: 1; }
+  .wip-agenda-flat-note {
+    font-size: var(--fs-xs); color: var(--text-soft);
+    grid-column: 2 / span 1;
+    margin-top: 2px;
+  }
+  .wip-agenda-empty {
+    padding: var(--sp-3xl);
+    background: var(--bg-elev);
+    border: 1px dashed var(--hairline);
+    border-radius: 14px;
+    text-align: center;
   }
   .wip-queue-col,
   .wip-run-col {
@@ -10596,6 +10752,58 @@
     border-color: transparent;
   }
 
+  /* ── Live meeting pre-start gate ── */
+  .wip-live-prestart {
+    padding: var(--sp-5xl) var(--sp-4xl);
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    border-radius: 16px;
+    text-align: center;
+    max-width: 640px;
+    margin: var(--sp-2xl) auto;
+  }
+  .wip-live-prestart-eyebrow {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--text-muted);
+    margin-bottom: var(--sp-sm);
+  }
+  .wip-live-prestart-title {
+    font-size: 28px; font-weight: 700;
+    letter-spacing: -0.02em; color: var(--text);
+    margin: 0 0 var(--sp-base);
+  }
+  .wip-live-prestart-body {
+    font-size: var(--fs-base); color: var(--text-soft);
+    line-height: 1.55;
+    max-width: 48ch;
+    margin: 0 auto var(--sp-2xl);
+  }
+  .wip-live-prestart-stats {
+    display: flex; justify-content: center; gap: var(--sp-3xl);
+    padding: var(--sp-xl) 0;
+    margin-bottom: var(--sp-xl);
+    border-top: 1px solid var(--hairline-soft);
+    border-bottom: 1px solid var(--hairline-soft);
+  }
+  .wip-live-prestart-stat strong {
+    display: block;
+    font-size: 26px; font-weight: 700;
+    letter-spacing: -0.02em; color: var(--text);
+  }
+  .wip-live-prestart-stat span {
+    display: block;
+    font-size: var(--fs-xs); color: var(--text-muted);
+    letter-spacing: 0.02em;
+    margin-top: 2px;
+  }
+  .wip-live-prestart-actions {
+    display: flex; justify-content: center;
+  }
+  .wip-live-prestart-cta {
+    padding: var(--sp-base) var(--sp-2xl) !important;
+    font-size: var(--fs-base) !important;
+  }
+
   /* ═══════ WEEKLY WIP — Live Meeting (Stage 2) ═══════
      Core belief: the meeting is running. Show what we're on, capture
      outcomes in one keystroke, never force the facilitator to read.
@@ -10798,6 +11006,38 @@
   .wip-live-flag-title { font-size: var(--fs-base); color: var(--text); margin-top: 2px; line-height: 1.45; }
   .wip-live-flag-note { font-size: var(--fs-sm); color: var(--text-soft); margin-top: 4px; line-height: 1.5; max-width: 72ch; }
   .wip-live-flag-actions { display: flex; gap: var(--sp-xs); align-items: center; }
+
+  /* New-style agenda card in Live Meeting (one card per agenda item). */
+  .wip-live-agenda-card {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--sp-lg);
+    align-items: center;
+    padding: var(--sp-lg) var(--sp-xl);
+    border: 1px solid var(--hairline); border-radius: 12px;
+    background: var(--bg);
+    transition: background-color var(--dur-fast) var(--ease-out), opacity var(--dur-fast) var(--ease-out);
+  }
+  .wip-live-agenda-card.is-focus {
+    background: color-mix(in srgb, var(--highlight) 6%, transparent);
+    border-color: color-mix(in srgb, var(--highlight) 30%, transparent);
+  }
+  .wip-live-agenda-card.is-done { opacity: 0.5; }
+  .wip-live-agenda-card.is-done .wip-live-agenda-title { text-decoration: line-through; }
+  .wip-live-agenda-content { min-width: 0; }
+  .wip-live-agenda-title {
+    font-size: var(--fs-lg); font-weight: 600; color: var(--text);
+    line-height: 1.35;
+  }
+  .wip-live-agenda-meta {
+    font-size: var(--fs-sm); color: var(--text-soft);
+    margin-top: 4px; line-height: 1.5;
+  }
+  .wip-live-agenda-body {
+    font-size: var(--fs-sm); color: var(--text-soft);
+    margin-top: var(--sp-sm); line-height: 1.55; max-width: 72ch;
+  }
+  .wip-live-agenda-actions { display: flex; gap: var(--sp-xs); align-items: center; }
 
   .wip-live-items {
     border: 1px solid var(--hairline); border-radius: 10px;
@@ -15290,7 +15530,7 @@
       <div class="wip-header-text">
         <div class="page-greeting">Weekly WIP</div>
         <h1 class="page-title" data-wip-page-title>Prep the meeting</h1>
-        <p class="page-date" data-wip-page-sub>Queue the red flags, shape the run of show, start when everyone's ready.</p>
+        <p class="page-date" data-wip-page-sub>Auto-populated from the kanban. Remove what you'll skip, add what you want to raise, start when ready.</p>
       </div>
       <div class="wip-header-meta">
         <div class="wip-next-meeting" aria-live="polite">
@@ -15309,65 +15549,56 @@
 
     <!-- ── AGENDA BUILDER ── -->
     <section class="wip-sub wip-agenda" data-wip-sub="agenda" aria-label="Agenda builder">
-      <div class="wip-agenda-grid">
 
-        <!-- LEFT: Red-flag queue, grouped by channel manager -->
-        <aside class="wip-queue-col" aria-label="Red flag queue">
-          <div class="wip-col-head">
-            <div>
-              <div class="wip-col-title">This week's red flags</div>
-              <div class="wip-col-sub"><span data-wip-queue-count>0</span> raised · drag a card onto its channel on the right to surface it</div>
-            </div>
-            <button class="wip-btn wip-btn-ring" data-wip-add-flag type="button" aria-label="Add red flag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              <span>Add red flag</span>
-            </button>
-          </div>
-
-          <div class="wip-queue" data-wip-queue role="list"></div>
-
-          <div class="wip-queue-empty" data-wip-queue-empty hidden>
-            <div class="wip-empty-title">No red flags this week</div>
-            <div class="wip-empty-body">Nice. Use the button above if something comes up before Friday.</div>
-          </div>
-        </aside>
-
-        <!-- RIGHT: Run of show -->
-        <section class="wip-run-col" aria-label="Run of show">
-          <div class="wip-col-head">
-            <div>
-              <div class="wip-col-title">Run of show</div>
-              <div class="wip-col-sub">Drag <strong>Channel updates</strong> rows to reorder · BAU stays last, collapsed by default</div>
-            </div>
-            <div class="wip-run-meta">
-              <span data-wip-run-count>0</span> items · est. <span data-wip-run-time>0</span> min
-            </div>
-          </div>
-
-          <ol class="wip-run" data-wip-run></ol>
-
-          <footer class="wip-run-actions" role="group" aria-label="Agenda actions">
-            <div class="wip-run-actions-left">
-              <span class="wip-save-hint" data-wip-save-hint>Saved just now</span>
-            </div>
-            <div class="wip-run-actions-right">
-              <button class="wip-btn wip-btn-ring" data-wip-send-preread type="button">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16v16H4z" opacity="0"/><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
-                <span>Send pre-read</span>
-              </button>
-              <button class="wip-btn wip-btn-primary" data-wip-start-meeting type="button">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"/></svg>
-                <span>Start meeting</span>
-              </button>
-            </div>
-          </footer>
-        </section>
-
+      <!-- Toolbar -->
+      <div class="wip-agenda-toolbar">
+        <div class="wip-agenda-meta">
+          <span data-wip-run-count>0</span> items on the agenda · est. <span data-wip-run-time>0</span> min
+          <span class="wip-save-hint" data-wip-save-hint>· Saved just now</span>
+        </div>
+        <div class="wip-agenda-actions">
+          <button class="wip-btn wip-btn-ring" data-wip-add-flag type="button" aria-label="Add agenda item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Add agenda item</span>
+          </button>
+          <button class="wip-btn wip-btn-ring" data-wip-send-preread type="button">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
+            <span>Send pre-read</span>
+          </button>
+          <button class="wip-btn wip-btn-primary" data-wip-start-meeting type="button">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+            <span>Start meeting</span>
+          </button>
+        </div>
       </div>
+
+      <!-- Single-column hierarchical agenda (New clients › Top priority › On track › Manual) -->
+      <div class="wip-agenda-list" data-wip-agenda-list aria-label="This week's agenda"></div>
+
+      <div class="wip-agenda-empty" data-wip-agenda-empty hidden>
+        <div class="wip-empty-title">Nothing on the agenda</div>
+        <div class="wip-empty-body">No new clients, no urgent cards — quiet week. Use <strong>Add agenda item</strong> if you want to raise something.</div>
+      </div>
+
     </section>
 
     <!-- ── LIVE MEETING ── -->
     <section class="wip-sub" data-wip-sub="live" aria-label="Live meeting" hidden>
+
+      <!-- Pre-start gate — shown until the user presses Start -->
+      <div class="wip-live-prestart" data-wip-live-prestart hidden>
+        <div class="wip-live-prestart-eyebrow">Ready when you are</div>
+        <h1 class="wip-live-prestart-title">Start the Weekly WIP</h1>
+        <p class="wip-live-prestart-body">The timer starts on your go and freezes the agenda — removing items mid-meeting is fine, but new auto-adds wait until next week. Use <strong>Pause</strong> to hold and <strong>End meeting</strong> to wrap.</p>
+        <div class="wip-live-prestart-stats" data-wip-live-prestart-stats></div>
+        <div class="wip-live-prestart-actions">
+          <button class="wip-btn wip-btn-primary wip-live-prestart-cta" data-wip-live-start type="button">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+            <span>Start meeting</span>
+          </button>
+        </div>
+      </div>
+
       <div class="wip-live-root" data-wip-live-root>
 
         <!-- Top bar: meeting clock + End meeting -->
@@ -15623,44 +15854,36 @@
   </main>
 </div>
 
-<!-- Edit red-flag modal -->
+<!-- Add/Edit agenda item modal -->
 <div class="wip-modal-overlay" data-wip-flag-overlay role="dialog" aria-modal="true" aria-labelledby="wip-flag-modal-title" hidden>
   <div class="wip-modal" role="document">
     <header class="wip-modal-head">
-      <h2 class="wip-modal-title" id="wip-flag-modal-title" data-wip-flag-modal-title>Raise a red flag</h2>
+      <h2 class="wip-modal-title" id="wip-flag-modal-title" data-wip-flag-modal-title>Add agenda item</h2>
       <button class="wip-modal-close" data-wip-flag-close type="button" aria-label="Close">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </header>
     <div class="wip-modal-body">
       <label class="wip-field">
-        <span class="wip-field-label">Channel</span>
-        <select class="wip-field-input" data-wip-flag-channel></select>
-      </label>
-      <label class="wip-field">
-        <span class="wip-field-label">Client</span>
+        <span class="wip-field-label">Client (optional)</span>
         <select class="wip-field-input" data-wip-flag-client></select>
       </label>
       <label class="wip-field">
-        <span class="wip-field-label">Headline</span>
-        <input type="text" class="wip-field-input" data-wip-flag-title placeholder="e.g. Paid budget reallocation decision needed">
+        <span class="wip-field-label">Title</span>
+        <input type="text" class="wip-field-input" data-wip-flag-title placeholder="e.g. Q2 OKRs — confirm team commitments">
       </label>
       <label class="wip-field">
         <span class="wip-field-label">Context</span>
-        <textarea class="wip-field-input wip-field-textarea" data-wip-flag-note rows="3" placeholder="Detail for the pre-read email."></textarea>
+        <textarea class="wip-field-input wip-field-textarea" data-wip-flag-note rows="3" placeholder="What the team needs to know — shows up in the pre-read."></textarea>
       </label>
-      <fieldset class="wip-field wip-field-severity">
-        <span class="wip-field-label">Severity</span>
-        <div class="wip-sev-row" role="radiogroup" aria-label="Severity">
-          <label class="wip-sev-opt"><input type="radio" name="wip-flag-sev" value="fire"><span class="wip-sev-chip fire">On Fire</span></label>
-          <label class="wip-sev-opt"><input type="radio" name="wip-flag-sev" value="risk" checked><span class="wip-sev-chip risk">At Risk</span></label>
-          <label class="wip-sev-opt"><input type="radio" name="wip-flag-sev" value="track"><span class="wip-sev-chip track">On Track</span></label>
-        </div>
-      </fieldset>
+      <label class="wip-field">
+        <span class="wip-field-label">Insert position</span>
+        <select class="wip-field-input" data-wip-flag-position aria-label="Where in the agenda to insert this item"></select>
+      </label>
     </div>
     <footer class="wip-modal-foot">
       <button class="wip-btn wip-btn-ghost wip-btn-muted" data-wip-flag-cancel type="button">Cancel</button>
-      <button class="wip-btn wip-btn-primary" data-wip-flag-save type="button">Save flag</button>
+      <button class="wip-btn wip-btn-primary" data-wip-flag-save type="button">Save item</button>
     </footer>
   </div>
 </div>
@@ -31254,10 +31477,14 @@ window.OPS_TEAM = OPS_TEAM;
   // ── DOM refs ─────────────────────────────────────────────────
   var els = {
     nextTime:       view.querySelector('[data-wip-next-time]'),
+    // Legacy queue/run elements (now replaced by the single-column list below)
     queue:          view.querySelector('[data-wip-queue]'),
     queueCount:     view.querySelector('[data-wip-queue-count]'),
     queueEmpty:     view.querySelector('[data-wip-queue-empty]'),
     run:            view.querySelector('[data-wip-run]'),
+    // New hierarchical agenda
+    agendaList:     view.querySelector('[data-wip-agenda-list]'),
+    agendaEmpty:    view.querySelector('[data-wip-agenda-empty]'),
     runCount:       view.querySelector('[data-wip-run-count]'),
     runTime:        view.querySelector('[data-wip-run-time]'),
     saveHint:       view.querySelector('[data-wip-save-hint]'),
@@ -31279,8 +31506,12 @@ window.OPS_TEAM = OPS_TEAM;
   }
 
   // ── Render: queue (red flags grouped by channel manager) ────
+  // [Legacy] Kept as a no-op when the new single-column agenda DOM is present.
+  // Retained so Live Meeting / Recap renderers that still read state.redFlags
+  // continue to work without a risky big-bang refactor.
   var SEV_RANK = { fire: 0, risk: 1, track: 2 };
   function renderQueue(){
+    if (!els.queue || !els.queueCount || !els.queueEmpty) return;
     var flags = state.redFlags.slice();
     flags.sort(function(a, b){
       if (a.scheduled !== b.scheduled) return a.scheduled ? 1 : -1;
@@ -31348,7 +31579,10 @@ window.OPS_TEAM = OPS_TEAM;
   }
 
   // ── Render: run of show ──────────────────────────────────────
+  // [Legacy] Skipped when `els.run` is absent (new single-column agenda).
+  // The new renderer below updates runCount/runTime itself from the bucket totals.
   function renderRun(){
+    if (!els.run) { renderAgendaList(); return; }
     els.run.innerHTML = '';
     var blocks = buildRunBlocks();
     var totalItems = 0, totalMin = 0;
@@ -31365,6 +31599,283 @@ window.OPS_TEAM = OPS_TEAM;
     els.runCount.textContent = totalItems;
     els.runTime.textContent  = totalMin;
   }
+
+  // ═════════════════════════════════════════════════════════════
+  //  NEW HIERARCHICAL AGENDA (auto-populated from PROJECTFLOW_DATA)
+  // ═════════════════════════════════════════════════════════════
+  //  Belief: the PM is prepping in 5 minutes. Show what the kanban
+  //  already knows — new clients, urgent cards, on-track work —
+  //  organized client › service › card so the pre-read mirrors how
+  //  the team thinks. Manual items slot anywhere. No severity jargon.
+
+  // Bucket a card into one of the priority lanes. Blocked wins ties.
+  function bucketForTask(task, now){
+    if (!task || task.columnId === 'done') return null;
+    if (task.columnId === 'blocked') return 'blocked';
+    var due = task.dueDate ? +new Date(task.dueDate) : null;
+    if (due != null && due < now) return 'overdue';
+    if (task.columnId === 'review') return 'review';
+    if (due != null) {
+      var day = 86400000;
+      var delta = due - now;
+      if (delta <= 7 * day)  return 'due-this';
+      if (delta <= 14 * day) return 'due-next';
+    }
+    return 'ontrack';
+  }
+  var URGENT_BUCKETS = { blocked: 1, overdue: 1, review: 1, 'due-this': 1, 'due-next': 1 };
+  var STATUS_LABEL = {
+    blocked: 'Blocked', overdue: 'Overdue', review: 'Needs review',
+    'due-this': 'Due this wk', 'due-next': 'Due next wk', ontrack: 'On track',
+    'new': 'New client', manual: 'Manual'
+  };
+
+  function computeAutoAgenda(){
+    var D = window.PROJECTFLOW_DATA;
+    var clients  = (D && D.clients)  ? D.clients  : [];
+    var services = (D && D.services) ? D.services : [];
+    var tasks    = (D && D.tasks)    ? D.tasks    : [];
+    var now = Date.now();
+
+    // New clients: mockup uses status === 'onboard' as the fresh-since-last-WIP proxy.
+    // Real app would check clients added since state.meta.lastWipAt.
+    var newClients = clients.filter(function(c){ return c.status === 'onboard'; });
+
+    // Index services + tasks by client
+    var svcByClient = {};
+    services.forEach(function(s){
+      (svcByClient[s.clientId] = svcByClient[s.clientId] || []).push(s);
+    });
+    var tasksByService = {};
+    tasks.forEach(function(t){
+      (tasksByService[t.serviceId] = tasksByService[t.serviceId] || []).push(t);
+    });
+    var clientById = {}; clients.forEach(function(c){ clientById[c.id] = c; });
+
+    // Build the urgent + on-track client > service > cards trees
+    var urgentTree = [], ontrackTree = [];
+    clients.forEach(function(c){
+      // Skip clients whose status is 'onboard' — they already appear in New clients
+      // and we don't want to double-list their work here for this pass.
+      var urgentServices = [], ontrackServices = [];
+      (svcByClient[c.id] || []).forEach(function(svc){
+        var urgentCards = [], ontrackCards = [];
+        (tasksByService[svc.id] || []).forEach(function(t){
+          var b = bucketForTask(t, now);
+          if (!b) return;
+          var row = { id: t.id, title: t.title, bucket: b, dueDate: t.dueDate, clientId: t.clientId, serviceId: t.serviceId };
+          if (URGENT_BUCKETS[b]) urgentCards.push(row); else ontrackCards.push(row);
+        });
+        // Rank urgent cards within a service by bucket priority
+        var RANK = { blocked: 0, overdue: 1, review: 2, 'due-this': 3, 'due-next': 4 };
+        urgentCards.sort(function(a, b){ return (RANK[a.bucket] || 9) - (RANK[b.bucket] || 9); });
+        if (urgentCards.length)  urgentServices.push({ id: svc.id, name: svc.name, cards: urgentCards });
+        if (ontrackCards.length) ontrackServices.push({ id: svc.id, name: svc.name, cards: ontrackCards });
+      });
+      if (urgentServices.length)  urgentTree.push({ id: c.id, name: c.name, services: urgentServices });
+      if (ontrackServices.length) ontrackTree.push({ id: c.id, name: c.name, services: ontrackServices });
+    });
+
+    // Manual items (stored in state.redFlags for backward-compat)
+    var manuals = (state.redFlags || []).slice();
+
+    return {
+      newClients: newClients,
+      urgent: urgentTree,
+      ontrack: ontrackTree,
+      manual: manuals
+    };
+  }
+
+  function countCards(tree){
+    var n = 0;
+    tree.forEach(function(cli){
+      cli.services.forEach(function(svc){ n += svc.cards.length; });
+    });
+    return n;
+  }
+
+  function renderAgendaList(){
+    if (!els.agendaList) return;
+    var data = computeAutoAgenda();
+    var removed = (state.removedAutoIds = state.removedAutoIds || {});
+    // Prune already-removed cards from the auto-trees
+    function prune(tree){
+      return tree.map(function(cli){
+        return {
+          id: cli.id, name: cli.name,
+          services: cli.services.map(function(svc){
+            return { id: svc.id, name: svc.name, cards: svc.cards.filter(function(card){ return !removed[card.id]; }) };
+          }).filter(function(s){ return s.cards.length > 0; })
+        };
+      }).filter(function(c){ return c.services.length > 0; });
+    }
+    var urgent  = prune(data.urgent);
+    var ontrack = prune(data.ontrack);
+    var newClients = data.newClients.filter(function(c){ return !removed['newclient-' + c.id]; });
+
+    // Bucket manual items by their insertPosition.
+    // Fall through to the next valid slot if the target group is missing.
+    var mBuckets = { top: [], beforeUrgent: [], beforeOntrack: [], bottom: [] };
+    (data.manual || []).forEach(function(m){
+      var pos = m.insertPosition || 'bottom';
+      if (pos === 'top')                 mBuckets.top.push(m);
+      else if (pos === 'before:urgent')  mBuckets.beforeUrgent.push(m);
+      else if (pos === 'before:ontrack') mBuckets.beforeOntrack.push(m);
+      else                               mBuckets.bottom.push(m);
+    });
+    // Fall-through if the anchor group is gone
+    if (!urgent.length)  { mBuckets.beforeOntrack = mBuckets.beforeUrgent.concat(mBuckets.beforeOntrack); mBuckets.beforeUrgent = []; }
+    if (!ontrack.length) { mBuckets.bottom = mBuckets.beforeOntrack.concat(mBuckets.bottom); mBuckets.beforeOntrack = []; }
+
+    function buildManualGroup(list){
+      if (!list.length) return null;
+      var rows = list.map(function(m){
+        return {
+          id: m.id, status: 'manual', statusLabel: 'Manual',
+          title: (m.clientName ? m.clientName + ' \u2014 ' : '') + (m.title || ''),
+          note: m.note || ''
+        };
+      });
+      return buildFlatGroup({
+        cls: 'wip-agenda-group--manual', title: 'Manual items', count: rows.length, rows: rows
+      });
+    }
+
+    els.agendaList.innerHTML = '';
+
+    var groups = [];
+    var mg;
+    if ((mg = buildManualGroup(mBuckets.top))) groups.push(mg);
+    if (newClients.length) {
+      groups.push(buildFlatGroup({
+        cls: 'wip-agenda-group--new-clients', title: 'New clients', count: newClients.length,
+        rows: newClients.map(function(c){ return { id: 'newclient-' + c.id, status: 'new', statusLabel: 'New', title: c.name, note: 'Since last WIP \u00B7 kickoff touchpoint' }; })
+      }));
+    }
+    if ((mg = buildManualGroup(mBuckets.beforeUrgent))) groups.push(mg);
+    if (urgent.length) {
+      groups.push(buildTreeGroup({
+        cls: 'wip-agenda-group--urgent', title: 'Top priority', count: countCards(urgent), tree: urgent
+      }));
+    }
+    if ((mg = buildManualGroup(mBuckets.beforeOntrack))) groups.push(mg);
+    if (ontrack.length) {
+      groups.push(buildTreeGroup({
+        cls: 'wip-agenda-group--ontrack', title: 'On track', count: countCards(ontrack), tree: ontrack
+      }));
+    }
+    if ((mg = buildManualGroup(mBuckets.bottom))) groups.push(mg);
+
+    if (!groups.length) {
+      els.agendaEmpty.hidden = false;
+      if (els.runCount) els.runCount.textContent = 0;
+      if (els.runTime)  els.runTime.textContent  = 5;
+      return;
+    }
+    els.agendaEmpty.hidden = true;
+
+    groups.forEach(function(g){ els.agendaList.appendChild(g); });
+
+    // Totals — rough estimate: 2 min per urgent card, 1 min per on-track, 1 min per manual/new
+    var urgentCount  = countCards(urgent);
+    var ontrackCount = countCards(ontrack);
+    var total = urgentCount + ontrackCount + newClients.length + data.manual.length;
+    var est   = Math.max(10, urgentCount * 2 + ontrackCount * 1 + newClients.length + data.manual.length);
+    if (els.runCount) els.runCount.textContent = total;
+    if (els.runTime)  els.runTime.textContent  = est;
+  }
+
+  function buildFlatGroup(opts){
+    var group = document.createElement('section');
+    group.className = 'wip-agenda-group ' + opts.cls;
+    group.innerHTML =
+      '<header class="wip-agenda-group-head">' +
+        '<div class="wip-agenda-group-title"><span class="wip-agenda-dot" aria-hidden="true"></span>' + escapeHtml(opts.title) + '</div>' +
+        '<div class="wip-agenda-group-count">' + opts.count + ' ' + (opts.count === 1 ? 'item' : 'items') + '</div>' +
+      '</header>' +
+      '<div class="wip-agenda-group-body"></div>';
+    var body = group.querySelector('.wip-agenda-group-body');
+    opts.rows.forEach(function(r){ body.appendChild(buildFlatRow(r)); });
+    return group;
+  }
+
+  function buildTreeGroup(opts){
+    var group = document.createElement('section');
+    group.className = 'wip-agenda-group ' + opts.cls;
+    group.innerHTML =
+      '<header class="wip-agenda-group-head">' +
+        '<div class="wip-agenda-group-title"><span class="wip-agenda-dot" aria-hidden="true"></span>' + escapeHtml(opts.title) + '</div>' +
+        '<div class="wip-agenda-group-count">' + opts.count + ' ' + (opts.count === 1 ? 'card' : 'cards') + '</div>' +
+      '</header>' +
+      '<div class="wip-agenda-group-body"></div>';
+    var body = group.querySelector('.wip-agenda-group-body');
+    opts.tree.forEach(function(cli){
+      var cliEl = document.createElement('div');
+      cliEl.className = 'wip-agenda-client';
+      cliEl.innerHTML = '<div class="wip-agenda-client-name">' + escapeHtml(cli.name) + '</div>';
+      cli.services.forEach(function(svc){
+        var svcEl = document.createElement('div');
+        svcEl.className = 'wip-agenda-service';
+        svcEl.innerHTML = '<div class="wip-agenda-service-name">' + escapeHtml(svc.name) + '</div>';
+        svc.cards.forEach(function(card){
+          svcEl.appendChild(buildCardRow(card));
+        });
+        cliEl.appendChild(svcEl);
+      });
+      body.appendChild(cliEl);
+    });
+    return group;
+  }
+
+  function buildCardRow(card){
+    var row = document.createElement('div');
+    row.className = 'wip-agenda-card-row';
+    row.setAttribute('data-auto-id', card.id);
+    var label = STATUS_LABEL[card.bucket] || 'Item';
+    row.innerHTML =
+      '<span class="wip-agenda-status" data-status="' + escapeHtml(card.bucket) + '">' + escapeHtml(label) + '</span>' +
+      '<span class="wip-agenda-card-title" title="' + escapeHtml(card.title) + '">' + escapeHtml(card.title) + '</span>' +
+      '<button class="wip-agenda-remove" type="button" data-agenda-remove="' + escapeHtml(card.id) + '" aria-label="Remove from agenda">' +
+        '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+      '</button>';
+    return row;
+  }
+
+  function buildFlatRow(r){
+    var row = document.createElement('div');
+    row.className = 'wip-agenda-flat-row';
+    row.setAttribute('data-flat-id', r.id);
+    row.innerHTML =
+      '<span class="wip-agenda-status" data-status="' + escapeHtml(r.status) + '">' + escapeHtml(r.statusLabel) + '</span>' +
+      '<span class="wip-agenda-card-title" title="' + escapeHtml(r.title) + '">' + escapeHtml(r.title) + '</span>' +
+      '<button class="wip-agenda-remove" type="button" data-agenda-remove="' + escapeHtml(r.id) + '" aria-label="Remove from agenda">' +
+        '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+      '</button>' +
+      (r.note ? '<div class="wip-agenda-flat-note">' + escapeHtml(r.note) + '</div>' : '');
+    return row;
+  }
+
+  // Remove handler — marks the auto-item as removed, or deletes the manual item
+  view.addEventListener('click', function(e){
+    var btn = e.target.closest('[data-agenda-remove]');
+    if (!btn) return;
+    e.preventDefault();
+    var id = btn.getAttribute('data-agenda-remove');
+    // If the id matches a manual (redFlag) item, delete it from state
+    var mIdx = -1;
+    for (var i = 0; i < state.redFlags.length; i++) {
+      if (state.redFlags[i].id === id) { mIdx = i; break; }
+    }
+    if (mIdx >= 0) {
+      state.redFlags.splice(mIdx, 1);
+    } else {
+      state.removedAutoIds = state.removedAutoIds || {};
+      state.removedAutoIds[id] = true;
+    }
+    saveState();
+    renderAgendaList();
+  });
 
   function buildRunBlocks(){
     var clients = readClients();
@@ -31659,44 +32170,70 @@ window.OPS_TEAM = OPS_TEAM;
     }
   }
 
-  // ── Flag modal ───────────────────────────────────────────────
-  var modal     = document.querySelector('[data-wip-flag-overlay]');
+  // ── Agenda item modal ────────────────────────────────────────
+  var modal      = document.querySelector('[data-wip-flag-overlay]');
   var mHeadTitle = modal.querySelector('[data-wip-flag-modal-title]');
-  var mChannel   = modal.querySelector('[data-wip-flag-channel]');
   var mClient    = modal.querySelector('[data-wip-flag-client]');
   var mTitle     = modal.querySelector('[data-wip-flag-title]');
   var mNote      = modal.querySelector('[data-wip-flag-note]');
-  var mSevRadios = modal.querySelectorAll('input[name="wip-flag-sev"]');
+  var mPosition  = modal.querySelector('[data-wip-flag-position]');
   var modalEditingId = null;
 
-  function populateModalSelects(){
-    mChannel.innerHTML = CHANNELS.map(function(c){
-      return '<option value="' + escapeHtml(c.id) + '">' + escapeHtml(c.name + ' \u2014 ' + c.manager) + '</option>';
-    }).join('');
+  function populateModalClientSelect(){
     var clients = readClients();
-    mClient.innerHTML = '<option value="">\u2014 Select client \u2014</option>' +
+    mClient.innerHTML = '<option value="">\u2014 No client \u2014</option>' +
       clients.map(function(c){ return '<option value="' + escapeHtml(c.id) + '">' + escapeHtml(c.name) + '</option>'; }).join('');
   }
 
+  function populatePositionSelect(currentValue){
+    // Show positions that match groups currently in the agenda.
+    var data = computeAutoAgenda();
+    var removed = state.removedAutoIds || {};
+    function pruneHas(tree){
+      for (var i = 0; i < tree.length; i++) {
+        for (var j = 0; j < tree[i].services.length; j++) {
+          for (var k = 0; k < tree[i].services[j].cards.length; k++) {
+            if (!removed[tree[i].services[j].cards[k].id]) return true;
+          }
+        }
+      }
+      return false;
+    }
+    var hasUrgent  = pruneHas(data.urgent);
+    var hasOntrack = pruneHas(data.ontrack);
+
+    var opts = [{ value: 'top', label: 'At top of agenda' }];
+    if (hasUrgent)  opts.push({ value: 'before:urgent',  label: 'Before Top priority' });
+    if (hasOntrack) opts.push({ value: 'before:ontrack', label: 'Before On track' });
+    opts.push({ value: 'bottom', label: 'At end of agenda' });
+
+    mPosition.innerHTML = opts.map(function(o){
+      return '<option value="' + escapeHtml(o.value) + '">' + escapeHtml(o.label) + '</option>';
+    }).join('');
+
+    var val = currentValue || 'bottom';
+    var found = false;
+    for (var i = 0; i < opts.length; i++) if (opts[i].value === val) { found = true; break; }
+    if (!found) val = 'bottom';
+    mPosition.value = val;
+  }
+
   function openFlagModal(existing){
-    populateModalSelects();
+    populateModalClientSelect();
     if (existing) {
       modalEditingId = existing.id;
-      mHeadTitle.textContent = 'Edit red flag';
-      mChannel.value = existing.channelId || CHANNELS[0].id;
-      mClient.value  = existing.clientId  || '';
-      mTitle.value   = existing.title     || '';
-      mNote.value    = existing.note      || '';
-      var sev = existing.severity || 'risk';
-      mSevRadios.forEach(function(r){ r.checked = (r.value === sev); });
+      mHeadTitle.textContent = 'Edit agenda item';
+      mClient.value  = existing.clientId || '';
+      mTitle.value   = existing.title    || '';
+      mNote.value    = existing.note     || '';
+      populatePositionSelect(existing.insertPosition || 'bottom');
     } else {
       modalEditingId = null;
-      mHeadTitle.textContent = 'Raise a red flag';
-      mChannel.value = CHANNELS[0].id;
-      mClient.value  = '';
-      mTitle.value   = '';
-      mNote.value    = '';
-      mSevRadios.forEach(function(r){ r.checked = (r.value === 'risk'); });
+      mHeadTitle.textContent = 'Add agenda item';
+      mClient.value = '';
+      mTitle.value  = '';
+      mNote.value   = '';
+      populatePositionSelect('bottom');
     }
     modal.hidden = false;
     setTimeout(function(){ mTitle.focus(); }, 80);
@@ -31725,8 +32262,6 @@ window.OPS_TEAM = OPS_TEAM;
       setTimeout(function(){ mTitle.style.borderColor = ''; }, 800);
       return;
     }
-    var sev = 'risk';
-    mSevRadios.forEach(function(r){ if (r.checked) sev = r.value; });
     var clients = readClients();
     var cid = mClient.value || null;
     var cname = '';
@@ -31734,12 +32269,11 @@ window.OPS_TEAM = OPS_TEAM;
       for (var i = 0; i < clients.length; i++) if (clients[i].id === cid) { cname = clients[i].name; break; }
     }
     var payload = {
-      channelId: mChannel.value,
       clientId: cid,
       clientName: cname,
       title: title,
       note: (mNote.value || '').trim(),
-      severity: sev
+      insertPosition: mPosition.value || 'bottom'
     };
     if (modalEditingId) {
       for (var j = 0; j < state.redFlags.length; j++) {
@@ -31751,14 +32285,18 @@ window.OPS_TEAM = OPS_TEAM;
     } else {
       state.redFlags.push({
         id: uid('f'), createdAt: Date.now(), createdBy: 'You', scheduled: false,
-        channelId: payload.channelId, clientId: payload.clientId, clientName: payload.clientName,
-        title: payload.title, note: payload.note, severity: payload.severity
+        clientId: payload.clientId, clientName: payload.clientName,
+        title: payload.title, note: payload.note,
+        insertPosition: payload.insertPosition
       });
     }
-    saveState(); renderQueue(); renderRun();
+    saveState();
+    renderAgendaList();
+    renderQueue();  // null-safe no-op
+    renderRun();    // null-safe redirect
     closeFlagModal();
     if (typeof window.showToast === 'function') {
-      window.showToast(modalEditingId ? 'Red flag updated' : 'Red flag raised');
+      window.showToast(modalEditingId ? 'Agenda item updated' : 'Agenda item added');
     }
   }
 
@@ -31900,13 +32438,105 @@ window.OPS_TEAM = OPS_TEAM;
   ensureMeetingState();
 
   function buildMeetingSequence(){
-    var seq = ['new-business', 'internal'];
-    state.channelOrder.forEach(function(cid){ seq.push(cid); });
-    seq.push('bau', 'action-review');
+    // Rebuild the agenda order that was rendered on the Agenda tab, using the
+    // snapshot captured at meeting start (removedAutoIds + manualIds).
+    var snap = (state.meeting && state.meeting.agendaSnapshot) || { removedAutoIds: {}, manualIds: [] };
+    var removed = snap.removedAutoIds || {};
+    var manualIds = snap.manualIds || [];
+    var data = computeAutoAgenda();
+
+    function prune(tree){
+      return tree.map(function(cli){
+        return {
+          id: cli.id, name: cli.name,
+          services: cli.services.map(function(svc){
+            return { id: svc.id, name: svc.name, cards: svc.cards.filter(function(card){ return !removed[card.id]; }) };
+          }).filter(function(s){ return s.cards.length > 0; })
+        };
+      }).filter(function(c){ return c.services.length > 0; });
+    }
+    var urgent  = prune(data.urgent);
+    var ontrack = prune(data.ontrack);
+    var newClients = data.newClients.filter(function(c){ return !removed['newclient-' + c.id]; });
+
+    var mBuckets = { top: [], beforeUrgent: [], beforeOntrack: [], bottom: [] };
+    manualIds.forEach(function(id){
+      var f = null;
+      for (var i = 0; i < state.redFlags.length; i++) if (state.redFlags[i].id === id) { f = state.redFlags[i]; break; }
+      if (!f) return;
+      var pos = f.insertPosition || 'bottom';
+      if (pos === 'top')                 mBuckets.top.push(f);
+      else if (pos === 'before:urgent')  mBuckets.beforeUrgent.push(f);
+      else if (pos === 'before:ontrack') mBuckets.beforeOntrack.push(f);
+      else                               mBuckets.bottom.push(f);
+    });
+    if (!urgent.length)  { mBuckets.beforeOntrack = mBuckets.beforeUrgent.concat(mBuckets.beforeOntrack); mBuckets.beforeUrgent = []; }
+    if (!ontrack.length) { mBuckets.bottom = mBuckets.beforeOntrack.concat(mBuckets.bottom); mBuckets.beforeOntrack = []; }
+
+    var seq = [];
+    mBuckets.top.forEach(function(f){ seq.push('agenda:manual:' + f.id); });
+    newClients.forEach(function(c){ seq.push('agenda:newclient:' + c.id); });
+    mBuckets.beforeUrgent.forEach(function(f){ seq.push('agenda:manual:' + f.id); });
+    urgent.forEach(function(cli){
+      cli.services.forEach(function(svc){
+        svc.cards.forEach(function(card){ seq.push('agenda:card:' + card.id); });
+      });
+    });
+    mBuckets.beforeOntrack.forEach(function(f){ seq.push('agenda:manual:' + f.id); });
+    ontrack.forEach(function(cli){
+      cli.services.forEach(function(svc){
+        svc.cards.forEach(function(card){ seq.push('agenda:card:' + card.id); });
+      });
+    });
+    mBuckets.bottom.forEach(function(f){ seq.push('agenda:manual:' + f.id); });
+
+    // Always close with an action-items review block.
+    seq.push('action-review');
     return seq;
   }
 
   function getBlockMeta(blockKey){
+    if (blockKey === 'action-review') {
+      return { title: 'Action items review', owner: 'You', est: 5, kind: 'action-review' };
+    }
+    // --- New agenda item keys ---
+    if (typeof blockKey === 'string' && blockKey.indexOf('agenda:newclient:') === 0) {
+      var cid = blockKey.slice('agenda:newclient:'.length);
+      var D = window.PROJECTFLOW_DATA || {};
+      var clients0 = D.clients || [];
+      var c0 = null;
+      for (var i = 0; i < clients0.length; i++) if (clients0[i].id === cid) { c0 = clients0[i]; break; }
+      if (!c0) return null;
+      return { title: c0.name, owner: c0.ownerName || 'AM', est: 4, kind: 'agenda-newclient', client: c0 };
+    }
+    if (typeof blockKey === 'string' && blockKey.indexOf('agenda:card:') === 0) {
+      var tid = blockKey.slice('agenda:card:'.length);
+      var D2 = window.PROJECTFLOW_DATA || {};
+      var t = null;
+      for (var j = 0; j < (D2.tasks || []).length; j++) if (D2.tasks[j].id === tid) { t = D2.tasks[j]; break; }
+      if (!t) return null;
+      var svc = null;
+      for (var k = 0; k < (D2.services || []).length; k++) if (D2.services[k].id === t.serviceId) { svc = D2.services[k]; break; }
+      var cli = null;
+      for (var l = 0; l < (D2.clients || []).length; l++) if (D2.clients[l].id === t.clientId) { cli = D2.clients[l]; break; }
+      var bucket = bucketForTask(t, Date.now()) || 'ontrack';
+      var urgent0 = URGENT_BUCKETS[bucket] ? 1 : 0;
+      var ownerName = t.assigneeName || (svc && svc.ownerName) || (cli && cli.ownerName) || '';
+      var titleBits = [];
+      if (cli) titleBits.push(cli.name);
+      if (svc) titleBits.push(svc.name);
+      titleBits.push(t.title || '');
+      return { title: titleBits.join(' \u00b7 '), owner: ownerName, est: urgent0 ? 4 : 2, kind: 'agenda-card', task: t, service: svc, client: cli, bucket: bucket };
+    }
+    if (typeof blockKey === 'string' && blockKey.indexOf('agenda:manual:') === 0) {
+      var fid = blockKey.slice('agenda:manual:'.length);
+      var f = null;
+      for (var fi = 0; fi < state.redFlags.length; fi++) if (state.redFlags[fi].id === fid) { f = state.redFlags[fi]; break; }
+      if (!f) return null;
+      var head = (f.clientName ? f.clientName + ' \u2014 ' : '') + (f.title || '');
+      return { title: head, owner: f.createdBy || 'You', est: 3, kind: 'agenda-manual', flag: f };
+    }
+    // --- Legacy keys (dead paths, retained for safety) ---
     if (blockKey === 'new-business') {
       return { title: 'New business', owner: 'Sales \u2192 AM', est: 5, kind: 'fixed', items: state.newBusinessItems };
     }
@@ -31915,9 +32545,6 @@ window.OPS_TEAM = OPS_TEAM;
     }
     if (blockKey === 'bau') {
       return { title: 'BAU summary', owner: 'All managers', est: 3, kind: 'bau' };
-    }
-    if (blockKey === 'action-review') {
-      return { title: 'Action items review', owner: 'You', est: 5, kind: 'action-review' };
     }
     var ch = channel(blockKey);
     if (ch) {
@@ -31997,8 +32624,61 @@ window.OPS_TEAM = OPS_TEAM;
     m.itemDone = {};
     m.notes = [];
     m.flagResolutions = {};
+    // Snapshot the agenda: freeze the list of urgent/on-track cards that were
+    // removed at start time. Removing an item mid-meeting still works, but
+    // new cards that qualify after Start will not auto-appear.
+    try {
+      m.agendaSnapshot = {
+        removedAutoIds: Object.assign({}, (state.removedAutoIds || {})),
+        manualIds: (state.redFlags || []).map(function(f){ return f.id; }),
+        at: Date.now()
+      };
+    } catch (e) {}
     saveState();
   }
+
+  // Toggle the pre-start gate vs. the live-meeting UI based on meeting.active.
+  function updateLivePrestartGate(){
+    var sub = view.querySelector('[data-wip-sub="live"]');
+    if (!sub) return;
+    var gate = sub.querySelector('[data-wip-live-prestart]');
+    var root = sub.querySelector('[data-wip-live-root]');
+    var statsHost = sub.querySelector('[data-wip-live-prestart-stats]');
+    if (!gate || !root) return;
+    var isActive = !!(state.meeting && state.meeting.active);
+    gate.hidden = isActive;
+    root.style.display = isActive ? '' : 'none';
+    if (!isActive && statsHost) {
+      // Show a quick preview of what's on the agenda so the PM knows what they'll
+      // be starting into.
+      var data = computeAutoAgenda();
+      var removed = state.removedAutoIds || {};
+      function cnt(tree){ var n = 0; tree.forEach(function(c){ c.services.forEach(function(s){ s.cards.forEach(function(card){ if (!removed[card.id]) n++; }); }); }); return n; }
+      var urgent  = cnt(data.urgent);
+      var ontrack = cnt(data.ontrack);
+      var newCli  = data.newClients.filter(function(c){ return !removed['newclient-' + c.id]; }).length;
+      var manual  = data.manual.length;
+      statsHost.innerHTML =
+        '<div class="wip-live-prestart-stat"><strong>' + (newCli + urgent + ontrack + manual) + '</strong><span>items on deck</span></div>' +
+        '<div class="wip-live-prestart-stat"><strong>' + urgent + '</strong><span>top priority</span></div>' +
+        '<div class="wip-live-prestart-stat"><strong>' + newCli + '</strong><span>new clients</span></div>';
+    }
+  }
+
+  // Pre-start CTA → start the meeting, then render the live UI.
+  view.addEventListener('click', function(e){
+    var btn = e.target.closest('[data-wip-live-start]');
+    if (!btn) return;
+    e.preventDefault();
+    startMeeting();
+    updateLivePrestartGate();
+    renderLive();
+    startTicking();
+    attachLiveKeyboard();
+    // Scroll the stage into view so the PM sees item #1 immediately.
+    var stage = view.querySelector('[data-wip-live-stage]');
+    if (stage) stage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 
   function recordItemElapsed(){
     var m = state.meeting;
@@ -32075,6 +32755,7 @@ window.OPS_TEAM = OPS_TEAM;
     stopTicking();
     closeEndMeetingModal();
     saveState();
+    updateLivePrestartGate();
     if (typeof window.showToast === 'function') {
       window.showToast('Meeting ended \u2014 notes are saved. Recap builds in Stage 3.', { duration: 3600 });
     }
@@ -32200,7 +32881,19 @@ window.OPS_TEAM = OPS_TEAM;
 
     // Counts/subhead
     var counts = '';
-    if (meta.kind === 'channel') {
+    if (meta.kind === 'agenda-newclient') {
+      counts = 'New client \u00b7 kickoff touchpoint';
+    } else if (meta.kind === 'agenda-card') {
+      counts = STATUS_LABEL[meta.bucket] || 'On track';
+      if (meta.task && meta.task.dueDate) {
+        counts += ' \u00b7 Due ' + new Date(meta.task.dueDate).toLocaleDateString();
+      }
+    } else if (meta.kind === 'agenda-manual') {
+      counts = 'Raised for this WIP';
+    } else if (meta.kind === 'action-review') {
+      var openN = state.actionItems.filter(function(a){ return a.status !== 'done'; }).length;
+      counts = openN + ' open action' + (openN === 1 ? '' : 's');
+    } else if (meta.kind === 'channel') {
       var active = meta.flags.filter(function(f){ return m.flagResolutions[f.id] !== 'done'; });
       counts = meta.flags.length === 0
         ? 'No red flags \u2014 just BAU'
@@ -32210,9 +32903,6 @@ window.OPS_TEAM = OPS_TEAM;
       counts = n + ' item' + (n === 1 ? '' : 's');
     } else if (meta.kind === 'bau') {
       counts = 'One-line update per manager';
-    } else if (meta.kind === 'action-review') {
-      var openN = state.actionItems.filter(function(a){ return a.status !== 'done'; }).length;
-      counts = openN + ' open action' + (openN === 1 ? '' : 's');
     }
     E.counts.textContent = counts;
 
@@ -32265,6 +32955,48 @@ window.OPS_TEAM = OPS_TEAM;
     var meta = getBlockMeta(key);
     if (!meta) return;
     E.body.innerHTML = '';
+
+    // --- New agenda kinds ---
+    if (meta.kind === 'agenda-newclient' || meta.kind === 'agenda-card' || meta.kind === 'agenda-manual') {
+      var isDone = !!m.itemDone[key];
+      var label, sublabel, bodyHtml = '';
+      if (meta.kind === 'agenda-newclient') {
+        label    = 'New client';
+        sublabel = (meta.client && (meta.client.ownerName || '')) || '';
+        bodyHtml =
+          '<div class="wip-live-agenda-title">' + escapeHtml(meta.client.name) + '</div>' +
+          '<div class="wip-live-agenda-meta">Since last WIP \u00b7 kickoff touchpoint' + (sublabel ? ' \u00b7 ' + escapeHtml(sublabel) : '') + '</div>' +
+          (meta.client.notes ? '<div class="wip-live-agenda-body">' + escapeHtml(meta.client.notes) + '</div>' : '');
+      } else if (meta.kind === 'agenda-card') {
+        label = STATUS_LABEL[meta.bucket] || 'On track';
+        var due = meta.task.dueDate ? new Date(meta.task.dueDate).toLocaleDateString() : '\u2014';
+        bodyHtml =
+          '<div class="wip-live-agenda-title">' + escapeHtml(meta.task.title || '') + '</div>' +
+          '<div class="wip-live-agenda-meta">' +
+            escapeHtml((meta.client && meta.client.name) || '') +
+            (meta.service ? ' \u00b7 ' + escapeHtml(meta.service.name) : '') +
+            ' \u00b7 Due ' + escapeHtml(due) +
+            (meta.owner ? ' \u00b7 ' + escapeHtml(meta.owner) : '') +
+          '</div>' +
+          (meta.task.description ? '<div class="wip-live-agenda-body">' + escapeHtml(meta.task.description) + '</div>' : '');
+      } else {
+        label = 'Manual agenda item';
+        bodyHtml =
+          '<div class="wip-live-agenda-title">' + escapeHtml(meta.flag.title || '') + '</div>' +
+          '<div class="wip-live-agenda-meta">' + escapeHtml(meta.flag.clientName || 'Internal') + ' \u00b7 raised by ' + escapeHtml(meta.flag.createdBy || 'You') + '</div>' +
+          (meta.flag.note ? '<div class="wip-live-agenda-body">' + escapeHtml(meta.flag.note) + '</div>' : '');
+      }
+      var actionHtml = isDone
+        ? '<button class="wip-btn wip-btn-ghost" data-wip-live-item-reopen type="button">Re-open</button>'
+        : '<button class="wip-btn wip-btn-primary" data-wip-live-item-done type="button"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>Mark discussed</button>';
+      E.body.innerHTML =
+        '<div class="wip-live-section-label">' + escapeHtml(label) + '</div>' +
+        '<div class="wip-live-agenda-card' + (isDone ? ' is-done' : ' is-focus') + '">' +
+          '<div class="wip-live-agenda-content">' + bodyHtml + '</div>' +
+          '<div class="wip-live-agenda-actions">' + actionHtml + '</div>' +
+        '</div>';
+      return;
+    }
 
     if (meta.kind === 'channel') {
       var flags = meta.flags;
@@ -32449,6 +33181,28 @@ window.OPS_TEAM = OPS_TEAM;
       var flagReopen = e.target.closest('[data-wip-live-flag-reopen]');
       if (flagReopen) { reopenFlag(flagReopen.getAttribute('data-wip-live-flag-reopen')); return; }
 
+      // New agenda item — mark discussed / re-open
+      if (e.target.closest('[data-wip-live-item-done]')) {
+        var mDone = state.meeting;
+        var kDone = mDone.sequence[mDone.currentIndex];
+        if (kDone) {
+          mDone.itemDone[kDone] = true;
+          saveState();
+          renderLive();
+        }
+        return;
+      }
+      if (e.target.closest('[data-wip-live-item-reopen]')) {
+        var mRe = state.meeting;
+        var kRe = mRe.sequence[mRe.currentIndex];
+        if (kRe) {
+          delete mRe.itemDone[kRe];
+          saveState();
+          renderLive();
+        }
+        return;
+      }
+
       var logDel = e.target.closest('[data-wip-live-log-del]');
       if (logDel) { undoEntry(logDel.getAttribute('data-wip-live-log-del')); return; }
 
@@ -32516,6 +33270,7 @@ window.OPS_TEAM = OPS_TEAM;
     if (m.endedAt) return true;
     if (m.notes && m.notes.length > 0) return true;
     if (m.flagResolutions && Object.keys(m.flagResolutions).length > 0) return true;
+    if (m.itemDone && Object.keys(m.itemDone).length > 0) return true;
     return false;
   }
 
@@ -32624,25 +33379,30 @@ window.OPS_TEAM = OPS_TEAM;
       lines.push('');
     }
 
-    var res = m.flagResolutions || {};
-    var resolvedIds = Object.keys(res).filter(function(id){ return res[id] === 'done'; });
-    if (resolvedIds.length > 0) {
-      lines.push('FLAGS RESOLVED');
-      resolvedIds.forEach(function(id){
-        var f = null;
-        for (var i = 0; i < state.redFlags.length; i++) if (state.redFlags[i].id === id) { f = state.redFlags[i]; break; }
-        if (!f) return;
-        lines.push('\u2022 ' + (f.clientName || '') + ' \u2014 ' + f.title);
+    // Agenda items discussed (new agenda model tracks completion in m.itemDone)
+    var done = m.itemDone || {};
+    var discussedKeys = (m.sequence || []).filter(function(k){
+      return done[k] && typeof k === 'string' && k.indexOf('agenda:') === 0;
+    });
+    if (discussedKeys.length > 0) {
+      lines.push('DISCUSSED');
+      discussedKeys.forEach(function(k){
+        var meta = getBlockMeta(k);
+        if (!meta) return;
+        lines.push('\u2022 ' + (meta.title || ''));
       });
       lines.push('');
     }
-
-    var stillOpen = state.redFlags.filter(function(f){ return res[f.id] !== 'done'; });
-    if (stillOpen.length > 0) {
-      lines.push('FLAGS STILL OPEN');
-      stillOpen.forEach(function(f){
-        var sevLabel = SEV_LABEL[f.severity] || 'At Risk';
-        lines.push('\u2022 [' + sevLabel + '] ' + (f.clientName || '') + ' \u2014 ' + f.title);
+    var stillOpenKeys = (m.sequence || []).filter(function(k){
+      return !done[k] && typeof k === 'string' && k.indexOf('agenda:') === 0;
+    });
+    if (stillOpenKeys.length > 0) {
+      lines.push('STILL OPEN');
+      stillOpenKeys.forEach(function(k){
+        var meta2 = getBlockMeta(k);
+        if (!meta2) return;
+        var tag = (meta2.kind === 'agenda-card' && STATUS_LABEL[meta2.bucket]) ? '[' + STATUS_LABEL[meta2.bucket] + '] ' : '';
+        lines.push('\u2022 ' + tag + (meta2.title || ''));
       });
       lines.push('');
     }
@@ -32728,14 +33488,15 @@ window.OPS_TEAM = OPS_TEAM;
     // Meta row
     var dur = fmtRecapDuration(m);
     var itemCount = (m.sequence || []).length || 0;
-    var flagsDone = Object.keys(m.flagResolutions || {}).filter(function(k){ return m.flagResolutions[k] === 'done'; }).length;
+    var itemDone = m.itemDone || {};
+    var itemsClosed = (m.sequence || []).filter(function(k){ return itemDone[k]; }).length;
     var newActions = (m.notes || []).filter(function(n){ return n.kind === 'action'; }).length;
     var metaParts = [];
     if (m.endedAt)        metaParts.push('Ended ' + fmtMeetingTime(m.endedAt));
     else if (m.startedAt) metaParts.push('Started ' + fmtMeetingTime(m.startedAt));
     if (dur)              metaParts.push(dur);
-    metaParts.push(itemCount + ' item' + (itemCount === 1 ? '' : 's') + ' covered');
-    metaParts.push(flagsDone + ' flag' + (flagsDone === 1 ? '' : 's') + ' closed');
+    metaParts.push(itemCount + ' item' + (itemCount === 1 ? '' : 's') + ' on agenda');
+    metaParts.push(itemsClosed + ' discussed');
     metaParts.push(newActions + ' new action' + (newActions === 1 ? '' : 's'));
     E.meta.innerHTML = metaParts.map(function(p, i){
       return (i > 0 ? '<span class="sep" aria-hidden="true">\u00b7</span>' : '') + '<span>' + escapeHtml(p) + '</span>';
@@ -33260,13 +34021,18 @@ window.OPS_TEAM = OPS_TEAM;
     onRoute: function(sub /* , id */){
       if (sub === 'live') {
         ensureMeetingState();
-        if (!state.meeting.active) {
-          // Auto-start when entering live without prior start (demo-friendly).
-          startMeeting();
+        // Don't auto-start. Show the pre-start gate until the user presses Start.
+        // Pause/End buttons + timer persistence all remain wired; the meeting
+        // only ends (and agenda snapshot clears) on End meeting.
+        updateLivePrestartGate();
+        if (state.meeting.active) {
+          renderLive();
+          startTicking();
+          attachLiveKeyboard();
+        } else {
+          stopTicking();
+          detachLiveKeyboard();
         }
-        renderLive();
-        startTicking();
-        attachLiveKeyboard();
       } else if (sub === 'recap') {
         stopTicking();
         detachLiveKeyboard();
