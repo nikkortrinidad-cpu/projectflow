@@ -1101,6 +1101,11 @@ export function generateDemoData(): FlizowData {
     touchpoints,
     actionItems,
     taskComments,
+    // Activity feed starts empty on a fresh demo load — activity gets
+    // appended as the user moves cards, edits fields, etc. Seeding
+    // historical activity would feel artificial next to the comment
+    // seeds (which are explicitly conversational).
+    taskActivity: [],
     today: todayStr,
     scheduleTaskMap,
   };

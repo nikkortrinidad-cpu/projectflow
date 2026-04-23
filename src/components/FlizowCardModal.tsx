@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFlizow } from '../store/useFlizow';
-import type { ColumnId, Priority, Member, TaskComment } from '../types/flizow';
+import type { ColumnId, Priority, Member, TaskComment, TaskActivity } from '../types/flizow';
 import { flizowStore } from '../store/flizowStore';
 import { BOARD_LABELS, labelById } from '../constants/labels';
 
@@ -702,13 +702,9 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
               role="tabpanel"
               hidden={tab !== 'activity'}
             >
-              <EmptyTab
-                icon={(
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                )}
-                title="Activity will appear here"
-                body="Status changes, assignments, and edits get logged once the activity stream ships."
-              />
+              {task ? (
+                <ActivityPanel taskId={task.id} members={data.members} activity={data.taskActivity} />
+              ) : null}
             </div>
           </div>
         </div>
@@ -809,24 +805,6 @@ function ChecklistRow({
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
-    </div>
-  );
-}
-
-function EmptyTab({ icon, title, body }: { icon: React.ReactNode; title: string; body: string }) {
-  return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      gap: 8, padding: '32px 24px', textAlign: 'center',
-      color: 'var(--text-faint)',
-    }}>
-      <div style={{
-        width: 44, height: 44, borderRadius: 12,
-        background: 'var(--bg-faint)',
-        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-      }}>{icon}</div>
-      <div style={{ color: 'var(--text)', fontWeight: 600, fontSize: 14 }}>{title}</div>
-      <div style={{ fontSize: 12.5, lineHeight: 1.5, maxWidth: 260 }}>{body}</div>
     </div>
   );
 }
@@ -1438,4 +1416,72 @@ function formatCommentTime(iso: string): string {
   }
   const datePart = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
   return `${datePart}, ${timePart}`;
+}
+
+/* ── Activity panel ──────────────────────────────────────────────────
+ *
+ * Read-only feed of every mutation on the card. Each row is a single
+ * line: avatar + "{name} {text}" + timestamp. Rows render newest-first
+ * because "what just happened?" is almost always the question driving a
+ * user to open this tab.
+ *
+ * The store pre-formats the text at write time, so the renderer here is
+ * intentionally dumb — no lookups, no conditionals per kind. The only
+ * bit of dynamic work is resolving actorId → member for the avatar and
+ * name, with a "Deleted user" fallback mirroring CommentItem. */
+function ActivityPanel({
+  taskId,
+  members,
+  activity,
+}: {
+  taskId: string;
+  members: Member[];
+  activity: TaskActivity[];
+}) {
+  const rows = useMemo(() => {
+    return activity
+      .filter(a => a.taskId === taskId)
+      .slice()
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }, [activity, taskId]);
+
+  const memberById = (id: string): Member | null =>
+    members.find(m => m.id === id) ?? null;
+
+  if (rows.length === 0) {
+    return (
+      <div style={{
+        padding: '24px 8px',
+        textAlign: 'center',
+        color: 'var(--text-faint)',
+        fontSize: 13,
+        lineHeight: 1.5,
+      }}>
+        No activity yet. Changes to this card will show up here.
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: '16px 16px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {rows.map(row => {
+        const actor = memberById(row.actorId);
+        return (
+          <div key={row.id} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+            <Avatar member={actor} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.45 }}>
+                <strong style={{ fontWeight: 600 }}>{actor?.name ?? 'Deleted user'}</strong>
+                {' '}
+                <span style={{ color: 'var(--text-soft)' }}>{row.text}</span>
+              </div>
+              <div style={{ fontSize: 11.5, color: 'var(--text-faint)', marginTop: 2 }}>
+                {formatCommentTime(row.createdAt)}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
 }

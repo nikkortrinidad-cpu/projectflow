@@ -2,7 +2,7 @@ import { doc, setDoc, onSnapshot, type Unsubscribe } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import type {
   FlizowData, Client, Service, Task, Member, Contact, QuickLink, Note,
-  Touchpoint, ActionItem, TaskComment,
+  Touchpoint, ActionItem, TaskComment, TaskActivity, TaskActivityKind,
   ColumnId, Priority,
 } from '../types/flizow';
 
@@ -43,6 +43,7 @@ function emptyData(): FlizowData {
     touchpoints: [],
     actionItems: [],
     taskComments: [],
+    taskActivity: [],
     today: todayISO(),
     scheduleTaskMap: {},
   };
@@ -91,6 +92,7 @@ function migrate(parsed: Partial<FlizowData>): FlizowData {
     touchpoints: parsed.touchpoints ?? base.touchpoints,
     actionItems: parsed.actionItems ?? base.actionItems,
     taskComments: parsed.taskComments ?? base.taskComments,
+    taskActivity: parsed.taskActivity ?? base.taskActivity,
     // `today` always refreshes on load — we never trust a stale anchor.
     today: todayISO(),
     scheduleTaskMap: parsed.scheduleTaskMap ?? base.scheduleTaskMap,
@@ -280,6 +282,7 @@ class FlizowStore {
     this.data.touchpoints = this.data.touchpoints.filter(t => t.clientId !== id);
     this.data.actionItems = this.data.actionItems.filter(a => a.clientId !== id);
     this.data.taskComments = this.data.taskComments.filter(c => !taskIds.has(c.taskId));
+    this.data.taskActivity = this.data.taskActivity.filter(a => !taskIds.has(a.taskId));
     this.save();
   }
 
@@ -311,11 +314,35 @@ class FlizowStore {
     this.data.tasks = this.data.tasks.filter(t => t.serviceId !== id);
     this.data.onboardingItems = this.data.onboardingItems.filter(o => o.serviceId !== id);
     this.data.taskComments = this.data.taskComments.filter(c => !taskIds.has(c.taskId));
+    this.data.taskActivity = this.data.taskActivity.filter(a => !taskIds.has(a.taskId));
     const client = this.data.clients.find(c => c.id === svc.clientId);
     if (client) {
       client.serviceIds = client.serviceIds.filter(sid => sid !== id);
     }
     this.save();
+  }
+
+  // ── Activity log helper ─────────────────────────────────────────────
+  //
+  // Called from every task-level mutation. The entry's `text` is the
+  // final pre-formatted string the Activity tab will render — keeping
+  // the formatting at write time means the renderer is a plain `.map`
+  // with no lookups or conditional logic. That's intentional: activity
+  // feeds read like a log file, and log files shouldn't re-hydrate.
+
+  private logActivity(taskId: string, kind: TaskActivityKind, text: string) {
+    const task = this.data.tasks.find(t => t.id === taskId);
+    if (!task) return; // guard — e.g. activity logged after cascade delete
+    const entry: TaskActivity = {
+      id: `ac-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+      taskId,
+      actorId: this.userId ?? 'user-1',
+      kind,
+      text,
+      createdAt: new Date().toISOString(),
+    };
+    // Replace the array so downstream useMemo([taskActivity]) refreshes.
+    this.data.taskActivity = [...this.data.taskActivity, entry];
   }
 
   // ── Tasks ────────────────────────────────────────────────────────────
@@ -326,13 +353,106 @@ class FlizowStore {
     if (service && !service.taskIds.includes(task.id)) {
       service.taskIds.push(task.id);
     }
+    this.logActivity(task.id, 'created', 'created this card');
     this.save();
   }
 
   updateTask(id: string, patch: Partial<Task>) {
     const t = this.data.tasks.find(t => t.id === id);
     if (!t) return;
+    // Snapshot the fields we care about before the patch lands so we can
+    // emit granular activity entries per change. We only log changes
+    // that a user would recognise as meaningful — drop everything else.
+    const before = {
+      columnId: t.columnId,
+      priority: t.priority,
+      title: t.title,
+      description: t.description,
+      dueDate: t.dueDate,
+      startDate: t.startDate,
+      assigneeIds: Array.isArray(t.assigneeIds)
+        ? [...t.assigneeIds]
+        : (t.assigneeId ? [t.assigneeId] : []),
+      labels: [...(t.labels ?? [])],
+    };
     Object.assign(t, patch);
+    const after = {
+      columnId: t.columnId,
+      priority: t.priority,
+      title: t.title,
+      description: t.description,
+      dueDate: t.dueDate,
+      startDate: t.startDate,
+      assigneeIds: Array.isArray(t.assigneeIds)
+        ? [...t.assigneeIds]
+        : (t.assigneeId ? [t.assigneeId] : []),
+      labels: [...(t.labels ?? [])],
+    };
+
+    if (before.columnId !== after.columnId) {
+      this.logActivity(id, 'moved', `moved this card to ${columnLabel(after.columnId)}`);
+    }
+    if (before.priority !== after.priority) {
+      this.logActivity(id, 'priority', `set priority to ${priorityLabel(after.priority)}`);
+    }
+    if (before.title !== after.title) {
+      this.logActivity(id, 'title', `renamed this card to "${after.title}"`);
+    }
+    if ((before.description ?? '') !== (after.description ?? '')) {
+      const hadBefore = !!before.description?.trim();
+      const hasAfter = !!after.description?.trim();
+      const text = !hadBefore && hasAfter
+        ? 'added a description'
+        : hadBefore && !hasAfter
+          ? 'cleared the description'
+          : 'edited the description';
+      this.logActivity(id, 'description', text);
+    }
+    if (before.dueDate !== after.dueDate) {
+      const text = !before.dueDate && after.dueDate
+        ? `set the due date to ${formatDayLabel(after.dueDate)}`
+        : before.dueDate && !after.dueDate
+          ? 'removed the due date'
+          : `changed the due date to ${formatDayLabel(after.dueDate || '')}`;
+      this.logActivity(id, 'dueDate', text);
+    }
+    if ((before.startDate ?? '') !== (after.startDate ?? '')) {
+      const text = !before.startDate && after.startDate
+        ? `set the start date to ${formatDayLabel(after.startDate)}`
+        : before.startDate && !after.startDate
+          ? 'removed the start date'
+          : `changed the start date to ${formatDayLabel(after.startDate || '')}`;
+      this.logActivity(id, 'startDate', text);
+    }
+    // Diff the assignee sets symmetrically so a swap reads as "added X,
+    // removed Y" rather than "replaced".
+    const beforeA = new Set(before.assigneeIds);
+    const afterA = new Set(after.assigneeIds);
+    for (const mid of afterA) {
+      if (!beforeA.has(mid)) {
+        const name = this.memberDisplay(mid);
+        this.logActivity(id, 'assignee', `added ${name}`);
+      }
+    }
+    for (const mid of beforeA) {
+      if (!afterA.has(mid)) {
+        const name = this.memberDisplay(mid);
+        this.logActivity(id, 'assignee', `removed ${name}`);
+      }
+    }
+    // Labels — same symmetric diff, with the BOARD_LABELS lookup in
+    // the renderer translating ids back to pretty names. The store
+    // deliberately logs the raw id and prefixes "label" for clarity
+    // without importing the constants module.
+    const beforeL = new Set(before.labels);
+    const afterL = new Set(after.labels);
+    for (const lid of afterL) {
+      if (!beforeL.has(lid)) this.logActivity(id, 'label', `added label ${labelText(lid)}`);
+    }
+    for (const lid of beforeL) {
+      if (!afterL.has(lid)) this.logActivity(id, 'label', `removed label ${labelText(lid)}`);
+    }
+
     this.save();
   }
 
@@ -347,12 +467,22 @@ class FlizowStore {
     this.updateTask(id, { priority });
   }
 
+  /** Resolve an actor/assignee id to a printable name for activity
+   *  text. Falls back to "Unknown" so a deleted member doesn't break
+   *  a rendered row. */
+  private memberDisplay(id: string | null | undefined): string {
+    if (!id) return 'Unknown';
+    const m = this.data.members.find(m => m.id === id);
+    return m?.name || 'Unknown';
+  }
+
   deleteTask(id: string) {
     const t = this.data.tasks.find(t => t.id === id);
     if (!t) return;
     this.data.tasks = this.data.tasks.filter(t => t.id !== id);
-    // Drop every comment + reply hanging off this card.
+    // Drop every comment + reply + activity entry hanging off this card.
     this.data.taskComments = this.data.taskComments.filter(c => c.taskId !== id);
+    this.data.taskActivity = this.data.taskActivity.filter(a => a.taskId !== id);
     const service = this.data.services.find(s => s.id === t.serviceId);
     if (service) {
       service.taskIds = service.taskIds.filter(tid => tid !== id);
@@ -375,7 +505,9 @@ class FlizowStore {
     if (!t) return null;
     if (!t.checklist) t.checklist = [];
     const id = `ck-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
-    t.checklist.push({ id, text: text.trim(), done: false, assigneeId: null });
+    const trimmed = text.trim();
+    t.checklist.push({ id, text: trimmed, done: false, assigneeId: null });
+    this.logActivity(taskId, 'checklistAdded', `added checklist item "${trimmed}"`);
     this.save();
     return id;
   }
@@ -386,6 +518,13 @@ class FlizowStore {
     const item = t.checklist.find(i => i.id === itemId);
     if (!item) return;
     item.done = !item.done;
+    this.logActivity(
+      taskId,
+      'checklistToggled',
+      item.done
+        ? `checked off "${item.text}"`
+        : `unchecked "${item.text}"`,
+    );
     this.save();
   }
 
@@ -396,14 +535,24 @@ class FlizowStore {
     if (!item) return;
     const trimmed = text.trim();
     if (!trimmed) return; // empty text = ignore; deletion is a separate call
+    if (trimmed === item.text) return; // no-op — don't spam the activity log
+    const old = item.text;
     item.text = trimmed;
+    this.logActivity(
+      taskId,
+      'checklistRenamed',
+      `renamed checklist item "${old}" to "${trimmed}"`,
+    );
     this.save();
   }
 
   deleteChecklistItem(taskId: string, itemId: string) {
     const t = this.data.tasks.find(t => t.id === taskId);
     if (!t || !t.checklist) return;
+    const item = t.checklist.find(i => i.id === itemId);
+    if (!item) return;
     t.checklist = t.checklist.filter(i => i.id !== itemId);
+    this.logActivity(taskId, 'checklistDeleted', `deleted checklist item "${item.text}"`);
     this.save();
   }
 
@@ -447,6 +596,11 @@ class FlizowStore {
     // inner arrays untouched, so mutating in place would let a cached
     // `useMemo([comments])` miss the addition.
     this.data.taskComments = [...this.data.taskComments, comment];
+    this.logActivity(
+      taskId,
+      'commentAdded',
+      parentId ? 'replied to a comment' : 'posted a comment',
+    );
     this.save();
     return id;
   }
@@ -483,6 +637,11 @@ class FlizowStore {
       if (isTopLevel && other.parentId === id) return false;
       return true;
     });
+    this.logActivity(
+      c.taskId,
+      'commentDeleted',
+      isTopLevel ? 'deleted a comment' : 'deleted a reply',
+    );
     this.save();
   }
 
@@ -709,6 +868,45 @@ class FlizowStore {
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────
+
+/** Pretty names for the five kanban columns. Used by the activity log
+ *  so moves read as "moved this card to In Progress" rather than the
+ *  raw id. */
+function columnLabel(id: ColumnId): string {
+  switch (id) {
+    case 'todo':       return 'To Do';
+    case 'inprogress': return 'In Progress';
+    case 'blocked':    return 'Blocked';
+    case 'review':     return 'Needs Review';
+    case 'done':       return 'Done';
+  }
+}
+
+function priorityLabel(p: Priority): string {
+  switch (p) {
+    case 'urgent': return 'Urgent';
+    case 'high':   return 'High';
+    case 'medium': return 'Medium';
+    case 'low':    return 'Low';
+  }
+}
+
+/** Format an ISO YYYY-MM-DD string as "Mar 4". Used in activity text.
+ *  Parses via UTC so timezone drift doesn't flip the displayed day. */
+function formatDayLabel(iso: string): string {
+  if (!iso) return '—';
+  const [y, m, d] = iso.split('-').map(Number);
+  if (!y || !m || !d) return iso;
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  return dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' });
+}
+
+/** Activity log prints raw label ids so the store stays decoupled from
+ *  the BOARD_LABELS constants. Wrapping it in this helper gives us a
+ *  single place to prettify later. */
+function labelText(id: string): string {
+  return id;
+}
 
 function initialsOf(nameOrEmail: string): string {
   const cleaned = nameOrEmail.split('@')[0].replace(/[^\w\s]/g, ' ').trim();

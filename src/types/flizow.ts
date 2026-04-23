@@ -263,6 +263,51 @@ export interface TaskComment {
   parentId?: string | null;
 }
 
+// ── Task activity ────────────────────────────────────────────────────────
+
+/**
+ * A single entry in a task's activity feed. Appended on every mutation
+ * the Activity tab cares about (moves, priority flips, edits, assignee
+ * changes, comment posts). Render is a simple reverse-chronological
+ * feed — no nesting, no editing. One event = one line.
+ *
+ * `kind` is intentionally a closed union so the renderer has an
+ * exhaustive switch. Adding a new kind means adding a case; unknown
+ * kinds from a stale cloud doc render as "did something" rather than
+ * crashing.
+ *
+ * `text` is pre-formatted at write time so we don't need to re-run
+ * i18n at render. If we ever need to localise, swap this field for
+ * structured parts and keep the shape compatible.
+ */
+export type TaskActivityKind =
+  | 'created'
+  | 'moved'
+  | 'priority'
+  | 'title'
+  | 'description'
+  | 'dueDate'
+  | 'startDate'
+  | 'assignee'
+  | 'label'
+  | 'checklistAdded'
+  | 'checklistToggled'
+  | 'checklistDeleted'
+  | 'checklistRenamed'
+  | 'commentAdded'
+  | 'commentDeleted';
+
+export interface TaskActivity {
+  id: string;
+  taskId: string;
+  actorId: string;
+  kind: TaskActivityKind;
+  /** Pre-formatted human string, e.g. "moved this card to In Progress". */
+  text: string;
+  /** ISO timestamp. */
+  createdAt: string;
+}
+
 // ── Notifications ────────────────────────────────────────────────────────
 
 export type NotificationType =
@@ -496,6 +541,9 @@ export interface FlizowData {
    *  read time rather than nesting under Task so a single
    *  update-comment call is a simple array patch. */
   taskComments: TaskComment[];
+  /** Flat list of every activity entry. Append-only — we never edit an
+   *  existing row. Cascade-deleted when its task goes away. */
+  taskActivity: TaskActivity[];
   /** The "today" reference the mockup uses for all date math. A single
    *  anchor keeps the UI stable across re-renders. */
   today: string;
