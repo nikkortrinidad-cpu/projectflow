@@ -6015,10 +6015,10 @@
     overflow: hidden;
   }
 
-  /* Today highlight — monochrome: uses value contrast + weight, no blue */
+  /* Today highlight — monochrome: solid black in light, solid white in dark */
   .week-col.is-today {
-    border-color: color-mix(in srgb, var(--text) 45%, transparent);
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--text) 35%, transparent), var(--shadow);
+    border-color: var(--text);
+    box-shadow: 0 0 0 1px var(--text), var(--shadow);
   }
   .week-col.is-today .week-col-header {
     background: color-mix(in srgb, var(--text) 6%, transparent);
