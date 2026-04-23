@@ -9,6 +9,7 @@ import { daysBetween, formatMonthDay } from '../utils/dateFormat';
 import FlizowCardModal from '../components/FlizowCardModal';
 import { BoardFilters, applyFilters, EMPTY_FILTERS, type BoardFilterState } from '../components/BoardFilters';
 import { EditServiceModal } from '../components/EditServiceModal';
+import { ConfirmDangerDialog } from '../components/ConfirmDangerDialog';
 
 /**
  * Service Kanban board — per-client workspace for a single service. Shows
@@ -72,6 +73,8 @@ export function BoardPage() {
         members={data.members}
         taskComments={data.taskComments}
         todayISO={data.today}
+        isFavorite={data.favoriteServiceIds.includes(service.id)}
+        taskCount={data.tasks.filter(t => t.serviceId === service.id).length}
       />
     </div>
   );
@@ -110,6 +113,8 @@ function BoardBody({
   members,
   taskComments,
   todayISO,
+  isFavorite,
+  taskCount,
 }: {
   client: Client;
   service: Service;
@@ -117,6 +122,8 @@ function BoardBody({
   members: Member[];
   taskComments: TaskComment[];
   todayISO: string;
+  isFavorite: boolean;
+  taskCount: number;
 }) {
   const { store } = useFlizow();
   const [search, setSearch] = useState('');
@@ -205,7 +212,13 @@ function BoardBody({
 
   return (
     <>
-      <Breadcrumb client={client} service={service} members={members} />
+      <Breadcrumb
+        client={client}
+        service={service}
+        members={members}
+        isFavorite={isFavorite}
+        taskCount={taskCount}
+      />
       <FiltersBar
         search={search}
         onSearch={setSearch}
@@ -269,7 +282,13 @@ function BoardBody({
 
 // ── Breadcrumb ───────────────────────────────────────────────────────
 
-function Breadcrumb({ client, service, members }: { client: Client; service: Service; members: Member[] }) {
+function Breadcrumb({ client, service, members, isFavorite, taskCount }: {
+  client: Client;
+  service: Service;
+  members: Member[];
+  isFavorite: boolean;
+  taskCount: number;
+}) {
   // Inline rename on the current-page crumb. Same pattern as the client
   // hero rename: cursor:text + hover tint + ring on focus, no pencil icon.
   // This is where users land right after the Add Service modal closes, so
@@ -281,9 +300,12 @@ function Breadcrumb({ client, service, members }: { client: Client; service: Ser
   const [menuOpen, setMenuOpen] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [membersOpen, setMembersOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const menuWrapRef = useRef<HTMLDivElement>(null);
   const membersWrapRef = useRef<HTMLDivElement>(null);
+  const settingsWrapRef = useRef<HTMLDivElement>(null);
 
   // Resolve the client's team roster: AM on top, operators below. We
   // read from client.amId + client.teamIds (the "Project team" on the
@@ -304,6 +326,7 @@ function Breadcrumb({ client, service, members }: { client: Client; service: Ser
     setEditing(false);
     setMenuOpen(false);
     setMembersOpen(false);
+    setSettingsOpen(false);
   }, [service.id, service.name]);
 
   useEffect(() => {
@@ -352,6 +375,28 @@ function Breadcrumb({ client, service, members }: { client: Client; service: Ser
       document.removeEventListener('keydown', onKey);
     };
   }, [membersOpen]);
+
+  // Same outside-click + Esc pattern for the Board Settings menu. We
+  // don't close it while the confirm-delete dialog is open, because the
+  // dialog lives outside the settings wrap and clicking inside it would
+  // otherwise dismiss the (already closed) menu unnecessarily.
+  useEffect(() => {
+    if (!settingsOpen) return;
+    function onPointer(e: PointerEvent) {
+      if (settingsWrapRef.current && !settingsWrapRef.current.contains(e.target as Node)) {
+        setSettingsOpen(false);
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setSettingsOpen(false);
+    }
+    document.addEventListener('pointerdown', onPointer);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerdown', onPointer);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [settingsOpen]);
 
   function commit() {
     const next = draft.trim();
@@ -467,10 +512,72 @@ function Breadcrumb({ client, service, members }: { client: Client; service: Ser
         </ol>
       </nav>
       <div className="board-actions">
-        <button type="button" className="btn-sm" disabled title="Board settings (coming soon)">
-          <SettingsIcon />
-          Board Settings
-        </button>
+        <div ref={settingsWrapRef} className="board-settings-wrap">
+          <button
+            type="button"
+            className="btn-sm"
+            aria-haspopup="menu"
+            aria-expanded={settingsOpen}
+            onClick={() => setSettingsOpen(v => !v)}
+          >
+            <SettingsIcon />
+            Board Settings
+          </button>
+          <div className={`tb-menu${settingsOpen ? ' open' : ''}`} role="menu" style={{ minWidth: 220 }}>
+            <div
+              role="menuitem"
+              tabIndex={0}
+              className="tb-menu-item"
+              onClick={() => {
+                flizowStore.toggleServiceFavorite(service.id);
+                setSettingsOpen(false);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  flizowStore.toggleServiceFavorite(service.id);
+                  setSettingsOpen(false);
+                }
+              }}
+            >
+              <StarIcon filled={isFavorite} />
+              {isFavorite ? 'Unpin from My Boards' : 'Pin to My Boards'}
+            </div>
+            <div
+              role="menuitem"
+              tabIndex={0}
+              className="tb-menu-item"
+              onClick={() => { setSettingsOpen(false); setShowEditModal(true); }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setSettingsOpen(false);
+                  setShowEditModal(true);
+                }
+              }}
+            >
+              <EditPenIcon />
+              Edit service details…
+            </div>
+            <div className="tb-menu-divider" />
+            <div
+              role="menuitem"
+              tabIndex={0}
+              className="tb-menu-item danger"
+              onClick={() => { setSettingsOpen(false); setConfirmDelete(true); }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setSettingsOpen(false);
+                  setConfirmDelete(true);
+                }
+              }}
+            >
+              <TrashIcon />
+              Delete service…
+            </div>
+          </div>
+        </div>
         <div ref={membersWrapRef} className="board-members-wrap">
           <button
             type="button"
@@ -510,6 +617,30 @@ function Breadcrumb({ client, service, members }: { client: Client; service: Ser
         <EditServiceModal
           service={service}
           onClose={() => setShowEditModal(false)}
+        />
+      )}
+
+      {confirmDelete && (
+        <ConfirmDangerDialog
+          title={`Delete "${service.name}"?`}
+          body={
+            <>
+              This removes the service board and cascades{' '}
+              <strong>{taskCount}</strong> card{taskCount === 1 ? '' : 's'}.
+              This can't be undone.
+            </>
+          }
+          confirmLabel="Delete service"
+          onConfirm={() => {
+            const clientId = client.id;
+            flizowStore.deleteService(service.id);
+            setConfirmDelete(false);
+            // After the service is gone, the current board URL is a dead
+            // link — route back to the client so the user lands somewhere
+            // meaningful instead of the empty state.
+            navigate(`#clients/${clientId}`);
+          }}
+          onClose={() => setConfirmDelete(false)}
         />
       )}
     </div>
@@ -1130,6 +1261,31 @@ function CommentIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+}
+function StarIcon({ filled = false }: { filled?: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ color: filled ? '#f59e0b' : 'currentColor' }}>
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
+  );
+}
+function EditPenIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+      <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+    </svg>
+  );
+}
+function TrashIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+      <path d="M10 11v6M14 11v6" />
+      <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
     </svg>
   );
 }

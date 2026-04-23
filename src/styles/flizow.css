@@ -1156,6 +1156,16 @@
     background: var(--hover-blue); color: #fff;
   }
 
+  /* Board-toolbar Settings menu. Uses the shared .tb-menu recipe for
+     the dropdown itself (same as the breadcrumb ⋯ menu) and just needs
+     the positioning wrapper here. Icon sits before the menu label. */
+  .board-settings-wrap { position: relative; display: inline-flex; }
+  .board-settings-wrap .tb-menu { top: 38px; right: auto; left: 0; }
+  .board-settings-wrap .tb-menu-item svg {
+    width: 14px; height: 14px;
+    flex-shrink: 0;
+  }
+
   /* Board-toolbar Members popover. Anchors below the "Members" button
      and right-aligns so it stays on-screen when the toolbar is tight. */
   .board-members-wrap { position: relative; display: inline-flex; }
