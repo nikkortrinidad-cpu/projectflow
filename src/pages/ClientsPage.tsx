@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRoute, navigate } from '../router';
+import { flizowStore } from '../store/flizowStore';
 import { useFlizow } from '../store/useFlizow';
 import {
   servicePills,
@@ -7,7 +8,7 @@ import {
   clientLastTouched,
   relativeTimeAgo,
 } from '../utils/clientDerived';
-import type { Client, ClientStatus } from '../types/flizow';
+import type { Client, ClientStatus, IndustryCategory, Member } from '../types/flizow';
 
 /**
  * Clients directory — the left (list) pane of the Mail.app-style split
@@ -44,6 +45,7 @@ export function ClientsPage() {
 
   const [activeView, setActiveView] = useState<SavedViewId>('all');
   const [search, setSearch] = useState('');
+  const [showAddClient, setShowAddClient] = useState(false);
 
   const currentMemberId = store.getCurrentMemberId();
 
@@ -93,9 +95,7 @@ export function ClientsPage() {
             type="button"
             className="list-pane-add-btn"
             aria-label="Add client"
-            // Add-client flow lands with the Client Detail pass; leaving
-            // a deliberate hook rather than a silent no-op.
-            onClick={() => window.alert('Add client flow ships with the Client Detail page.')}
+            onClick={() => setShowAddClient(true)}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <line x1="12" y1="5" x2="12" y2="19" />
@@ -173,6 +173,14 @@ export function ClientsPage() {
           </div>
         )}
       </main>
+
+      {showAddClient && (
+        <AddClientModal
+          members={data.members}
+          todayISO={data.today}
+          onClose={() => setShowAddClient(false)}
+        />
+      )}
     </div>
   );
 }
@@ -340,4 +348,290 @@ function filterClients(
   }
 
   return { filtered, counts };
+}
+
+// ── Add client modal ──────────────────────────────────────────────────────
+
+/**
+ * The nine logo gradients live in flizow.css as `.logo-indigo`, `.logo-sky`
+ * etc. Keeping this list in one place means the modal swatches and the
+ * rendered client-row avatar can't drift.
+ */
+const LOGO_CLASSES = [
+  'logo-indigo', 'logo-sky', 'logo-teal', 'logo-green',
+  'logo-amber',  'logo-orange', 'logo-pink', 'logo-purple', 'logo-slate',
+] as const;
+
+const INDUSTRY_CATEGORIES: { value: IndustryCategory; label: string }[] = [
+  { value: 'saas',         label: 'SaaS / Tech' },
+  { value: 'ecommerce',    label: 'E-commerce / Retail' },
+  { value: 'healthcare',   label: 'Healthcare / Wellness' },
+  { value: 'fnb',          label: 'Food & Beverage' },
+  { value: 'education',    label: 'Education' },
+  { value: 'professional', label: 'Professional services' },
+  { value: 'realestate',   label: 'Real estate' },
+  { value: 'services',     label: 'Consumer services' },
+  { value: 'industrial',   label: 'Industrial / Manufacturing' },
+  { value: 'media',        label: 'Media & Publishing' },
+];
+
+/**
+ * Derive two-letter initials from a free-text client name. Falls back to
+ * 'NC' (new client) if the name is empty — purely defensive; the modal
+ * won't let you save an empty name.
+ */
+function deriveInitials(name: string): string {
+  const trimmed = name.trim();
+  if (!trimmed) return 'NC';
+  const words = trimmed.split(/\s+/).filter(Boolean);
+  if (words.length === 1) {
+    return (words[0].slice(0, 2)).toUpperCase();
+  }
+  return (words[0][0] + words[1][0]).toUpperCase();
+}
+
+/**
+ * Default renewal date = one year from today. Written out so we don't
+ * pull in a date library just for this one calculation.
+ */
+function defaultRenewsAt(todayISO: string): string {
+  const d = new Date(todayISO);
+  if (Number.isNaN(d.getTime())) {
+    return new Date(Date.now() + 365 * 86_400_000).toISOString().slice(0, 10);
+  }
+  d.setFullYear(d.getFullYear() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
+function AddClientModal({ members, todayISO, onClose }: {
+  members: Member[];
+  todayISO: string;
+  onClose: () => void;
+}) {
+  const [name, setName] = useState('');
+  const [industry, setIndustry] = useState('');
+  const [industryCategory, setIndustryCategory] = useState<IndustryCategory>('saas');
+  const [amId, setAmId] = useState<string>('');
+  const [mrr, setMrr] = useState<string>('0');
+  const [renewsAt, setRenewsAt] = useState<string>(() => defaultRenewsAt(todayISO));
+  const [status, setStatus] = useState<ClientStatus>('onboard');
+  const [logoClass, setLogoClass] = useState<typeof LOGO_CLASSES[number]>('logo-indigo');
+  const [nameError, setNameError] = useState(false);
+  const nameRef = useRef<HTMLInputElement>(null);
+
+  // AM picker shows only members typed 'am'. Operators live on the team
+  // strip of the client detail page — a new client doesn't pick operators
+  // at creation.
+  const ams = useMemo(() => members.filter(m => m.type === 'am'), [members]);
+
+  useEffect(() => {
+    const t = window.setTimeout(() => nameRef.current?.focus(), 80);
+    return () => window.clearTimeout(t);
+  }, []);
+
+  function handleSave() {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setNameError(true);
+      nameRef.current?.focus();
+      window.setTimeout(() => setNameError(false), 1400);
+      return;
+    }
+
+    // Derive initials at save time so the user doesn't have to maintain
+    // them separately — if they want custom initials later the Client
+    // Detail page is where that lives.
+    const id = `cl-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+    const client: Client = {
+      id,
+      name: trimmedName,
+      initials: deriveInitials(trimmedName),
+      logoClass,
+      status,
+      industry: industry.trim() || 'Uncategorized',
+      industryCategory,
+      amId: amId || null,
+      mrr: Math.max(0, parseInt(mrr, 10) || 0),
+      renewsAt,
+      startedAt: todayISO,
+      serviceIds: [],
+      teamIds: [],
+    };
+    flizowStore.addClient(client);
+    onClose();
+    // Land the user on the new client's detail page so they can keep going.
+    navigate(`#clients/${id}`);
+  }
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleSave();
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onClose, name, industry, industryCategory, amId, mrr, renewsAt, status, logoClass]);
+
+  function handleBackdropClick(e: React.MouseEvent<HTMLDivElement>) {
+    if (e.target === e.currentTarget) onClose();
+  }
+
+  return (
+    <div
+      className="wip-modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="add-client-title"
+      onClick={handleBackdropClick}
+    >
+      <div className="wip-modal" role="document" style={{ maxWidth: 560 }}>
+        <header className="wip-modal-head">
+          <h2 className="wip-modal-title" id="add-client-title">Add client</h2>
+          <button type="button" className="wip-modal-close" onClick={onClose} aria-label="Close">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </header>
+
+        <div className="wip-modal-body">
+          <label className="wip-field">
+            <span className="wip-field-label">Client name</span>
+            <input
+              ref={nameRef}
+              type="text"
+              className="wip-field-input"
+              value={name}
+              onChange={(e) => { setName(e.target.value); if (nameError) setNameError(false); }}
+              placeholder="e.g. Acme Industries"
+              style={nameError ? { borderColor: 'var(--status-fire)' } : undefined}
+              aria-invalid={nameError || undefined}
+            />
+          </label>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <label className="wip-field">
+              <span className="wip-field-label">Industry</span>
+              <input
+                type="text"
+                className="wip-field-input"
+                value={industry}
+                onChange={(e) => setIndustry(e.target.value)}
+                placeholder="e.g. B2B SaaS"
+              />
+            </label>
+            <label className="wip-field">
+              <span className="wip-field-label">Category</span>
+              <select
+                className="wip-field-input"
+                value={industryCategory}
+                onChange={(e) => setIndustryCategory(e.target.value as IndustryCategory)}
+              >
+                {INDUSTRY_CATEGORIES.map(c => (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <label className="wip-field">
+            <span className="wip-field-label">Account Manager</span>
+            <select
+              className="wip-field-input"
+              value={amId}
+              onChange={(e) => setAmId(e.target.value)}
+            >
+              <option value="">Unassigned</option>
+              {ams.map(m => (
+                <option key={m.id} value={m.id}>{m.name}</option>
+              ))}
+            </select>
+          </label>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <label className="wip-field">
+              <span className="wip-field-label">MRR (USD)</span>
+              <input
+                type="number"
+                className="wip-field-input"
+                value={mrr}
+                onChange={(e) => setMrr(e.target.value)}
+                min="0"
+                step="100"
+                placeholder="0"
+              />
+            </label>
+            <label className="wip-field">
+              <span className="wip-field-label">Renewal date</span>
+              <input
+                type="date"
+                className="wip-field-input"
+                value={renewsAt}
+                onChange={(e) => setRenewsAt(e.target.value)}
+              />
+            </label>
+          </div>
+
+          <label className="wip-field">
+            <span className="wip-field-label">Status</span>
+            <select
+              className="wip-field-input"
+              value={status}
+              onChange={(e) => setStatus(e.target.value as ClientStatus)}
+            >
+              <option value="onboard">Onboarding (first 30 days)</option>
+              <option value="track">On track</option>
+              <option value="risk">At risk</option>
+              <option value="fire">On fire</option>
+              <option value="paused">Paused</option>
+            </select>
+          </label>
+
+          <div className="wip-field">
+            <span className="wip-field-label">Logo colour</span>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }} role="radiogroup" aria-label="Logo colour">
+              {LOGO_CLASSES.map(cls => (
+                <button
+                  key={cls}
+                  type="button"
+                  role="radio"
+                  aria-checked={logoClass === cls}
+                  aria-label={cls.replace('logo-', '')}
+                  className={`client-logo ${cls}`}
+                  onClick={() => setLogoClass(cls)}
+                  style={{
+                    width: 36, height: 36, borderRadius: 8,
+                    border: logoClass === cls
+                      ? '2px solid var(--highlight)'
+                      : '2px solid transparent',
+                    outline: 'none',
+                    cursor: 'pointer',
+                    color: 'transparent', // hide any text content
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <footer className="wip-modal-foot">
+          <button type="button" className="wip-btn wip-btn-ghost" onClick={onClose}>
+            Cancel
+          </button>
+          <button type="button" className="wip-btn wip-btn-primary" onClick={handleSave}>
+            Create client
+          </button>
+        </footer>
+      </div>
+    </div>
+  );
 }
