@@ -143,6 +143,8 @@ function ClientDetail({ client, data, store }: DetailProps) {
             onDelete={(id) => setDeleteServiceId(id)}
             onMoveUp={(id) => store.reorderService(id, 'up')}
             onMoveDown={(id) => store.reorderService(id, 'down')}
+            favoriteIds={data.favoriteServiceIds}
+            onToggleFavorite={(id) => store.toggleServiceFavorite(id)}
           />
           <ActivitySection client={client} tasks={data.tasks} members={data.members} todayISO={data.today} />
         </>
@@ -709,7 +711,7 @@ function buildAttentionChips(
 
 // ── Overview · Active Services ────────────────────────────────────────────
 
-function ServicesSection({ services, onAdd, editing, onToggleEdit, onDelete, onMoveUp, onMoveDown }: {
+function ServicesSection({ services, onAdd, editing, onToggleEdit, onDelete, onMoveUp, onMoveDown, favoriteIds, onToggleFavorite }: {
   services: Service[];
   onAdd: () => void;
   editing: boolean;
@@ -717,6 +719,8 @@ function ServicesSection({ services, onAdd, editing, onToggleEdit, onDelete, onM
   onDelete: (id: string) => void;
   onMoveUp: (id: string) => void;
   onMoveDown: (id: string) => void;
+  favoriteIds: string[];
+  onToggleFavorite: (id: string) => void;
 }) {
   if (services.length === 0) {
     // Empty state: the "Add a service" hint becomes the CTA itself. A button
@@ -804,6 +808,8 @@ function ServicesSection({ services, onAdd, editing, onToggleEdit, onDelete, onM
             onRemove={editing ? () => onDelete(s.id) : undefined}
             onMoveUp={editing && i > 0 ? () => onMoveUp(s.id) : undefined}
             onMoveDown={editing && i < services.length - 1 ? () => onMoveDown(s.id) : undefined}
+            isFavorite={favoriteIds.includes(s.id)}
+            onToggleFavorite={() => onToggleFavorite(s.id)}
           />
         ))}
       </div>
@@ -811,7 +817,7 @@ function ServicesSection({ services, onAdd, editing, onToggleEdit, onDelete, onM
   );
 }
 
-function ServiceCard({ service, editing, onRemove, onMoveUp, onMoveDown }: {
+function ServiceCard({ service, editing, onRemove, onMoveUp, onMoveDown, isFavorite, onToggleFavorite }: {
   service: Service;
   editing?: boolean;
   onRemove?: () => void;
@@ -820,6 +826,10 @@ function ServiceCard({ service, editing, onRemove, onMoveUp, onMoveDown }: {
   onMoveUp?: () => void;
   /** Undefined when the card is already at the bottom. */
   onMoveDown?: () => void;
+  /** Whether the service is pinned to the user's "My Boards" strip on
+   *  the Overview. Drives the filled/outlined star affordance. */
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void;
 }) {
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     // In edit mode the card is a management surface, not a link — clicks
@@ -902,6 +912,23 @@ function ServiceCard({ service, editing, onRemove, onMoveUp, onMoveDown }: {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <line x1="18" y1="6" x2="6" y2="18" />
             <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      )}
+      {!editing && onToggleFavorite && (
+        <button
+          type="button"
+          className={`service-favorite-btn${isFavorite ? ' is-favorite' : ''}`}
+          aria-label={isFavorite ? `Unpin ${service.name} from My Boards` : `Pin ${service.name} to My Boards`}
+          aria-pressed={isFavorite ? 'true' : 'false'}
+          title={isFavorite ? 'Unpin from My Boards' : 'Pin to My Boards'}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleFavorite();
+          }}
+        >
+          <svg viewBox="0 0 24 24" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
           </svg>
         </button>
       )}

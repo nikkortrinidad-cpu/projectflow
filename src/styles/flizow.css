@@ -9427,6 +9427,46 @@
   }
   [data-services-list][data-edit="true"] .service-reorder-wrap { display: inline-flex; }
 
+  /* Star button — top-right, always visible outside edit mode. In edit
+     mode the × remove button owns that spot, so the star hides. Filled
+     gold when active; outlined faint gray when not. Gold reads
+     "favorite" without pulling eye-weight from the highlight-blue
+     language the rest of the app uses for active states. */
+  .service-favorite-btn {
+    position: absolute;
+    top: -6px; right: -6px;
+    width: 22px; height: 22px;
+    display: inline-flex;
+    align-items: center; justify-content: center;
+    border-radius: 50%;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    color: var(--text-faint);
+    cursor: pointer;
+    padding: 0;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease, transform 0.12s ease;
+    z-index: 2;
+    opacity: 0;
+  }
+  .service-favorite-btn svg { width: 11px; height: 11px; }
+  .service-card:hover .service-favorite-btn,
+  .service-favorite-btn:focus-visible {
+    opacity: 1;
+  }
+  .service-favorite-btn:hover {
+    color: #f59e0b;
+    border-color: color-mix(in srgb, #f59e0b 40%, var(--hairline));
+    transform: scale(1.08);
+  }
+  .service-favorite-btn.is-favorite {
+    opacity: 1;
+    color: #f59e0b;
+    border-color: color-mix(in srgb, #f59e0b 45%, var(--hairline));
+  }
+  .service-favorite-btn.is-favorite svg { fill: #f59e0b; }
+  [data-services-list][data-edit="true"] .service-favorite-btn { display: none; }
+
   /* Notes — Apple Notes-style 2-pane */
   .notes-section .detail-section-header { align-items: center; gap: var(--sp-base); }
   .notes-new-btn {

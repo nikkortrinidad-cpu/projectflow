@@ -110,6 +110,24 @@ export function OverviewPage() {
     };
   }, [weekDays]);
 
+  // My Boards chips — resolved from favoriteServiceIds so the strip
+  // order mirrors the order the user starred things (newest at the
+  // end). A favorite whose underlying service has been deleted is
+  // dropped on cascade in the store, so every id here should resolve.
+  const myBoards = useMemo(() => {
+    const svcById = new Map(data.services.map((s) => [s.id, s]));
+    const clientById = new Map(data.clients.map((c) => [c.id, c]));
+    const out: Array<{ service: typeof data.services[number]; client: typeof data.clients[number] }> = [];
+    for (const id of data.favoriteServiceIds) {
+      const service = svcById.get(id);
+      if (!service) continue;
+      const client = clientById.get(service.clientId);
+      if (!client) continue;
+      out.push({ service, client });
+    }
+    return out;
+  }, [data.favoriteServiceIds, data.services, data.clients]);
+
   return (
     <div className="view view-overview active">
       <main className="page">
@@ -284,8 +302,11 @@ export function OverviewPage() {
         <div className="block" data-block-id="myboards">
           <div className="block-header">
             <div className="block-title">My Boards</div>
+            {myBoards.length > 0 && (
+              <div className="block-sub"><span>{myBoards.length} pinned</span></div>
+            )}
           </div>
-          <div className="pinned-wrap pinned-wrap--inline">
+          <div className={`pinned-wrap pinned-wrap--inline${myBoards.length === 0 ? ' has-empty' : ''}`}>
             <div className="pinned-empty">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
@@ -295,6 +316,27 @@ export function OverviewPage() {
                 <div className="pinned-empty-sub">Open any client and tap the star on a service to pin its board here.</div>
               </div>
               <a className="pinned-empty-cta" href="#clients">Browse clients →</a>
+            </div>
+            <div className="pinned-strip">
+              {myBoards.map(({ service, client }) => (
+                <a
+                  key={service.id}
+                  className="board-chip"
+                  href={`#board/${service.id}`}
+                  data-status={client.status}
+                  aria-label={`Open ${service.name} board for ${client.name}`}
+                >
+                  <div className={`board-chip-logo ${client.logoClass}`}>{client.initials}</div>
+                  <div className="board-chip-body">
+                    <div className="board-chip-name">{service.name}</div>
+                    <div className="board-chip-meta">
+                      {client.name}
+                      <span className="sep">·</span>
+                      {service.type === 'project' ? 'Project' : 'Retainer'}
+                    </div>
+                  </div>
+                </a>
+              ))}
             </div>
           </div>
         </div>

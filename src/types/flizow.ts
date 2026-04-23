@@ -583,4 +583,9 @@ export interface FlizowData {
   today: string;
   /** Map from schedule-seed id → the service id the card lives on. */
   scheduleTaskMap: { [scheduleId: string]: string };
+  /** Service ids the user has starred. These render as the "My Boards"
+   *  strip on the Overview so the boards you open every day are one
+   *  click away. Order is insertion — newest star lands at the end of
+   *  the strip; re-starring a service bumps it to the end. */
+  favoriteServiceIds: string[];
 }

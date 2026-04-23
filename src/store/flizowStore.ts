@@ -49,6 +49,7 @@ function emptyData(): FlizowData {
     manualAgendaItems: [],
     today: todayISO(),
     scheduleTaskMap: {},
+    favoriteServiceIds: [],
   };
 }
 
@@ -100,6 +101,9 @@ function migrate(parsed: Partial<FlizowData>): FlizowData {
     // `today` always refreshes on load — we never trust a stale anchor.
     today: todayISO(),
     scheduleTaskMap: parsed.scheduleTaskMap ?? base.scheduleTaskMap,
+    favoriteServiceIds: Array.isArray(parsed.favoriteServiceIds)
+      ? parsed.favoriteServiceIds
+      : base.favoriteServiceIds,
   };
 }
 
@@ -400,6 +404,10 @@ class FlizowStore {
     if (client) {
       client.serviceIds = client.serviceIds.filter(sid => sid !== id);
     }
+    // A deleted service can't stay pinned on the Overview — a dead chip
+    // would 404 on click. Cascade the favorites list so the pin state
+    // always matches what exists.
+    this.data.favoriteServiceIds = this.data.favoriteServiceIds.filter(sid => sid !== id);
     this.save();
   }
 
@@ -426,6 +434,23 @@ class FlizowStore {
     if (j < 0 || j >= ids.length) return;
     [ids[i], ids[j]] = [ids[j], ids[i]];
     client.serviceIds = ids;
+    this.save();
+  }
+
+  // ── Favorites ───────────────────────────────────────────────────────
+  //
+  // Star/unstar a service. Drives the "My Boards" strip on the Overview.
+  // We store insertion-ordered ids, not a set, so the strip order
+  // matches the order the user starred — newest pin at the end. A
+  // second call with the same id removes it (toggle).
+  toggleServiceFavorite(serviceId: string) {
+    const current = this.data.favoriteServiceIds;
+    const idx = current.indexOf(serviceId);
+    if (idx === -1) {
+      this.data.favoriteServiceIds = [...current, serviceId];
+    } else {
+      this.data.favoriteServiceIds = current.filter((id) => id !== serviceId);
+    }
     this.save();
   }
 

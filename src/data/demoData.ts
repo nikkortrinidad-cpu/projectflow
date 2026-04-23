@@ -1101,5 +1101,9 @@ export function generateDemoData(): FlizowData {
     manualAgendaItems: [],
     today: todayStr,
     scheduleTaskMap,
+    // Demo loads come in without anything pinned. The star affordance
+    // on each service card is self-explanatory enough that the user
+    // picks their own My Boards strip as they poke around.
+    favoriteServiceIds: [],
   };
 }
