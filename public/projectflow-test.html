@@ -5602,6 +5602,60 @@
   .health-value .unit { font-size: var(--fs-xl); font-weight: 500; color: var(--text-soft); margin-left: 2px; }
   .health-sub { font-size: var(--fs-sm); color: var(--text-soft); margin-top: 6px; letter-spacing: -0.005em; }
 
+  /* --- BLOCK 3: WEEKLY WIP PREVIEW — mirrors Agenda tab counts --- */
+  .wipnext-strip {
+    background: var(--bg-elev);
+    border-radius: 18px;
+    padding: 28px 36px;
+    border: 1px solid var(--hairline-soft);
+    box-shadow: var(--shadow);
+    display: grid;
+    grid-template-columns: 1.4fr 1px 1fr 1px 1fr 1px 1fr;
+    gap: var(--sp-4xl);
+    align-items: center;
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .wipnext-divider { background: var(--hairline); height: 64px; width: 1px; }
+  .wipnext-cell { display: flex; flex-direction: column; min-width: 0; }
+  .wipnext-cell--when {
+    gap: 4px;
+    cursor: pointer;
+    border-radius: 12px;
+    padding: var(--sp-xs) var(--sp-md);
+    margin: -6px -10px;
+    transition: background 0.15s ease;
+  }
+  .wipnext-cell--when:hover { background: var(--hover-tint); }
+  .wipnext-cell--when:focus-visible {
+    outline: 2px solid var(--hover-blue);
+    outline-offset: 2px;
+    background: var(--hover-tint);
+  }
+  .wipnext-when-label, .wipnext-label {
+    font-size: var(--fs-xs); font-weight: 500; color: var(--text-soft);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin-bottom: 4px;
+  }
+  .wipnext-when {
+    font-size: var(--fs-2xl); font-weight: 600; color: var(--text);
+    letter-spacing: -0.015em; line-height: var(--lh-hug);
+  }
+  .wipnext-when-rel {
+    font-size: var(--fs-sm); font-weight: 500; color: var(--text-soft);
+    letter-spacing: -0.005em; margin-top: 4px;
+  }
+  .wipnext-num {
+    font-size: var(--fs-6xl); font-weight: 600; line-height: var(--lh-hug);
+    letter-spacing: -0.025em; color: var(--text);
+    font-feature-settings: "tnum";
+  }
+  .wipnext-num.is-urgent { color: var(--accent); }
+  .wipnext-num.is-muted  { color: var(--text-soft); }
+  .wipnext-sub {
+    font-size: var(--fs-sm); color: var(--text-soft); margin-top: 6px;
+    letter-spacing: -0.005em;
+  }
+
   /* --- BLOCK 2: NEEDS YOUR ATTENTION --- */
   .attention-list { display: flex; flex-direction: column; gap: var(--sp-base); }
   .attn-card {
@@ -6438,6 +6492,13 @@
       gap: 28px;
     }
     .health-divider { display: none; }
+    .wipnext-strip {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      padding: 22px 24px;
+    }
+    .wipnext-divider { display: none; }
+    .wipnext-cell--when { grid-column: 1 / -1; }
     .week-board { grid-template-columns: repeat(5, 1fr); }
     .week-col { height: 380px; }
     .page-title { font-size: var(--fs-4xl); }
@@ -10147,6 +10208,17 @@
     font-size: var(--fs-md); font-weight: 600; color: var(--text);
     letter-spacing: -0.01em;
   }
+  .wip-next-meta {
+    font-size: var(--fs-xs); font-weight: 500; color: var(--text-soft);
+    letter-spacing: -0.005em; margin-top: 2px;
+  }
+  .wip-next-meta[hidden] { display: none; }
+  .wip-next-meta .wip-next-meta-sep {
+    margin: 0 6px; color: var(--hairline);
+  }
+  .wip-next-meta .wip-next-meta-urgent {
+    color: var(--text); font-weight: 600;
+  }
 
   /* Tab row — Tier 3 tint for active, neutral hover for inactive */
   .wip-tabs {
@@ -12754,7 +12826,41 @@
     </div>
   </div>
 
-  <!-- BLOCK 3: THIS WEEK + NEXT WEEK PREVIEW -->
+  <!-- BLOCK 3: WEEKLY WIP PREVIEW — mirrors the Agenda tab counts + next meeting -->
+  <div class="block" data-block-id="wipnext">
+    <div class="block-header">
+      <button class="block-drag-handle" data-tip="Drag to reorder" aria-label="Drag to reorder"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></button>
+      <div class="block-title">Weekly WIP</div>
+      <a href="#wip/agenda" class="block-link" id="wipNextReviewLink">Review agenda →</a>
+    </div>
+    <div class="wipnext-strip" id="wipNextStrip">
+      <div class="wipnext-cell wipnext-cell--when" role="button" tabindex="0" aria-label="Open Weekly WIP agenda" data-wipnext-open>
+        <div class="wipnext-when-label">Next meeting</div>
+        <div class="wipnext-when" id="wipNextWhen">—</div>
+        <div class="wipnext-when-rel" id="wipNextRel"></div>
+      </div>
+      <div class="wipnext-divider"></div>
+      <div class="wipnext-cell">
+        <div class="wipnext-label">Items on deck</div>
+        <div class="wipnext-num" id="wipNextTotal">0</div>
+        <div class="wipnext-sub" id="wipNextTotalSub">nothing queued</div>
+      </div>
+      <div class="wipnext-divider"></div>
+      <div class="wipnext-cell">
+        <div class="wipnext-label">Top priority</div>
+        <div class="wipnext-num" id="wipNextUrgent">0</div>
+        <div class="wipnext-sub">needs a decision</div>
+      </div>
+      <div class="wipnext-divider"></div>
+      <div class="wipnext-cell">
+        <div class="wipnext-label">New clients</div>
+        <div class="wipnext-num" id="wipNextNew">0</div>
+        <div class="wipnext-sub">kickoff touchpoint</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BLOCK 4: THIS WEEK + NEXT WEEK PREVIEW -->
   <div class="block" data-block-id="schedule">
     <div class="block-header">
       <button class="block-drag-handle" data-tip="Drag to reorder" aria-label="Drag to reorder"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></button>
@@ -12772,7 +12878,7 @@
 
   </div>
 
-  <!-- BLOCK 4: MY BOARDS — pinned kanban boards, shared store with Clients view -->
+  <!-- BLOCK 5: MY BOARDS — pinned kanban boards, shared store with Clients view -->
   <div class="block" data-block-id="myboards">
     <div class="block-header">
       <button class="block-drag-handle" data-tip="Drag to reorder" aria-label="Drag to reorder"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></button>
@@ -14953,6 +15059,7 @@
         <div class="wip-next-meeting" aria-live="polite">
           <span class="wip-next-label">Next meeting</span>
           <span class="wip-next-time" data-wip-next-time>—</span>
+          <span class="wip-next-meta" data-wip-next-meta hidden></span>
         </div>
       </div>
     </header>
@@ -25493,6 +25600,100 @@ window.OPS_TEAM = OPS_TEAM;
 </script>
 
 <script>
+/* ═══════ Home — Weekly WIP preview block ═══════
+   Mirrors the Agenda tab's live counts so the PM sees meeting prep status
+   on the Home page without switching tabs. Reads through window.WIP API so
+   the WIP IIFE stays the single source of truth for agenda state. */
+(function(){
+  function fmtWhen(iso){
+    if (!iso) return { full: '\u2014', rel: '' };
+    var d   = new Date(iso);
+    var day = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+    var tm  = d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    // Relative hint — helps the user scan urgency without mental math.
+    var now = new Date();
+    var mStart = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    var nStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    var days = Math.round((mStart - nStart) / 86400000);
+    var rel;
+    if (days < 0)      rel = Math.abs(days) + (days === -1 ? ' day ago' : ' days ago');
+    else if (days === 0) rel = 'Today';
+    else if (days === 1) rel = 'Tomorrow';
+    else if (days < 7)   rel = 'In ' + days + ' days';
+    else                 rel = 'In ' + Math.floor(days / 7) + ' week' + (days >= 14 ? 's' : '');
+    return { full: day + ' \u00b7 ' + tm, rel: rel };
+  }
+
+  function render(){
+    var strip   = document.getElementById('wipNextStrip');
+    var whenEl  = document.getElementById('wipNextWhen');
+    var relEl   = document.getElementById('wipNextRel');
+    var totEl   = document.getElementById('wipNextTotal');
+    var totSub  = document.getElementById('wipNextTotalSub');
+    var urgEl   = document.getElementById('wipNextUrgent');
+    var newEl   = document.getElementById('wipNextNew');
+    if (!strip || !totEl) return;
+
+    var api = (window.WIP && typeof window.WIP.getAgendaSummary === 'function')
+              ? window.WIP.getAgendaSummary() : null;
+    // WIP IIFE not parsed yet — leave placeholders; it calls us back once ready.
+    if (!api) return;
+
+    var w = fmtWhen(api.nextMeetingAt);
+    if (whenEl) whenEl.textContent = w.full;
+    if (relEl)  relEl.textContent  = w.rel;
+
+    // Primary number — grey when nothing's queued so the block doesn't
+    // bluff about an empty agenda.
+    var total = api.total || 0;
+    if (totEl) {
+      totEl.textContent = total;
+      totEl.classList.toggle('is-muted', total === 0);
+    }
+    if (totSub) {
+      totSub.textContent = total === 0 ? 'nothing queued'
+                         : api.isCustomOrder ? 'custom order set'
+                         : total === 1 ? 'item to discuss' : 'items to discuss';
+    }
+
+    // Urgent gets the accent color only when it matters — zero is muted.
+    var urg = api.urgent || 0;
+    if (urgEl) {
+      urgEl.textContent = urg;
+      urgEl.classList.toggle('is-urgent', urg > 0);
+      urgEl.classList.toggle('is-muted',  urg === 0);
+    }
+    var nc = api.newClients || 0;
+    if (newEl) {
+      newEl.textContent = nc;
+      newEl.classList.toggle('is-muted', nc === 0);
+    }
+  }
+
+  // Click/Enter on the "when" cell jumps to Agenda — direct manipulation.
+  function wireOpen(){
+    var cell = document.querySelector('[data-wipnext-open]');
+    if (!cell || cell.__wired) return;
+    cell.__wired = true;
+    function go(){ window.location.hash = '#wip/agenda'; }
+    cell.addEventListener('click', go);
+    cell.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); }
+    });
+  }
+
+  // Public: WIP IIFE re-renders on every agenda change so counts stay live.
+  window.renderHomeWipPreview = render;
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function(){ render(); wireOpen(); });
+  } else {
+    render(); wireOpen();
+  }
+})();
+</script>
+
+<script>
 /* Phase 4: Kanban board renderer — cards come from PROJECTFLOW_DATA.tasks */
 (function(){
   var D = window.PROJECTFLOW_DATA;
@@ -30591,6 +30792,7 @@ window.OPS_TEAM = OPS_TEAM;
   // ── DOM refs ─────────────────────────────────────────────────
   var els = {
     nextTime:       view.querySelector('[data-wip-next-time]'),
+    nextMeta:       view.querySelector('[data-wip-next-meta]'),
     // Legacy queue/run elements (now replaced by the single-column list below)
     queue:          view.querySelector('[data-wip-queue]'),
     queueCount:     view.querySelector('[data-wip-queue-count]'),
@@ -30618,6 +30820,31 @@ window.OPS_TEAM = OPS_TEAM;
   // ── Render: header ───────────────────────────────────────────
   function renderHeader(){
     els.nextTime.textContent = fmtMeetingTime(state.meta.nextMeetingAt);
+    renderNextMeta();
+  }
+  // Live item/urgency summary beneath the meeting time. Mirrors Agenda counts.
+  function renderNextMeta(){
+    if (!els.nextMeta) return;
+    var A = computeOrderedAgenda();
+    var total = A.counts.total;
+    if (total <= 0) {
+      els.nextMeta.hidden = true;
+      els.nextMeta.innerHTML = '';
+      return;
+    }
+    els.nextMeta.hidden = false;
+    var parts = [];
+    parts.push('<span>' + total + (total === 1 ? ' item' : ' items') + '</span>');
+    if (A.counts.urgent > 0) {
+      parts.push('<span class="wip-next-meta-sep">\u00b7</span>' +
+                 '<span class="wip-next-meta-urgent">' + A.counts.urgent + ' top priority</span>');
+    }
+    if (A.counts.newClients > 0) {
+      parts.push('<span class="wip-next-meta-sep">\u00b7</span>' +
+                 '<span>' + A.counts.newClients +
+                 (A.counts.newClients === 1 ? ' new client' : ' new clients') + '</span>');
+    }
+    els.nextMeta.innerHTML = parts.join('');
   }
 
   // ── Render: queue (red flags grouped by channel manager) ────
@@ -30810,11 +31037,32 @@ window.OPS_TEAM = OPS_TEAM;
     return n;
   }
 
-  function renderAgendaList(){
-    if (!els.agendaList) return;
+  // Single source of truth for "what's on the agenda, in what order".
+  // Both the Agenda tab and the Live Meeting sequence derive from this.
+  //
+  // Options:
+  //   snapshot:    { removedAutoIds, manualIds, customOrder } — when present,
+  //                we treat it as a frozen copy (used during a live meeting).
+  //                When absent, we read live state.
+  //   customOrder: explicit override (tests / preview). Overrides snapshot.
+  //
+  // Returns: { ordered, canonical, groups, counts, isCustomOrder }
+  //   ordered:   flat list of entries in final order (respects custom order)
+  //   canonical: flat list in auto order (for seeding on first drag)
+  //   groups:    { urgent, ontrack, newClients, mBuckets } for grouped render
+  //   counts:    totals by category
+  //   Each entry: { id, kind: 'card'|'flat', blockKey, card?, flat? }
+  function computeOrderedAgenda(opts){
+    opts = opts || {};
+    var snap = opts.snapshot || null;
+    var removed = snap ? (snap.removedAutoIds || {}) : (state.removedAutoIds = state.removedAutoIds || {});
+    var manualIds = snap ? (snap.manualIds || []) : null; // null = accept all live manuals
+    var customOrder = (opts.customOrder !== undefined) ? opts.customOrder
+                     : (snap && snap.customOrder !== undefined) ? snap.customOrder
+                     : state.agendaCustomOrder;
+
     var data = computeAutoAgenda();
-    var removed = (state.removedAutoIds = state.removedAutoIds || {});
-    // Prune already-removed cards from the auto-trees
+
     function prune(tree){
       return tree.map(function(cli){
         return {
@@ -30829,19 +31077,107 @@ window.OPS_TEAM = OPS_TEAM;
     var ontrack = prune(data.ontrack);
     var newClients = data.newClients.filter(function(c){ return !removed['newclient-' + c.id]; });
 
-    // Bucket manual items by their insertPosition.
-    // Fall through to the next valid slot if the target group is missing.
+    var manuals = (data.manual || []).slice();
+    if (manualIds) {
+      var idset = {};
+      manualIds.forEach(function(id){ idset[id] = true; });
+      manuals = manuals.filter(function(m){ return idset[m.id]; });
+    }
+
     var mBuckets = { top: [], beforeUrgent: [], beforeOntrack: [], bottom: [] };
-    (data.manual || []).forEach(function(m){
+    manuals.forEach(function(m){
       var pos = m.insertPosition || 'bottom';
       if (pos === 'top')                 mBuckets.top.push(m);
       else if (pos === 'before:urgent')  mBuckets.beforeUrgent.push(m);
       else if (pos === 'before:ontrack') mBuckets.beforeOntrack.push(m);
       else                               mBuckets.bottom.push(m);
     });
-    // Fall-through if the anchor group is gone
     if (!urgent.length)  { mBuckets.beforeOntrack = mBuckets.beforeUrgent.concat(mBuckets.beforeOntrack); mBuckets.beforeUrgent = []; }
     if (!ontrack.length) { mBuckets.bottom = mBuckets.beforeOntrack.concat(mBuckets.bottom); mBuckets.beforeOntrack = []; }
+
+    function manualEntry(m){
+      return {
+        id: m.id, kind: 'flat', blockKey: 'agenda:manual:' + m.id,
+        flat: {
+          id: m.id, status: 'manual', statusLabel: 'Manual',
+          title: (m.clientName ? m.clientName + ' \u2014 ' : '') + (m.title || ''),
+          note: m.note || ''
+        }
+      };
+    }
+    function newClientEntry(c){
+      return {
+        id: 'newclient-' + c.id, kind: 'flat', blockKey: 'agenda:newclient:' + c.id,
+        flat: {
+          id: 'newclient-' + c.id, status: 'new', statusLabel: 'New',
+          title: c.name, note: 'Since last WIP \u00B7 kickoff touchpoint'
+        }
+      };
+    }
+    function cardEntry(card){
+      return { id: card.id, kind: 'card', blockKey: 'agenda:card:' + card.id, card: card };
+    }
+
+    var canonical = [];
+    mBuckets.top.forEach(function(m){ canonical.push(manualEntry(m)); });
+    newClients.forEach(function(c){ canonical.push(newClientEntry(c)); });
+    mBuckets.beforeUrgent.forEach(function(m){ canonical.push(manualEntry(m)); });
+    urgent.forEach(function(cli){
+      cli.services.forEach(function(svc){
+        svc.cards.forEach(function(card){ canonical.push(cardEntry(card)); });
+      });
+    });
+    mBuckets.beforeOntrack.forEach(function(m){ canonical.push(manualEntry(m)); });
+    ontrack.forEach(function(cli){
+      cli.services.forEach(function(svc){
+        svc.cards.forEach(function(card){ canonical.push(cardEntry(card)); });
+      });
+    });
+    mBuckets.bottom.forEach(function(m){ canonical.push(manualEntry(m)); });
+
+    var ordered = canonical;
+    var isCustomOrder = false;
+    if (Array.isArray(customOrder) && customOrder.length && canonical.length) {
+      isCustomOrder = true;
+      var byId = {};
+      canonical.forEach(function(e){ byId[e.id] = e; });
+      var seen = {};
+      var out = [];
+      customOrder.forEach(function(id){
+        if (byId[id] && !seen[id]) { out.push(byId[id]); seen[id] = true; }
+      });
+      canonical.forEach(function(e){ if (!seen[e.id]) out.push(e); });
+      ordered = out;
+    }
+
+    function cnt(tree){
+      var n = 0;
+      tree.forEach(function(cli){ cli.services.forEach(function(svc){ n += svc.cards.length; }); });
+      return n;
+    }
+
+    return {
+      ordered: ordered,
+      canonical: canonical,
+      groups: { urgent: urgent, ontrack: ontrack, newClients: newClients, mBuckets: mBuckets },
+      counts: {
+        total: ordered.length,
+        urgent: cnt(urgent),
+        ontrack: cnt(ontrack),
+        manual: manuals.length,
+        newClients: newClients.length
+      },
+      isCustomOrder: isCustomOrder
+    };
+  }
+
+  function renderAgendaList(){
+    if (!els.agendaList) return;
+    var A = computeOrderedAgenda();
+    var urgent = A.groups.urgent;
+    var ontrack = A.groups.ontrack;
+    var newClients = A.groups.newClients;
+    var mBuckets = A.groups.mBuckets;
 
     function manualToFlatRow(m){
       return {
@@ -30865,66 +31201,28 @@ window.OPS_TEAM = OPS_TEAM;
       });
     }
 
-    // Totals — rough estimate: 2 min per urgent card, 1 min per on-track, 1 min per manual/new
-    var urgentCount  = countCards(urgent);
-    var ontrackCount = countCards(ontrack);
-    var total = urgentCount + ontrackCount + newClients.length + data.manual.length;
-    var est   = Math.max(10, urgentCount * 2 + ontrackCount * 1 + newClients.length + data.manual.length);
+    // Stats: ~2 min per urgent, 1 min per on-track/manual/new
+    var total = A.counts.total;
+    var est   = Math.max(10, A.counts.urgent * 2 + A.counts.ontrack * 1 + A.counts.newClients + A.counts.manual);
 
-    // ── Build a canonical ordered flat list of every agenda item ──
-    // Used both to power custom-order mode and to seed it on first drag.
-    // Each entry: { id, kind: 'card'|'flat', card|flat }
-    var canonicalFlat = [];
-    function pushManuals(list){
-      list.forEach(function(m){ canonicalFlat.push({ id: m.id, kind: 'flat', flat: manualToFlatRow(m) }); });
-    }
-    pushManuals(mBuckets.top);
-    newClients.forEach(function(c){
-      canonicalFlat.push({ id: 'newclient-' + c.id, kind: 'flat', flat: newClientToFlatRow(c) });
-    });
-    pushManuals(mBuckets.beforeUrgent);
-    urgent.forEach(function(cli){
-      cli.services.forEach(function(svc){
-        svc.cards.forEach(function(card){ canonicalFlat.push({ id: card.id, kind: 'card', card: card }); });
-      });
-    });
-    pushManuals(mBuckets.beforeOntrack);
-    ontrack.forEach(function(cli){
-      cli.services.forEach(function(svc){
-        svc.cards.forEach(function(card){ canonicalFlat.push({ id: card.id, kind: 'card', card: card }); });
-      });
-    });
-    pushManuals(mBuckets.bottom);
+    // Seed canonical IDs so the first drag can pick up from the auto order.
+    state._agendaCanonicalIds = A.canonical.map(function(e){ return e.id; });
 
     els.agendaList.innerHTML = '';
 
-    var customOrder = state.agendaCustomOrder;
-    var hasCustom = Array.isArray(customOrder) && customOrder.length > 0;
-
-    // If custom order is set, render a single flat custom group sorted by it.
-    // Unknown items (newly auto-added since the reorder) append to the end.
-    if (hasCustom && canonicalFlat.length) {
-      var byId = {};
-      canonicalFlat.forEach(function(entry){ byId[entry.id] = entry; });
-      var seen = {};
-      var ordered = [];
-      customOrder.forEach(function(id){
-        if (byId[id] && !seen[id]) { ordered.push(byId[id]); seen[id] = true; }
-      });
-      canonicalFlat.forEach(function(entry){
-        if (!seen[entry.id]) ordered.push(entry);
-      });
-
-      var custom = buildCustomGroup(ordered);
-      els.agendaList.appendChild(custom);
+    // Custom-order mode — one flat list of every item.
+    if (A.isCustomOrder && A.ordered.length) {
+      els.agendaList.appendChild(buildCustomGroup(A.ordered));
       els.agendaEmpty.hidden = true;
       if (els.resetOrderBtn) els.resetOrderBtn.hidden = false;
       if (els.runCount) els.runCount.textContent = total;
       if (els.runTime)  els.runTime.textContent  = est;
+      renderNextMeta();
+      notifyAgendaChanged();
       return;
     }
 
-    // Otherwise, render the normal grouped view.
+    // Grouped mode — the canonical auto-layout.
     if (els.resetOrderBtn) els.resetOrderBtn.hidden = true;
 
     var groups = [];
@@ -30954,6 +31252,8 @@ window.OPS_TEAM = OPS_TEAM;
       els.agendaEmpty.hidden = false;
       if (els.runCount) els.runCount.textContent = 0;
       if (els.runTime)  els.runTime.textContent  = 5;
+      renderNextMeta();
+      notifyAgendaChanged();
       return;
     }
     els.agendaEmpty.hidden = true;
@@ -30962,10 +31262,8 @@ window.OPS_TEAM = OPS_TEAM;
 
     if (els.runCount) els.runCount.textContent = total;
     if (els.runTime)  els.runTime.textContent  = est;
-
-    // Store canonical order so first drag can seed custom order from whatever
-    // the user sees right now.
-    state._agendaCanonicalIds = canonicalFlat.map(function(e){ return e.id; });
+    renderNextMeta();
+    notifyAgendaChanged();
   }
 
   // Custom-order group — a single flat list of every agenda item, reorderable
@@ -31720,59 +32018,13 @@ window.OPS_TEAM = OPS_TEAM;
   ensureMeetingState();
 
   function buildMeetingSequence(){
-    // Rebuild the agenda order that was rendered on the Agenda tab, using the
-    // snapshot captured at meeting start (removedAutoIds + manualIds).
-    var snap = (state.meeting && state.meeting.agendaSnapshot) || { removedAutoIds: {}, manualIds: [] };
-    var removed = snap.removedAutoIds || {};
-    var manualIds = snap.manualIds || [];
-    var data = computeAutoAgenda();
-
-    function prune(tree){
-      return tree.map(function(cli){
-        return {
-          id: cli.id, name: cli.name,
-          services: cli.services.map(function(svc){
-            return { id: svc.id, name: svc.name, cards: svc.cards.filter(function(card){ return !removed[card.id]; }) };
-          }).filter(function(s){ return s.cards.length > 0; })
-        };
-      }).filter(function(c){ return c.services.length > 0; });
-    }
-    var urgent  = prune(data.urgent);
-    var ontrack = prune(data.ontrack);
-    var newClients = data.newClients.filter(function(c){ return !removed['newclient-' + c.id]; });
-
-    var mBuckets = { top: [], beforeUrgent: [], beforeOntrack: [], bottom: [] };
-    manualIds.forEach(function(id){
-      var f = null;
-      for (var i = 0; i < state.redFlags.length; i++) if (state.redFlags[i].id === id) { f = state.redFlags[i]; break; }
-      if (!f) return;
-      var pos = f.insertPosition || 'bottom';
-      if (pos === 'top')                 mBuckets.top.push(f);
-      else if (pos === 'before:urgent')  mBuckets.beforeUrgent.push(f);
-      else if (pos === 'before:ontrack') mBuckets.beforeOntrack.push(f);
-      else                               mBuckets.bottom.push(f);
-    });
-    if (!urgent.length)  { mBuckets.beforeOntrack = mBuckets.beforeUrgent.concat(mBuckets.beforeOntrack); mBuckets.beforeUrgent = []; }
-    if (!ontrack.length) { mBuckets.bottom = mBuckets.beforeOntrack.concat(mBuckets.bottom); mBuckets.beforeOntrack = []; }
-
-    var seq = [];
-    mBuckets.top.forEach(function(f){ seq.push('agenda:manual:' + f.id); });
-    newClients.forEach(function(c){ seq.push('agenda:newclient:' + c.id); });
-    mBuckets.beforeUrgent.forEach(function(f){ seq.push('agenda:manual:' + f.id); });
-    urgent.forEach(function(cli){
-      cli.services.forEach(function(svc){
-        svc.cards.forEach(function(card){ seq.push('agenda:card:' + card.id); });
-      });
-    });
-    mBuckets.beforeOntrack.forEach(function(f){ seq.push('agenda:manual:' + f.id); });
-    ontrack.forEach(function(cli){
-      cli.services.forEach(function(svc){
-        svc.cards.forEach(function(card){ seq.push('agenda:card:' + card.id); });
-      });
-    });
-    mBuckets.bottom.forEach(function(f){ seq.push('agenda:manual:' + f.id); });
-
-    return seq;
+    // Drive the Live Meeting order from the same source the Agenda tab uses.
+    // Reads the snapshot (removedAutoIds + manualIds + customOrder) frozen at
+    // meeting start so mid-meeting agenda edits don't reorder the room.
+    var snap = (state.meeting && state.meeting.agendaSnapshot)
+              || { removedAutoIds: {}, manualIds: [], customOrder: [] };
+    var A = computeOrderedAgenda({ snapshot: snap });
+    return A.ordered.map(function(e){ return e.blockKey; });
   }
 
   function getBlockMeta(blockKey){
@@ -31894,23 +32146,25 @@ window.OPS_TEAM = OPS_TEAM;
     m.pausedAt = null;
     m.pausedTotalMs = 0;
     m.currentIndex = 0;
-    m.sequence = buildMeetingSequence();
-    m.itemStart = {};
-    m.itemStart[m.sequence[0]] = Date.now();
     m.itemElapsed = {};
     m.itemDone = {};
     m.notes = [];
     m.flagResolutions = {};
-    // Snapshot the agenda: freeze the list of urgent/on-track cards that were
-    // removed at start time. Removing an item mid-meeting still works, but
-    // new cards that qualify after Start will not auto-appear.
+    // Snapshot the agenda FIRST so buildMeetingSequence can read it. The
+    // snapshot freezes removed IDs, manual IDs, AND the custom drag order —
+    // mid-meeting edits to the Agenda tab do not reorder a live meeting;
+    // nothing qualifies auto-in after Start.
     try {
       m.agendaSnapshot = {
         removedAutoIds: Object.assign({}, (state.removedAutoIds || {})),
         manualIds: (state.redFlags || []).map(function(f){ return f.id; }),
+        customOrder: Array.isArray(state.agendaCustomOrder) ? state.agendaCustomOrder.slice() : [],
         at: Date.now()
       };
     } catch (e) {}
+    m.sequence = buildMeetingSequence();
+    m.itemStart = {};
+    if (m.sequence[0]) m.itemStart[m.sequence[0]] = Date.now();
     saveState();
   }
 
@@ -31926,19 +32180,13 @@ window.OPS_TEAM = OPS_TEAM;
     gate.hidden = isActive;
     root.style.display = isActive ? '' : 'none';
     if (!isActive && statsHost) {
-      // Show a quick preview of what's on the agenda so the PM knows what they'll
-      // be starting into.
-      var data = computeAutoAgenda();
-      var removed = state.removedAutoIds || {};
-      function cnt(tree){ var n = 0; tree.forEach(function(c){ c.services.forEach(function(s){ s.cards.forEach(function(card){ if (!removed[card.id]) n++; }); }); }); return n; }
-      var urgent  = cnt(data.urgent);
-      var ontrack = cnt(data.ontrack);
-      var newCli  = data.newClients.filter(function(c){ return !removed['newclient-' + c.id]; }).length;
-      var manual  = data.manual.length;
+      // Preview mirrors what Agenda tab is showing right now — same ordering,
+      // same removals, same counts. One source of truth.
+      var A = computeOrderedAgenda();
       statsHost.innerHTML =
-        '<div class="wip-live-prestart-stat"><strong>' + (newCli + urgent + ontrack + manual) + '</strong><span>items on deck</span></div>' +
-        '<div class="wip-live-prestart-stat"><strong>' + urgent + '</strong><span>top priority</span></div>' +
-        '<div class="wip-live-prestart-stat"><strong>' + newCli + '</strong><span>new clients</span></div>';
+        '<div class="wip-live-prestart-stat"><strong>' + A.counts.total + '</strong><span>items on deck</span></div>' +
+        '<div class="wip-live-prestart-stat"><strong>' + A.counts.urgent + '</strong><span>top priority</span></div>' +
+        '<div class="wip-live-prestart-stat"><strong>' + A.counts.newClients + '</strong><span>new clients</span></div>';
     }
   }
 
@@ -32481,8 +32729,32 @@ window.OPS_TEAM = OPS_TEAM;
 
   // ACTION ITEMS (Stage 4) removed — actions live on the kanban, not in a separate list.
 
+  // ── Public API — other views (Home) read the agenda from here ─
+  // getAgendaSummary() returns live counts + ordering flags. Kept small so
+  // the Home renderer doesn't become dependent on WIP internals.
+  function getAgendaSummary(){
+    var A = computeOrderedAgenda();
+    return {
+      nextMeetingAt: state.meta && state.meta.nextMeetingAt,
+      total:     A.counts.total,
+      urgent:    A.counts.urgent,
+      ontrack:   A.counts.ontrack,
+      manual:    A.counts.manual,
+      newClients:A.counts.newClients,
+      isCustomOrder: A.isCustomOrder
+    };
+  }
+  // Fire-and-forget notifier so the Home block stays in lockstep with the
+  // Agenda tab — called after every state change that alters the list.
+  function notifyAgendaChanged(){
+    if (typeof window.renderHomeWipPreview === 'function') {
+      try { window.renderHomeWipPreview(); } catch (e) {}
+    }
+  }
+
   // ── Public hook for router ──────────────────────────────────
   window.WIP = {
+    getAgendaSummary: getAgendaSummary,
     onRoute: function(sub /* , id */){
       if (sub === 'live') {
         ensureMeetingState();
@@ -32510,6 +32782,9 @@ window.OPS_TEAM = OPS_TEAM;
   renderHeader();
   renderQueue();
   renderRun();
+  // Kick the Home block once WIP is fully wired — it may have rendered
+  // before window.WIP existed and is still showing placeholder dashes.
+  notifyAgendaChanged();
 
   // Belated sub-route init: the router may have routed to #wip/live
   // before this IIFE defined window.WIP (script-order race). Catch up.
