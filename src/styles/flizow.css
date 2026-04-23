@@ -8914,6 +8914,72 @@
   }
   .onboarding-group-label:first-child { margin-top: 0; padding-top: 0; border-top: none; }
 
+  /* Per-row delete: the × sits on the right edge, well away from the
+     checkbox on the left, and only appears on row hover. Keyboard users
+     get it via focus-within on the row (covers tab-to-button). No confirm
+     dialog — low-value data, re-add is one keystroke. */
+  .onboarding-delete-btn {
+    margin-left: auto;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px;
+    padding: 0; border: 0; border-radius: 6px;
+    background: transparent; color: var(--text-faint);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s, background 0.15s, color 0.15s;
+  }
+  .onboarding-delete-btn svg { width: 12px; height: 12px; }
+  .onboarding-item:hover .onboarding-delete-btn,
+  .onboarding-item:focus-within .onboarding-delete-btn,
+  .onboarding-delete-btn:focus-visible {
+    opacity: 1;
+  }
+  .onboarding-delete-btn:hover {
+    background: color-mix(in srgb, #ff453a 10%, transparent);
+    color: #ff453a;
+  }
+  .onboarding-delete-btn:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 1px;
+  }
+
+  /* "+ Add item" inline composer — rests as a faint row-shaped button
+     so the grid rhythm stays intact; opens into a text input that
+     autofocuses. Enter commits, Esc cancels, blur-with-empty cancels. */
+  .onboarding-add-btn {
+    grid-column: 1 / -1;
+    display: inline-flex; align-items: center; gap: var(--sp-base);
+    padding: 8px 0;
+    font-size: var(--fs-sm); font-weight: 500;
+    color: var(--text-faint);
+    background: none; border: 0;
+    cursor: pointer;
+    letter-spacing: -0.005em;
+    transition: color 0.15s;
+  }
+  .onboarding-add-btn:hover { color: var(--highlight); }
+  .onboarding-add-btn svg { width: 14px; height: 14px; }
+  .onboarding-add-input-wrap {
+    grid-column: 1 / -1;
+    padding: 4px 0;
+  }
+  .onboarding-add-input {
+    width: 100%;
+    padding: 8px 12px;
+    font: inherit;
+    font-size: var(--fs-md);
+    color: var(--text);
+    background: var(--bg-faint);
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .onboarding-add-input:focus {
+    border-color: var(--highlight);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--highlight) 18%, transparent);
+  }
+
   /* Service-scoped onboarding — aggregated stack, one collapsible card per service */
   .onboarding-service-stack {
     display: flex; flex-direction: column; gap: var(--sp-md);

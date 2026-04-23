@@ -139,6 +139,11 @@ function ClientDetail({ client, data, store }: DetailProps) {
           services={services}
           items={clientOnboarding}
           onToggle={(id) => store.toggleOnboardingItem(id)}
+          onAdd={(serviceId, group, label) => {
+            const id = `onb-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+            store.addOnboardingItem({ id, serviceId, group, label, done: false });
+          }}
+          onDelete={(id) => store.deleteOnboardingItem(id)}
         />
       )}
 
@@ -1028,10 +1033,12 @@ function quickTime(createdAt: string, todayISO: string): string {
  *   click to fix.
  * - Keyboard: head is a <button>, each check is a <button aria-pressed>.
  */
-function OnboardingSection({ services, items, onToggle }: {
+function OnboardingSection({ services, items, onToggle, onAdd, onDelete }: {
   services: Service[];
   items: OnboardingItem[];
   onToggle: (id: string) => void;
+  onAdd: (serviceId: string, group: 'client' | 'us', label: string) => void;
+  onDelete: (id: string) => void;
 }) {
   const groups = useMemo(() => groupByService(services, items), [services, items]);
 
@@ -1090,7 +1097,13 @@ function OnboardingSection({ services, items, onToggle }: {
       </div>
       <div className="onboarding-service-stack">
         {groups.map(g => (
-          <OnboardingServiceCard key={g.service.id} group={g} onToggle={onToggle} />
+          <OnboardingServiceCard
+            key={g.service.id}
+            group={g}
+            onToggle={onToggle}
+            onAdd={onAdd}
+            onDelete={onDelete}
+          />
         ))}
       </div>
     </div>
@@ -1115,9 +1128,11 @@ function groupByService(services: Service[], items: OnboardingItem[]): Onboardin
   });
 }
 
-function OnboardingServiceCard({ group, onToggle }: {
+function OnboardingServiceCard({ group, onToggle, onAdd, onDelete }: {
   group: OnboardingGroup;
   onToggle: (id: string) => void;
+  onAdd: (serviceId: string, group: 'client' | 'us', label: string) => void;
+  onDelete: (id: string) => void;
 }) {
   const { service, client, us, doneCount, total } = group;
   const complete = total > 0 && doneCount === total;
@@ -1175,31 +1190,40 @@ function OnboardingServiceCard({ group, onToggle }: {
 
       <div id={`onb-body-${service.id}`} className="onboarding-service-body">
         <div className="onboarding-checklist">
-          {client.length > 0 && (
-            <>
-              <div className="onboarding-group-label">Needed from client</div>
-              {client.map(item => (
-                <OnboardingRow key={item.id} item={item} onToggle={onToggle} />
-              ))}
-            </>
-          )}
-          {us.length > 0 && (
-            <>
-              <div className="onboarding-group-label">We take care of</div>
-              {us.map(item => (
-                <OnboardingRow key={item.id} item={item} onToggle={onToggle} />
-              ))}
-            </>
-          )}
+          {/* Both groups render unconditionally now — the "+ Add item"
+              composer lives at the bottom of each, so the group needs
+              to exist even when it's currently empty. Label the group
+              regardless so the user knows where their new item will
+              land. */}
+          <div className="onboarding-group-label">Needed from client</div>
+          {client.map(item => (
+            <OnboardingRow key={item.id} item={item} onToggle={onToggle} onDelete={onDelete} />
+          ))}
+          <OnboardingAddItem
+            serviceId={service.id}
+            group="client"
+            onAdd={onAdd}
+          />
+
+          <div className="onboarding-group-label" style={{ marginTop: 16 }}>We take care of</div>
+          {us.map(item => (
+            <OnboardingRow key={item.id} item={item} onToggle={onToggle} onDelete={onDelete} />
+          ))}
+          <OnboardingAddItem
+            serviceId={service.id}
+            group="us"
+            onAdd={onAdd}
+          />
         </div>
       </div>
     </div>
   );
 }
 
-function OnboardingRow({ item, onToggle }: {
+function OnboardingRow({ item, onToggle, onDelete }: {
   item: OnboardingItem;
   onToggle: (id: string) => void;
+  onDelete: (id: string) => void;
 }) {
   return (
     <label
@@ -1222,7 +1246,107 @@ function OnboardingRow({ item, onToggle }: {
         )}
       </button>
       <span>{item.label}</span>
+
+      {/* × lives on the right edge, far from the checkbox on the left,
+          and only fades in on row hover. Low-cost data — no confirm
+          dialog. If a user regrets the delete they can just re-add it. */}
+      <button
+        type="button"
+        className="onboarding-delete-btn"
+        aria-label={`Delete "${item.label}"`}
+        title="Delete item"
+        onClick={(e) => {
+          // stopPropagation because the row <label> would otherwise
+          // treat the click as a toggle on the checkbox.
+          e.preventDefault();
+          e.stopPropagation();
+          onDelete(item.id);
+        }}
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
     </label>
+  );
+}
+
+/**
+ * Inline-composer row that sits at the end of each onboarding group.
+ *
+ * Default state: a faint "+ Add item" button styled like the row it
+ * replaces, so the rhythm of the list stays unbroken. Click switches
+ * to a text input with autofocus. Enter commits, Escape cancels, blur
+ * with empty reverts. No modal — this is a micro-interaction, not a
+ * flow, and a modal would be overkill.
+ */
+function OnboardingAddItem({ serviceId, group, onAdd }: {
+  serviceId: string;
+  group: 'client' | 'us';
+  onAdd: (serviceId: string, group: 'client' | 'us', label: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editing) {
+      const t = window.setTimeout(() => inputRef.current?.focus(), 40);
+      return () => window.clearTimeout(t);
+    }
+  }, [editing]);
+
+  function commit() {
+    const trimmed = draft.trim();
+    if (trimmed) onAdd(serviceId, group, trimmed);
+    setDraft('');
+    setEditing(false);
+  }
+
+  function cancel() {
+    setDraft('');
+    setEditing(false);
+  }
+
+  if (!editing) {
+    return (
+      <button
+        type="button"
+        className="onboarding-add-btn"
+        onClick={() => setEditing(true)}
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+        Add item
+      </button>
+    );
+  }
+
+  return (
+    <div className="onboarding-add-input-wrap">
+      <input
+        ref={inputRef}
+        type="text"
+        className="onboarding-add-input"
+        value={draft}
+        placeholder={group === 'client' ? 'e.g. Logo assets in SVG' : 'e.g. Book kickoff call'}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            commit();
+          } else if (e.key === 'Escape') {
+            e.preventDefault();
+            cancel();
+          }
+        }}
+        onBlur={commit}
+        aria-label={`New ${group === 'client' ? 'client' : 'team'} onboarding item`}
+      />
+    </div>
   );
 }
 

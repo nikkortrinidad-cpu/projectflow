@@ -815,6 +815,25 @@ class FlizowStore {
     this.save();
   }
 
+  /** Append a user-added onboarding item to a service's checklist. Used
+   *  by the inline "+ Add item" composer on the Onboarding tab. Replaces
+   *  the array ref (not `.push`) so useMemo([onboardingItems]) consumers
+   *  on ClientDetailPage recompute. */
+  addOnboardingItem(item: OnboardingItem) {
+    this.data.onboardingItems = [...this.data.onboardingItems, item];
+    this.save();
+  }
+
+  /** Remove an onboarding item. Template-seeded and user-added items are
+   *  treated the same — if a user decides a step doesn't apply to this
+   *  client, they can delete it outright rather than leave a permanently
+   *  unchecked row polluting the "items left" counter. Low-cost data,
+   *  so no confirm dialog — the UI only exposes the × on hover. */
+  deleteOnboardingItem(id: string) {
+    this.data.onboardingItems = this.data.onboardingItems.filter(o => o.id !== id);
+    this.save();
+  }
+
   // ── Client directory: contacts, quick links, team ────────────────────
 
   addContact(contact: Contact) {
