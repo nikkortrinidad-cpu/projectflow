@@ -33711,15 +33711,19 @@ window.OPS_TEAM = OPS_TEAM;
 </script>
 
 <script type="module" id="testersBoot">
-/* ═══════ Peer testing — auth boot ═══════
+/* ═══════ Peer testing — auth + Firestore sync boot ═══════
    Runs only when tester mode is active (pre-flight in <head> sets the state).
-   Loads Firebase via CDN modules, handles the sign-in popup, and flips the
-   gate state when auth resolves. Sync (Firestore read/write) lands in the
-   next commit — this commit is just the gate. */
+   On sign-in: fetches the tester's Firestore doc, clears local projectflow.*
+   keys, replaces them with cloud values, writes a profile, then reloads so
+   the mockup IIFEs start fresh against the hydrated state. After that, every
+   projectflow.* localStorage write is mirrored to Firestore (debounced) so
+   the admin can see the session live. */
 
 const TESTERS_MODE = document.documentElement.getAttribute('data-testers-state') != null;
 if (TESTERS_MODE) {
-  const ADMIN_EMAIL = 'nikkortrinidad@gmail.com';
+  const ADMIN_EMAIL    = 'nikkortrinidad@gmail.com';
+  const HYDRATION_FLAG = 'projectflow.testers.hydratedUid';
+  const FLUSH_DELAY_MS = 1200;
   const FIREBASE_CONFIG = {
     apiKey: "AIzaSyBncwf9Qi8vkNKeRrE1jrjJDr5eI-RJP5k",
     authDomain: "kanban-5f0f4.firebaseapp.com",
@@ -33729,11 +33733,17 @@ if (TESTERS_MODE) {
     appId: "1:209234941977:web:6189232c2db32f82b37288"
   };
 
+  // Capture raw localStorage methods BEFORE the write-through proxy is
+  // installed. Hydration uses these directly so cloud → local writes don't
+  // echo back to Firestore as changes.
+  const rawSetItem    = localStorage.setItem.bind(localStorage);
+  const rawRemoveItem = localStorage.removeItem.bind(localStorage);
+
   try {
     const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
     const { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } =
       await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
-    const { getFirestore } =
+    const { getFirestore, doc, getDoc, setDoc, serverTimestamp } =
       await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
 
     const app = initializeApp(FIREBASE_CONFIG);
@@ -33741,14 +33751,104 @@ if (TESTERS_MODE) {
     const db = getFirestore(app);
     const provider = new GoogleAuthProvider();
 
-    // Exposed for later commits (sync, admin view, read-only mode).
+    // ── Sync helpers ────────────────────────────────────────────────────
+    // Local-only flags live in localStorage but should not round-trip to
+    // Firestore: they belong to the device, not the session.
+    function isSyncedKey(k) {
+      return !!k
+        && k.startsWith('projectflow.')
+        && k !== 'projectflow.testers.enabled'
+        && k !== HYDRATION_FLAG;
+    }
+    function allSyncedKeys() {
+      const out = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (isSyncedKey(k)) out.push(k);
+      }
+      return out;
+    }
+    function snapshotStore() {
+      const s = {};
+      allSyncedKeys().forEach(k => { s[k] = localStorage.getItem(k); });
+      return s;
+    }
+    function clearLocalSynced() {
+      allSyncedKeys().forEach(k => rawRemoveItem(k));
+    }
+
+    async function hydrateFromCloud(uid) {
+      const ref  = doc(db, 'projectflow-testers', uid);
+      const snap = await getDoc(ref);
+      const data = snap.exists() ? snap.data() : null;
+      const store = (data && data.store) || {};
+      clearLocalSynced();
+      Object.entries(store).forEach(([k, v]) => {
+        if (typeof v === 'string') rawSetItem(k, v);
+      });
+      return data;
+    }
+
+    async function writeProfile(user, firstTime) {
+      const ref = doc(db, 'projectflow-testers', user.uid);
+      const profile = {
+        email:    user.email     || null,
+        name:     user.displayName || null,
+        photoURL: user.photoURL   || null,
+        lastSeen: serverTimestamp()
+      };
+      if (firstTime) profile.firstSeen = serverTimestamp();
+      await setDoc(ref, { profile }, { merge: true });
+    }
+
+    let flushTimer = null;
+    async function flushNow() {
+      const user = window.__pfTesters && window.__pfTesters.user;
+      if (!user) return;
+      const ref = doc(db, 'projectflow-testers', user.uid);
+      await setDoc(ref, {
+        store:   snapshotStore(),
+        profile: { lastSeen: serverTimestamp() }
+      }, { merge: true });
+    }
+    function scheduleFlush() {
+      clearTimeout(flushTimer);
+      flushTimer = setTimeout(() => {
+        flushTimer = null;
+        flushNow().catch(e => console.error('[testers] flush failed:', e));
+      }, FLUSH_DELAY_MS);
+    }
+
+    function installWriteThrough() {
+      localStorage.setItem = function(key, value) {
+        rawSetItem(key, value);
+        if (isSyncedKey(key)) scheduleFlush();
+      };
+      localStorage.removeItem = function(key) {
+        rawRemoveItem(key);
+        if (isSyncedKey(key)) scheduleFlush();
+      };
+      // Best-effort flush on tab close. Browsers may cancel async work, but
+      // in practice the Firestore write usually makes it out.
+      window.addEventListener('beforeunload', () => {
+        if (flushTimer) {
+          clearTimeout(flushTimer);
+          flushNow().catch(() => {});
+        }
+      });
+    }
+
+    // Exposed for later commits (admin view, sign-out, read-only switches).
     window.__pfTesters = {
       app, auth, db, provider,
       adminEmail: ADMIN_EMAIL,
       user: null,
-      signOut: () => signOut(auth)
+      signOut:   () => signOut(auth),
+      flushNow,                // manual "push now" for debugging
+      snapshotStore            // used by the admin view in a later commit
     };
 
+    // ── Gate UI ─────────────────────────────────────────────────────────
     const gateBtn   = document.getElementById('testersSignInBtn');
     const gateLabel = document.getElementById('testersSignInLabel');
     const gateErr   = document.getElementById('testersSignInErr');
@@ -33759,10 +33859,10 @@ if (TESTERS_MODE) {
       gateErr.classList.add('shown');
     }
     function clearErr() { if (gateErr) gateErr.classList.remove('shown'); }
-    function setBusy(busy) {
+    function setBusy(busy, label) {
       if (!gateBtn || !gateLabel) return;
       gateBtn.disabled = busy;
-      gateLabel.textContent = busy ? 'Signing in…' : 'Continue with Google';
+      gateLabel.textContent = busy ? (label || 'Signing in…') : 'Continue with Google';
     }
 
     gateBtn?.addEventListener('click', async () => {
@@ -33770,31 +33870,58 @@ if (TESTERS_MODE) {
       setBusy(true);
       try {
         await signInWithPopup(auth, provider);
-        // onAuthStateChanged flips state below; keep the button disabled
-        // through the brief auth-resolve window so double-clicks don't stack.
+        // onAuthStateChanged handles the rest — keep the button disabled
+        // through the brief resolve window so double-clicks don't stack.
       } catch (e) {
         setBusy(false);
-        // Friendly messages for the common cases; otherwise show raw.
         const code = e && e.code;
-        if (code === 'auth/popup-closed-by-user') setErr('Sign-in cancelled.');
-        else if (code === 'auth/popup-blocked')   setErr('Popup blocked — allow popups and try again.');
+        if (code === 'auth/popup-closed-by-user')        setErr('Sign-in cancelled.');
+        else if (code === 'auth/popup-blocked')          setErr('Popup blocked — allow popups and try again.');
         else if (code === 'auth/network-request-failed') setErr('Network issue — check your connection.');
         else setErr((e && e.message) || 'Sign in failed. Try again.');
       }
     });
 
-    onAuthStateChanged(auth, (user) => {
+    // ── Auth state → hydrate → reveal ──────────────────────────────────
+    onAuthStateChanged(auth, async (user) => {
       window.__pfTesters.user = user || null;
-      if (user) {
-        // Commit 2 will insert Firestore hydration here before reveal.
-        document.documentElement.setAttribute('data-testers-state', 'authed');
-      } else {
+
+      if (!user) {
         document.documentElement.setAttribute('data-testers-state', 'signin');
         setBusy(false);
+        return;
       }
+
+      // Hydrate once per tab (sessionStorage survives reloads). Switching
+      // accounts in the same tab re-hydrates because the flag is per-uid.
+      const hydratedUid = sessionStorage.getItem(HYDRATION_FLAG);
+      if (hydratedUid !== user.uid) {
+        setBusy(true, 'Loading your session…');
+        try {
+          const data = await hydrateFromCloud(user.uid);
+          await writeProfile(user, !data);
+          sessionStorage.setItem(HYDRATION_FLAG, user.uid);
+          // Reload so the mockup IIFEs re-run against the hydrated storage —
+          // they cache state in memory on first run, so we can't just patch
+          // localStorage underneath them after the fact.
+          location.reload();
+        } catch (e) {
+          console.error('[testers] hydrate failed:', e);
+          const denied = e && (e.code === 'permission-denied' || /permission/i.test(e.message || ''));
+          setErr(denied
+            ? 'Firestore rules denied access. Paste the rules snippet and try again.'
+            : 'Could not load your session. Refresh to retry.');
+          setBusy(false);
+        }
+        return;
+      }
+
+      // Already hydrated this tab — wire write-through and reveal the app.
+      installWriteThrough();
+      writeProfile(user, false).catch(e => console.warn('[testers] profile update skipped:', e));
+      document.documentElement.setAttribute('data-testers-state', 'authed');
     });
   } catch (e) {
-    // Firebase failed to load — surface the error and let the user retry.
     console.error('[testers] boot failed:', e);
     const err = document.getElementById('testersSignInErr');
     if (err) {
