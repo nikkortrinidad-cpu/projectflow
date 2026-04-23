@@ -437,6 +437,28 @@ class FlizowStore {
     this.save();
   }
 
+  // ── Column WIP limits ───────────────────────────────────────────────
+  //
+  // Pass `null` (or omit) to clear the cap on that column — we want a
+  // single API shape, so "no limit" is expressed by clearing rather
+  // than setting 0 (which would read as "zero allowed" and confuse the
+  // display format). Values are clamped to [1, 99] — lower bound so we
+  // don't store an unusable limit, upper bound so the chip always fits
+  // two digits.
+  setColumnLimit(serviceId: string, columnId: ColumnId, limit: number | null) {
+    const svc = this.data.services.find((s) => s.id === serviceId);
+    if (!svc) return;
+    const next: Partial<Record<ColumnId, number>> = { ...(svc.columnLimits ?? {}) };
+    if (limit === null || !Number.isFinite(limit)) {
+      delete next[columnId];
+    } else {
+      const clamped = Math.max(1, Math.min(99, Math.round(limit)));
+      next[columnId] = clamped;
+    }
+    svc.columnLimits = Object.keys(next).length ? next : undefined;
+    this.save();
+  }
+
   // ── Favorites ───────────────────────────────────────────────────────
   //
   // Star/unstar a service. Drives the "My Boards" strip on the Overview.

@@ -1325,6 +1325,99 @@
     font-size: var(--fs-md); font-weight: 500;
     font-feature-settings: "tnum";
   }
+  .column-count.is-over-limit {
+    color: #b45309;
+    font-weight: 600;
+  }
+
+  /* WIP limit popover — lives under the column ⋯ button. Matches the
+     .col-menu positioning so it feels like "the same menu with a
+     one-thing form" rather than a separate surface. */
+  .wip-limit-pop {
+    position: absolute;
+    top: 30px; right: 0;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.06);
+    padding: 12px;
+    min-width: 240px;
+    z-index: 25;
+  }
+  .wip-limit-label {
+    font-size: var(--fs-xs); font-weight: 600;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+  }
+  .wip-limit-row {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .wip-limit-input {
+    flex: 1;
+    padding: 8px 10px;
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+    font-size: var(--fs-md);
+    font-feature-settings: "tnum";
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .wip-limit-input:focus {
+    outline: none;
+    border-color: var(--hover-blue);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--hover-blue) 20%, transparent);
+  }
+  /* Hide the browser's default number-spinner UI — it clutters the row
+     and we already constrain min/max/step in the input attrs + store. */
+  .wip-limit-input::-webkit-outer-spin-button,
+  .wip-limit-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .wip-limit-input { -moz-appearance: textfield; }
+  .wip-limit-save {
+    padding: 8px 14px;
+    background: var(--hover-blue);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font: inherit;
+    font-weight: 600;
+    font-size: var(--fs-sm);
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .wip-limit-save:hover { opacity: 0.9; }
+  .wip-limit-save:active { opacity: 0.8; }
+  .wip-limit-clear {
+    display: block;
+    margin-top: 8px;
+    padding: 6px 10px;
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 8px;
+    font: inherit;
+    font-size: var(--fs-sm);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .wip-limit-clear:hover {
+    background: var(--bg-soft);
+    color: var(--text);
+    border-color: var(--hairline);
+  }
+  .wip-limit-hint {
+    margin-top: 10px;
+    font-size: var(--fs-xs);
+    color: var(--text-soft);
+    line-height: var(--lh-body);
+    letter-spacing: -0.005em;
+  }
   .column-menu-wrap { position: relative; }
   .column-menu {
     cursor: pointer; color: var(--text-faint);

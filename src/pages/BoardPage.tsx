@@ -237,6 +237,8 @@ function BoardBody({
                 serviceId={service.id}
                 clientId={client.id}
                 onOpenCard={setSelectedTaskId}
+                limit={service.columnLimits?.[col.id]}
+                onSetLimit={(next) => flizowStore.setColumnLimit(service.id, col.id, next)}
               />
             );
           })}
@@ -508,6 +510,8 @@ function Column({
   serviceId,
   clientId,
   onOpenCard,
+  limit,
+  onSetLimit,
 }: {
   columnId: ColumnId;
   title: string;
@@ -519,18 +523,37 @@ function Column({
   serviceId: string;
   clientId: string;
   onOpenCard: (taskId: string) => void;
+  limit: number | undefined;
+  onSetLimit: (next: number | null) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `col:${columnId}` });
+  const [limitEditorOpen, setLimitEditorOpen] = useState(false);
+  const isOverLimit = limit !== undefined && tasks.length > limit;
   return (
     <div className="column" data-dot={dot} ref={setNodeRef} style={isOver ? { borderColor: 'var(--hover-blue)' } : undefined}>
       <div className="column-header">
         <div className="column-title-group">
           <span className="column-dot" />
           <div className="column-title">{title}</div>
-          <div className="column-count">{tasks.length}</div>
+          <div className={`column-count${isOverLimit ? ' is-over-limit' : ''}`}>
+            {limit !== undefined ? `${tasks.length} / ${limit}` : tasks.length}
+          </div>
         </div>
         <div className="column-menu-wrap">
-          <button className="column-menu" aria-label="List options" disabled>⋯</button>
+          <button
+            className={`column-menu${limitEditorOpen ? ' open' : ''}`}
+            aria-label="Column options"
+            aria-expanded={limitEditorOpen ? 'true' : 'false'}
+            onClick={() => setLimitEditorOpen((v) => !v)}
+          >⋯</button>
+          {limitEditorOpen && (
+            <WipLimitEditor
+              columnTitle={title}
+              currentLimit={limit}
+              onSave={(next) => { onSetLimit(next); setLimitEditorOpen(false); }}
+              onClose={() => setLimitEditorOpen(false)}
+            />
+          )}
         </div>
       </div>
       <div className="column-cards">
@@ -547,6 +570,121 @@ function Column({
         {columnId === 'todo' && (
           <AddCardInline serviceId={serviceId} clientId={clientId} />
         )}
+      </div>
+    </div>
+  );
+}
+
+// ── WIP Limit editor (column ⋯ popover) ─────────────────────────────
+
+/**
+ * Tiny inline popover for setting/clearing a column's WIP cap. Lives
+ * under the column header's ⋯ button, dismisses on outside-click or
+ * Esc, saves on Enter or explicit Save. Empty input = clear the cap.
+ *
+ * We keep the UX direct — no modal, no settings page — because setting
+ * a cap is a two-field action (a number + a decision) and stacking a
+ * modal on top of the board for that would break flow.
+ */
+function WipLimitEditor({
+  columnTitle,
+  currentLimit,
+  onSave,
+  onClose,
+}: {
+  columnTitle: string;
+  currentLimit: number | undefined;
+  onSave: (next: number | null) => void;
+  onClose: () => void;
+}) {
+  const [value, setValue] = useState<string>(currentLimit !== undefined ? String(currentLimit) : '');
+  const inputRef = useRef<HTMLInputElement>(null);
+  const popRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // 60ms delay so the button's click-outside doesn't immediately
+    // close us before we've rendered our own listeners.
+    const t = setTimeout(() => inputRef.current?.select(), 60);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.preventDefault(); onClose(); }
+    };
+    const onPointer = (e: PointerEvent) => {
+      if (!popRef.current) return;
+      if (!popRef.current.contains(e.target as Node)) onClose();
+    };
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('pointerdown', onPointer);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('pointerdown', onPointer);
+    };
+  }, [onClose]);
+
+  const commit = () => {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      onSave(null);
+      return;
+    }
+    const n = Number(trimmed);
+    if (!Number.isFinite(n) || n < 1) {
+      // Bad input = treat as clear, matching the empty case. Better
+      // than silently dropping the user's submit.
+      onSave(null);
+      return;
+    }
+    onSave(n);
+  };
+
+  return (
+    <div
+      ref={popRef}
+      className="wip-limit-pop"
+      role="dialog"
+      aria-label={`Set WIP limit for ${columnTitle}`}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="wip-limit-label">WIP limit · {columnTitle}</div>
+      <div className="wip-limit-row">
+        <input
+          ref={inputRef}
+          type="number"
+          min={1}
+          max={99}
+          step={1}
+          inputMode="numeric"
+          className="wip-limit-input"
+          placeholder="No limit"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') { e.preventDefault(); commit(); }
+          }}
+        />
+        <button
+          type="button"
+          className="wip-limit-save"
+          onClick={commit}
+        >
+          Save
+        </button>
+      </div>
+      {currentLimit !== undefined && (
+        <button
+          type="button"
+          className="wip-limit-clear"
+          onClick={() => { onSave(null); }}
+        >
+          Clear limit
+        </button>
+      )}
+      <div className="wip-limit-hint">
+        Leave blank for no cap. Exceeding the cap tints the count amber —
+        nothing's blocked.
       </div>
     </div>
   );

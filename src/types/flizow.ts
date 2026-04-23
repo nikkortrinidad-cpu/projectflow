@@ -153,6 +153,12 @@ export interface Service {
   /** ISO date. Next milestone or recurring deliverable. */
   nextDeliverableAt: string;
   taskIds: string[];
+  /** Per-column WIP caps. Absent key = no limit on that column. The
+   *  board shows "N / L" on the header when set, and tints the count
+   *  amber when tasks exceed the cap. Per-service (not global) because
+   *  a content retainer and a dev project have very different cadences
+   *  for what "too much at once" looks like. */
+  columnLimits?: Partial<Record<ColumnId, number>>;
 }
 
 /** Metadata a schedule-seeded task carries so the Overview Schedule can
