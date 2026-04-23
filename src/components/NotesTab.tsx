@@ -5,6 +5,7 @@ import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
 import type { Note } from '../types/flizow';
 import type { FlizowStore } from '../store/flizowStore';
+import { ConfirmDangerDialog } from './ConfirmDangerDialog';
 
 /**
  * Notes tab for Client Detail. Two-pane Apple-Notes layout: searchable
@@ -238,6 +239,11 @@ function NoteEditor({ note, store, onDelete }: {
 }) {
   const [savedLabel, setSavedLabel] = useState<string>('All changes saved');
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Delete-confirm lives at the editor level so the dialog's Escape /
+  // backdrop / focus handling doesn't collide with the editor's own
+  // key bindings. Native window.confirm would bypass dark mode and the
+  // themed shell we use for every other destructive action.
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const editor = useEditor({
     extensions: [
@@ -325,9 +331,7 @@ function NoteEditor({ note, store, onDelete }: {
           <button
             type="button"
             className="notes-icon-btn notes-icon-btn--danger"
-            onClick={() => {
-              if (window.confirm('Delete this note? This cannot be undone yet.')) onDelete();
-            }}
+            onClick={() => setShowDeleteConfirm(true)}
             title="Delete note"
             aria-label="Delete note"
           >
@@ -353,6 +357,26 @@ function NoteEditor({ note, store, onDelete }: {
       }}>
         {note.locked ? 'Locked — read-only' : savedLabel}
       </div>
+
+      {showDeleteConfirm && (() => {
+        // Use the first non-empty line as the note's title in the dialog
+        // so the user knows which note they're about to drop. Falls back
+        // to "Untitled note" when the note is still empty.
+        const title = deriveTitle(note.body).trim();
+        const displayTitle = title || 'Untitled note';
+        return (
+          <ConfirmDangerDialog
+            title={`Delete "${displayTitle}"?`}
+            body="This removes the note from this client permanently."
+            confirmLabel="Delete note"
+            onConfirm={() => {
+              setShowDeleteConfirm(false);
+              onDelete();
+            }}
+            onClose={() => setShowDeleteConfirm(false)}
+          />
+        );
+      })()}
     </div>
   );
 }
