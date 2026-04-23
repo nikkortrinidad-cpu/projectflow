@@ -191,7 +191,21 @@
     transition: background 0.3s ease, border-color 0.3s ease;
   }
   .header-left { display: flex; align-items: center; gap: var(--sp-3xl); }
-  .header-logo { font-size: var(--fs-xl); font-weight: 600; letter-spacing: -0.022em; color: var(--text); }
+  .header-logo {
+    font-size: var(--fs-xl); font-weight: 600; letter-spacing: -0.022em;
+    color: var(--text); text-decoration: none;
+    /* Tiny padding so the hover tint reads as a hit target, not a floating rect. */
+    padding: 4px 6px; margin: -4px -6px;
+    border-radius: 8px;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .header-logo:hover { background: var(--hover-tint, rgba(10, 132, 255, 0.08)); }
+  .header-logo:focus-visible {
+    outline: 2px solid var(--highlight, #0a84ff);
+    outline-offset: 2px;
+    background: var(--hover-tint, rgba(10, 132, 255, 0.08));
+  }
+  .header-logo:active { transform: translateY(0.5px); }
   .header-nav { display: flex; gap: var(--sp-micro); }
   .header-nav a {
     padding: var(--sp-xs) var(--sp-base); border-radius: 8px;
@@ -12316,7 +12330,7 @@
 
 <div class="header">
   <div class="header-left">
-    <div class="header-logo">ProjectFlow</div>
+    <a href="#overview" class="header-logo" data-view-target="overview" aria-label="ProjectFlow home" data-tip="Home" data-tip-pos="below-start">ProjectFlow</a>
     <nav class="header-nav">
       <a href="#overview" data-view-target="overview" class="on" aria-current="page">Home</a>
       <a href="#clients" data-view-target="clients">Clients</a>
