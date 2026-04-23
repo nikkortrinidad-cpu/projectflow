@@ -10259,16 +10259,44 @@
     padding-bottom: 2px;
   }
   .wip-agenda-card-row {
-    display: grid; grid-template-columns: 96px 1fr auto;
+    display: grid; grid-template-columns: 20px 96px 1fr auto;
     align-items: center; gap: var(--sp-sm);
     padding: var(--sp-xs) var(--sp-sm);
     border-radius: 8px;
     margin-left: var(--sp-xl);
-    transition: background var(--dur-fast);
+    transition: background var(--dur-fast), opacity var(--dur-fast), transform var(--dur-fast);
   }
   .wip-agenda-card-row:hover {
     background: color-mix(in srgb, var(--text) 4%, transparent);
   }
+  .wip-agenda-card-row.is-dragging {
+    opacity: 0.4;
+  }
+  .wip-agenda-card-row.is-drop-target {
+    background: color-mix(in srgb, var(--highlight, #0a84ff) 8%, transparent);
+    box-shadow: inset 0 2px 0 0 var(--highlight, #0a84ff);
+  }
+  .wip-agenda-card-row.is-drop-target-bottom {
+    background: color-mix(in srgb, var(--highlight, #0a84ff) 8%, transparent);
+    box-shadow: inset 0 -2px 0 0 var(--highlight, #0a84ff);
+  }
+  .wip-agenda-drag {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px;
+    color: var(--text-faint);
+    border-radius: 4px;
+    cursor: grab;
+    opacity: 0; transition: opacity var(--dur-fast), color var(--dur-fast);
+    background: transparent; border: none; padding: 0;
+  }
+  .wip-agenda-card-row:hover .wip-agenda-drag,
+  .wip-agenda-card-row:focus-within .wip-agenda-drag,
+  .wip-agenda-flat-row:hover .wip-agenda-drag,
+  .wip-agenda-flat-row:focus-within .wip-agenda-drag { opacity: 1; }
+  .wip-agenda-drag:hover { color: var(--text-muted); }
+  .wip-agenda-drag:active,
+  .wip-agenda-card-row.is-dragging .wip-agenda-drag,
+  .wip-agenda-flat-row.is-dragging .wip-agenda-drag { cursor: grabbing; }
   .wip-agenda-status {
     font-size: var(--fs-nano); font-weight: 700;
     text-transform: uppercase; letter-spacing: 0.06em;
@@ -10313,21 +10341,40 @@
 
   /* Flat rows for new-clients and manual items (no service layer) */
   .wip-agenda-flat-row {
-    display: grid; grid-template-columns: 96px 1fr auto;
+    display: grid; grid-template-columns: 20px 96px 1fr auto;
     align-items: center; gap: var(--sp-sm);
     padding: var(--sp-sm) var(--sp-sm);
     border-radius: 8px;
-    transition: background var(--dur-fast);
+    transition: background var(--dur-fast), opacity var(--dur-fast), transform var(--dur-fast);
   }
   .wip-agenda-flat-row:hover {
     background: color-mix(in srgb, var(--text) 4%, transparent);
   }
   .wip-agenda-flat-row .wip-agenda-remove { opacity: 0; }
   .wip-agenda-flat-row:hover .wip-agenda-remove { opacity: 1; }
+  .wip-agenda-flat-row.is-dragging {
+    opacity: 0.4;
+  }
+  .wip-agenda-flat-row.is-drop-target {
+    background: color-mix(in srgb, var(--highlight, #0a84ff) 8%, transparent);
+    box-shadow: inset 0 2px 0 0 var(--highlight, #0a84ff);
+  }
+  .wip-agenda-flat-row.is-drop-target-bottom {
+    background: color-mix(in srgb, var(--highlight, #0a84ff) 8%, transparent);
+    box-shadow: inset 0 -2px 0 0 var(--highlight, #0a84ff);
+  }
   .wip-agenda-flat-note {
     font-size: var(--fs-xs); color: var(--text-soft);
-    grid-column: 2 / span 1;
+    grid-column: 3 / span 1;
     margin-top: 2px;
+  }
+  /* Custom-order group — single flat list, no client/service grouping */
+  .wip-agenda-group--custom .wip-agenda-group-body {
+    padding: var(--sp-xs);
+  }
+  .wip-agenda-group--custom .wip-agenda-card-row,
+  .wip-agenda-group--custom .wip-agenda-flat-row {
+    margin-left: 0;
   }
   .wip-agenda-empty {
     padding: var(--sp-3xl);
@@ -10627,6 +10674,7 @@
   }
   .wip-btn:focus-visible { outline: 2px solid var(--highlight); outline-offset: 2px; }
   .wip-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .wip-btn[hidden] { display: none; }
   .wip-btn-primary {
     background: var(--highlight); color: #fff;
   }
@@ -14924,6 +14972,10 @@
           <span class="wip-save-hint" data-wip-save-hint>· Saved just now</span>
         </div>
         <div class="wip-agenda-actions">
+          <button class="wip-btn wip-btn-ghost" data-wip-reset-order type="button" data-tip="Return to the auto-grouped order" data-tip-pos="below" hidden>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 4 3 10 9 10"/></svg>
+            <span>Reset order</span>
+          </button>
           <button class="wip-btn wip-btn-ring" data-wip-add-flag type="button" aria-label="Add agenda item">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             <span>Add agenda item</span>
@@ -30552,7 +30604,8 @@ window.OPS_TEAM = OPS_TEAM;
     saveHint:       view.querySelector('[data-wip-save-hint]'),
     addFlagBtn:     view.querySelector('[data-wip-add-flag]'),
     sendPrereadBtn: view.querySelector('[data-wip-send-preread]'),
-    startMeetingBtn:view.querySelector('[data-wip-start-meeting]')
+    startMeetingBtn:view.querySelector('[data-wip-start-meeting]'),
+    resetOrderBtn:  view.querySelector('[data-wip-reset-order]')
   };
 
   function pulseSaveHint(){
@@ -30790,21 +30843,89 @@ window.OPS_TEAM = OPS_TEAM;
     if (!urgent.length)  { mBuckets.beforeOntrack = mBuckets.beforeUrgent.concat(mBuckets.beforeOntrack); mBuckets.beforeUrgent = []; }
     if (!ontrack.length) { mBuckets.bottom = mBuckets.beforeOntrack.concat(mBuckets.bottom); mBuckets.beforeOntrack = []; }
 
+    function manualToFlatRow(m){
+      return {
+        id: m.id, status: 'manual', statusLabel: 'Manual',
+        title: (m.clientName ? m.clientName + ' \u2014 ' : '') + (m.title || ''),
+        note: m.note || ''
+      };
+    }
+    function newClientToFlatRow(c){
+      return {
+        id: 'newclient-' + c.id, status: 'new', statusLabel: 'New',
+        title: c.name, note: 'Since last WIP \u00B7 kickoff touchpoint'
+      };
+    }
+
     function buildManualGroup(list){
       if (!list.length) return null;
-      var rows = list.map(function(m){
-        return {
-          id: m.id, status: 'manual', statusLabel: 'Manual',
-          title: (m.clientName ? m.clientName + ' \u2014 ' : '') + (m.title || ''),
-          note: m.note || ''
-        };
-      });
+      var rows = list.map(manualToFlatRow);
       return buildFlatGroup({
         cls: 'wip-agenda-group--manual', title: 'Manual items', count: rows.length, rows: rows
       });
     }
 
+    // Totals — rough estimate: 2 min per urgent card, 1 min per on-track, 1 min per manual/new
+    var urgentCount  = countCards(urgent);
+    var ontrackCount = countCards(ontrack);
+    var total = urgentCount + ontrackCount + newClients.length + data.manual.length;
+    var est   = Math.max(10, urgentCount * 2 + ontrackCount * 1 + newClients.length + data.manual.length);
+
+    // ── Build a canonical ordered flat list of every agenda item ──
+    // Used both to power custom-order mode and to seed it on first drag.
+    // Each entry: { id, kind: 'card'|'flat', card|flat }
+    var canonicalFlat = [];
+    function pushManuals(list){
+      list.forEach(function(m){ canonicalFlat.push({ id: m.id, kind: 'flat', flat: manualToFlatRow(m) }); });
+    }
+    pushManuals(mBuckets.top);
+    newClients.forEach(function(c){
+      canonicalFlat.push({ id: 'newclient-' + c.id, kind: 'flat', flat: newClientToFlatRow(c) });
+    });
+    pushManuals(mBuckets.beforeUrgent);
+    urgent.forEach(function(cli){
+      cli.services.forEach(function(svc){
+        svc.cards.forEach(function(card){ canonicalFlat.push({ id: card.id, kind: 'card', card: card }); });
+      });
+    });
+    pushManuals(mBuckets.beforeOntrack);
+    ontrack.forEach(function(cli){
+      cli.services.forEach(function(svc){
+        svc.cards.forEach(function(card){ canonicalFlat.push({ id: card.id, kind: 'card', card: card }); });
+      });
+    });
+    pushManuals(mBuckets.bottom);
+
     els.agendaList.innerHTML = '';
+
+    var customOrder = state.agendaCustomOrder;
+    var hasCustom = Array.isArray(customOrder) && customOrder.length > 0;
+
+    // If custom order is set, render a single flat custom group sorted by it.
+    // Unknown items (newly auto-added since the reorder) append to the end.
+    if (hasCustom && canonicalFlat.length) {
+      var byId = {};
+      canonicalFlat.forEach(function(entry){ byId[entry.id] = entry; });
+      var seen = {};
+      var ordered = [];
+      customOrder.forEach(function(id){
+        if (byId[id] && !seen[id]) { ordered.push(byId[id]); seen[id] = true; }
+      });
+      canonicalFlat.forEach(function(entry){
+        if (!seen[entry.id]) ordered.push(entry);
+      });
+
+      var custom = buildCustomGroup(ordered);
+      els.agendaList.appendChild(custom);
+      els.agendaEmpty.hidden = true;
+      if (els.resetOrderBtn) els.resetOrderBtn.hidden = false;
+      if (els.runCount) els.runCount.textContent = total;
+      if (els.runTime)  els.runTime.textContent  = est;
+      return;
+    }
+
+    // Otherwise, render the normal grouped view.
+    if (els.resetOrderBtn) els.resetOrderBtn.hidden = true;
 
     var groups = [];
     var mg;
@@ -30812,7 +30933,7 @@ window.OPS_TEAM = OPS_TEAM;
     if (newClients.length) {
       groups.push(buildFlatGroup({
         cls: 'wip-agenda-group--new-clients', title: 'New clients', count: newClients.length,
-        rows: newClients.map(function(c){ return { id: 'newclient-' + c.id, status: 'new', statusLabel: 'New', title: c.name, note: 'Since last WIP \u00B7 kickoff touchpoint' }; })
+        rows: newClients.map(newClientToFlatRow)
       }));
     }
     if ((mg = buildManualGroup(mBuckets.beforeUrgent))) groups.push(mg);
@@ -30839,13 +30960,32 @@ window.OPS_TEAM = OPS_TEAM;
 
     groups.forEach(function(g){ els.agendaList.appendChild(g); });
 
-    // Totals — rough estimate: 2 min per urgent card, 1 min per on-track, 1 min per manual/new
-    var urgentCount  = countCards(urgent);
-    var ontrackCount = countCards(ontrack);
-    var total = urgentCount + ontrackCount + newClients.length + data.manual.length;
-    var est   = Math.max(10, urgentCount * 2 + ontrackCount * 1 + newClients.length + data.manual.length);
     if (els.runCount) els.runCount.textContent = total;
     if (els.runTime)  els.runTime.textContent  = est;
+
+    // Store canonical order so first drag can seed custom order from whatever
+    // the user sees right now.
+    state._agendaCanonicalIds = canonicalFlat.map(function(e){ return e.id; });
+  }
+
+  // Custom-order group — a single flat list of every agenda item, reorderable
+  // across the old group boundaries. Reset button returns to the auto groups.
+  function buildCustomGroup(ordered){
+    var group = document.createElement('section');
+    group.className = 'wip-agenda-group wip-agenda-group--custom';
+    var total = ordered.length;
+    group.innerHTML =
+      '<header class="wip-agenda-group-head">' +
+        '<div class="wip-agenda-group-title"><span class="wip-agenda-dot" aria-hidden="true"></span>Agenda order</div>' +
+        '<div class="wip-agenda-group-count">' + total + ' ' + (total === 1 ? 'item' : 'items') + ' \u00B7 custom order</div>' +
+      '</header>' +
+      '<div class="wip-agenda-group-body"></div>';
+    var body = group.querySelector('.wip-agenda-group-body');
+    ordered.forEach(function(entry){
+      if (entry.kind === 'card') body.appendChild(buildCardRow(entry.card));
+      else                       body.appendChild(buildFlatRow(entry.flat));
+    });
+    return group;
   }
 
   function buildFlatGroup(opts){
@@ -30890,12 +31030,22 @@ window.OPS_TEAM = OPS_TEAM;
     return group;
   }
 
+  var DRAG_HANDLE_SVG =
+    '<svg width="10" height="14" viewBox="0 0 10 14" aria-hidden="true"><g fill="currentColor">' +
+      '<circle cx="2" cy="2" r="1.2"/><circle cx="8" cy="2" r="1.2"/>' +
+      '<circle cx="2" cy="7" r="1.2"/><circle cx="8" cy="7" r="1.2"/>' +
+      '<circle cx="2" cy="12" r="1.2"/><circle cx="8" cy="12" r="1.2"/>' +
+    '</g></svg>';
+
   function buildCardRow(card){
     var row = document.createElement('div');
     row.className = 'wip-agenda-card-row';
     row.setAttribute('data-auto-id', card.id);
+    row.setAttribute('data-agenda-id', card.id);
+    row.setAttribute('draggable', 'true');
     var label = STATUS_LABEL[card.bucket] || 'Item';
     row.innerHTML =
+      '<button class="wip-agenda-drag" type="button" tabindex="-1" aria-label="Drag to reorder" data-tip="Drag to reorder" data-tip-pos="right">' + DRAG_HANDLE_SVG + '</button>' +
       '<span class="wip-agenda-status" data-status="' + escapeHtml(card.bucket) + '">' + escapeHtml(label) + '</span>' +
       '<span class="wip-agenda-card-title" title="' + escapeHtml(card.title) + '">' + escapeHtml(card.title) + '</span>' +
       '<button class="wip-agenda-remove" type="button" data-agenda-remove="' + escapeHtml(card.id) + '" aria-label="Remove from agenda">' +
@@ -30908,7 +31058,10 @@ window.OPS_TEAM = OPS_TEAM;
     var row = document.createElement('div');
     row.className = 'wip-agenda-flat-row';
     row.setAttribute('data-flat-id', r.id);
+    row.setAttribute('data-agenda-id', r.id);
+    row.setAttribute('draggable', 'true');
     row.innerHTML =
+      '<button class="wip-agenda-drag" type="button" tabindex="-1" aria-label="Drag to reorder" data-tip="Drag to reorder" data-tip-pos="right">' + DRAG_HANDLE_SVG + '</button>' +
       '<span class="wip-agenda-status" data-status="' + escapeHtml(r.status) + '">' + escapeHtml(r.statusLabel) + '</span>' +
       '<span class="wip-agenda-card-title" title="' + escapeHtml(r.title) + '">' + escapeHtml(r.title) + '</span>' +
       '<button class="wip-agenda-remove" type="button" data-agenda-remove="' + escapeHtml(r.id) + '" aria-label="Remove from agenda">' +
@@ -30935,6 +31088,113 @@ window.OPS_TEAM = OPS_TEAM;
       state.removedAutoIds = state.removedAutoIds || {};
       state.removedAutoIds[id] = true;
     }
+    // Keep the custom order in sync — drop the removed id from the list
+    if (Array.isArray(state.agendaCustomOrder) && state.agendaCustomOrder.length) {
+      state.agendaCustomOrder = state.agendaCustomOrder.filter(function(x){ return x !== id; });
+    }
+    saveState();
+    renderAgendaList();
+  });
+
+  // Reset-order handler — clear custom order, return to auto-grouped view
+  if (els.resetOrderBtn) {
+    els.resetOrderBtn.addEventListener('click', function(){
+      state.agendaCustomOrder = [];
+      saveState();
+      renderAgendaList();
+      if (typeof window.showToast === 'function') {
+        window.showToast('Agenda back to auto order');
+      }
+    });
+  }
+
+  // ── Agenda drag-to-reorder ────────────────────────────────────
+  // Rules:
+  //   • Drag any row by its handle (or the row body).
+  //   • First drag flattens the view — we seed state.agendaCustomOrder from
+  //     the canonical order so the visible order is preserved, then apply
+  //     the user's move. "Reset order" clears it and returns to auto groups.
+  //   • New auto-added items (that weren't present at reorder time) append
+  //     to the end on the next render.
+  var draggingAgendaId = null;
+  var draggingAgendaRow = null;
+
+  function agendaRowSelector(row){
+    return row && (row.classList.contains('wip-agenda-card-row') || row.classList.contains('wip-agenda-flat-row'));
+  }
+
+  function clearAgendaDropTargets(){
+    view.querySelectorAll('.wip-agenda-card-row.is-drop-target, .wip-agenda-flat-row.is-drop-target, .wip-agenda-card-row.is-drop-target-bottom, .wip-agenda-flat-row.is-drop-target-bottom').forEach(function(el){
+      el.classList.remove('is-drop-target', 'is-drop-target-bottom');
+    });
+  }
+
+  view.addEventListener('dragstart', function(e){
+    var row = e.target.closest('.wip-agenda-card-row, .wip-agenda-flat-row');
+    if (!agendaRowSelector(row)) return;
+    draggingAgendaId = row.getAttribute('data-agenda-id');
+    draggingAgendaRow = row;
+    row.classList.add('is-dragging');
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = 'move';
+      try { e.dataTransfer.setData('application/x-agenda-id', draggingAgendaId); } catch (_) {}
+    }
+  });
+
+  view.addEventListener('dragend', function(){
+    if (draggingAgendaRow) draggingAgendaRow.classList.remove('is-dragging');
+    clearAgendaDropTargets();
+    draggingAgendaId = null;
+    draggingAgendaRow = null;
+  });
+
+  view.addEventListener('dragover', function(e){
+    if (!draggingAgendaId) return;
+    var target = e.target.closest('.wip-agenda-card-row, .wip-agenda-flat-row');
+    if (!agendaRowSelector(target)) return;
+    var targetId = target.getAttribute('data-agenda-id');
+    if (!targetId || targetId === draggingAgendaId) return;
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+    clearAgendaDropTargets();
+    // Top half → drop before target; bottom half → drop after target
+    var rect = target.getBoundingClientRect();
+    var before = (e.clientY - rect.top) < rect.height / 2;
+    target.classList.add(before ? 'is-drop-target' : 'is-drop-target-bottom');
+  });
+
+  view.addEventListener('drop', function(e){
+    if (!draggingAgendaId) return;
+    var target = e.target.closest('.wip-agenda-card-row, .wip-agenda-flat-row');
+    if (!agendaRowSelector(target)) return;
+    var targetId = target.getAttribute('data-agenda-id');
+    if (!targetId || targetId === draggingAgendaId) return;
+    e.preventDefault();
+
+    var rect = target.getBoundingClientRect();
+    var before = (e.clientY - rect.top) < rect.height / 2;
+
+    // Seed custom order from the canonical order if not yet customized
+    var order = Array.isArray(state.agendaCustomOrder) && state.agendaCustomOrder.length
+      ? state.agendaCustomOrder.slice()
+      : (state._agendaCanonicalIds || []).slice();
+
+    // Make sure both ids are present; append any missing ones in canonical order
+    var has = {}; order.forEach(function(id){ has[id] = true; });
+    (state._agendaCanonicalIds || []).forEach(function(id){
+      if (!has[id]) { order.push(id); has[id] = true; }
+    });
+
+    var fromIdx = order.indexOf(draggingAgendaId);
+    if (fromIdx < 0) { order.push(draggingAgendaId); fromIdx = order.length - 1; }
+    order.splice(fromIdx, 1);
+
+    var toIdx = order.indexOf(targetId);
+    if (toIdx < 0) toIdx = order.length;
+    if (!before) toIdx += 1;
+    order.splice(toIdx, 0, draggingAgendaId);
+
+    state.agendaCustomOrder = order;
     saveState();
     renderAgendaList();
   });
