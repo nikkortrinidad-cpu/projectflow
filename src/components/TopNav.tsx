@@ -1,5 +1,7 @@
+import { useRef, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRoute } from '../router';
+import FlizowNotificationsPanel from './FlizowNotificationsPanel';
 
 // Which nav item should be visually active for each route.
 // Sub-routes (e.g. `client-detail`, `board`) inherit their parent's active state.
@@ -18,17 +20,29 @@ const ACTIVE_NAV_BY_ROUTE: Record<string, string> = {
 interface TopNavProps {
   /** Fires when the avatar button is clicked; parent renders the modal. */
   onOpenAccount?: () => void;
-  /** Reserved for the Notifications panel (wires in the next pass). */
-  onOpenNotifications?: () => void;
+  /** Notifications panel is owned by TopNav (needs `.notif-wrap` as the
+   *  positioning anchor), but state is lifted to the parent so other
+   *  screens could drive it later (e.g. toast → "View in panel"). */
+  notifOpen?: boolean;
+  onToggleNotifications?: () => void;
+  onCloseNotifications?: () => void;
   /** Reserved for the ⌘K command palette (wires in the next pass). */
   onOpenCmdk?: () => void;
 }
 
-export function TopNav({ onOpenAccount, onOpenNotifications, onOpenCmdk }: TopNavProps = {}) {
+export function TopNav({
+  onOpenAccount,
+  notifOpen = false,
+  onToggleNotifications,
+  onCloseNotifications,
+  onOpenCmdk,
+}: TopNavProps = {}) {
   const route = useRoute();
   const active = ACTIVE_NAV_BY_ROUTE[route.name] ?? '';
   const { user } = useAuth();
   const initials = deriveInitials(user?.displayName || user?.email || 'U');
+  const notifBtnRef = useRef<HTMLButtonElement>(null);
+  const [unreadNotifs, setUnreadNotifs] = useState(0);
 
   return (
     <div className="header">
@@ -65,19 +79,35 @@ export function TopNav({ onOpenAccount, onOpenNotifications, onOpenCmdk }: TopNa
             <rect x="13" y="13" width="8" height="8" rx="1.5"/>
           </svg>
         </a>
-        <button
-          className="header-icon"
-          type="button"
-          aria-label="Notifications"
-          onClick={onOpenNotifications}
-          disabled={!onOpenNotifications}
-          title={onOpenNotifications ? 'Notifications' : 'Notifications coming soon'}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-          </svg>
-        </button>
+        <div className="notif-wrap">
+          <button
+            ref={notifBtnRef}
+            className="header-icon notif-btn"
+            type="button"
+            aria-label={unreadNotifs > 0 ? `Notifications (${unreadNotifs} unread)` : 'Notifications'}
+            aria-haspopup="dialog"
+            aria-expanded={notifOpen}
+            aria-controls="notifPanel"
+            data-unread={unreadNotifs > 0 ? 'true' : undefined}
+            onClick={onToggleNotifications}
+            disabled={!onToggleNotifications}
+            title={onToggleNotifications ? 'Notifications' : 'Notifications coming soon'}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            <span className="notif-dot" aria-hidden="true" />
+          </button>
+          {onCloseNotifications && (
+            <FlizowNotificationsPanel
+              open={notifOpen}
+              onClose={onCloseNotifications}
+              triggerRef={notifBtnRef}
+              onUnreadChange={setUnreadNotifs}
+            />
+          )}
+        </div>
         <button
           className="avatar"
           type="button"

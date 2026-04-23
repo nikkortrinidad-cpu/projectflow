@@ -60,10 +60,16 @@ function App() {
  *  gated branch of App. */
 function AppShell() {
   const [accountOpen, setAccountOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
 
   return (
     <>
-      <TopNav onOpenAccount={() => setAccountOpen(true)} />
+      <TopNav
+        onOpenAccount={() => setAccountOpen(true)}
+        notifOpen={notifOpen}
+        onToggleNotifications={() => setNotifOpen((v) => !v)}
+        onCloseNotifications={() => setNotifOpen(false)}
+      />
       <PageShell />
       {accountOpen && (
         <FlizowAccountModal onClose={() => setAccountOpen(false)} />
