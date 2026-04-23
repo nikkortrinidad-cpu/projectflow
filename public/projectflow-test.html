@@ -4909,20 +4909,31 @@
     left: 50%;
     bottom: calc(100% + 6px);
     transform: translateX(-50%) translateY(2px);
-    padding: 5px 8px;
+    padding: 6px 10px;
     background: rgba(18, 18, 20, 0.96);
     color: #fff;
     font-size: var(--fs-xs);
     font-weight: 500;
-    line-height: var(--lh-dense);
+    line-height: 1.35;
     letter-spacing: -0.005em;
+    /* Tooltip must ignore parent typography — uppercase severity labels and
+       tight tracking should not leak into the hint itself. */
+    text-transform: none;
+    font-variant: normal;
     border-radius: 6px;
-    white-space: nowrap;
+    /* Short tooltips stay on one line; long ones wrap within a sane cap so
+       nothing spills past a button or viewport edge. */
+    white-space: normal;
+    max-width: 260px;
+    width: max-content;
+    text-align: center;
     pointer-events: none;
     opacity: 0;
     box-shadow: 0 4px 14px rgba(0,0,0,0.25);
     transition: opacity 0.12s ease 0.45s, transform 0.12s ease 0.45s;
-    z-index: 100;
+    /* Sticky header sits at z-index 100; modals at 1000+. Tooltips need to
+       clear the header but stay under modal chrome. */
+    z-index: 1050;
   }
   :root[data-theme="light"] [data-tip]::after {
     background: rgba(28, 28, 30, 0.96);
@@ -6148,6 +6159,10 @@
   .attention-list.expanded .attn-hidden {
     opacity: 1;
     max-height: 220px;
+    /* Let tooltips inside expanded cards escape the card box once the reveal
+       animation finishes. Small delay keeps the max-height transition clean. */
+    overflow: visible;
+    transition: opacity 0.3s ease, max-height 0.4s ease, padding 0.3s ease, margin 0.3s ease, overflow 0s linear 0.4s;
     padding-top: 22px; padding-bottom: 22px;
     margin-top: 0;
     border-color: var(--hairline-soft);
@@ -12316,13 +12331,13 @@
       <span class="cmdk-label">Search clients, tasks, people…</span>
       <span class="cmdk-kbd">⌘K</span>
     </button>
-    <button class="header-tool" aria-label="Service templates" onclick="openTemplates()" data-tip="Service templates" data-tip-pos="below">
+    <button class="header-tool" aria-label="Service templates" onclick="openTemplates()" data-tip="Service templates" data-tip-pos="below-end">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>
     </button>
     <div class="notif-wrap" id="notifWrap">
       <button class="header-icon notif-btn" type="button" id="notifBtn"
               aria-label="Notifications" aria-haspopup="dialog" aria-expanded="false"
-              aria-controls="notifPanel" data-tip="Notifications" data-tip-pos="below">
+              aria-controls="notifPanel" data-tip="Notifications" data-tip-pos="below-end">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         <span class="notif-dot" aria-hidden="true"></span>
       </button>
@@ -14947,11 +14962,11 @@
           </div>
           <div class="wip-live-topbar-clock" data-wip-live-clock aria-label="Elapsed meeting time">00:00</div>
           <div class="wip-live-topbar-ctrls">
-            <button class="wip-btn wip-btn-ghost" data-wip-live-pause type="button" aria-pressed="false" title="Pause timer (Space)">
+            <button class="wip-btn wip-btn-ghost" data-wip-live-pause type="button" aria-pressed="false" data-tip="Pause timer · Space" data-tip-pos="below-end">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
               <span data-wip-live-pause-label>Pause</span>
             </button>
-            <button class="wip-btn wip-btn-ghost" data-wip-live-end type="button" title="End meeting">
+            <button class="wip-btn wip-btn-ghost" data-wip-live-end type="button" data-tip="End meeting and save notes" data-tip-pos="below-end">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>
               End meeting
             </button>
@@ -18078,6 +18093,32 @@ document.addEventListener('keydown', function(e){
   }
   if(e.key === 'Escape') {
     closeCmdK();
+  }
+});
+
+/* ---------- Global Escape closer for modals ----------
+   Apple HIG: Esc should close whatever the user just opened. We close the
+   topmost open overlay (by z-index) so stacked modals unwind one at a time.
+   Card detail has its own dedicated handler elsewhere — we skip it here so
+   its save/cancel semantics stay in charge. */
+document.addEventListener('keydown', function(e){
+  if (e.key !== 'Escape') return;
+  // Topmost-first order. If one closes, stop so the next Esc closes the next.
+  var candidates = [
+    { sel: '[data-add-service-modal][aria-hidden="false"], [data-add-service-modal][data-open="true"]', close: function(el){ el.setAttribute('aria-hidden','true'); el.removeAttribute('data-open'); } },
+    { sel: '[data-new-client-modal][aria-hidden="false"], [data-new-client-modal][data-open="true"]', close: function(el){ el.setAttribute('aria-hidden','true'); el.removeAttribute('data-open'); } },
+    { sel: '[data-log-modal][aria-hidden="false"], [data-log-modal][data-open="true"]', close: function(el){ el.setAttribute('aria-hidden','true'); el.removeAttribute('data-open'); } },
+    { sel: '[data-schedule-modal][aria-hidden="false"], [data-schedule-modal][data-open="true"]', close: function(el){ el.setAttribute('aria-hidden','true'); el.removeAttribute('data-open'); } },
+    { sel: '[data-contact-modal][aria-hidden="false"], [data-contact-modal][data-open="true"]', close: function(el){ el.setAttribute('aria-hidden','true'); el.removeAttribute('data-open'); } },
+    { sel: '[data-team-modal][aria-hidden="false"], [data-team-modal][data-open="true"]', close: function(el){ el.setAttribute('aria-hidden','true'); el.removeAttribute('data-open'); } },
+    { sel: '[data-import-modal][aria-hidden="false"], [data-import-modal][data-open="true"]', close: function(el){ el.setAttribute('aria-hidden','true'); el.removeAttribute('data-open'); } },
+    { sel: '.share-overlay.open', close: function(){ if (typeof window.closeShareModal === 'function') window.closeShareModal(); else document.getElementById('shareOverlay').classList.remove('open'); } },
+    { sel: '.acct-overlay[data-open="true"]', close: function(el){ el.setAttribute('data-open','false'); el.setAttribute('aria-hidden','true'); } },
+    { sel: '.notif-panel[data-open="true"]', close: function(el){ el.setAttribute('data-open','false'); el.setAttribute('aria-hidden','true'); var btn = document.getElementById('notifBtn'); if (btn) btn.setAttribute('aria-expanded','false'); } }
+  ];
+  for (var i = 0; i < candidates.length; i++) {
+    var el = document.querySelector(candidates[i].sel);
+    if (el) { candidates[i].close(el); e.stopPropagation(); return; }
   }
 });
 
@@ -24961,7 +25002,7 @@ window.OPS_TEAM = OPS_TEAM;
       var status = client.status || 'track';
       var typeLabel = svc.type === 'project' ? 'project' : 'retainer';
       var firstWord = client.name.split(' ')[0];
-      return '<a class="board-chip' + selected + '" href="#board/' + svc.id + '" data-service-id="' + svc.id + '" data-status="' + status + '" data-tip="' + escapeHtml(svc.name) + ' · ' + escapeHtml(client.name) + '" data-tip-pos="below">' +
+      return '<a class="board-chip' + selected + '" href="#board/' + svc.id + '" data-service-id="' + svc.id + '" data-status="' + status + '" data-tip="' + escapeHtml(svc.name) + ' · ' + escapeHtml(client.name) + '" data-tip-pos="above">' +
         '<div class="board-chip-logo" style="background:' + logoColor + '">' + escapeHtml(client.initials) + '</div>' +
         '<div class="board-chip-body">' +
           '<div class="board-chip-name">' + escapeHtml(svc.name) + '</div>' +
