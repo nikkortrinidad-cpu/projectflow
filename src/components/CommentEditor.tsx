@@ -8,6 +8,7 @@ import { useBoard } from '../store/useStore';
 import { store } from '../store/boardStore';
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
+import { InsertLinkDialog } from './InsertLinkDialog';
 
 interface Props {
   onSubmit: (html: string, scheduledAt?: string) => void;
@@ -30,6 +31,10 @@ export function CommentEditor({ onSubmit, placeholder: placeholderText, compact,
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isEmpty, setIsEmpty] = useState(!initialContent);
+  // Insert-link dialog state — two variants share the modal with a kind
+  // flag. null means closed; 'link' and 'image' pick the copy + the
+  // TipTap command that runs when the user hits Insert.
+  const [insertDialog, setInsertDialog] = useState<null | 'link' | 'image'>(null);
   const submitRef = useRef<() => void>(null);
 
   const EnterSubmit = Extension.create({
@@ -94,19 +99,11 @@ export function CommentEditor({ onSubmit, placeholder: placeholderText, compact,
   const actionBtn = (active: boolean = false) =>
     `p-1.5 rounded-lg transition ${active ? 'bg-[#0071e3]/10 text-[#0071e3]' : 'text-[#86868b] dark:text-[#6e6e73] hover:text-[#6e6e73] dark:hover:text-[#aeaeb2] hover:bg-black/5 dark:hover:bg-white/10'}`;
 
-  const addLink = () => {
-    const url = window.prompt('Enter URL:');
-    if (url) {
-      editor.chain().focus().setLink({ href: url }).run();
-    }
-  };
-
-  const addImage = () => {
-    const url = window.prompt('Enter image URL:');
-    if (url) {
-      editor.chain().focus().setImage({ src: url }).run();
-    }
-  };
+  // Replaces window.prompt with the themed InsertLinkDialog — same
+  // single-URL shape, but the modal respects dark mode, keybindings,
+  // and the rest of the app's visual contract.
+  const addLink = () => setInsertDialog('link');
+  const addImage = () => setInsertDialog('image');
 
   const insertMention = (name: string) => {
     editor.chain().focus()
@@ -465,6 +462,20 @@ export function CommentEditor({ onSubmit, placeholder: placeholderText, compact,
           </div>
         </div>
       </div>
+
+      {insertDialog && (
+        <InsertLinkDialog
+          kind={insertDialog}
+          onInsert={(url) => {
+            if (insertDialog === 'image') {
+              editor.chain().focus().setImage({ src: url }).run();
+            } else {
+              editor.chain().focus().setLink({ href: url }).run();
+            }
+          }}
+          onClose={() => setInsertDialog(null)}
+        />
+      )}
     </div>
   );
 }

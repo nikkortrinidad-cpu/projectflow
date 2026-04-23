@@ -6,6 +6,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import type { Note } from '../types/flizow';
 import type { FlizowStore } from '../store/flizowStore';
 import { ConfirmDangerDialog } from './ConfirmDangerDialog';
+import { InsertLinkDialog } from './InsertLinkDialog';
 
 /**
  * Notes tab for Client Detail. Two-pane Apple-Notes layout: searchable
@@ -384,6 +385,12 @@ function NoteEditor({ note, store, onDelete }: {
 // ── Toolbar ───────────────────────────────────────────────────────────────
 
 function Toolbar({ editor, disabled }: { editor: Editor; disabled: boolean }) {
+  // Insert-link dialog state lives on the toolbar so the button can flip
+  // to the dialog without lifting through NoteEditor. wip-modal-overlay is
+  // fixed-position so it renders above everything regardless of where we
+  // mount it in the tree.
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+
   const btn = (
     key: string, label: string, active: boolean, run: () => void, icon: React.ReactNode,
   ) => (
@@ -429,13 +436,26 @@ function Toolbar({ editor, disabled }: { editor: Editor; disabled: boolean }) {
       )}
       <span className="notes-toolbar-divider" />
       {btn('link', 'Link', editor.isActive('link'), () => {
+        // If the caret already sits inside a link, treat the button as
+        // "remove link" — matches the toggle pattern of every other
+        // formatting button in the row. Otherwise flip open the themed
+        // URL dialog.
         if (editor.isActive('link')) {
           editor.chain().focus().unsetLink().run();
           return;
         }
-        const url = window.prompt('Link URL');
-        if (url) editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+        setLinkDialogOpen(true);
       }, <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1" /><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1" /></svg>
+      )}
+
+      {linkDialogOpen && (
+        <InsertLinkDialog
+          kind="link"
+          onInsert={(url) => {
+            editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+          }}
+          onClose={() => setLinkDialogOpen(false)}
+        />
       )}
     </div>
   );
