@@ -1069,11 +1069,18 @@ function CommentsPanel({
   // one at a time; opening a second replaces the first so the panel
   // doesn't turn into a wall of textareas.
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  // Comment slated for deletion — drives a single ConfirmDangerDialog
+  // mounted at the panel root. Lifting the state up (rather than each
+  // CommentItem owning its own dialog) means one mount point, one
+  // focus trap, and the same "cascade warning" component we use for
+  // every other destructive action in the app.
+  const [deleteTarget, setDeleteTarget] = useState<TaskComment | null>(null);
 
   // Reset UI state whenever the modal switches to a different card.
   useEffect(() => {
     setExpanded(new Set());
     setReplyingTo(null);
+    setDeleteTarget(null);
   }, [taskId]);
 
   function toggleExpanded(id: string) {
@@ -1132,6 +1139,7 @@ function CommentsPanel({
                   flizowStore.addComment(taskId, text, c.id);
                   setReplyingTo(null);
                 }}
+                onRequestDelete={(target) => setDeleteTarget(target)}
                 membersById={membersById}
               />
             );
@@ -1141,6 +1149,38 @@ function CommentsPanel({
       <TopLevelComposer
         onSend={(text) => { flizowStore.addComment(taskId, text); }}
       />
+
+      {deleteTarget && (() => {
+        const isTopLevel = !deleteTarget.parentId;
+        const replyCount = isTopLevel
+          ? (repliesByParent.get(deleteTarget.id)?.length ?? 0)
+          : 0;
+        // A top-level comment with replies cascades them. Surfacing the
+        // count up-front matches the Delete Client dialog's "Cascades
+        // N cards, N notes…" pattern — never surprise a user with what
+        // a destructive action took with it.
+        const title = isTopLevel ? 'Delete comment?' : 'Delete reply?';
+        const confirmLabel = isTopLevel && replyCount > 0
+          ? `Delete comment + ${replyCount} ${replyCount === 1 ? 'reply' : 'replies'}`
+          : isTopLevel
+            ? 'Delete comment'
+            : 'Delete reply';
+        const body = isTopLevel && replyCount > 0
+          ? `Removes this comment and the ${replyCount} ${replyCount === 1 ? 'reply' : 'replies'} underneath it. This can't be undone.`
+          : "This can't be undone.";
+        return (
+          <ConfirmDangerDialog
+            title={title}
+            body={body}
+            confirmLabel={confirmLabel}
+            onConfirm={() => {
+              flizowStore.deleteComment(deleteTarget.id);
+              setDeleteTarget(null);
+            }}
+            onClose={() => setDeleteTarget(null)}
+          />
+        );
+      })()}
     </div>
   );
 }
@@ -1157,6 +1197,7 @@ function CommentItem({
   onStartReply,
   onCancelReply,
   onSendReply,
+  onRequestDelete,
   membersById,
 }: {
   comment: TaskComment;
@@ -1169,15 +1210,11 @@ function CommentItem({
   onStartReply: () => void;
   onCancelReply: () => void;
   onSendReply: (text: string) => void;
+  onRequestDelete: (target: TaskComment) => void;
   membersById: (id: string) => Member | null;
 }) {
   const isOwn = !!selfId && selfId === comment.authorId;
   const showRepliesToggle = replies.length > 0;
-
-  function onDelete() {
-    if (!confirm('Delete this comment? Any replies will be removed too.')) return;
-    flizowStore.deleteComment(comment.id);
-  }
 
   return (
     <div className="comment">
@@ -1200,7 +1237,7 @@ function CommentItem({
           {comment.updatedAt && <span>· Edited</span>}
           <button type="button" className="reply-btn" onClick={onStartReply}>Reply</button>
           {isOwn && (
-            <button type="button" className="reply-btn" onClick={onDelete}>Delete</button>
+            <button type="button" className="reply-btn" onClick={() => onRequestDelete(comment)}>Delete</button>
           )}
         </div>
 
@@ -1226,6 +1263,7 @@ function CommentItem({
                 comment={r}
                 author={membersById(r.authorId)}
                 selfId={selfId}
+                onRequestDelete={onRequestDelete}
               />
             ))}
             {isReplying && (
@@ -1246,16 +1284,14 @@ function ReplyItem({
   comment,
   author,
   selfId,
+  onRequestDelete,
 }: {
   comment: TaskComment;
   author: Member | null;
   selfId: string | null;
+  onRequestDelete: (target: TaskComment) => void;
 }) {
   const isOwn = !!selfId && selfId === comment.authorId;
-  function onDelete() {
-    if (!confirm('Delete this reply?')) return;
-    flizowStore.deleteComment(comment.id);
-  }
   return (
     <div className="comment">
       <Avatar member={author} />
@@ -1271,7 +1307,7 @@ function ReplyItem({
           <span>{formatCommentTime(comment.createdAt)}</span>
           {comment.updatedAt && <span>· Edited</span>}
           {isOwn && (
-            <button type="button" className="reply-btn" onClick={onDelete}>Delete</button>
+            <button type="button" className="reply-btn" onClick={() => onRequestDelete(comment)}>Delete</button>
           )}
         </div>
       </div>
