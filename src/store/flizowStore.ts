@@ -442,7 +442,11 @@ class FlizowStore {
       createdAt: new Date().toISOString(),
       parentId: parentId || undefined,
     };
-    this.data.taskComments.push(comment);
+    // Replace (don't mutate in place) so consumers that memoise on the
+    // array reference re-run. `notify()` wraps `this.data` but leaves
+    // inner arrays untouched, so mutating in place would let a cached
+    // `useMemo([comments])` miss the addition.
+    this.data.taskComments = [...this.data.taskComments, comment];
     this.save();
     return id;
   }
@@ -452,11 +456,18 @@ class FlizowStore {
   updateComment(id: string, text: string) {
     const trimmed = text.trim();
     if (!trimmed) return;
-    const c = this.data.taskComments.find(c => c.id === id);
-    if (!c) return;
-    if (c.text === trimmed) return; // no-op guard keeps `updatedAt` honest
-    c.text = trimmed;
-    c.updatedAt = new Date().toISOString();
+    const existing = this.data.taskComments.find(c => c.id === id);
+    if (!existing) return;
+    if (existing.text === trimmed) return; // no-op guard keeps updatedAt honest
+    const patched: TaskComment = {
+      ...existing,
+      text: trimmed,
+      updatedAt: new Date().toISOString(),
+    };
+    // Splice-replace so the array reference changes (see addComment).
+    this.data.taskComments = this.data.taskComments.map(c =>
+      c.id === id ? patched : c,
+    );
     this.save();
   }
 
