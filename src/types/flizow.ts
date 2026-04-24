@@ -333,6 +333,73 @@ export interface TaskActivity {
   createdAt: string;
 }
 
+// ── Ops tasks ────────────────────────────────────────────────────────────
+
+/**
+ * Internal-team task that lives on the Ops board. The Ops board is the
+ * agency's own kanban — hiring, finance, brand, legal, tooling, process.
+ * No clientId / serviceId because the work isn't tied to a client.
+ *
+ * Kept separate from `Task` rather than folded into it with a "isOps"
+ * flag: every place that reads tasks wants client-scoped rows only, so
+ * mixing the two piles would mean wrapping every query in a filter.
+ * Two piles, two typed mutators — cleaner at the call site.
+ *
+ * Labels are free-text strings (e.g. "Hiring", "Legal") rather than
+ * BOARD_LABELS ids. The modal renders them via the orphan-label fallback
+ * so no picker is wired up for v1; they come in through the seed and
+ * stay immutable until we add an ops-label palette.
+ *
+ * Comments + activity aren't logged on ops cards for v1 — the modal
+ * hides both tabs when `kind === 'opsTask'`. When the team actually
+ * starts using the Ops board daily, wire them through the same store
+ * helpers the Task side already has.
+ */
+export interface OpsTask {
+  id: string;
+  title: string;
+  columnId: ColumnId;
+  priority?: Priority;
+  /** Member id — ops tasks resolve through `data.members` like Task
+   *  does. The mockup seed stored raw initials; migrate() maps those
+   *  to the seeded ops-team Member records on first load. */
+  assigneeId: string | null;
+  /** Secondary owners. Kept separate from `assigneeId` so the card tile
+   *  can still show the primary owner without digging into the array. */
+  assigneeIds?: string[];
+  /** Free-text label strings. No BOARD_LABELS mapping for ops — the
+   *  card renderer falls back to the raw token, which reads fine on
+   *  the tile and in the modal's meta row. */
+  labels: string[];
+  /** ISO date (YYYY-MM-DD). Optional — an ops task can sit without a
+   *  date (e.g. "Draft team offsite agenda"). */
+  dueDate?: string;
+  /** ISO timestamp. */
+  createdAt: string;
+  // ── Ops-specific display overrides (mockup parity) ────────────────
+  /** "Blocked · Xd" / "Waiting · Xd" without needing a real timestamp.
+   *  Expressed in days-since-entered; rendered as the due pill when set. */
+  enteredDaysAgo?: number;
+  /** Force a specific due-mod colour (amber for waiting, red for blocked)
+   *  independent of the real dueDate. Only the card tile reads this. */
+  overrideMod?: '' | 'due-overdue' | 'due-soon' | 'due-waiting' | 'due-blocked';
+  /** Paired label text for `overrideMod` (e.g. "Waiting · 3d"). */
+  overrideLabel?: string;
+  /** Raw count shown in the card footer. Until comments are wired up
+   *  for ops tasks we render this static number rather than computing
+   *  from data.taskComments (ops tasks aren't in that table yet). */
+  comments?: number;
+  /** Same pattern as `comments` — raw count on the card, no backing
+   *  attachments table for v1. */
+  attachments?: number;
+  // ── Card detail (optional — mirrors Task's post-modal fields) ─────
+  description?: string;
+  checklist?: TaskChecklistItem[];
+  startDate?: string;
+  archived?: boolean;
+  archivedAt?: string;
+}
+
 // ── Notifications ────────────────────────────────────────────────────────
 
 export type NotificationType =
@@ -606,6 +673,10 @@ export interface FlizowData {
   /** The "today" reference the mockup uses for all date math. A single
    *  anchor keeps the UI stable across re-renders. */
   today: string;
+  /** Internal-team tasks shown on the Ops board. Separate pile from
+   *  `tasks` because the Ops board has no client/service scope and the
+   *  two would otherwise need a filter on every read. */
+  opsTasks: OpsTask[];
   /** Map from schedule-seed id → the service id the card lives on. */
   scheduleTaskMap: { [scheduleId: string]: string };
   /** Service ids the user has starred. These render as the "My Boards"

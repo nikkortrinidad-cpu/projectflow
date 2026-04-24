@@ -1099,6 +1099,11 @@ export function generateDemoData(): FlizowData {
     // itself. Keeps the section quiet on first load so the auto-built
     // agenda is what the user sees first.
     manualAgendaItems: [],
+    // Ops board seed lives in src/data/opsSeed.ts and is applied by
+    // flizowStore.migrate() when the ops-team members aren't present —
+    // the demo data doesn't include that roster, so a fresh `Load demo`
+    // run picks up the 12 seeded ops cards on the next render.
+    opsTasks: [],
     today: todayStr,
     scheduleTaskMap,
     // Demo loads come in without anything pinned. The star affordance

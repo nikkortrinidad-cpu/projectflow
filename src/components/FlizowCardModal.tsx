@@ -1,10 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFlizow } from '../store/useFlizow';
-import type { ColumnId, Priority, Member, TaskComment, TaskActivity } from '../types/flizow';
+import type { ColumnId, Priority, Member, TaskComment, TaskActivity, Task, OpsTask } from '../types/flizow';
 import { flizowStore } from '../store/flizowStore';
 import { BOARD_LABELS, labelById } from '../constants/labels';
 import { ConfirmDangerDialog } from './ConfirmDangerDialog';
 import FlizowShareModal from './FlizowShareModal';
+
+/** The modal supports two card "kinds": client tasks (the default) and
+ *  internal Ops board tasks. Ops cards skip the client/service header,
+ *  the Share action, the comments + activity tabs, and the Duplicate
+ *  menu item — all of which rely on infrastructure we haven't wired up
+ *  for the Ops board yet. Everything else (title, status, priority,
+ *  assignees, labels, dates, description, checklist, archive) works
+ *  identically against `data.opsTasks` via the matching store mutators. */
+export type CardKind = 'task' | 'opsTask';
+
+/** Union of the two shapes the modal can render. The render path is
+ *  kind-neutral — every code path reads through one of these fields,
+ *  and the adapter below routes writes to the right store mutator. */
+type AnyCard = Task | OpsTask;
 
 /**
  * FlizowCardModal — the per-card detail overlay on top of the service
@@ -59,11 +73,63 @@ function formatDateLong(iso: string | null | undefined): string {
 interface Props {
   taskId: string;
   onClose: () => void;
+  /** Which pile the card lives in. Omit for client tasks (the default). */
+  kind?: CardKind;
 }
 
-export default function FlizowCardModal({ taskId, onClose }: Props) {
+export default function FlizowCardModal({ taskId, onClose, kind = 'task' }: Props) {
   const { data, store } = useFlizow();
-  const task = data.tasks.find(t => t.id === taskId);
+  const isOps = kind === 'opsTask';
+  const task = isOps
+    ? (data.opsTasks.find(t => t.id === taskId) as AnyCard | undefined)
+    : (data.tasks.find(t => t.id === taskId) as AnyCard | undefined);
+
+  // ── Kind adapter ──────────────────────────────────────────────────
+  // Single indirection for every write so the render code below doesn't
+  // sprout a ternary at each call site. The wrappers resolve to the
+  // store's task / opsTask methods based on the active kind. Patch
+  // shape is shared because Task and OpsTask overlap on every field the
+  // modal edits.
+  function patchCard(id: string, patch: Partial<AnyCard>) {
+    if (isOps) store.updateOpsTask(id, patch as Partial<OpsTask>);
+    else store.updateTask(id, patch as Partial<Task>);
+  }
+  function moveCard(id: string, columnId: ColumnId) {
+    if (isOps) store.moveOpsTask(id, columnId);
+    else store.moveTask(id, columnId);
+  }
+  function setCardPriority(id: string, priority: Priority) {
+    if (isOps) store.setOpsTaskPriority(id, priority);
+    else store.setTaskPriority(id, priority);
+  }
+  function addChecklist(id: string, text: string) {
+    if (isOps) store.addOpsChecklistItem(id, text);
+    else store.addChecklistItem(id, text);
+  }
+  function toggleChecklist(id: string, itemId: string) {
+    if (isOps) store.toggleOpsChecklistItem(id, itemId);
+    else store.toggleChecklistItem(id, itemId);
+  }
+  function renameChecklist(id: string, itemId: string, text: string) {
+    if (isOps) store.updateOpsChecklistItemText(id, itemId, text);
+    else store.updateChecklistItemText(id, itemId, text);
+  }
+  function deleteChecklist(id: string, itemId: string) {
+    if (isOps) store.deleteOpsChecklistItem(id, itemId);
+    else store.deleteChecklistItem(id, itemId);
+  }
+  function deleteCard(id: string) {
+    if (isOps) store.deleteOpsTask(id);
+    else store.deleteTask(id);
+  }
+  function archiveCard(id: string) {
+    if (isOps) store.archiveOpsTask(id);
+    else store.archiveTask(id);
+  }
+  function unarchiveCard(id: string) {
+    if (isOps) store.unarchiveOpsTask(id);
+    else store.unarchiveTask(id);
+  }
 
   // ── Keyboard: Esc closes, regardless of focus target ──────────────
   useEffect(() => {
@@ -96,7 +162,7 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
       setTitleDraft(task.title); // snap back on empty/unchanged
       return;
     }
-    store.updateTask(task.id, { title: next });
+    patchCard(task.id, { title: next });
   }
 
   // ── Description: click-to-edit with save/cancel ───────────────────
@@ -109,7 +175,7 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
 
   function saveDesc() {
     if (!task) return;
-    store.updateTask(task.id, { description: descDraft.trim() });
+    patchCard(task.id, { description: descDraft.trim() });
     setEditingDesc(false);
   }
   function cancelDesc() {
@@ -167,8 +233,15 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
   }, [newCheckActive]);
 
   // ── Derived ───────────────────────────────────────────────────────
-  const client = task ? data.clients.find(c => c.id === task.clientId) : null;
-  const service = task ? data.services.find(s => s.id === task.serviceId) : null;
+  // Client + service lookups only apply to `Task` rows — OpsTask has no
+  // clientId / serviceId. `in` narrows the union so TS lets us read the
+  // fields without casting, and non-task cards fall through to null.
+  const client = task && 'clientId' in task
+    ? data.clients.find(c => c.id === task.clientId)
+    : null;
+  const service = task && 'serviceId' in task
+    ? data.services.find(s => s.id === task.serviceId)
+    : null;
   const assignees = useMemo(() => {
     if (!task) return [];
     const ids = task.assigneeIds && task.assigneeIds.length
@@ -196,7 +269,7 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
     const next = current.includes(memberId)
       ? current.filter(id => id !== memberId)
       : [...current, memberId];
-    store.updateTask(task.id, {
+    patchCard(task.id, {
       assigneeIds: next,
       // Keep the singleton field synced so older readers still work.
       assigneeId: next[0] ?? null,
@@ -208,7 +281,7 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
     const next = task.labels.includes(labelId)
       ? task.labels.filter(l => l !== labelId)
       : [...task.labels, labelId];
-    store.updateTask(task.id, { labels: next });
+    patchCard(task.id, { labels: next });
   }
 
   // ── Guard: task vanished (deleted elsewhere) ──────────────────────
@@ -234,21 +307,26 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
         {/* ── Titlebar ───────────────────────────────────────────── */}
         <div className="card-titlebar">
           <div className="titlebar-actions">
-            <button
-              type="button"
-              className="tb-btn"
-              aria-label="Share card"
-              title="Share card"
-              onClick={(e) => {
-                e.stopPropagation();
-                // Closing the More menu first keeps the titlebar state
-                // consistent — only one overlay pops at a time.
-                setMoreOpen(false);
-                setShareOpen(true);
-              }}
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-            </button>
+            {/* Share targets a `#board/{svcId}/card/{id}` deep link — ops
+                cards have no service route yet, so hide the button until
+                that lands. */}
+            {!isOps && (
+              <button
+                type="button"
+                className="tb-btn"
+                aria-label="Share card"
+                title="Share card"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Closing the More menu first keeps the titlebar state
+                  // consistent — only one overlay pops at a time.
+                  setMoreOpen(false);
+                  setShareOpen(true);
+                }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+              </button>
+            )}
             <button
               type="button"
               className="tb-btn"
@@ -259,6 +337,10 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
             </button>
             {moreOpen && (
               <div className="tb-menu open" onClick={(e) => e.stopPropagation()}>
+                {/* Duplicate + Copy link both depend on `serviceId` — hide
+                    both for ops cards until the Ops board has its own
+                    routing and duplication story. */}
+                {!isOps && (
                 <div
                   className="tb-menu-item"
                   role="menuitem"
@@ -275,7 +357,7 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
                       // and re-navigate to the same board — the useEffect
                       // on BoardPage picks it up and opens the modal.
                       sessionStorage.setItem('flizow-open-card', newId);
-                      if (task?.serviceId) {
+                      if (task && 'serviceId' in task && task.serviceId) {
                         // Force hash re-parse so BoardPage re-runs its
                         // mount-time auto-open effect even if we're on
                         // the same board. Works by setting to '#' first.
@@ -298,6 +380,8 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
                 >
                   Duplicate card
                 </div>
+                )}
+                {!isOps && (
                 <div
                   className="tb-menu-item"
                   role="menuitem"
@@ -310,7 +394,7 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
                     // owning user (or a teammate signed in later) opens
                     // it, BoardPage mounts with that card pre-opened via
                     // its initialCardId auto-open effect.
-                    if (!task) return;
+                    if (!task || !('serviceId' in task)) return;
                     const base = window.location.href.split('#')[0];
                     const url = `${base}#board/${task.serviceId}/card/${task.id}`;
                     try {
@@ -333,7 +417,8 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
                 >
                   {copiedLink ? 'Link copied' : 'Copy link'}
                 </div>
-                <div className="tb-menu-divider" />
+                )}
+                {!isOps && <div className="tb-menu-divider" />}
                 <div
                   className="tb-menu-item"
                   role="menuitem"
@@ -349,10 +434,10 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
                     // open so the user can continue editing.
                     if (!task) return;
                     if (task.archived) {
-                      flizowStore.unarchiveTask(task.id);
+                      unarchiveCard(task.id);
                       setMoreOpen(false);
                     } else {
-                      flizowStore.archiveTask(task.id);
+                      archiveCard(task.id);
                       setMoreOpen(false);
                       onClose();
                     }
@@ -407,9 +492,14 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
           <div className="card-modal-main">
             <div className="card-modal-body">
 
-              {/* Context line (client · service). Gives the user a quick
-                  anchor so they know which board they're editing. */}
-              {(client || service) && (
+              {/* Context line — client · service for client tasks,
+                  "Ops board" for internal tasks. Either way it's a
+                  quick anchor for which board the card lives on. */}
+              {isOps ? (
+                <div style={{ fontSize: 12, color: 'var(--text-faint)', letterSpacing: '0.02em', textTransform: 'uppercase', fontWeight: 600 }}>
+                  Internal · Ops board
+                </div>
+              ) : (client || service) && (
                 <div style={{ fontSize: 12, color: 'var(--text-faint)', letterSpacing: '0.02em', textTransform: 'uppercase', fontWeight: 600 }}>
                   {client?.name}{service ? ` · ${service.name}` : ''}
                 </div>
@@ -455,7 +545,7 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
                             key={opt.id}
                             type="button"
                             className="tb-menu-item"
-                            onClick={() => { store.moveTask(task.id, opt.id); setStatusOpen(false); }}
+                            onClick={() => { moveCard(task.id, opt.id); setStatusOpen(false); }}
                           >
                             <span className={`status-dot ${opt.dot}`} style={{ marginRight: 8 }} />
                             {opt.label}
@@ -489,7 +579,7 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
                             key={opt.id}
                             type="button"
                             className="tb-menu-item"
-                            onClick={() => { store.setTaskPriority(task.id, opt.id); setPriorityOpen(false); }}
+                            onClick={() => { setCardPriority(task.id, opt.id); setPriorityOpen(false); }}
                           >
                             <span className={`status-dot ${opt.dot}`} style={{ marginRight: 8 }} />
                             {opt.label}
@@ -631,7 +721,7 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
                       className="meta-date"
                       aria-label="Start date"
                       value={task.startDate ?? ''}
-                      onChange={(e) => store.updateTask(task.id, { startDate: e.target.value || undefined })}
+                      onChange={(e) => patchCard(task.id, { startDate: e.target.value || undefined })}
                     />
                   </div>
                 </div>
@@ -647,7 +737,7 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
                       className="meta-date"
                       aria-label="Due date"
                       value={task.dueDate ?? ''}
-                      onChange={(e) => store.updateTask(task.id, { dueDate: e.target.value })}
+                      onChange={(e) => patchCard(task.id, { dueDate: e.target.value })}
                     />
                   </div>
                 </div>
@@ -730,9 +820,9 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
                       key={item.id}
                       text={item.text}
                       done={item.done}
-                      onToggle={() => store.toggleChecklistItem(task.id, item.id)}
-                      onRename={(next) => store.updateChecklistItemText(task.id, item.id, next)}
-                      onDelete={() => store.deleteChecklistItem(task.id, item.id)}
+                      onToggle={() => toggleChecklist(task.id, item.id)}
+                      onRename={(next) => renameChecklist(task.id, item.id, next)}
+                      onDelete={() => deleteChecklist(task.id, item.id)}
                     />
                   ))}
 
@@ -755,7 +845,7 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
                             e.preventDefault();
                             const text = newCheckText.trim();
                             if (text) {
-                              store.addChecklistItem(task.id, text);
+                              addChecklist(task.id, text);
                               setNewCheckText('');
                               // keep input focused for fast multi-add
                               newCheckInputRef.current?.focus();
@@ -791,47 +881,68 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
           </div>
 
           {/* ── Sidebar ──────────────────────────────────────────── */}
+          {/* Comments + activity are backed by `data.taskComments` /
+              `data.taskActivity`, both keyed to client task ids. Until
+              the Ops board has its own comment + activity streams, the
+              sidebar renders a short placeholder so the card shell stays
+              visually symmetric without lying about features we haven't
+              built yet. */}
           <div className="card-modal-sidebar">
-            <div className="sidebar-tabs" role="tablist" aria-label="Card sidebar">
-              <button
-                type="button"
-                className={`sidebar-tab${tab === 'comments' ? ' active' : ''}`}
-                role="tab"
-                aria-selected={tab === 'comments'}
-                onClick={() => setTab('comments')}
-              >
-                Comments
-              </button>
-              <button
-                type="button"
-                className={`sidebar-tab${tab === 'activity' ? ' active' : ''}`}
-                role="tab"
-                aria-selected={tab === 'activity'}
-                onClick={() => setTab('activity')}
-              >
-                Activity Log
-              </button>
-            </div>
+            {isOps ? (
+              <div style={{
+                padding: '32px 24px',
+                color: 'var(--text-faint)',
+                fontSize: 13,
+                lineHeight: 1.55,
+                textAlign: 'center',
+              }}>
+                <div style={{ fontWeight: 600, marginBottom: 6, color: 'var(--text-soft)' }}>
+                  Comments and activity
+                </div>
+                <div>
+                  The Ops board doesn't track these yet. They'll turn on once the team starts using the board daily.
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="sidebar-tabs" role="tablist" aria-label="Card sidebar">
+                  <button
+                    type="button"
+                    className={`sidebar-tab${tab === 'comments' ? ' active' : ''}`}
+                    role="tab"
+                    aria-selected={tab === 'comments'}
+                    onClick={() => setTab('comments')}
+                  >
+                    Comments
+                  </button>
+                  <button
+                    type="button"
+                    className={`sidebar-tab${tab === 'activity' ? ' active' : ''}`}
+                    role="tab"
+                    aria-selected={tab === 'activity'}
+                    onClick={() => setTab('activity')}
+                  >
+                    Activity Log
+                  </button>
+                </div>
 
-            <div
-              className={`sidebar-content${tab === 'comments' ? ' active' : ''}`}
-              role="tabpanel"
-              hidden={tab !== 'comments'}
-            >
-              {task ? (
-                <CommentsPanel taskId={task.id} members={data.members} comments={data.taskComments} />
-              ) : null}
-            </div>
+                <div
+                  className={`sidebar-content${tab === 'comments' ? ' active' : ''}`}
+                  role="tabpanel"
+                  hidden={tab !== 'comments'}
+                >
+                  <CommentsPanel taskId={task.id} members={data.members} comments={data.taskComments} />
+                </div>
 
-            <div
-              className={`sidebar-content${tab === 'activity' ? ' active' : ''}`}
-              role="tabpanel"
-              hidden={tab !== 'activity'}
-            >
-              {task ? (
-                <ActivityPanel taskId={task.id} members={data.members} activity={data.taskActivity} />
-              ) : null}
-            </div>
+                <div
+                  className={`sidebar-content${tab === 'activity' ? ' active' : ''}`}
+                  role="tabpanel"
+                  hidden={tab !== 'activity'}
+                >
+                  <ActivityPanel taskId={task.id} members={data.members} activity={data.taskActivity} />
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -843,14 +954,14 @@ export default function FlizowCardModal({ taskId, onClose }: Props) {
           confirmLabel="Delete card"
           onConfirm={() => {
             setShowDeleteConfirm(false);
-            store.deleteTask(task.id);
+            deleteCard(task.id);
             onClose();
           }}
           onClose={() => setShowDeleteConfirm(false)}
         />
       )}
 
-      {shareOpen && task && (
+      {shareOpen && task && !isOps && (
         <FlizowShareModal
           taskId={task.id}
           onClose={() => setShareOpen(false)}

@@ -3,10 +3,11 @@ import { db } from '../lib/firebase';
 import type {
   FlizowData, Client, Service, Task, Member, Contact, QuickLink, Note,
   Touchpoint, ActionItem, TaskComment, TaskActivity, TaskActivityKind,
-  ManualAgendaItem, OnboardingItem, ColumnId, Priority,
+  ManualAgendaItem, OnboardingItem, ColumnId, Priority, OpsTask,
 } from '../types/flizow';
 import { ONBOARDING_TEMPLATES } from '../data/onboardingTemplates';
 import { TASK_POOLS } from '../data/taskPools';
+import { OPS_TEAM_MEMBERS, OPS_TASK_SEED } from '../data/opsSeed';
 
 /**
  * FlizowStore — central data container for the new product surface
@@ -47,6 +48,7 @@ function emptyData(): FlizowData {
     taskComments: [],
     taskActivity: [],
     manualAgendaItems: [],
+    opsTasks: [],
     today: todayISO(),
     scheduleTaskMap: {},
     favoriteServiceIds: [],
@@ -83,11 +85,32 @@ function migrate(parsed: Partial<FlizowData>): FlizowData {
     ...c,
     teamIds: Array.isArray(c.teamIds) ? c.teamIds : [],
   }));
+  // Ops-team seed + Ops-task seed run together, gated on the presence of
+  // the ops-team roster. The two pieces belong to the same surface (Ops
+  // board) — seeding one without the other would leave you with 12 cards
+  // assigned to missing members, or 6 members sitting on an empty board.
+  // Idempotent by id: existing ops-team members are left alone so manual
+  // edits (role titles, colours) survive a reload.
+  const existingMembers = parsed.members ?? base.members;
+  const haveAnyOpsTeam = OPS_TEAM_MEMBERS.some(seed =>
+    existingMembers.some(m => m.id === seed.id),
+  );
+  let members = existingMembers;
+  let opsTasks = parsed.opsTasks ?? base.opsTasks;
+  if (!haveAnyOpsTeam) {
+    members = [...existingMembers, ...OPS_TEAM_MEMBERS];
+    if (!opsTasks.length) {
+      // First-load seed. Keeps a fresh workspace from opening to an
+      // empty Ops board — same UX the old `useState(INITIAL_TASKS)` gave
+      // us before the store owned this data.
+      opsTasks = OPS_TASK_SEED.map(t => ({ ...t }));
+    }
+  }
   return {
     clients,
     services: parsed.services ?? base.services,
     tasks: parsed.tasks ?? base.tasks,
-    members: parsed.members ?? base.members,
+    members,
     integrations: parsed.integrations ?? base.integrations,
     onboardingItems: parsed.onboardingItems ?? base.onboardingItems,
     contacts: parsed.contacts ?? base.contacts,
@@ -98,6 +121,7 @@ function migrate(parsed: Partial<FlizowData>): FlizowData {
     taskComments: parsed.taskComments ?? base.taskComments,
     taskActivity: parsed.taskActivity ?? base.taskActivity,
     manualAgendaItems: parsed.manualAgendaItems ?? base.manualAgendaItems,
+    opsTasks,
     // `today` always refreshes on load — we never trust a stale anchor.
     today: todayISO(),
     scheduleTaskMap: parsed.scheduleTaskMap ?? base.scheduleTaskMap,
@@ -737,6 +761,101 @@ class FlizowStore {
     if (this.data.scheduleTaskMap[id]) {
       delete this.data.scheduleTaskMap[id];
     }
+    this.save();
+  }
+
+  // ── Ops tasks ────────────────────────────────────────────────────────
+  //
+  // Same shape as the Task mutators above, but against `data.opsTasks`
+  // instead of `data.tasks`. No activity logging for v1 — the Ops board
+  // modal hides the Activity tab, so the infrastructure would be unused.
+  // When we wire ops comments + activity, `logActivity` gets widened to
+  // accept an opsTaskId and these mutators call it the way updateTask
+  // already does.
+
+  addOpsTask(task: OpsTask) {
+    this.data.opsTasks = [...this.data.opsTasks, task];
+    this.save();
+  }
+
+  updateOpsTask(id: string, patch: Partial<OpsTask>) {
+    const t = this.data.opsTasks.find(t => t.id === id);
+    if (!t) return;
+    Object.assign(t, patch);
+    this.save();
+  }
+
+  moveOpsTask(id: string, columnId: ColumnId) {
+    this.updateOpsTask(id, { columnId });
+  }
+
+  setOpsTaskPriority(id: string, priority: Priority) {
+    this.updateOpsTask(id, { priority });
+  }
+
+  deleteOpsTask(id: string) {
+    const before = this.data.opsTasks.length;
+    this.data.opsTasks = this.data.opsTasks.filter(t => t.id !== id);
+    if (this.data.opsTasks.length !== before) this.save();
+  }
+
+  archiveOpsTask(id: string) {
+    const t = this.data.opsTasks.find(t => t.id === id);
+    if (!t || t.archived) return;
+    t.archived = true;
+    t.archivedAt = new Date().toISOString();
+    this.save();
+  }
+
+  unarchiveOpsTask(id: string) {
+    const t = this.data.opsTasks.find(t => t.id === id);
+    if (!t || !t.archived) return;
+    t.archived = false;
+    t.archivedAt = undefined;
+    this.save();
+  }
+
+  // ── Ops task checklist ──────────────────────────────────────────────
+  //
+  // Mirrors the Task checklist helpers but against opsTasks. Same lazy
+  // init pattern — first write creates the array. We factor out the
+  // checklist CRUD so the modal can use a single code path regardless
+  // of which kind of card is open.
+
+  addOpsChecklistItem(taskId: string, text: string): string | null {
+    const t = this.data.opsTasks.find(t => t.id === taskId);
+    if (!t) return null;
+    if (!t.checklist) t.checklist = [];
+    const id = `ck-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+    t.checklist.push({ id, text: text.trim(), done: false, assigneeId: null });
+    this.save();
+    return id;
+  }
+
+  toggleOpsChecklistItem(taskId: string, itemId: string) {
+    const t = this.data.opsTasks.find(t => t.id === taskId);
+    if (!t || !t.checklist) return;
+    const item = t.checklist.find(i => i.id === itemId);
+    if (!item) return;
+    item.done = !item.done;
+    this.save();
+  }
+
+  updateOpsChecklistItemText(taskId: string, itemId: string, text: string) {
+    const t = this.data.opsTasks.find(t => t.id === taskId);
+    if (!t || !t.checklist) return;
+    const item = t.checklist.find(i => i.id === itemId);
+    if (!item) return;
+    const trimmed = text.trim();
+    if (!trimmed || trimmed === item.text) return;
+    item.text = trimmed;
+    this.save();
+  }
+
+  deleteOpsChecklistItem(taskId: string, itemId: string) {
+    const t = this.data.opsTasks.find(t => t.id === taskId);
+    if (!t || !t.checklist) return;
+    t.checklist = t.checklist.filter(i => i.id !== itemId);
     this.save();
   }
 

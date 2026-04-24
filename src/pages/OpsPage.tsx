@@ -3,6 +3,10 @@ import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, closestC
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { daysBetween, formatMonthDay } from '../utils/dateFormat';
 import { BoardFilters, applyFilters, EMPTY_FILTERS, type BoardFilterState } from '../components/BoardFilters';
+import { useFlizow } from '../store/useFlizow';
+import { flizowStore } from '../store/flizowStore';
+import type { OpsTask, Member, ColumnId } from '../types/flizow';
+import FlizowCardModal from '../components/FlizowCardModal';
 
 /**
  * Ops board — internal-team kanban for the work the agency does for
@@ -10,57 +14,20 @@ import { BoardFilters, applyFilters, EMPTY_FILTERS, type BoardFilterState } from
  * deliverables live on per-service boards; this is where the partners
  * track the business's own to-dos.
  *
- * Data for the first pass is local state seeded from the mockup. Each
- * column-move updates component state — no persistence yet. When the
- * ops data structure lands in the store (probably as a sibling of
- * Task under the Flizow data model) this view lights up automatically.
+ * Data source lives in `flizowStore.data.opsTasks` with seed+backfill
+ * handled in `migrate()`. Assignees resolve through `data.members` like
+ * client cards do — the old raw-initials string was replaced with real
+ * member ids so the modal's assignee picker and the filter bar's
+ * assignee chip work off the same pool the rest of the app uses.
+ *
+ * Clicking a card opens `FlizowCardModal` with `kind="opsTask"`, which
+ * hides the comments + activity tabs (not wired for ops yet) but shares
+ * the same title, status, priority, date, label, and checklist UI.
  */
 
-// ── Types ────────────────────────────────────────────────────────────
-
-type ColumnId = 'todo' | 'inprogress' | 'blocked' | 'review' | 'done';
-type Priority = 'high' | 'medium' | 'low';
 type DueMod = '' | 'due-overdue' | 'due-soon' | 'due-waiting' | 'due-blocked';
 
-interface OpsTask {
-  id: string;
-  title: string;
-  columnId: ColumnId;
-  labels: string[];
-  priority?: Priority;
-  assignee: string; // initials
-  dueDate?: string; // ISO YYYY-MM-DD — if blank, no date shown
-  /** Authored date override so "Blocked · Xd" / "Waiting · Xd" render
-   *  without needing a real timestamp on the card. Expressed as days ago. */
-  enteredDaysAgo?: number;
-  /** Override the computed due-mod when the mockup has a specific state
-   *  (e.g. "Waiting · 3d" regardless of the actual due date). */
-  overrideMod?: DueMod;
-  overrideLabel?: string;
-  comments?: number;
-  attachments?: number;
-}
-
-// ── Seed (mirrors the mockup's 12 ops tasks) ─────────────────────────
-
-const INITIAL_TASKS: OpsTask[] = [
-  { id: 'ops-1',  columnId: 'todo',       priority: 'high',   labels: ['Hiring'],  assignee: 'KL', dueDate: '2026-04-24', title: 'Post Social Media Manager listing on LinkedIn and WeWorkRemotely', comments: 2 },
-  { id: 'ops-2',  columnId: 'todo',       priority: 'medium', labels: ['Legal'],   assignee: 'RC', dueDate: '2026-04-28', title: 'Review Q2 retainer contracts — Acme, Summit, Cascade', comments: 1, attachments: 3 },
-  { id: 'ops-3',  columnId: 'todo',       priority: 'medium', labels: ['Process'], assignee: 'RC', title: 'Draft team offsite agenda — June in Tahoe', comments: 4 },
-
-  { id: 'ops-4',  columnId: 'inprogress', priority: 'high',   labels: ['Hiring'],  assignee: 'KL', dueDate: '2026-04-26', title: 'Build internal hiring pipeline in Ashby ATS', comments: 6, attachments: 2 },
-  { id: 'ops-5',  columnId: 'inprogress', priority: 'high',   labels: ['Finance'], assignee: 'RC', dueDate: '2026-05-01', title: 'Migrate invoicing from Wave to QuickBooks Online', comments: 4, attachments: 1 },
-  { id: 'ops-6',  columnId: 'inprogress', priority: 'medium', labels: ['Brand'],   assignee: 'CC', title: 'Refresh agency pricing sheet for 2026 retainers', comments: 2 },
-
-  { id: 'ops-7',  columnId: 'blocked',    priority: 'high',   labels: ['Legal'],   assignee: 'RC', enteredDaysAgo: 2, overrideMod: 'due-blocked', overrideLabel: 'Blocked · 2d', title: 'Sign new office lease — waiting on landlord redlines', comments: 3, attachments: 2 },
-
-  { id: 'ops-8',  columnId: 'review',     priority: 'medium', labels: ['Process'], assignee: 'KL', enteredDaysAgo: 3, overrideMod: 'due-waiting', overrideLabel: 'Waiting · 3d', title: 'Employee handbook v2 — final draft for legal review', comments: 8, attachments: 1 },
-  { id: 'ops-9',  columnId: 'review',     priority: 'medium', labels: ['Brand'],   assignee: 'HS', enteredDaysAgo: 1, overrideMod: 'due-waiting', overrideLabel: 'Waiting · 1d', title: 'Portfolio case studies — 3 new drafts for site relaunch', comments: 5, attachments: 3 },
-
-  { id: 'ops-10', columnId: 'done',       priority: 'medium', labels: ['Hiring'],  assignee: 'RC', title: 'Onboard Michael Potts — Paid Social Manager', comments: 9 },
-  { id: 'ops-11', columnId: 'done',       priority: 'low',    labels: ['Tools'],   assignee: 'CC', title: 'Upgrade Notion workspace to Business plan', comments: 1 },
-  { id: 'ops-12', columnId: 'done',       priority: 'medium', labels: ['Process'], assignee: 'RC', title: 'Q1 retro slide deck and action items', comments: 6, attachments: 2 },
-];
+// ── Column layout ────────────────────────────────────────────────────
 
 const COLUMNS: Array<{ id: ColumnId; title: string; dot: string; emptyHide?: boolean }> = [
   { id: 'todo',       title: 'To Do',        dot: 'todo' },
@@ -73,22 +40,27 @@ const COLUMNS: Array<{ id: ColumnId; title: string; dot: string; emptyHide?: boo
 // ── Page ─────────────────────────────────────────────────────────────
 
 export function OpsPage() {
-  const [tasks, setTasks] = useState<OpsTask[]>(INITIAL_TASKS);
+  const { data } = useFlizow();
+  const tasks = data.opsTasks;
+  const members = data.members;
+
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<BoardFilterState>(EMPTY_FILTERS);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
   );
 
-  // Filter + sort. Ops tasks have their own narrower shape (initials instead
-  // of member ids, plain-text labels instead of BOARD_LABELS ids) so the
-  // shared Assignee/Label chips are hidden via `show={{...}}` in FiltersBar.
-  // Priority + Due date + Sort still apply normally.
+  // Archived ops cards stay in the pile (same rule as client tasks) but
+  // drop out of every render + count. Restore goes through the same
+  // titlebar menu in FlizowCardModal.
+  const liveTasks = useMemo(() => tasks.filter(t => !t.archived), [tasks]);
+
   const filteredTasks = useMemo(
-    () => applyFilters(tasks, filters, todayISO(), search),
-    [tasks, filters, search],
+    () => applyFilters(liveTasks, filters, todayISO(), search),
+    [liveTasks, filters, search],
   );
 
   const tasksByColumn = useMemo(() => {
@@ -101,15 +73,34 @@ export function OpsPage() {
     return byCol;
   }, [filteredTasks]);
 
-  // Stats update as tasks move between columns — the header isn't just
-  // decoration, it's the quick-glance summary the partners use to size
-  // up the week.
   const stats = useMemo(() => {
-    const total = tasks.length;
-    const inProgress = tasks.filter(t => t.columnId === 'inprogress').length;
-    const blocked = tasks.filter(t => t.columnId === 'blocked').length;
+    const total = liveTasks.length;
+    const inProgress = liveTasks.filter(t => t.columnId === 'inprogress').length;
+    const blocked = liveTasks.filter(t => t.columnId === 'blocked').length;
     return { total, inProgress, blocked };
-  }, [tasks]);
+  }, [liveTasks]);
+
+  // Assignee filter pool — every member currently owning an ops card,
+  // plus the seeded ops-team roster so the picker isn't empty when the
+  // board happens to be filtered down to zero cards. This mirrors the
+  // way BoardPage derives its member list from a single service.
+  const opsAssigneeMembers = useMemo(() => {
+    const byId = new Map<string, Member>();
+    for (const m of members) {
+      if (m.id.startsWith('ops-')) byId.set(m.id, m);
+    }
+    for (const t of tasks) {
+      if (t.assigneeId) {
+        const m = members.find(m => m.id === t.assigneeId);
+        if (m) byId.set(m.id, m);
+      }
+      for (const aid of t.assigneeIds ?? []) {
+        const m = members.find(m => m.id === aid);
+        if (m) byId.set(m.id, m);
+      }
+    }
+    return Array.from(byId.values());
+  }, [members, tasks]);
 
   function handleDragStart(e: DragStartEvent) {
     setActiveId(String(e.active.id));
@@ -130,7 +121,7 @@ export function OpsPage() {
     if (!targetCol) return;
     const source = tasks.find(t => t.id === taskId);
     if (!source || source.columnId === targetCol) return;
-    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, columnId: targetCol as ColumnId } : t));
+    flizowStore.moveOpsTask(taskId, targetCol);
   }
 
   const activeTask = activeId ? tasks.find(t => t.id === activeId) : undefined;
@@ -143,6 +134,7 @@ export function OpsPage() {
         onSearch={setSearch}
         filters={filters}
         onFiltersChange={setFilters}
+        members={opsAssigneeMembers}
       />
 
       <DndContext
@@ -162,15 +154,25 @@ export function OpsPage() {
                 title={col.title}
                 dot={col.dot}
                 tasks={colTasks}
+                members={members}
+                onOpenTask={(id) => setSelectedId(id)}
               />
             );
           })}
         </div>
 
         <DragOverlay dropAnimation={null}>
-          {activeTask ? <CardTile task={activeTask} dragging /> : null}
+          {activeTask ? <CardTile task={activeTask} members={members} dragging /> : null}
         </DragOverlay>
       </DndContext>
+
+      {selectedId && (
+        <FlizowCardModal
+          taskId={selectedId}
+          kind="opsTask"
+          onClose={() => setSelectedId(null)}
+        />
+      )}
     </div>
   );
 }
@@ -208,11 +210,13 @@ function FiltersBar({
   onSearch,
   filters,
   onFiltersChange,
+  members,
 }: {
   search: string;
   onSearch: (v: string) => void;
   filters: BoardFilterState;
   onFiltersChange: (next: BoardFilterState) => void;
+  members: Member[];
 }) {
   return (
     <div className="filters-bar" role="search" aria-label="Ops board filters">
@@ -229,14 +233,15 @@ function FiltersBar({
           onChange={(e) => onSearch(e.target.value)}
         />
       </label>
-      {/* Ops tasks store assignees as initials and labels as free-text,
-          so the shared component's member/label pickers don't fit yet.
-          Hide them here and expose just Priority / Due date / Sort. */}
+      {/* Labels stay hidden — ops tasks use free-text labels ('Hiring',
+          'Legal', 'Brand'…) instead of the BOARD_LABELS palette the
+          shared picker renders. Priority, Due, Assignees, Sort all work
+          against the real member pool. */}
       <BoardFilters
         state={filters}
         onChange={onFiltersChange}
-        members={[]}
-        show={{ assignees: false, labels: false }}
+        members={members}
+        show={{ labels: false }}
       />
     </div>
   );
@@ -249,11 +254,15 @@ function Column({
   title,
   dot,
   tasks,
+  members,
+  onOpenTask,
 }: {
   columnId: ColumnId;
   title: string;
   dot: string;
   tasks: OpsTask[];
+  members: Member[];
+  onOpenTask: (id: string) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `col:${columnId}` });
   return (
@@ -275,7 +284,12 @@ function Column({
       </div>
       <div className="column-cards">
         {tasks.map(task => (
-          <DraggableCard key={task.id} task={task} />
+          <DraggableCard
+            key={task.id}
+            task={task}
+            members={members}
+            onOpen={() => onOpenTask(task.id)}
+          />
         ))}
       </div>
     </div>
@@ -284,7 +298,15 @@ function Column({
 
 // ── Draggable Card ───────────────────────────────────────────────────
 
-function DraggableCard({ task }: { task: OpsTask }) {
+function DraggableCard({
+  task,
+  members,
+  onOpen,
+}: {
+  task: OpsTask;
+  members: Member[];
+  onOpen: () => void;
+}) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: task.id });
   return (
     <div
@@ -292,20 +314,52 @@ function DraggableCard({ task }: { task: OpsTask }) {
       {...attributes}
       {...listeners}
       style={{ opacity: isDragging ? 0 : 1 }}
+      // The click handler lives on the wrapper div (not the inner tile)
+      // so we can intercept *before* dnd-kit would treat a drag-start as
+      // a potential selection. Pointer sensor's 5px activation distance
+      // means a clean click with no horizontal travel never becomes a
+      // drag — those land here as `click`.
+      onClick={(e) => {
+        // Suppress the click if dnd-kit is mid-drag. We check via the
+        // isDragging flag dnd-kit surfaces; when true we're in a drop
+        // transition and the user didn't mean to open the modal.
+        if (isDragging) return;
+        e.stopPropagation();
+        onOpen();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onOpen();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label={`Open card: ${task.title}`}
     >
-      <CardTile task={task} />
+      <CardTile task={task} members={members} />
     </div>
   );
 }
 
-function CardTile({ task, dragging }: { task: OpsTask; dragging?: boolean }) {
+function CardTile({
+  task,
+  members,
+  dragging,
+}: {
+  task: OpsTask;
+  members: Member[];
+  dragging?: boolean;
+}) {
   const isDone = task.columnId === 'done';
   const due = dueDescriptor(task);
+  const assignee = task.assigneeId ? members.find(m => m.id === task.assigneeId) : null;
+
   return (
     <div
       className={`card${isDone ? ' is-done' : ''}`}
       data-priority={task.priority ?? ''}
-      data-assignees={task.assignee.toLowerCase()}
+      data-assignees={assignee?.initials.toLowerCase() ?? ''}
       style={dragging ? { boxShadow: '0 10px 30px rgba(10,132,255,0.25)', transform: 'rotate(-1deg)' } : undefined}
     >
       <div className="card-top">
@@ -340,7 +394,22 @@ function CardTile({ task, dragging }: { task: OpsTask; dragging?: boolean }) {
             </span>
           )}
         </div>
-        <div className="card-assignee" title={task.assignee}>{task.assignee}</div>
+        {assignee ? (
+          <div
+            className="card-assignee"
+            title={assignee.name}
+            style={assignee.type === 'operator' && assignee.bg
+              ? { background: assignee.bg, color: assignee.color }
+              : { background: assignee.color, color: '#fff' }
+            }
+          >
+            {assignee.initials}
+          </div>
+        ) : (
+          <div className="card-assignee" title="Unassigned" style={{ background: 'var(--bg-faint)', color: 'var(--text-faint)' }}>
+            —
+          </div>
+        )}
       </div>
     </div>
   );
