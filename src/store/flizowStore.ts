@@ -553,35 +553,48 @@ class FlizowStore {
   }
 
   updateTask(id: string, patch: Partial<Task>) {
-    const t = this.data.tasks.find(t => t.id === id);
-    if (!t) return;
+    const idx = this.data.tasks.findIndex(t => t.id === id);
+    if (idx === -1) return;
+    const original = this.data.tasks[idx];
     // Snapshot the fields we care about before the patch lands so we can
     // emit granular activity entries per change. We only log changes
     // that a user would recognise as meaningful — drop everything else.
     const before = {
-      columnId: t.columnId,
-      priority: t.priority,
-      title: t.title,
-      description: t.description,
-      dueDate: t.dueDate,
-      startDate: t.startDate,
-      assigneeIds: Array.isArray(t.assigneeIds)
-        ? [...t.assigneeIds]
-        : (t.assigneeId ? [t.assigneeId] : []),
-      labels: [...(t.labels ?? [])],
+      columnId: original.columnId,
+      priority: original.priority,
+      title: original.title,
+      description: original.description,
+      dueDate: original.dueDate,
+      startDate: original.startDate,
+      assigneeIds: Array.isArray(original.assigneeIds)
+        ? [...original.assigneeIds]
+        : (original.assigneeId ? [original.assigneeId] : []),
+      labels: [...(original.labels ?? [])],
     };
-    Object.assign(t, patch);
+    // Replace-in-array rather than mutate-in-place. `notify()` only
+    // spreads the top-level data object — if we mutated the task via
+    // Object.assign, `data.tasks` would keep the same array ref and
+    // any `useMemo([tasks])` consumer would skip recomputing. The UI
+    // then renders the pre-move bucketing even though the underlying
+    // card has already changed column. New array ref → memo invalidates
+    // → board re-renders.
+    const updated: Task = { ...original, ...patch };
+    this.data.tasks = [
+      ...this.data.tasks.slice(0, idx),
+      updated,
+      ...this.data.tasks.slice(idx + 1),
+    ];
     const after = {
-      columnId: t.columnId,
-      priority: t.priority,
-      title: t.title,
-      description: t.description,
-      dueDate: t.dueDate,
-      startDate: t.startDate,
-      assigneeIds: Array.isArray(t.assigneeIds)
-        ? [...t.assigneeIds]
-        : (t.assigneeId ? [t.assigneeId] : []),
-      labels: [...(t.labels ?? [])],
+      columnId: updated.columnId,
+      priority: updated.priority,
+      title: updated.title,
+      description: updated.description,
+      dueDate: updated.dueDate,
+      startDate: updated.startDate,
+      assigneeIds: Array.isArray(updated.assigneeIds)
+        ? [...updated.assigneeIds]
+        : (updated.assigneeId ? [updated.assigneeId] : []),
+      labels: [...(updated.labels ?? [])],
     };
 
     if (before.columnId !== after.columnId) {
@@ -796,9 +809,18 @@ class FlizowStore {
   }
 
   updateOpsTask(id: string, patch: Partial<OpsTask>) {
-    const t = this.data.opsTasks.find(t => t.id === id);
-    if (!t) return;
-    Object.assign(t, patch);
+    const idx = this.data.opsTasks.findIndex(t => t.id === id);
+    if (idx === -1) return;
+    // Replace-in-array (not mutate-in-place) so `data.opsTasks` gets a
+    // fresh reference. Without this, OpsPage's `useMemo([tasks])`
+    // caches the pre-move bucketing — a card dragged to a new column
+    // only surfaces after a hard refresh. Same reasoning as updateTask().
+    const updated: OpsTask = { ...this.data.opsTasks[idx], ...patch };
+    this.data.opsTasks = [
+      ...this.data.opsTasks.slice(0, idx),
+      updated,
+      ...this.data.opsTasks.slice(idx + 1),
+    ];
     this.save();
   }
 

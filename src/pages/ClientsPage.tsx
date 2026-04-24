@@ -46,8 +46,21 @@ export function ClientsPage() {
   const [activeView, setActiveView] = useState<SavedViewId>('all');
   const [search, setSearch] = useState('');
   const [showAddClient, setShowAddClient] = useState(false);
+  // Demo loader sits in the empty state so a first-time user lands on
+  // something to do, not a stale message. Tracked locally so the button
+  // can show a loading spinner while the dynamic import resolves.
+  const [loadingDemo, setLoadingDemo] = useState(false);
 
   const currentMemberId = store.getCurrentMemberId();
+
+  const handleLoadDemo = async () => {
+    setLoadingDemo(true);
+    try {
+      await store.loadDemoData();
+    } finally {
+      setLoadingDemo(false);
+    }
+  };
 
   // Compute filtered rows + per-view counts in one pass so the chip labels
   // stay in lockstep with the list and we don't walk the client list
@@ -141,20 +154,59 @@ export function ClientsPage() {
 
         {filtered.length === 0 ? (
           <div className="list-empty-state" role="status" aria-live="polite" style={{ display: 'flex' }}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-            <div className="list-empty-title">No clients match</div>
-            <div className="list-empty-sub">
-              {data.clients.length === 0
-                ? 'This workspace is empty. Add your first client to get started.'
-                : 'Try a different search or saved view.'}
-            </div>
-            {data.clients.length > 0 && (
-              <button type="button" className="list-empty-clear" onClick={handleClear}>
-                Clear filters
-              </button>
+            {data.clients.length === 0 ? (
+              // Fresh workspace — offer both a demo loader (low-friction
+              // poke-around) and a direct "Add client" entry. The demo
+              // button leads so a first-time user has a one-click path
+              // to seeing the product full of realistic data.
+              <>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                <div className="list-empty-title">No clients yet</div>
+                <div className="list-empty-sub">
+                  Load a demo workspace to explore Flizow, or add your first client.
+                </div>
+                <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
+                  <button
+                    type="button"
+                    className="list-empty-clear"
+                    onClick={handleLoadDemo}
+                    disabled={loadingDemo}
+                    style={{
+                      background: 'var(--accent)',
+                      color: '#fff',
+                      borderColor: 'var(--accent)',
+                      opacity: loadingDemo ? 0.7 : 1,
+                      cursor: loadingDemo ? 'progress' : 'pointer',
+                    }}
+                  >
+                    {loadingDemo ? 'Loading demo…' : 'Load demo data'}
+                  </button>
+                  <button
+                    type="button"
+                    className="list-empty-clear"
+                    onClick={() => setShowAddClient(true)}
+                  >
+                    Add client
+                  </button>
+                </div>
+              </>
+            ) : (
+              // Workspace has clients, but the current filter/search
+              // produced no matches.
+              <>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <div className="list-empty-title">No clients match</div>
+                <div className="list-empty-sub">Try a different search or saved view.</div>
+                <button type="button" className="list-empty-clear" onClick={handleClear}>
+                  Clear filters
+                </button>
+              </>
             )}
           </div>
         ) : (
