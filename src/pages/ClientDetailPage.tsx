@@ -13,6 +13,7 @@ import { StatsTab } from '../components/StatsTab';
 import { ConfirmDangerDialog } from '../components/ConfirmDangerDialog';
 import { defaultNextDeliverableAt } from '../data/serviceTemplateOptions';
 import { ServiceMetadataForm } from '../components/shared/ServiceMetadataForm';
+import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
 
 /**
  * Right-hand pane of the Clients split view. Ports the Acme detail layout
@@ -2280,6 +2281,11 @@ function AddContactModal({ clientId, existingPrimary, contact, onClose }: {
   // payload (no point running the validation twice).
   const [pendingDemotion, setPendingDemotion] = useState<string | null>(null);
   const nameRef = useRef<HTMLInputElement>(null);
+  // Trap focus inside the form while it's the top-most modal. When the
+  // demotion confirm stacks over us, disable the trap so Tab can enter
+  // the child dialog — that dialog owns the focus ring until it closes.
+  const modalRef = useRef<HTMLDivElement>(null);
+  useModalFocusTrap(modalRef, !pendingDemotion);
 
   useEffect(() => {
     const t = window.setTimeout(() => {
@@ -2382,7 +2388,7 @@ function AddContactModal({ clientId, existingPrimary, contact, onClose }: {
       aria-labelledby="add-contact-title"
       onClick={handleBackdropClick}
     >
-      <div className="wip-modal" role="document" style={{ maxWidth: 480 }}>
+      <div ref={modalRef} className="wip-modal" role="document" style={{ maxWidth: 480 }}>
         <header className="wip-modal-head">
           <h2 className="wip-modal-title" id="add-contact-title">
             {isEdit ? 'Edit contact' : 'Add contact'}

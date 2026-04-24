@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Touchpoint, TouchpointKind, Member, Contact, Client } from '../types/flizow';
 import { flizowStore } from '../store/flizowStore';
+import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
 import { initialsOf, avatarColor } from '../utils/avatar';
 
 /**
@@ -73,6 +74,12 @@ export function TouchpointModal({
 
   const topicRef = useRef<HTMLInputElement>(null);
   const pickerWrapRef = useRef<HTMLDivElement>(null);
+  // Trap keyboard focus inside the modal. The attendee picker is
+  // rendered inside the modal DOM, so its options are included in the
+  // trap's focusable scan automatically — Tab cycles through topic,
+  // kind, date, the picker chips, and the footer buttons.
+  const modalRef = useRef<HTMLDivElement>(null);
+  useModalFocusTrap(modalRef);
 
   // Autofocus + select on mount. In edit mode select-all because the
   // user is here to change something; in add mode the field is empty
@@ -230,7 +237,7 @@ export function TouchpointModal({
       aria-labelledby="touchpoint-modal-title"
       onClick={handleBackdropClick}
     >
-      <div className="wip-modal" role="document" style={{ maxWidth: 540 }}>
+      <div ref={modalRef} className="wip-modal" role="document" style={{ maxWidth: 540 }}>
         <header className="wip-modal-head">
           <h2 className="wip-modal-title" id="touchpoint-modal-title">{title}</h2>
           <button type="button" className="wip-modal-close" onClick={onClose} aria-label="Close">

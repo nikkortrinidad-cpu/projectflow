@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ServiceType, TemplateKey } from '../../types/flizow';
 import { TEMPLATE_OPTIONS } from '../../data/serviceTemplateOptions';
 import { useModalAutofocus } from '../../hooks/useModalAutofocus';
+import { useModalFocusTrap } from '../../hooks/useModalFocusTrap';
 import { useModalKeyboard } from '../../hooks/useModalKeyboard';
 
 /**
@@ -77,6 +78,10 @@ export function ServiceMetadataForm({
   );
   const [nameError, setNameError] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
+  // Modal shell ref so the focus trap can query descendants. Both add
+  // and edit share this form, so fixing the trap here fixes both flows.
+  const modalRef = useRef<HTMLDivElement>(null);
+  useModalFocusTrap(modalRef);
 
   // Only show templates allowed for the selected type. If the user
   // switches to a type that disallows the current template, snap to
@@ -135,7 +140,7 @@ export function ServiceMetadataForm({
       aria-labelledby={titleId}
       onClick={handleBackdropClick}
     >
-      <div className="wip-modal" role="document" style={{ maxWidth: 520 }}>
+      <div ref={modalRef} className="wip-modal" role="document" style={{ maxWidth: 520 }}>
         <header className="wip-modal-head">
           <h2 className="wip-modal-title" id={titleId}>{resolvedTitle}</h2>
           <button type="button" className="wip-modal-close" onClick={onClose} aria-label="Close">

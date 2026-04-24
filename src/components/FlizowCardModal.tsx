@@ -6,6 +6,7 @@ import { BOARD_LABELS, labelById } from '../constants/labels';
 import { ConfirmDangerDialog } from './ConfirmDangerDialog';
 import FlizowShareModal from './FlizowShareModal';
 import { useActivatableRow } from '../hooks/useActivatableRow';
+import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
 
 /** The modal supports two card "kinds": client tasks (the default) and
  *  internal Ops board tasks. Ops cards skip the client/service header,
@@ -248,6 +249,13 @@ export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDupl
     if (newCheckActive) newCheckInputRef.current?.focus();
   }, [newCheckActive]);
 
+  // ── Focus trap ────────────────────────────────────────────────────
+  // Trap Tab inside the card modal. Disabled while a stacked child
+  // dialog is open (delete confirm or share modal) so Tab can enter
+  // the child — the child owns the focus ring until it closes.
+  const modalRef = useRef<HTMLDivElement>(null);
+  useModalFocusTrap(modalRef, !showDeleteConfirm && !shareOpen);
+
   // ── Derived ───────────────────────────────────────────────────────
   // Client + service lookups only apply to `Task` rows — OpsTask has no
   // clientId / serviceId. `in` narrows the union so TS lets us read the
@@ -318,7 +326,7 @@ export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDupl
       aria-labelledby="cardModalTitle"
       onClick={onClose}
     >
-      <div className="card-modal" onClick={(e) => e.stopPropagation()}>
+      <div ref={modalRef} className="card-modal" onClick={(e) => e.stopPropagation()}>
 
         {/* ── Titlebar ───────────────────────────────────────────── */}
         <div className="card-titlebar">
