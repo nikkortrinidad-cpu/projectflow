@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRoute, navigate } from '../router';
 import { useFlizow } from '../store/useFlizow';
 import type {
-  Client, Service, ServiceType, TemplateKey, Task, Member, FlizowData, ClientStatus,
+  Client, Service, Task, Member, FlizowData, ClientStatus,
   OnboardingItem, Contact, QuickLink,
 } from '../types/flizow';
 import { flizowStore, type FlizowStore } from '../store/flizowStore';
@@ -11,7 +11,8 @@ import { NotesTab } from '../components/NotesTab';
 import { TouchpointsTab } from '../components/TouchpointsTab';
 import { StatsTab } from '../components/StatsTab';
 import { ConfirmDangerDialog } from '../components/ConfirmDangerDialog';
-import { TEMPLATE_OPTIONS, defaultNextDeliverableAt } from '../data/serviceTemplateOptions';
+import { defaultNextDeliverableAt } from '../data/serviceTemplateOptions';
+import { ServiceMetadataForm } from '../components/shared/ServiceMetadataForm';
 
 /**
  * Right-hand pane of the Clients split view. Ports the Acme detail layout
@@ -2196,197 +2197,44 @@ function statusChipLabel(status: ClientStatus): string {
 // ── Add Service Modal ─────────────────────────────────────────────────────
 
 // Template options + the date default live in src/data/serviceTemplateOptions
-// so EditServiceModal can share them without reaching across files.
+// so both modals can share the source of truth.
 
 function AddServiceModal({ clientId, onClose }: {
   clientId: string;
   onClose: () => void;
 }) {
-  const [name, setName] = useState('');
-  const [type, setType] = useState<ServiceType>('retainer');
-  const [templateKey, setTemplateKey] = useState<TemplateKey>('demandgen');
-  const [nextDeliverableAt, setNextDeliverableAt] = useState<string>(defaultNextDeliverableAt);
-  const [nameError, setNameError] = useState(false);
-  const nameRef = useRef<HTMLInputElement>(null);
-
-  // Keep the template valid for the selected type. If the user picks
-  // "project" while a retainer-only template is selected, snap to the first
-  // template that still fits rather than letting them save a mismatch.
-  const visibleTemplates = useMemo(
-    () => TEMPLATE_OPTIONS.filter(t => t.allowed.includes(type)),
-    [type],
-  );
-
-  useEffect(() => {
-    if (!visibleTemplates.some(t => t.value === templateKey) && visibleTemplates.length) {
-      setTemplateKey(visibleTemplates[0].value);
-    }
-  }, [visibleTemplates, templateKey]);
-
-  useEffect(() => {
-    const t = window.setTimeout(() => nameRef.current?.focus(), 80);
-    return () => window.clearTimeout(t);
-  }, []);
-
-  function handleSave() {
-    const trimmedName = name.trim();
-    if (!trimmedName) {
-      setNameError(true);
-      nameRef.current?.focus();
-      window.setTimeout(() => setNameError(false), 1400);
-      return;
-    }
-
-    const id = `svc-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
-    const service: Service = {
-      id,
-      clientId,
-      name: trimmedName,
-      type,
-      templateKey,
-      progress: 0,
-      nextDeliverableAt,
-      taskIds: [],
-    };
-    flizowStore.addService(service);
-    onClose();
-    // Land on the new board so the user can immediately add their first card.
-    navigate(`#board/${id}`);
-  }
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        onClose();
-        return;
-      }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-        e.preventDefault();
-        handleSave();
-      }
-    }
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onClose, name, type, templateKey, nextDeliverableAt]);
-
-  function handleBackdropClick(e: React.MouseEvent<HTMLDivElement>) {
-    if (e.target === e.currentTarget) onClose();
-  }
-
+  // Thin wrapper over the shared form. This file used to carry ~190
+  // lines of form JSX copy-pasted from EditServiceModal; both are now
+  // ~20-line shells that only differ in their submit handler.
   return (
-    <div
-      className="wip-modal-overlay"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="add-service-title"
-      onClick={handleBackdropClick}
-    >
-      <div className="wip-modal" role="document" style={{ maxWidth: 520 }}>
-        <header className="wip-modal-head">
-          <h2 className="wip-modal-title" id="add-service-title">Add service</h2>
-          <button type="button" className="wip-modal-close" onClick={onClose} aria-label="Close">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        </header>
-
-        <div className="wip-modal-body">
-          <label className="wip-field">
-            <span className="wip-field-label">Service name</span>
-            <input
-              ref={nameRef}
-              type="text"
-              className="wip-field-input"
-              value={name}
-              onChange={(e) => { setName(e.target.value); if (nameError) setNameError(false); }}
-              placeholder="e.g. Q2 Paid Social Retainer"
-              style={nameError ? { borderColor: 'var(--status-fire)' } : undefined}
-              aria-invalid={nameError || undefined}
-            />
-          </label>
-
-          <div className="wip-field" role="radiogroup" aria-label="Service type">
-            <span className="wip-field-label">Type</span>
-            <div style={{ display: 'flex', gap: 8 }}>
-              {(['retainer', 'project'] as ServiceType[]).map(opt => {
-                const checked = type === opt;
-                return (
-                  <button
-                    key={opt}
-                    type="button"
-                    role="radio"
-                    aria-checked={checked}
-                    onClick={() => setType(opt)}
-                    style={{
-                      flex: 1,
-                      padding: '10px 14px',
-                      borderRadius: 8,
-                      border: checked
-                        ? '2px solid var(--highlight)'
-                        : '1px solid var(--hairline-soft)',
-                      background: checked ? 'var(--highlight-soft)' : 'var(--bg-elev)',
-                      color: 'var(--text)',
-                      font: 'inherit',
-                      fontWeight: checked ? 600 : 400,
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                    }}
-                  >
-                    <div style={{ textTransform: 'capitalize' }}>{opt}</div>
-                    <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-soft)', marginTop: 2 }}>
-                      {opt === 'retainer'
-                        ? 'Ongoing monthly scope'
-                        : 'Fixed deliverable, ships once'}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <label className="wip-field">
-            <span className="wip-field-label">Template</span>
-            <select
-              className="wip-field-input"
-              value={templateKey}
-              onChange={(e) => setTemplateKey(e.target.value as TemplateKey)}
-            >
-              {visibleTemplates.map(t => (
-                <option key={t.value} value={t.value}>{t.label}</option>
-              ))}
-            </select>
-            <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-faint)', marginTop: 4, display: 'block' }}>
-              Seeds the board with starter columns and a few example cards.
-            </span>
-          </label>
-
-          <label className="wip-field">
-            <span className="wip-field-label">
-              {type === 'project' ? 'Due date' : 'Next deliverable'}
-            </span>
-            <input
-              type="date"
-              className="wip-field-input"
-              value={nextDeliverableAt}
-              onChange={(e) => setNextDeliverableAt(e.target.value)}
-            />
-          </label>
-        </div>
-
-        <footer className="wip-modal-foot">
-          <button type="button" className="wip-btn wip-btn-ghost" onClick={onClose}>
-            Cancel
-          </button>
-          <button type="button" className="wip-btn wip-btn-primary" onClick={handleSave}>
-            Create service
-          </button>
-        </footer>
-      </div>
-    </div>
+    <ServiceMetadataForm
+      mode="add"
+      initial={{
+        name: '',
+        type: 'retainer',
+        templateKey: 'demandgen',
+        progress: 0,
+        nextDeliverableAt: defaultNextDeliverableAt(),
+      }}
+      onClose={onClose}
+      onSubmit={(values) => {
+        const id = `svc-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+        const service: Service = {
+          id,
+          clientId,
+          name: values.name,
+          type: values.type,
+          templateKey: values.templateKey,
+          progress: 0,
+          nextDeliverableAt: values.nextDeliverableAt,
+          taskIds: [],
+        };
+        flizowStore.addService(service);
+        onClose();
+        // Land on the new board so the user can immediately add their first card.
+        navigate(`#board/${id}`);
+      }}
+    />
   );
 }
 
