@@ -85,26 +85,30 @@ function migrate(parsed: Partial<FlizowData>): FlizowData {
     ...c,
     teamIds: Array.isArray(c.teamIds) ? c.teamIds : [],
   }));
-  // Ops-team seed + Ops-task seed run together, gated on the presence of
-  // the ops-team roster. The two pieces belong to the same surface (Ops
-  // board) — seeding one without the other would leave you with 12 cards
-  // assigned to missing members, or 6 members sitting on an empty board.
-  // Idempotent by id: existing ops-team members are left alone so manual
-  // edits (role titles, colours) survive a reload.
+  // Ops-team + Ops-task seeding. The two seeds are decoupled so a
+  // partial state (members seeded but tasks missing, or vice versa —
+  // can happen across a migration rollout or a device with stale
+  // localStorage) self-heals on next load.
+  //
+  // Member seed: idempotent per id. Compare each OPS_TEAM_MEMBERS entry
+  // against existing members and add only the missing ones. That way a
+  // user who renamed "Ryan Castro" or changed a colour keeps their edit.
+  //
+  // Task seed: one-shot gate via `opsTasks.length === 0`. If the pile is
+  // empty we seed. Users who deliberately delete everything will see the
+  // pile come back on next load — acceptable for v1; we'll gate on a
+  // flag when someone actually needs the "empty on purpose" affordance.
   const existingMembers = parsed.members ?? base.members;
-  const haveAnyOpsTeam = OPS_TEAM_MEMBERS.some(seed =>
-    existingMembers.some(m => m.id === seed.id),
+  const missingOpsTeam = OPS_TEAM_MEMBERS.filter(
+    seed => !existingMembers.some(m => m.id === seed.id),
   );
-  let members = existingMembers;
+  const members = missingOpsTeam.length
+    ? [...existingMembers, ...missingOpsTeam]
+    : existingMembers;
+
   let opsTasks = parsed.opsTasks ?? base.opsTasks;
-  if (!haveAnyOpsTeam) {
-    members = [...existingMembers, ...OPS_TEAM_MEMBERS];
-    if (!opsTasks.length) {
-      // First-load seed. Keeps a fresh workspace from opening to an
-      // empty Ops board — same UX the old `useState(INITIAL_TASKS)` gave
-      // us before the store owned this data.
-      opsTasks = OPS_TASK_SEED.map(t => ({ ...t }));
-    }
+  if (opsTasks.length === 0) {
+    opsTasks = OPS_TASK_SEED.map(t => ({ ...t }));
   }
   return {
     clients,
@@ -219,11 +223,24 @@ class FlizowStore {
         const payload = snapshot.data();
         if (payload && typeof payload.data === 'string') {
           try {
-            const cloud = migrate(JSON.parse(payload.data));
+            const raw = JSON.parse(payload.data) as Partial<FlizowData>;
+            const cloud = migrate(raw);
+            // Did migrate() add anything? If the cloud doc was written by
+            // a build that pre-dates a seed (Ops team, Ops tasks, etc.),
+            // our in-memory copy now has entries the cloud doesn't. Push
+            // back so the seed persists — otherwise every sign-in would
+            // re-apply the same migration silently across devices.
+            const seededMembers =
+              (raw.members?.length ?? 0) !== cloud.members.length;
+            const seededOpsTasks =
+              (raw.opsTasks?.length ?? 0) !== cloud.opsTasks.length;
             this.data = cloud;
             this.upsertOwnMember(userId, displayName, email, photoURL);
             localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
             this.notify();
+            if (seededMembers || seededOpsTasks) {
+              this.saveToFirestore();
+            }
           } catch (err) {
             console.error('Failed to parse Flizow cloud state:', err);
           }

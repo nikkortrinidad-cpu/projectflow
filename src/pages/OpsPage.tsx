@@ -29,10 +29,14 @@ type DueMod = '' | 'due-overdue' | 'due-soon' | 'due-waiting' | 'due-blocked';
 
 // ── Column layout ────────────────────────────────────────────────────
 
-const COLUMNS: Array<{ id: ColumnId; title: string; dot: string; emptyHide?: boolean }> = [
+// Fixed five-column board. We used to hide Blocked when empty, but the
+// missing column read as a bug ("where's the Blocked column?") more
+// often than it read as calm. Predictable layout wins over empty-state
+// trimming on a board this small.
+const COLUMNS: Array<{ id: ColumnId; title: string; dot: string }> = [
   { id: 'todo',       title: 'To Do',        dot: 'todo' },
   { id: 'inprogress', title: 'In Progress',  dot: 'progress' },
-  { id: 'blocked',    title: 'Blocked',      dot: 'blocked', emptyHide: true },
+  { id: 'blocked',    title: 'Blocked',      dot: 'blocked' },
   { id: 'review',     title: 'Needs Review', dot: 'review' },
   { id: 'done',       title: 'Done',         dot: 'done' },
 ];
@@ -146,7 +150,6 @@ export function OpsPage() {
         <div className="board" id="opsBoard">
           {COLUMNS.map(col => {
             const colTasks = tasksByColumn.get(col.id) ?? [];
-            if (col.emptyHide && colTasks.length === 0) return null;
             return (
               <Column
                 key={col.id}
