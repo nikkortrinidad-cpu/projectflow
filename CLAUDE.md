@@ -296,7 +296,8 @@ git push origin main
 
 ## Design Standards
 
-Before creating or modifying any UI layout, mockup, or component, always read and follow the design skill file:
+Before creating or modifying any UI layout, mockup, or component, always read and follow these skill files (in order — belief → execution → code):
+- **`~/Documents/Claude/skills/apple-design-principles.md`** — Apple HIG, UX, UI, and Flizow's design language. Core belief, the 10 HIG principles, UX behavior rules, UI execution rules, the 4-tier blue highlight hierarchy, component conventions, and the 8-step audit rubric. The primary design reference.
 - **`~/Documents/Claude/skills/grids-and-layout-design.md`** — Grid systems, typography, composition (Golden Ratio, Rule of Thirds, Gestalt principles), line length rules (45–70 cpl), spacing, and a pre-flight checklist.
 - **`~/Documents/Claude/skills/coding-best-practices.md`** — Code quality, readability, and maintainability standards.
 
