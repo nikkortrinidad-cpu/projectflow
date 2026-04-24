@@ -93,3 +93,23 @@ export function navigate(hash: string) {
   if (window.location.hash === normalized) return;
   window.location.hash = normalized;
 }
+
+/**
+ * Navigate to `hash` AND guarantee a fresh hashchange event even if we
+ * were already on that hash. Callers use this when a downstream page
+ * has a mount-time effect keyed to hashchange that needs to re-fire —
+ * most notably BoardPage's "open the card whose id is in sessionStorage"
+ * flow after a card duplicate.
+ *
+ * Implementation is a deliberate two-step: set hash to '' so the browser
+ * fires one hashchange, then set to the target so it fires another. The
+ * ugly part is contained here so the callers aren't re-implementing it.
+ * Audit: card-modal M5.
+ */
+export function navigateForceReparse(hash: string) {
+  const normalized = hash.startsWith('#') ? hash : `#${hash}`;
+  if (window.location.hash === normalized) {
+    window.location.hash = '';
+  }
+  window.location.hash = normalized;
+}

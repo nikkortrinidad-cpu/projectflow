@@ -2736,6 +2736,11 @@
     color: var(--text);
     line-height: var(--lh-px-md);  /* 20px — 4px baseline rhythm */
     letter-spacing: -0.005em;
+    /* Cap line length at ~65 characters so long paragraphs stay in
+       the 45-70cpl reading band on wide viewports. Sidebar width
+       alone doesn't enforce it once the sidebar grows past 420px in
+       future layouts. Audit: card-modal M6. */
+    max-width: 65ch;
   }
   .comment-text .mention,
   .comment-input .mention {

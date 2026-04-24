@@ -7,6 +7,7 @@ import { ConfirmDangerDialog } from './ConfirmDangerDialog';
 import FlizowShareModal from './FlizowShareModal';
 import { useActivatableRow } from '../hooks/useActivatableRow';
 import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
+import { navigateForceReparse } from '../router';
 
 /** The modal supports two card "kinds": client tasks (the default) and
  *  internal Ops board tasks. Ops cards skip the client/service header,
@@ -323,7 +324,15 @@ export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDupl
       className="card-modal-overlay open"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="cardModalTitle"
+      // Previously `aria-labelledby="cardModalTitle"` pointed at the
+      // title <input>, which means the dialog's accessible name was
+      // re-derived from the input's value on every keystroke. Screen
+      // readers announced the name change on every character typed.
+      // Using the committed `task.title` as a plain aria-label gives
+      // the dialog a stable name that only changes when the user
+      // commits a rename (blur / Enter), which is what we want.
+      // Audit: card-modal M4.
+      aria-label={task.title || 'Card details'}
       onClick={onClose}
     >
       <div ref={modalRef} className="card-modal" onClick={(e) => e.stopPropagation()}>
@@ -392,16 +401,13 @@ export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDupl
                     // on BoardPage picks it up and opens the modal.
                     sessionStorage.setItem('flizow-open-card', newId);
                     if (task && 'serviceId' in task && task.serviceId) {
-                      // Force hash re-parse so BoardPage re-runs its
-                      // mount-time auto-open effect even if we're on
-                      // the same board. Works by setting to '#' first.
-                      const target = `#board/${task.serviceId}`;
-                      if (window.location.hash === target) {
-                        window.location.hash = '';
-                        window.location.hash = target;
-                      } else {
-                        window.location.hash = target;
-                      }
+                      // BoardPage's auto-open effect listens on
+                      // hashchange, so we need a fresh fire even if we
+                      // were already on this board. The "set to ''
+                      // then to target" trick lives in the router
+                      // helper so callers don't duplicate it. Audit:
+                      // card-modal M5.
+                      navigateForceReparse(`#board/${task.serviceId}`);
                     }
                   }}
                   onKeyDown={(e) => {
