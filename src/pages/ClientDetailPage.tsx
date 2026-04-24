@@ -1654,7 +1654,7 @@ function AboutSection({ client, data }: { client: Client; data: FlizowData }) {
       {showAddContact && (
         <AddContactModal
           clientId={client.id}
-          hasPrimary={contacts.some(c => c.primary)}
+          existingPrimary={contacts.find(c => c.primary) ?? null}
           onClose={() => setShowAddContact(false)}
         />
       )}
@@ -1665,7 +1665,7 @@ function AboutSection({ client, data }: { client: Client; data: FlizowData }) {
         return (
           <AddContactModal
             clientId={client.id}
-            hasPrimary={contacts.some(c => c.primary)}
+            existingPrimary={contacts.find(c => c.primary) ?? null}
             contact={target}
             onClose={() => setEditContactId(null)}
           />
@@ -2246,9 +2246,14 @@ function AddServiceModal({ clientId, onClose }: {
 
 // ── Add Contact Modal ─────────────────────────────────────────────────────
 
-function AddContactModal({ clientId, hasPrimary, contact, onClose }: {
+function AddContactModal({ clientId, existingPrimary, contact, onClose }: {
   clientId: string;
-  hasPrimary: boolean;
+  /** The client's current primary contact, or null if none exists.
+   *  We need the actual record (not just a boolean) so the demotion
+   *  confirm can name the person being demoted — "Jamie Chen will
+   *  stop being primary" is a lot more honest than "the primary will
+   *  change." Audit: add-contact-modal.md H1. */
+  existingPrimary: Contact | null;
   /** When provided, the modal switches to edit mode: pre-fills every
    *  field, flips the title + save button copy, and calls updateContact
    *  instead of addContact. Keeping one component for both flows means
@@ -2257,17 +2262,23 @@ function AddContactModal({ clientId, hasPrimary, contact, onClose }: {
   onClose: () => void;
 }) {
   const isEdit = !!contact;
+  const hasPrimary = !!existingPrimary;
   const [name, setName] = useState(contact?.name ?? '');
   const [role, setRole] = useState(contact?.role ?? '');
   const [email, setEmail] = useState(contact?.email ?? '');
   const [phone, setPhone] = useState(contact?.phone ?? '');
   // Edit mode honours the contact's existing flag; add mode defaults to
   // "primary" only when the client has no primary yet (first-contact case).
-  // New primary demotes the old one — the store handles that.
+  // New primary demotes the old one — the store handles that, but we
+  // gate the save behind a confirm first (see pendingDemotion below).
   const [primary, setPrimary] = useState<boolean>(
     isEdit ? !!contact.primary : !hasPrimary,
   );
   const [nameError, setNameError] = useState(false);
+  // When non-null, a demotion confirm dialog is stacked over the form.
+  // Tracked as a trimmed-name string so we can reuse it as the saved
+  // payload (no point running the validation twice).
+  const [pendingDemotion, setPendingDemotion] = useState<string | null>(null);
   const nameRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -2281,14 +2292,21 @@ function AddContactModal({ clientId, hasPrimary, contact, onClose }: {
     return () => window.clearTimeout(t);
   }, [isEdit]);
 
-  function handleSave() {
-    const trimmedName = name.trim();
-    if (!trimmedName) {
-      setNameError(true);
-      nameRef.current?.focus();
-      window.setTimeout(() => setNameError(false), 1400);
-      return;
-    }
+  // True when saving with `primary === true` would demote a *different*
+  // contact. Editing the existing primary with primary still true is a
+  // no-op; adding a new primary when there's no current primary is
+  // first-primary, not a demotion.
+  function wouldDemote(trimmedName: string): boolean {
+    if (!primary) return false;
+    if (!existingPrimary) return false;
+    if (isEdit && contact && existingPrimary.id === contact.id) return false;
+    // Silence the unused-arg warning without sacrificing the signature
+    // symmetry with handleSave.
+    void trimmedName;
+    return true;
+  }
+
+  function persistSave(trimmedName: string) {
     if (isEdit && contact) {
       flizowStore.updateContact(contact.id, {
         name: trimmedName,
@@ -2313,7 +2331,29 @@ function AddContactModal({ clientId, hasPrimary, contact, onClose }: {
     onClose();
   }
 
+  function handleSave() {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setNameError(true);
+      nameRef.current?.focus();
+      window.setTimeout(() => setNameError(false), 1400);
+      return;
+    }
+    if (wouldDemote(trimmedName)) {
+      // Park the save behind a confirm. Weekly WIP pings route by the
+      // primary flag, so flipping it without a visible "you are about
+      // to demote Jamie" beat was a forgiveness-principle failure.
+      setPendingDemotion(trimmedName);
+      return;
+    }
+    persistSave(trimmedName);
+  }
+
   useEffect(() => {
+    // While the stacked confirm is open, let *that* modal own the
+    // keyboard — otherwise Escape would close both at once and
+    // Cmd+Enter would save twice.
+    if (pendingDemotion) return;
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') {
         e.preventDefault();
@@ -2328,7 +2368,7 @@ function AddContactModal({ clientId, hasPrimary, contact, onClose }: {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onClose, name, role, email, phone, primary]);
+  }, [onClose, name, role, email, phone, primary, pendingDemotion]);
 
   function handleBackdropClick(e: React.MouseEvent<HTMLDivElement>) {
     if (e.target === e.currentTarget) onClose();
@@ -2418,13 +2458,14 @@ function AddContactModal({ clientId, hasPrimary, contact, onClose }: {
               Set as primary contact
             </span>
             <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-faint)' }}>
-              {/* In edit mode: if this contact is already primary, don't
-                  threaten "will replace" — nothing's being replaced.
-                  Otherwise mirror the add-mode hint. */}
+              {/* Naming the existing primary in the hint means a
+                  distracted user sees the consequence before saving, not
+                  just in a post-save toast. The stacked confirm still
+                  runs on save either way. */}
               {isEdit && contact?.primary
                 ? '— this is the primary contact'
-                : hasPrimary
-                  ? '— this will replace the current primary'
+                : existingPrimary
+                  ? `— replaces ${existingPrimary.name} as primary`
                   : '— gets CC\u2019d on Weekly WIP pings'}
             </span>
           </label>
@@ -2439,6 +2480,32 @@ function AddContactModal({ clientId, hasPrimary, contact, onClose }: {
           </button>
         </footer>
       </div>
+
+      {pendingDemotion && existingPrimary && (
+        <ConfirmDangerDialog
+          title="Reassign primary contact?"
+          body={
+            <>
+              <p style={{ margin: 0 }}>
+                <strong>{existingPrimary.name}</strong> will stop being the
+                primary contact for this client. They'll no longer receive
+                Weekly WIP pings.
+              </p>
+              <p style={{ margin: '10px 0 0' }}>
+                <strong>{pendingDemotion}</strong> will take over the
+                primary role.
+              </p>
+            </>
+          }
+          confirmLabel="Switch primary"
+          onConfirm={() => {
+            const trimmedName = pendingDemotion;
+            setPendingDemotion(null);
+            persistSave(trimmedName);
+          }}
+          onClose={() => setPendingDemotion(null)}
+        />
+      )}
     </div>
   );
 }
