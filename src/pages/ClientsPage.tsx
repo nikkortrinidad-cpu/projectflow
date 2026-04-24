@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRoute, navigate } from '../router';
 import { flizowStore } from '../store/flizowStore';
 import { useFlizow } from '../store/useFlizow';
+import { useModalAutofocus } from '../hooks/useModalAutofocus';
+import { useModalKeyboard } from '../hooks/useModalKeyboard';
 import {
   servicePills,
   clientMetric,
@@ -482,10 +484,7 @@ function AddClientModal({ members, todayISO, onClose }: {
   // at creation.
   const ams = useMemo(() => members.filter(m => m.type === 'am'), [members]);
 
-  useEffect(() => {
-    const t = window.setTimeout(() => nameRef.current?.focus(), 80);
-    return () => window.clearTimeout(t);
-  }, []);
+  useModalAutofocus(nameRef);
 
   function handleSave() {
     const trimmedName = name.trim();
@@ -521,22 +520,8 @@ function AddClientModal({ members, todayISO, onClose }: {
     navigate(`#clients/${id}`);
   }
 
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        onClose();
-        return;
-      }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-        e.preventDefault();
-        handleSave();
-      }
-    }
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onClose, name, industry, industryCategory, amId, mrr, renewsAt, status, logoClass]);
+  // Escape closes; ⌘/Ctrl+Enter saves. Shared hook.
+  useModalKeyboard({ onClose, onSave: handleSave });
 
   function handleBackdropClick(e: React.MouseEvent<HTMLDivElement>) {
     if (e.target === e.currentTarget) onClose();

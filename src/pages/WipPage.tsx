@@ -5,6 +5,8 @@ import { useFlizow } from '../store/useFlizow';
 import type { Client, ManualAgendaItem, Service, Task } from '../types/flizow';
 import { daysBetween } from '../utils/dateFormat';
 import { useActivatableRow } from '../hooks/useActivatableRow';
+import { useModalAutofocus } from '../hooks/useModalAutofocus';
+import { useModalKeyboard } from '../hooks/useModalKeyboard';
 
 /**
  * Weekly WIP — the standing-meeting agenda page.
@@ -761,12 +763,9 @@ function AddAgendaItemModal({ clients, existing, hasManualItems, onClose }: {
   const [titleError, setTitleError] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
 
-  // Auto-focus the title field after the overlay mounts. Small delay so
-  // the transition doesn't eat the focus ring.
-  useEffect(() => {
-    const timer = window.setTimeout(() => titleRef.current?.focus(), 80);
-    return () => window.clearTimeout(timer);
-  }, []);
+  // Auto-focus the title field after the overlay mounts. Shared hook
+  // encapsulates the 80ms "wait for the transition" delay.
+  useModalAutofocus(titleRef);
 
   function handleSave() {
     const trimmedTitle = title.trim();
@@ -791,27 +790,8 @@ function AddAgendaItemModal({ clients, existing, hasManualItems, onClose }: {
     onClose();
   }
 
-  // Global keys while the modal is open: Escape closes, ⌘/Ctrl+Enter
-  // saves from anywhere (not just the title field). Bound at window
-  // level so either works no matter which input is focused.
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        onClose();
-        return;
-      }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-        e.preventDefault();
-        handleSave();
-      }
-    }
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-    // handleSave closes over title/clientId/note/position/isEdit/existing, so
-    // rebind whenever any of those change. Cheap — the modal's input set is small.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onClose, title, clientId, note, position, isEdit, existing]);
+  // Escape closes; ⌘/Ctrl+Enter saves. Shared hook.
+  useModalKeyboard({ onClose, onSave: handleSave });
 
   function handleBackdropClick(e: React.MouseEvent<HTMLDivElement>) {
     if (e.target === e.currentTarget) onClose();
@@ -952,13 +932,9 @@ function PreReadModal({ groups, todayISO, nextMeeting, itemCount, estMinutes, on
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') { e.preventDefault(); onClose(); }
-    }
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  // Escape-to-close only — no save shortcut since this modal compiles
+  // text, it doesn't write state.
+  useModalKeyboard({ onClose });
 
   async function handleCopy() {
     const text = body;

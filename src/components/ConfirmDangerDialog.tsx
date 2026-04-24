@@ -1,4 +1,6 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useRef, type ReactNode } from 'react';
+import { useModalAutofocus } from '../hooks/useModalAutofocus';
+import { useModalKeyboard } from '../hooks/useModalKeyboard';
 
 /**
  * Reusable "are you sure" dialog for destructive actions. Matches the
@@ -29,21 +31,13 @@ export function ConfirmDangerDialog({ title, body, confirmLabel, onConfirm, onCl
 }) {
   const confirmRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
-    const t = window.setTimeout(() => confirmRef.current?.focus(), 80);
-    return () => window.clearTimeout(t);
-  }, []);
+  // Focus lands on the destructive button on open — the Apple Finder
+  // pattern: user clicked delete to get here, so "yes, do it" is the
+  // default. Shared hook wraps the 80ms wait-for-transition delay.
+  useModalAutofocus(confirmRef);
 
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        onClose();
-      }
-    }
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  // Escape closes; no save shortcut (the confirm button is the save).
+  useModalKeyboard({ onClose });
 
   function handleBackdropClick(e: React.MouseEvent<HTMLDivElement>) {
     if (e.target === e.currentTarget) onClose();

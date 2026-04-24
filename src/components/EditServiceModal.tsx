@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Service, ServiceType, TemplateKey } from '../types/flizow';
 import { flizowStore } from '../store/flizowStore';
 import { TEMPLATE_OPTIONS } from '../data/serviceTemplateOptions';
+import { useModalAutofocus } from '../hooks/useModalAutofocus';
+import { useModalKeyboard } from '../hooks/useModalKeyboard';
 
 /**
  * Edit-existing-service modal. Covers the fields AddServiceModal sets at
@@ -63,13 +65,7 @@ export function EditServiceModal({ service, onClose }: Props) {
 
   // Autofocus name and select so hitting the modal with Cmd+Return
   // after a typo fix is one gesture, not two.
-  useEffect(() => {
-    const t = window.setTimeout(() => {
-      nameRef.current?.focus();
-      nameRef.current?.select();
-    }, 80);
-    return () => window.clearTimeout(t);
-  }, []);
+  useModalAutofocus(nameRef, { select: true });
 
   function handleSave() {
     const trimmedName = name.trim();
@@ -95,22 +91,9 @@ export function EditServiceModal({ service, onClose }: Props) {
     onClose();
   }
 
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        onClose();
-        return;
-      }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-        e.preventDefault();
-        handleSave();
-      }
-    }
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onClose, name, type, templateKey, progress, nextDeliverableAt]);
+  // Escape closes; Cmd/Ctrl+Enter saves. Shared hook; no more
+  // hand-rolled keydown listener.
+  useModalKeyboard({ onClose, onSave: handleSave });
 
   function handleBackdropClick(e: React.MouseEvent<HTMLDivElement>) {
     if (e.target === e.currentTarget) onClose();

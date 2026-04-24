@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useFlizow } from '../store/useFlizow';
 import { useAuth } from '../contexts/AuthContext';
 import type { Member } from '../types/flizow';
+import { useModalAutofocus } from '../hooks/useModalAutofocus';
 
 /**
  * FlizowShareModal — "Share card" dialog launched from the card detail
@@ -230,13 +231,11 @@ export default function FlizowShareModal({ taskId, onClose }: Props) {
     });
   }, [task, currentMemberId]);
 
-  // Autofocus the email input on mount — matches the mockup's setTimeout
-  // pattern. A short timeout lets the backdrop paint first so the focus
-  // ring doesn't flicker against a white screen.
-  useEffect(() => {
-    const t = window.setTimeout(() => emailInputRef.current?.focus(), 80);
-    return () => window.clearTimeout(t);
-  }, []);
+  // Autofocus the email input on mount. Shared hook handles the 80ms
+  // wait-for-backdrop-paint delay; keydown stays hand-rolled below
+  // because this modal's Escape semantics are nested (close menu first,
+  // then close modal) and don't fit the plain useModalKeyboard shape.
+  useModalAutofocus(emailInputRef);
 
   // Keyboard handling — capture phase so we run before FlizowCardModal's
   // listener. Escape closes the menu first if one's open, otherwise the

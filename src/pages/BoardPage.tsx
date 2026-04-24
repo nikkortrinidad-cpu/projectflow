@@ -11,6 +11,7 @@ import { BoardFilters, applyFilters, EMPTY_FILTERS, type BoardFilterState, type 
 import { EditServiceModal } from '../components/EditServiceModal';
 import { ConfirmDangerDialog } from '../components/ConfirmDangerDialog';
 import { labelById } from '../constants/labels';
+import { useDismissable } from '../hooks/useDismissable';
 
 /**
  * Service Kanban board — per-client workspace for a single service. Shows
@@ -753,65 +754,13 @@ function Breadcrumb({
     return () => window.clearTimeout(t);
   }, [editing]);
 
-  // Close the overflow menu on outside click or Esc.
-  useEffect(() => {
-    if (!menuOpen) return;
-    function onPointer(e: PointerEvent) {
-      if (menuWrapRef.current && !menuWrapRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setMenuOpen(false);
-    }
-    document.addEventListener('pointerdown', onPointer);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('pointerdown', onPointer);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [menuOpen]);
-
-  // Same outside-click + Esc pattern for the Members popover.
-  useEffect(() => {
-    if (!membersOpen) return;
-    function onPointer(e: PointerEvent) {
-      if (membersWrapRef.current && !membersWrapRef.current.contains(e.target as Node)) {
-        setMembersOpen(false);
-      }
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setMembersOpen(false);
-    }
-    document.addEventListener('pointerdown', onPointer);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('pointerdown', onPointer);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [membersOpen]);
-
-  // Same outside-click + Esc pattern for the Board Settings menu. We
-  // don't close it while the confirm-delete dialog is open, because the
-  // dialog lives outside the settings wrap and clicking inside it would
-  // otherwise dismiss the (already closed) menu unnecessarily.
-  useEffect(() => {
-    if (!settingsOpen) return;
-    function onPointer(e: PointerEvent) {
-      if (settingsWrapRef.current && !settingsWrapRef.current.contains(e.target as Node)) {
-        setSettingsOpen(false);
-      }
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setSettingsOpen(false);
-    }
-    document.addEventListener('pointerdown', onPointer);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('pointerdown', onPointer);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [settingsOpen]);
+  // Outside-click + Esc for the three popovers in this subtree: the
+  // overflow (kebab) menu, the Members popover, and Board Settings.
+  // All three share the same dismissal semantics — useDismissable
+  // replaces what used to be three near-identical useEffects.
+  useDismissable(menuWrapRef, menuOpen, () => setMenuOpen(false));
+  useDismissable(membersWrapRef, membersOpen, () => setMembersOpen(false));
+  useDismissable(settingsWrapRef, settingsOpen, () => setSettingsOpen(false));
 
   function commit() {
     const next = draft.trim();
