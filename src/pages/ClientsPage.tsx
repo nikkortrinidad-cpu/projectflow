@@ -145,7 +145,11 @@ export function ClientsPage() {
           </button>
         </div>
 
-        <div className="clients-section-header">All Clients</div>
+        {/* "All Clients" section header used to live here. The page
+            title above is already "Clients" and the default saved-view
+            chip reads "All," so the header tripled the same signal and
+            pushed the filter chips down the page. Removed per audit
+            clients.md M1. */}
 
         <div className="saved-views-wrap">
           <div className="saved-views" role="tablist" aria-label="Saved views">
@@ -162,20 +166,12 @@ export function ClientsPage() {
                 <span className="view-chip-count">{counts[view.id]}</span>
               </button>
             ))}
-            {/* Custom saved views belong with the Templates pass — they share
-                the same "save a named filter set" plumbing. Until that ships,
-                keep the button visible but disabled so the roadmap hint is
-                still discoverable (via title + aria-label) without a fake
-                dialog masquerading as a real feature. */}
-            <button
-              type="button"
-              className="view-chip new-view"
-              aria-label="Custom views arrive with the Templates pass"
-              title="Custom views arrive with the Templates pass"
-              disabled
-            >
-              +
-            </button>
+            {/* A disabled "+ new view" chip used to sit at the end of
+                the row. It looked clickable, read as a button to screen
+                readers, and did nothing — a dead-end affordance. Pulled
+                per audit clients.md M2; the chip will return when the
+                Templates pass actually ships the save-a-filter-set
+                plumbing it was promising. */}
           </div>
         </div>
 
@@ -195,7 +191,19 @@ export function ClientsPage() {
                 <div className="list-empty-sub">
                   Load a demo workspace to explore Flizow, or add your first client.
                 </div>
-                <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
+                {/* Button order + spacing per audit clients.md M4/M5:
+                    "Load demo data" sits on the right so the cursor
+                    lands on the lower-friction first-time path (Fitts'
+                    Law on LTR layouts reads the rightmost button as
+                    primary). gap/marginTop now on the 4-grid. */}
+                <div style={{ display: 'flex', gap: 12, marginTop: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
+                  <button
+                    type="button"
+                    className="list-empty-clear"
+                    onClick={() => setShowAddClient(true)}
+                  >
+                    Add client
+                  </button>
                   <button
                     type="button"
                     className="list-empty-clear"
@@ -210,13 +218,6 @@ export function ClientsPage() {
                     }}
                   >
                     {loadingDemo ? 'Loading demo…' : 'Load demo data'}
-                  </button>
-                  <button
-                    type="button"
-                    className="list-empty-clear"
-                    onClick={() => setShowAddClient(true)}
-                  >
-                    Add client
                   </button>
                 </div>
               </>
@@ -243,7 +244,13 @@ export function ClientsPage() {
               <div>Client</div>
               <div>Services</div>
               <div>Account Manager</div>
-              <div>Status</div>
+              {/* Renamed from "Status" per audit clients.md M3. The
+                  status dot on the left already carries the state
+                  ("On fire" / "At risk" / "On track"); this column
+                  is really "the next thing that needs attention" —
+                  overdue counts, setup %, review due. "Attention"
+                  names the thing instead of duplicating the dot. */}
+              <div>Attention</div>
               <div style={{ textAlign: 'right' }}>Updated</div>
               <div></div>
             </div>
