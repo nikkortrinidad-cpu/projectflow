@@ -3,6 +3,7 @@ import type {
   Client, Touchpoint, ActionItem, Member, Contact, Service, TouchpointKind,
 } from '../types/flizow';
 import type { FlizowStore } from '../store/flizowStore';
+import { initialsOf, avatarColor } from '../utils/avatar';
 import { navigate } from '../router';
 import { formatMonthDay, daysBetween } from '../utils/dateFormat';
 import { ConfirmDangerDialog } from './ConfirmDangerDialog';
@@ -756,22 +757,6 @@ function lookupAttendee(
   return null;
 }
 
-function initialsOf(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return '?';
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[1][0]).toUpperCase();
-}
-
-/** Deterministic pastel hue for a contact id. Keeps each client-side
- *  attendee the same colour across re-renders without us having to
- *  store one. */
-function avatarColor(seed: string): string {
-  let h = 0;
-  for (let i = 0; i < seed.length; i++) h = ((h << 5) - h + seed.charCodeAt(i)) | 0;
-  const hue = Math.abs(h) % 360;
-  return `hsl(${hue} 55% 55%)`;
-}
 
 function labelForKind(kind: TouchpointKind): string {
   switch (kind) {

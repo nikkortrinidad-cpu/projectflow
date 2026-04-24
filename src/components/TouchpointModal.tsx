@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Touchpoint, TouchpointKind, Member, Contact, Client } from '../types/flizow';
 import { flizowStore } from '../store/flizowStore';
+import { initialsOf, avatarColor } from '../utils/avatar';
 
 /**
  * Create / edit modal for Touchpoints. One component drives three
@@ -388,16 +389,3 @@ function fromDatetimeLocal(s: string): string {
   return new Date(s).toISOString();
 }
 
-function initialsOf(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return '?';
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[1][0]).toUpperCase();
-}
-
-function avatarColor(seed: string): string {
-  let h = 0;
-  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
-  const hue = h % 360;
-  return `hsl(${hue} 70% 55%)`;
-}
