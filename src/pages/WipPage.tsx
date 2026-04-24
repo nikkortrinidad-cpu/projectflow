@@ -57,6 +57,11 @@ interface AgendaGroup {
   key: 'new-clients' | 'urgent' | 'ontrack' | 'manual';
   title: string;
   items: AgendaItem[];
+  /** Count of items that matched the group's selector but were
+   *  truncated by the per-group cap. Surfaced in the group head so
+   *  the AM knows there's overflow beyond what the meeting will cover
+   *  — hidden truncation is truncation that breaks trust. Audit: wip M5. */
+  hiddenCount: number;
 }
 
 /** Modal state: closed, open for a new item, or open editing an existing item. */
@@ -208,7 +213,6 @@ export function WipPage() {
           <section className="wip-sub wip-agenda" aria-label="Agenda builder">
             <AgendaToolbar
               count={itemCount}
-              minutes={estMinutes}
               onAdd={() => setModal({ kind: 'add' })}
               onStart={startMeeting}
               onSendPreRead={() => setShowPreRead(true)}
@@ -289,9 +293,8 @@ export function WipPage() {
 
 // ── Toolbar ──────────────────────────────────────────────────────────────
 
-function AgendaToolbar({ count, minutes, onAdd, onStart, onSendPreRead }: {
+function AgendaToolbar({ count, onAdd, onStart, onSendPreRead }: {
   count: number;
-  minutes: number;
   onAdd: () => void;
   onStart: () => void;
   onSendPreRead: () => void;
@@ -299,8 +302,17 @@ function AgendaToolbar({ count, minutes, onAdd, onStart, onSendPreRead }: {
   return (
     <div className="wip-agenda-toolbar">
       <div className="wip-agenda-meta">
-        <span>{count}</span> item{count === 1 ? '' : 's'} on the agenda · est. <span>{minutes}</span> min
-        <span className="wip-save-hint">· Saved just now</span>
+        {/* Toolbar used to read "{count} items · est. {minutes} min ·
+            Saved just now". Two small lies dressed as status: the
+            minute estimate was a `Math.max(15, count * 2)` floor (so
+            any 1-to-7-item agenda read as "15 min"), and "Saved just
+            now" rendered unconditionally with no save event behind it.
+            Both chipped at the AM's trust in the rest of the surface.
+            Now just the honest thing: item count. The pre-read modal
+            and the Live tab still use estMinutes internally to pace
+            the timeline — there it's a pacing guide, not a promise.
+            Audit: wip M2 + M3. */}
+        <span>{count}</span> item{count === 1 ? '' : 's'} on the agenda
       </div>
       <div className="wip-agenda-actions">
         <button type="button" className="wip-btn wip-btn-ring" onClick={onAdd}>
@@ -372,6 +384,15 @@ function AgendaGroupBlock({ group, onRemove, onEditManual }: {
         </div>
         <div className="wip-agenda-group-count">
           {group.items.length} item{group.items.length === 1 ? '' : 's'}
+          {/* When a group's selector matched more than the per-group
+              cap, show "+N more" so the AM knows the meeting won't
+              touch everything. Previously `.slice(0, N)` trimmed
+              silently. Audit: wip M5. */}
+          {group.hiddenCount > 0 && (
+            <span style={{ marginLeft: 6, color: 'var(--text-faint)' }}>
+              · +{group.hiddenCount} more
+            </span>
+          )}
         </div>
       </div>
 
@@ -574,45 +595,48 @@ function buildAgenda(
   todayISO: string,
 ): AgendaGroup[] {
   // 1. New clients: onboard status or started in the last 30 days
-  const newClients = clients
-    .filter(c => {
-      if (c.status === 'onboard') return true;
-      if (!c.startedAt) return false;
-      const age = daysBetween(c.startedAt, todayISO);
-      return age >= 0 && age <= 30;
-    })
-    .slice(0, 6);
+  const newClientsAll = clients.filter(c => {
+    if (c.status === 'onboard') return true;
+    if (!c.startedAt) return false;
+    const age = daysBetween(c.startedAt, todayISO);
+    return age >= 0 && age <= 30;
+  });
+  const newClients = newClientsAll.slice(0, 6);
+  const newClientsHidden = Math.max(0, newClientsAll.length - newClients.length);
 
-  // 2. Urgent: tasks that are blocked, severity critical, or overdue
-  const urgent = tasks
-    .filter(t => {
-      if (t.columnId === 'done') return false;
-      if (t.columnId === 'blocked') return true;
-      if (t.severity === 'critical') return true;
-      if (t.dueDate && daysBetween(todayISO, t.dueDate) < 0) return true;
-      return false;
-    })
-    // Limit to ~12 rows so the urgent group stays scannable
-    .slice(0, 12);
+  // 2. Urgent: tasks that are blocked, severity critical, or overdue.
+  // Capped at 12 rows so the group stays scannable; the remainder
+  // count flows through to the group head so the AM sees there's
+  // more urgent work than the meeting will cover. Audit: wip M5.
+  const urgentAll = tasks.filter(t => {
+    if (t.columnId === 'done') return false;
+    if (t.columnId === 'blocked') return true;
+    if (t.severity === 'critical') return true;
+    if (t.dueDate && daysBetween(todayISO, t.dueDate) < 0) return true;
+    return false;
+  });
+  const urgent = urgentAll.slice(0, 12);
+  const urgentHidden = Math.max(0, urgentAll.length - urgent.length);
 
   // 3. On-track celebratory items: healthy clients with a task due this week
   const onTrackClients = new Set(
     clients.filter(c => c.status === 'track').map(c => c.id),
   );
-  const onTrack = tasks
-    .filter(t => {
-      if (t.columnId === 'done') return false;
-      if (!onTrackClients.has(t.clientId)) return false;
-      if (!t.dueDate) return false;
-      const diff = daysBetween(todayISO, t.dueDate);
-      return diff >= 0 && diff <= 14;
-    })
-    .slice(0, 8);
+  const onTrackAll = tasks.filter(t => {
+    if (t.columnId === 'done') return false;
+    if (!onTrackClients.has(t.clientId)) return false;
+    if (!t.dueDate) return false;
+    const diff = daysBetween(todayISO, t.dueDate);
+    return diff >= 0 && diff <= 14;
+  });
+  const onTrack = onTrackAll.slice(0, 8);
+  const onTrackHidden = Math.max(0, onTrackAll.length - onTrack.length);
 
   return [
     {
       key: 'new-clients',
       title: 'New clients',
+      hiddenCount: newClientsHidden,
       items: newClients.map(c => ({
         key: `nc-${c.id}`,
         kind: 'client',
@@ -625,6 +649,7 @@ function buildAgenda(
     {
       key: 'urgent',
       title: 'Top priority',
+      hiddenCount: urgentHidden,
       items: urgent.map(t => {
         const client = clients.find(c => c.id === t.clientId);
         const service = services.find(s => s.id === t.serviceId);
@@ -644,6 +669,7 @@ function buildAgenda(
     {
       key: 'ontrack',
       title: 'On track',
+      hiddenCount: onTrackHidden,
       items: onTrack.map(t => {
         const client = clients.find(c => c.id === t.clientId);
         const service = services.find(s => s.id === t.serviceId);
@@ -663,6 +689,9 @@ function buildAgenda(
     {
       key: 'manual',
       title: 'Added by hand',
+      // Manual items never get truncated — if the AM added it by hand
+      // we don't hide it from them at render time.
+      hiddenCount: 0,
       items: [...manualItems]
         // Rank ascending = top-of-manual first. Fall back to createdAt
         // so two items with identical rank sort deterministically.
