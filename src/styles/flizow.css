@@ -1717,8 +1717,17 @@
     background: transparent;
     border-radius: 0 2px 2px 0;
   }
-  .card[data-priority="high"]::before { background: var(--accent); }
+  /* Priority stripe scale, from lightest to heaviest visual weight:
+     low        → invisible (default transparent; no weight by design)
+     medium     → 2px amber
+     high       → 2px accent red
+     urgent     → 3px accent red (thicker so it reads louder than high)
+     The urgent case used to fall through to transparent — which meant
+     the demo's most-urgent cards rendered as low-priority. Audit:
+     ops M3 (also fixes Board). */
   .card[data-priority="medium"]::before { background: #ff9f0a; }
+  .card[data-priority="high"]::before { background: var(--accent); }
+  .card[data-priority="urgent"]::before { background: var(--accent); width: 3px; }
 
   /* row 1: labels (left) · due-date pill (right) */
   .card-top {

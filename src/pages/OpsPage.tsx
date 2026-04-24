@@ -198,9 +198,12 @@ function Header({ stats }: { stats: { total: number; inProgress: number; blocked
       <div className="ops-header-text">
         <div className="ops-header-eyebrow">Internal work</div>
         <h1 className="ops-header-title">Ops board</h1>
+        {/* Header sub used to run two lines explaining what goes
+            here vs. on a client board. Useful on first visit, noise
+            on the 300th. Trimmed to the essential-at-a-glance line;
+            the rest was re-learnable by context. Audit: ops M5. */}
         <p className="ops-header-sub">
-          Work the team is doing for the business itself — hiring, finance, process, tooling.
-          Client deliverables stay inside each client profile.
+          Hiring, finance, process, tooling — work the team does for itself.
         </p>
       </div>
       <div className="ops-header-stats" role="group" aria-label="Board summary">
@@ -291,9 +294,12 @@ function Column({
           <div className="column-title">{title}</div>
           <div className="column-count">{tasks.length}</div>
         </div>
-        <div className="column-menu-wrap">
-          <button className="column-menu" aria-label="List options" disabled>⋯</button>
-        </div>
+        {/* No ⋯ menu on Ops columns — the button used to render
+            permanently `disabled`, which broke cross-page consistency
+            (Board's ⋯ does something; Ops's looked the same but
+            didn't). Ops has no per-column WIP limits yet; if/when we
+            add them, the menu can come back wired. Until then, the
+            header reads cleaner without a dead control. Audit: ops M1. */}
       </div>
       <div className="column-cards">
         {tasks.map(task => (
