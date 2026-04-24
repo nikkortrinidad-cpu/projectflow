@@ -894,74 +894,48 @@ export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDupl
           </div>
 
           {/* ── Sidebar ──────────────────────────────────────────── */}
-          {/* Comments + activity are backed by `data.taskComments` /
-              `data.taskActivity`. Ops cards get the Activity tab now
-              (writes go through the shared `logActivity` helper); the
-              Comments tab stays client-only until the Ops board has a
-              comment stream to read from. */}
+          {/* Comments + activity both live in shared pools
+              (`data.taskComments` / `data.taskActivity`) keyed by
+              taskId, so ops and client cards render the same two-tab
+              layout. The store's comment + activity mutators accept
+              either kind of task. */}
           <div className="card-modal-sidebar">
-            {isOps ? (
-              <>
-                <div className="sidebar-tabs" role="tablist" aria-label="Card sidebar">
-                  {/* Single-tab switcher rather than a bare heading — keeps
-                      visual parity with the two-tab client view and leaves
-                      a slot for Comments to slide in next to it. */}
-                  <button
-                    type="button"
-                    className="sidebar-tab active"
-                    role="tab"
-                    aria-selected={true}
-                  >
-                    Activity Log
-                  </button>
-                </div>
-                <div
-                  className="sidebar-content active"
-                  role="tabpanel"
-                >
-                  <ActivityPanel taskId={task.id} members={data.members} activity={data.taskActivity} />
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="sidebar-tabs" role="tablist" aria-label="Card sidebar">
-                  <button
-                    type="button"
-                    className={`sidebar-tab${tab === 'comments' ? ' active' : ''}`}
-                    role="tab"
-                    aria-selected={tab === 'comments'}
-                    onClick={() => setTab('comments')}
-                  >
-                    Comments
-                  </button>
-                  <button
-                    type="button"
-                    className={`sidebar-tab${tab === 'activity' ? ' active' : ''}`}
-                    role="tab"
-                    aria-selected={tab === 'activity'}
-                    onClick={() => setTab('activity')}
-                  >
-                    Activity Log
-                  </button>
-                </div>
+            <div className="sidebar-tabs" role="tablist" aria-label="Card sidebar">
+              <button
+                type="button"
+                className={`sidebar-tab${tab === 'comments' ? ' active' : ''}`}
+                role="tab"
+                aria-selected={tab === 'comments'}
+                onClick={() => setTab('comments')}
+              >
+                Comments
+              </button>
+              <button
+                type="button"
+                className={`sidebar-tab${tab === 'activity' ? ' active' : ''}`}
+                role="tab"
+                aria-selected={tab === 'activity'}
+                onClick={() => setTab('activity')}
+              >
+                Activity Log
+              </button>
+            </div>
 
-                <div
-                  className={`sidebar-content${tab === 'comments' ? ' active' : ''}`}
-                  role="tabpanel"
-                  hidden={tab !== 'comments'}
-                >
-                  <CommentsPanel taskId={task.id} members={data.members} comments={data.taskComments} />
-                </div>
+            <div
+              className={`sidebar-content${tab === 'comments' ? ' active' : ''}`}
+              role="tabpanel"
+              hidden={tab !== 'comments'}
+            >
+              <CommentsPanel taskId={task.id} members={data.members} comments={data.taskComments} />
+            </div>
 
-                <div
-                  className={`sidebar-content${tab === 'activity' ? ' active' : ''}`}
-                  role="tabpanel"
-                  hidden={tab !== 'activity'}
-                >
-                  <ActivityPanel taskId={task.id} members={data.members} activity={data.taskActivity} />
-                </div>
-              </>
-            )}
+            <div
+              className={`sidebar-content${tab === 'activity' ? ' active' : ''}`}
+              role="tabpanel"
+              hidden={tab !== 'activity'}
+            >
+              <ActivityPanel taskId={task.id} members={data.members} activity={data.taskActivity} />
+            </div>
           </div>
         </div>
       </div>

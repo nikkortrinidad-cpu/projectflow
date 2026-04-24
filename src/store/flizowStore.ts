@@ -979,8 +979,9 @@ class FlizowStore {
     const before = this.data.opsTasks.length;
     this.data.opsTasks = this.data.opsTasks.filter(t => t.id !== id);
     if (this.data.opsTasks.length === before) return;
-    // Matches deleteTask's cascade — a card's activity has nowhere to
-    // live without the card.
+    // Matches deleteTask's cascade — comments and activity have nowhere
+    // to live without the card.
+    this.data.taskComments = this.data.taskComments.filter(c => c.taskId !== id);
     this.data.taskActivity = this.data.taskActivity.filter(a => a.taskId !== id);
     this.save();
   }
@@ -1145,7 +1146,11 @@ class FlizowStore {
   ): string | null {
     const trimmed = text.trim();
     if (!trimmed) return null;
-    const task = this.data.tasks.find(t => t.id === taskId);
+    // Comments live in a shared pool keyed by taskId, so either kind of
+    // task can own one. We only need the id to exist somewhere.
+    const task =
+      this.data.tasks.find(t => t.id === taskId) ||
+      this.data.opsTasks.find(t => t.id === taskId);
     if (!task) return null;
     // Authorship falls back to a synthetic "you" id if no user is signed
     // in — the seed demo data uses the same fallback so the UI renders
