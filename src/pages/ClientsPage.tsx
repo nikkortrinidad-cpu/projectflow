@@ -102,7 +102,7 @@ export function ClientsPage() {
   };
 
   return (
-    <div className="view view-clients active" data-view="clients">
+    <div className="view view-clients active">
       <main className="clients-page">
         {/* Full-width header — CSS hides it inside .clients-split-wrapper,
             but we keep it so the same component still renders correctly

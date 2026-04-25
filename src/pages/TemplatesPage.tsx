@@ -235,7 +235,7 @@ export function TemplatesPage() {
   }, [query]);
 
   return (
-    <div className="view view-templates active" data-view="templates">
+    <div className="view view-templates active">
       <div className="templates-split-wrapper">
         <ListPane
           templates={filtered}

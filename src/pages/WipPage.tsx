@@ -186,7 +186,7 @@ export function WipPage() {
   }
 
   return (
-    <div className="view view-wip active" data-view="wip">
+    <div className="view view-wip active">
       <main className="wip-page">
         <header className="wip-header">
           <div className="wip-header-text">

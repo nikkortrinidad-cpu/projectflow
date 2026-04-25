@@ -50,7 +50,7 @@ export function ClientDetailPage() {
   const client = id ? data.clients.find(c => c.id === id) ?? null : null;
 
   return (
-    <div className="view view-client-detail active" data-view="client-detail">
+    <div className="view view-client-detail active">
       {client ? <ClientDetail client={client} data={data} store={store} /> : <EmptyState />}
     </div>
   );

@@ -106,7 +106,7 @@ export function AnalyticsPage() {
   const [drillMember, setDrillMember] = useState<string | null>(null);
 
   return (
-    <div className="view view-analytics active" data-view="analytics">
+    <div className="view view-analytics active">
       <main className="anlx-page">
         <header className="anlx-header">
           <div className="anlx-header-text">

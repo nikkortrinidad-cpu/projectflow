@@ -314,7 +314,7 @@ export function BoardPage() {
 
   if (!service || !client) {
     return (
-      <div className="view view-board active" data-view="board">
+      <div className="view view-board active">
         <EmptyState serviceId={serviceId} />
       </div>
     );
@@ -329,7 +329,7 @@ export function BoardPage() {
   const archivedTasks = serviceTasks.filter(t => !!t.archived);
 
   return (
-    <div className="view view-board active" data-view="board">
+    <div className="view view-board active">
       <BoardBody
         client={client}
         service={service}
@@ -2085,6 +2085,3 @@ function formatArchivedTime(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
-// Unused underscore marker so Priority isn't an unused import.
-// (Keeps types.ts changes cheap if the field gets consumed later.)
-export type _BoardPriorityMarker = Priority;

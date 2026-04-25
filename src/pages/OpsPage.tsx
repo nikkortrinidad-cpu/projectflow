@@ -138,7 +138,7 @@ export function OpsPage() {
   const activeTask = activeId ? tasks.find(t => t.id === activeId) : undefined;
 
   return (
-    <div className="view view-ops active" data-view="ops">
+    <div className="view view-ops active">
       <Header stats={stats} />
       <FiltersBar
         search={search}

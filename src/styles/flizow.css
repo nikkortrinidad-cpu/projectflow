@@ -6268,10 +6268,10 @@
     border-radius: 4px;
   }
   .week-col-body::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
-  .week-col-body.has-overflow {
-    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent 100%);
-    mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent 100%);
-  }
+  /* .week-col-body.has-overflow fade-mask removed — no JS ever sets
+     the `has-overflow` class (no ResizeObserver / scroll-height
+     check wired). Restore from git if/when the overflow-detection
+     ships. Audit: overview L3. */
   .week-task {
     display: block;
     background: var(--bg-soft);
@@ -7313,24 +7313,11 @@
     font-weight: 600;
     box-shadow: 0 0 0 1px color-mix(in srgb, var(--highlight) 20%, transparent);
   }
-  .client-tab-badge {
-    display: inline-flex; align-items: center;
-    padding: 1px 7px;
-    border-radius: 980px;
-    background: color-mix(in srgb, var(--text-faint) 22%, transparent);
-    color: var(--text-muted);
-    font-size: var(--fs-xs); font-weight: 600;
-    font-feature-settings: "tnum";
-    letter-spacing: 0;
-  }
-  .client-tab[data-active="true"] .client-tab-badge {
-    background: color-mix(in srgb, var(--highlight) 18%, transparent);
-    color: var(--highlight);
-  }
-  .client-tab-badge.done {
-    background: color-mix(in srgb, var(--status-track) 20%, transparent);
-    color: var(--status-track);
-  }
+  /* .client-tab-badge + its active/done variants (~18 lines) removed —
+     ClientDetailPage renders `<button className="client-tab">` with
+     no badge element, no unread-count, no has-attention marker.
+     Restore when the feature (likely a per-tab count) ships.
+     Audit: client-detail L1. */
   /* Tab gating lives in React — ClientDetailPage conditionally mounts
      each tab's contents. The `data-active-tab` + `data-tab` display:none
      filter that used to sit here was a parallel hiding layer: it could
