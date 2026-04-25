@@ -13453,3 +13453,51 @@
     outline-offset: 3px;
     box-shadow: inset 0 0 0 2px rgba(255,255,255,0.9);
   }
+
+  /* ─────────────────────────────────────────────────────────────
+     Mobile fixes (B6 audit)
+     The app is desktop-primary (1280–1920). These rules close the
+     three HIGH gaps below 600px so the most-visited surfaces stop
+     being truly broken on phones:
+       - Health strip: 3 columns + dividers stack to 1 column
+       - Analytics workload row: 5 cols at 900px collapse further
+       - .page horizontal padding shrinks
+       - .list-pane-toggle hit zone grows to 44x44 via ::before
+         (visual stays 28x28 so the design doesn't change)
+     ───────────────────────────────────────────────────────────── */
+
+  /* Hit-area expansion for the small list-pane toggle. Visual stays
+     28x28; the invisible ::before reaches out to a 44x44 zone so
+     phone taps register against Apple's 44pt touch-target floor.
+     Audit: mobile HIGH (touch-target undersized). */
+  .list-pane-toggle { position: absolute; }
+  .list-pane-toggle::before {
+    content: "";
+    position: absolute;
+    inset: -8px;
+    border-radius: 12px;
+  }
+
+  @media (max-width: 600px) {
+    /* Page chrome: shrink horizontal padding so content has room. */
+    .page { padding: var(--sp-2xl) var(--sp-xl) 80px; }
+
+    /* Health strip: 3-up doesn't fit. Stack vertically so each
+       cell has full width and the values stay readable. */
+    .health-strip {
+      grid-template-columns: 1fr;
+      gap: var(--sp-md);
+    }
+    .health-divider { display: none; }
+
+    /* Analytics workload row: 4 cells (who, bar, num, chev) is too
+       tight on phones. Drop the bar — the number to the right of
+       it carries the same information, and the bar's relative-share
+       comparison is hard to do on a 320px viewport anyway. Result:
+       name + count + chevron. */
+    .anlx-wl-head, .anlx-wl-row {
+      grid-template-columns: minmax(0, 1fr) 48px 20px;
+    }
+    .anlx-wl-bar,
+    .anlx-wl-head-cell:nth-child(2) { display: none; }
+  }
