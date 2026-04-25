@@ -24,14 +24,32 @@ export function LoginPage() {
     try {
       await signInWithGoogle();
     } catch (err: any) {
-      setError(err?.message || 'Sign in failed. Try again.');
+      // User-cancelled popup is not an error — they explicitly
+      // backed out, surface nothing. For the common-but-confusing
+      // failure modes (popup blocked by browser, network down), give
+      // a plain-language explanation instead of Firebase's raw text.
+      const code: string = err?.code || '';
+      if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+        // silent — user closed the Google popup deliberately
+      } else if (code === 'auth/popup-blocked') {
+        setError('Your browser blocked the Google sign-in popup. Allow popups for this site and try again.');
+      } else if (code === 'auth/network-request-failed') {
+        setError("Couldn't reach Google. Check your connection and try again.");
+      } else if (code === 'auth/unauthorized-domain') {
+        setError('This site isn\'t authorized for Google sign-in yet. Contact support.');
+      } else {
+        setError(err?.message || 'Sign in failed. Try again.');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div
+    // <main> so screen readers expose this as the page's primary
+    // landmark — login is the only thing on the screen, so it IS
+    // the main content. Audit: login HIGH (no landmark).
+    <main
       className="min-h-screen flex items-center justify-center px-6 py-12"
       style={{ backgroundColor: '#f5f5f7' }}
     >
@@ -125,7 +143,7 @@ export function LoginPage() {
             onClick={handleGoogleSignIn}
             disabled={loading}
             aria-busy={loading}
-            className="focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+            className="login-cta"
             style={{
               marginTop: 32,
               width: '100%',
@@ -207,6 +225,6 @@ export function LoginPage() {
           Powered by Firebase · Hosted on GitHub Pages
         </p>
       </div>
-    </div>
+    </main>
   );
 }
