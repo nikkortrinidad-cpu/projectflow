@@ -10639,17 +10639,8 @@
     font-size: var(--fs-md); font-weight: 600; color: var(--text);
     letter-spacing: -0.01em;
   }
-  .wip-next-meta {
-    font-size: var(--fs-xs); font-weight: 500; color: var(--text-soft);
-    letter-spacing: -0.005em; margin-top: 2px;
-  }
-  .wip-next-meta[hidden] { display: none; }
-  .wip-next-meta .wip-next-meta-sep {
-    margin: 0 6px; color: var(--hairline);
-  }
-  .wip-next-meta .wip-next-meta-urgent {
-    color: var(--text); font-weight: 600;
-  }
+  /* .wip-next-meta + children removed — the prestart card renders
+     meeting label + time only; no meta row. Audit: wip M1. */
 
   /* Tab row — Tier 3 tint for active, neutral hover for inactive */
   .wip-tabs {
@@ -10677,14 +10668,10 @@
   .wip-sub { display: block; }
   .wip-sub[hidden] { display: none; }
 
-  /* Agenda builder two-column layout */
-  .wip-agenda-grid {
-    display: grid; grid-template-columns: 380px 1fr;
-    gap: var(--sp-3xl);
-    align-items: start;
-  }
+  /* .wip-agenda-grid (two-column layout) removed — agenda is a
+     single linear column now. Audit: wip M1. */
 
-  /* ── New single-column hierarchical agenda ───────────────────── */
+  /* ── Single-column hierarchical agenda ───────────────────── */
   .wip-agenda-toolbar {
     display: flex; align-items: center; justify-content: space-between;
     gap: var(--sp-lg); flex-wrap: wrap;
@@ -10697,9 +10684,8 @@
     font-size: var(--fs-sm); color: var(--text-soft);
     font-variant-numeric: tabular-nums;
   }
-  .wip-agenda-meta .wip-save-hint {
-    margin-left: var(--sp-xs); color: var(--text-faint);
-  }
+  /* .wip-agenda-meta .wip-save-hint removed — Wave 3 dropped the
+     "Saved just now" theatre span. Audit: wip M1 + M2. */
   .wip-agenda-actions {
     display: flex; gap: var(--sp-sm); flex-wrap: wrap;
   }
@@ -10870,19 +10856,8 @@
     background: color-mix(in srgb, var(--highlight, #0a84ff) 8%, transparent);
     box-shadow: inset 0 -2px 0 0 var(--highlight, #0a84ff);
   }
-  .wip-agenda-flat-note {
-    font-size: var(--fs-xs); color: var(--text-soft);
-    grid-column: 3 / span 1;
-    margin-top: 2px;
-  }
-  /* Custom-order group — single flat list, no client/service grouping */
-  .wip-agenda-group--custom .wip-agenda-group-body {
-    padding: var(--sp-xs);
-  }
-  .wip-agenda-group--custom .wip-agenda-card-row,
-  .wip-agenda-group--custom .wip-agenda-flat-row {
-    margin-left: 0;
-  }
+  /* .wip-agenda-flat-note and .wip-agenda-group--custom overrides
+     deleted — no React renders either class. Audit: wip M1. */
   .wip-agenda-empty {
     padding: var(--sp-3xl);
     background: var(--bg-elev);
@@ -10890,119 +10865,14 @@
     border-radius: 14px;
     text-align: center;
   }
-  .wip-queue-col,
-  .wip-run-col {
-    background: var(--bg-elev);
-    border: 1px solid var(--hairline);
-    border-radius: 14px;
-    padding: var(--sp-2xl);
-    display: flex; flex-direction: column; gap: var(--sp-xl);
-    min-width: 0;
-  }
+  /* Queue/Run two-column layout rules (~120 lines) used to sit
+     here: .wip-queue-col / .wip-run-col containers, .wip-col-head /
+     .wip-col-title / .wip-col-sub, .wip-run-meta pill, the whole
+     .wip-queue* channel-manager group system, .wip-flag-card* severity
+     tiles, .wip-icon-btn, and .wip-queue-empty. None are rendered —
+     the Agenda tab switched to a flat single-column hierarchical
+     layout well before this audit. Audit: wip M1. */
 
-  .wip-col-head {
-    display: flex; align-items: flex-start; justify-content: space-between;
-    gap: var(--sp-base);
-  }
-  .wip-col-title {
-    font-size: var(--fs-lg); font-weight: 600; color: var(--text);
-    letter-spacing: -0.01em;
-  }
-  .wip-col-sub {
-    font-size: var(--fs-xs); color: var(--text-soft);
-    line-height: var(--lh-px-md); margin-top: 2px;
-    max-width: 52ch;
-  }
-  .wip-col-sub strong { color: var(--text-muted); font-weight: 600; }
-
-  .wip-run-meta {
-    font-size: var(--fs-xs); color: var(--text-soft);
-    white-space: nowrap;
-    padding: var(--sp-micro) var(--sp-sm);
-    background: var(--bg-soft);
-    border-radius: 6px;
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* Queue — channel manager groups */
-  .wip-queue {
-    display: flex; flex-direction: column; gap: var(--sp-xl);
-  }
-  .wip-queue-group {
-    display: flex; flex-direction: column; gap: var(--sp-sm);
-  }
-  .wip-queue-group-head {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: var(--sp-sm); padding: 0 var(--sp-micro);
-  }
-  .wip-queue-group-name {
-    font-size: var(--fs-nano); font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.08em; color: var(--text-soft);
-  }
-  .wip-queue-group-count {
-    font-size: var(--fs-nano); color: var(--text-faint);
-    font-variant-numeric: tabular-nums;
-  }
-  .wip-flag-card {
-    display: flex; flex-direction: column; gap: var(--sp-micro);
-    padding: var(--sp-base) var(--sp-lg);
-    background: var(--bg);
-    border: 1px solid var(--hairline);
-    border-radius: 10px;
-    cursor: grab;
-    transition: border-color var(--dur-fast), background var(--dur-fast);
-  }
-  .wip-flag-card:hover {
-    border-color: color-mix(in srgb, var(--text) 18%, transparent);
-    background: color-mix(in srgb, var(--text) 3%, var(--bg));
-  }
-  .wip-flag-card:active { cursor: grabbing; }
-  .wip-flag-card.is-dragging { opacity: 0.5; }
-  .wip-flag-card.is-scheduled {
-    border-style: dashed;
-    opacity: 0.7;
-  }
-  .wip-flag-head {
-    display: flex; align-items: center; gap: var(--sp-sm);
-    justify-content: space-between;
-  }
-  .wip-flag-client {
-    font-size: var(--fs-xs); color: var(--text-soft);
-    font-weight: 500; letter-spacing: -0.005em;
-  }
-  .wip-flag-title {
-    font-size: var(--fs-sm); font-weight: 600; color: var(--text);
-    letter-spacing: -0.01em; line-height: var(--lh-px-md);
-  }
-  .wip-flag-note {
-    font-size: var(--fs-xs); color: var(--text-muted);
-    line-height: var(--lh-px-md);
-    max-width: 62ch;
-  }
-  .wip-flag-actions {
-    display: flex; gap: var(--sp-micro); margin-left: auto;
-  }
-  .wip-icon-btn {
-    width: 24px; height: 24px;
-    display: inline-flex; align-items: center; justify-content: center;
-    background: transparent; border: none; border-radius: 6px;
-    color: var(--text-soft); cursor: pointer;
-    transition: background var(--dur-fast), color var(--dur-fast);
-  }
-  .wip-icon-btn:hover {
-    background: color-mix(in srgb, currentColor 10%, transparent);
-    color: var(--text);
-  }
-  .wip-icon-btn:focus-visible {
-    outline: 2px solid var(--highlight); outline-offset: 2px;
-  }
-
-  .wip-queue-empty {
-    text-align: center; padding: var(--sp-4xl) var(--sp-xl);
-    background: var(--bg);
-    border: 1px dashed var(--hairline);
-    border-radius: 10px;
-  }
   .wip-empty-title {
     font-size: var(--fs-md); font-weight: 600; color: var(--text);
     margin-bottom: 4px;
@@ -11013,161 +10883,15 @@
     line-height: var(--lh-px-md);
   }
 
-  /* Run of show */
-  .wip-run {
-    list-style: none; padding: 0; margin: 0;
-    display: flex; flex-direction: column; gap: var(--sp-sm);
-  }
-  .wip-run-block {
-    display: flex; flex-direction: column;
-    border: 1px solid var(--hairline);
-    border-radius: 10px;
-    background: var(--bg);
-    overflow: hidden;
-    transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
-  }
-  .wip-run-block:hover { border-color: color-mix(in srgb, var(--text) 16%, transparent); }
-  .wip-run-block.is-drop-target {
-    border-color: var(--highlight);
-    background: var(--highlight-soft);
-  }
-  .wip-run-block.is-dragging { opacity: 0.5; }
-  .wip-run-block.is-bau { background: var(--bg-soft); }
-
-  .wip-run-head {
-    display: grid;
-    grid-template-columns: auto auto 1fr auto auto;
-    align-items: center;
-    gap: var(--sp-sm);
-    padding: var(--sp-base) var(--sp-lg);
-    cursor: default;
-  }
-  .wip-run-block[data-reorderable="true"] .wip-run-drag {
-    cursor: grab;
-  }
-  .wip-run-block[data-reorderable="true"].is-dragging .wip-run-drag { cursor: grabbing; }
-  .wip-run-drag {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 22px; height: 22px;
-    color: var(--text-faint);
-    border-radius: 4px;
-    opacity: 0; transition: opacity var(--dur-fast), color var(--dur-fast);
-  }
-  .wip-run-block[data-reorderable="true"]:hover .wip-run-drag,
-  .wip-run-block[data-reorderable="true"]:focus-within .wip-run-drag { opacity: 1; }
-  .wip-run-drag:hover { color: var(--text-muted); }
-
-  .wip-run-index {
-    font-size: var(--fs-xs); color: var(--text-faint);
-    font-variant-numeric: tabular-nums; font-weight: 600;
-    min-width: 18px; text-align: right;
-  }
-  .wip-run-title-col { min-width: 0; }
-  .wip-run-title {
-    font-size: var(--fs-md); font-weight: 600; color: var(--text);
-    letter-spacing: -0.01em;
-  }
-  .wip-run-meta-line {
-    font-size: var(--fs-xs); color: var(--text-soft);
-    margin-top: 2px;
-    display: flex; align-items: center; gap: var(--sp-sm);
-    flex-wrap: wrap;
-  }
-  .wip-run-meta-line .sep { color: var(--text-faint); }
-  .wip-run-meta-line .owner { color: var(--text-muted); }
-  .wip-run-count-pill {
-    font-size: var(--fs-nano); font-weight: 600;
-    padding: 2px 7px; border-radius: 980px;
-    background: var(--bg-soft); color: var(--text-muted);
-    font-variant-numeric: tabular-nums;
-  }
-  .wip-run-count-pill.has-flag {
-    background: color-mix(in srgb, var(--status-fire) 14%, transparent);
-    color: var(--status-fire);
-  }
-
-  /* Early-leave toggle — Tier 3 tint when active */
-  .wip-run-leave {
-    display: inline-flex; align-items: center; gap: var(--sp-micro);
-    padding: 4px var(--sp-sm);
-    background: transparent;
-    border: 1px solid var(--hairline);
-    border-radius: 6px;
-    font-size: var(--fs-nano); font-weight: 600;
-    color: var(--text-soft);
-    cursor: pointer;
-    transition: all var(--dur-fast);
-  }
-  .wip-run-leave:hover { color: var(--text); border-color: color-mix(in srgb, var(--text) 18%, transparent); }
-  .wip-run-leave.is-on {
-    background: var(--highlight-soft);
-    border-color: transparent;
-    color: var(--highlight);
-  }
-  .wip-run-leave svg { width: 10px; height: 10px; }
-
-  .wip-run-expand {
-    width: 22px; height: 22px;
-    display: inline-flex; align-items: center; justify-content: center;
-    background: transparent; border: none; border-radius: 4px;
-    color: var(--text-soft); cursor: pointer;
-    transition: background var(--dur-fast), transform var(--dur-fast);
-  }
-  .wip-run-expand:hover { background: color-mix(in srgb, currentColor 10%, transparent); color: var(--text); }
-  .wip-run-block.is-open .wip-run-expand svg { transform: rotate(90deg); }
-
-  .wip-run-body {
-    padding: 0 var(--sp-lg) var(--sp-base);
-    border-top: 1px solid var(--hairline);
-    display: none;
-    flex-direction: column; gap: var(--sp-sm);
-  }
-  .wip-run-block.is-open .wip-run-body { display: flex; padding-top: var(--sp-base); }
-
-  .wip-item-list {
-    list-style: none; padding: 0; margin: 0;
-    display: flex; flex-direction: column; gap: var(--sp-micro);
-  }
-  .wip-item {
-    display: flex; align-items: flex-start; gap: var(--sp-sm);
-    padding: var(--sp-xs) var(--sp-sm);
-    border-radius: 6px;
-    font-size: var(--fs-sm); color: var(--text);
-    line-height: var(--lh-px-md);
-  }
-  .wip-item:hover { background: color-mix(in srgb, var(--text) 3%, transparent); }
-  .wip-item-dot {
-    width: 6px; height: 6px; border-radius: 50%;
-    margin-top: 7px; flex-shrink: 0;
-    background: var(--text-faint);
-  }
-  .wip-item.has-flag .wip-item-dot { background: var(--status-fire); }
-  .wip-item-title { flex: 1; min-width: 0; max-width: 62ch; }
-  .wip-item-meta {
-    font-size: var(--fs-nano); color: var(--text-soft);
-    margin-left: var(--sp-sm); white-space: nowrap;
-  }
-
-  .wip-item-empty {
-    font-size: var(--fs-xs); color: var(--text-soft);
-    padding: var(--sp-sm) var(--sp-sm);
-    font-style: italic;
-  }
-
-  /* Run footer actions */
-  .wip-run-actions {
-    display: flex; align-items: center; justify-content: space-between;
-    padding-top: var(--sp-lg);
-    border-top: 1px solid var(--hairline);
-  }
-  .wip-run-actions-right {
-    display: flex; gap: var(--sp-sm);
-  }
-  .wip-save-hint {
-    font-size: var(--fs-xs); color: var(--text-faint);
-    transition: color var(--dur-fast);
-  }
-  .wip-save-hint.is-pulse { color: var(--highlight); }
+  /* Run-of-show rails (~150 lines) used to sit here:
+     .wip-run list, .wip-run-block* states (is-drop-target,
+     is-dragging, is-bau, is-open), .wip-run-head grid,
+     .wip-run-drag / -index / -title* / -meta-line / -count-pill /
+     -leave / -expand / -body, .wip-item* pre-pass list, and the
+     .wip-run-actions footer. None are rendered — the Live tab
+     switched to a different structure in the meeting-run pass.
+     .wip-save-hint also deleted (Wave 3 dropped the "Saved just
+     now" span it styled). Audit: wip M1. */
 
   /* Buttons — shared */
   .wip-btn {
@@ -11202,9 +10926,7 @@
     border-color: var(--hairline);
   }
   .wip-btn-ghost:hover:not(:disabled) { color: var(--text); border-color: color-mix(in srgb, var(--text) 18%, transparent); }
-  .wip-btn-muted {
-    border-color: transparent;
-  }
+  /* .wip-btn-muted removed — no consumer. Audit: wip M1. */
 
   /* ── Live meeting pre-start gate ── */
   .wip-live-prestart {
@@ -11429,179 +11151,15 @@
     letter-spacing: 0.08em; text-transform: uppercase;
   }
 
-  .wip-live-flag {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    gap: var(--sp-base);
-    align-items: center;
-    padding: var(--sp-base) var(--sp-lg);
-    border: 1px solid var(--hairline); border-radius: 10px;
-    background: var(--bg);
-    transition: background-color var(--dur-fast) var(--ease-out), opacity var(--dur-fast) var(--ease-out);
-  }
-  .wip-live-flag + .wip-live-flag { margin-top: var(--sp-xs); }
-  .wip-live-flag.is-focus {
-    background: color-mix(in srgb, var(--highlight) 8%, transparent);
-    border-color: color-mix(in srgb, var(--highlight) 30%, transparent);
-  }
-  .wip-live-flag.is-resolved { opacity: 0.5; }
-  .wip-live-flag.is-resolved .wip-live-flag-title { text-decoration: line-through; }
-  .wip-live-flag-sev {
-    display: inline-flex; align-items: center;
-    font-size: var(--fs-nano); font-weight: 700;
-    padding: 3px var(--sp-xs); border-radius: 6px;
-    white-space: nowrap;
-  }
-  .wip-live-flag-sev.fire { color: var(--status-fire); background: color-mix(in srgb, var(--status-fire) 12%, transparent); }
-  .wip-live-flag-sev.risk { color: var(--status-risk); background: color-mix(in srgb, var(--status-risk) 14%, transparent); }
-  .wip-live-flag-sev.track { color: var(--status-track); background: color-mix(in srgb, var(--status-track) 14%, transparent); }
-  .wip-live-flag-body { min-width: 0; }
-  .wip-live-flag-client { font-size: var(--fs-sm); font-weight: 600; color: var(--text); }
-  .wip-live-flag-title { font-size: var(--fs-base); color: var(--text); margin-top: 2px; line-height: 1.45; }
-  .wip-live-flag-note { font-size: var(--fs-sm); color: var(--text-soft); margin-top: 4px; line-height: 1.5; max-width: 72ch; }
-  .wip-live-flag-actions { display: flex; gap: var(--sp-xs); align-items: center; }
-
-  /* New-style agenda card in Live Meeting (one card per agenda item). */
-  .wip-live-agenda-card {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: var(--sp-lg);
-    align-items: center;
-    padding: var(--sp-lg) var(--sp-xl);
-    border: 1px solid var(--hairline); border-radius: 12px;
-    background: var(--bg);
-    transition: background-color var(--dur-fast) var(--ease-out), opacity var(--dur-fast) var(--ease-out);
-  }
-  .wip-live-agenda-card.is-focus {
-    background: color-mix(in srgb, var(--highlight) 6%, transparent);
-    border-color: color-mix(in srgb, var(--highlight) 30%, transparent);
-  }
-  .wip-live-agenda-card.is-done { opacity: 0.5; }
-  .wip-live-agenda-card.is-done .wip-live-agenda-title { text-decoration: line-through; }
-  .wip-live-agenda-content { min-width: 0; }
-  .wip-live-agenda-title {
-    font-size: var(--fs-lg); font-weight: 600; color: var(--text);
-    line-height: 1.35;
-  }
-  .wip-live-agenda-meta {
-    font-size: var(--fs-sm); color: var(--text-soft);
-    margin-top: 4px; line-height: 1.5;
-  }
-  .wip-live-agenda-body {
-    font-size: var(--fs-sm); color: var(--text-soft);
-    margin-top: var(--sp-sm); line-height: 1.55; max-width: 72ch;
-  }
-  .wip-live-agenda-actions { display: flex; gap: var(--sp-xs); align-items: center; }
-
-  .wip-live-items {
-    border: 1px solid var(--hairline); border-radius: 10px;
-    background: var(--bg);
-    padding: var(--sp-sm) var(--sp-lg);
-  }
-  .wip-live-items-empty {
-    font-size: var(--fs-sm); color: var(--text-faint);
-    padding: var(--sp-xs) 0; font-style: italic;
-  }
-  .wip-live-items ul { list-style: none; margin: 0; padding: 0; }
-  .wip-live-items li {
-    padding: var(--sp-xs) 0;
-    display: grid; grid-template-columns: 1fr auto; gap: var(--sp-sm);
-    align-items: baseline;
-    font-size: var(--fs-sm); color: var(--text);
-  }
-  .wip-live-items li + li { border-top: 1px solid var(--hairline); }
-  .wip-live-items .item-meta { font-size: var(--fs-nano); color: var(--text-faint); }
-
-  .wip-live-capture {
-    border-top: 1px solid var(--hairline);
-    padding-top: var(--sp-base);
-    display: flex; flex-direction: column; gap: var(--sp-sm);
-  }
-  .wip-live-capture-head {
-    display: flex; gap: var(--sp-sm); align-items: center; justify-content: space-between;
-  }
-  .wip-live-capture-title { font-size: var(--fs-sm); font-weight: 600; color: var(--text); }
-  .wip-live-capture-hint {
-    font-size: var(--fs-nano); color: var(--text-faint);
-    display: inline-flex; gap: 4px; align-items: center; flex-wrap: wrap;
-  }
-  .wip-live-capture-btns { display: flex; gap: var(--sp-xs); flex-wrap: wrap; }
-
-  .wip-live-capture-form {
-    display: none;
-    border: 1px solid color-mix(in srgb, var(--highlight) 30%, transparent);
-    background: color-mix(in srgb, var(--highlight) 5%, transparent);
-    border-radius: 10px;
-    padding: var(--sp-sm) var(--sp-base);
-  }
-  .wip-live-capture-form.is-open { display: flex; flex-direction: column; gap: var(--sp-xs); }
-  .wip-live-capture-form-head {
-    font-size: var(--fs-nano); font-weight: 700;
-    color: var(--highlight);
-    letter-spacing: 0.08em; text-transform: uppercase;
-    display: flex; justify-content: space-between; align-items: center;
-  }
-  .wip-live-capture-input {
-    width: 100%;
-    font: inherit; font-size: var(--fs-base);
-    padding: var(--sp-xs) 0;
-    background: transparent;
-    border: 0;
-    color: var(--text);
-    resize: none;
-    min-height: 54px;
-    line-height: 1.45;
-  }
-  .wip-live-capture-input:focus { outline: none; }
-  .wip-live-capture-form-foot {
-    display: flex; gap: var(--sp-xs); align-items: center; justify-content: flex-end;
-  }
-
-  .wip-live-log { display: flex; flex-direction: column; gap: var(--sp-xs); }
-  .wip-live-log-empty {
-    font-size: var(--fs-sm); color: var(--text-faint);
-    padding: var(--sp-sm) 0; font-style: italic;
-  }
-  .wip-live-log-entry {
-    display: grid; grid-template-columns: 92px 1fr auto; gap: var(--sp-sm);
-    align-items: baseline;
-    padding: var(--sp-xs) var(--sp-sm);
-    border-radius: 8px;
-    background: var(--bg);
-    border: 1px solid var(--hairline);
-    font-size: var(--fs-sm);
-  }
-  .wip-live-log-kind {
-    font-size: var(--fs-nano); font-weight: 700;
-    letter-spacing: 0.06em; text-transform: uppercase;
-    color: var(--text-faint);
-  }
-  .wip-live-log-entry.kind-decision .wip-live-log-kind { color: var(--highlight); }
-  .wip-live-log-entry.kind-action   .wip-live-log-kind { color: var(--status-risk); }
-  .wip-live-log-text { color: var(--text); word-break: break-word; line-height: 1.5; }
-  .wip-live-log-meta {
-    font-size: var(--fs-nano); color: var(--text-faint);
-    white-space: nowrap;
-    display: inline-flex; gap: var(--sp-xs); align-items: center;
-  }
-  .wip-live-log-del {
-    background: transparent; border: 0; cursor: pointer;
-    color: var(--text-faint); font-size: var(--fs-xs);
-    padding: 2px 6px; border-radius: 6px;
-  }
-  .wip-live-log-del:hover { color: var(--text); background: color-mix(in srgb, var(--text) 6%, transparent); }
-
-  .wip-live-footer-nav {
-    display: flex; gap: var(--sp-sm); align-items: center; justify-content: space-between;
-    padding-top: var(--sp-base);
-    border-top: 1px solid var(--hairline);
-    margin-top: var(--sp-sm);
-  }
-  .wip-live-footer-left { display: flex; gap: var(--sp-xs); align-items: center; }
-  .wip-live-footer-hint {
-    font-size: var(--fs-xs); color: var(--text-faint);
-    display: inline-flex; gap: var(--sp-xs); align-items: center; flex-wrap: wrap;
-  }
+  /* Live-meeting pre-pass rules (~155 lines) used to sit here:
+     .wip-live-flag* severity tiles, .wip-live-agenda-card* per-item
+     cards, .wip-live-items sub-list, .wip-live-capture* decision/
+     action form, .wip-live-log* meeting log panel, .wip-live-footer-*
+     navigation. None are rendered — the Live tab shipped with a
+     different structure (.wip-live-tl-item / .wip-live-stage / etc.).
+     The live .wip-live-grid / .wip-live-timeline / .wip-live-stage
+     consumers still need their responsive + reduced-motion rules,
+     so those are kept below. Audit: wip M1. */
 
   @media (max-width: 1024px) {
     .wip-live-grid { grid-template-columns: 240px 1fr; }
@@ -11612,48 +11170,12 @@
     .wip-live-timeline { position: static; max-height: 220px; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .wip-live-tl-item, .wip-live-flag { transition: none; }
+    .wip-live-tl-item { transition: none; }
   }
 
-  /* Recap (Stage 3) + Action Items (Stage 4) styles removed — tabs dropped. */
-
-  /* Stubs for other tabs */
-  .wip-stub {
-    max-width: 520px; margin: 40px auto;
-    padding: var(--sp-5xl) var(--sp-3xl);
-    text-align: center;
-    background: var(--bg-elev);
-    border: 1px solid var(--hairline);
-    border-radius: 14px;
-    display: flex; flex-direction: column; align-items: center; gap: var(--sp-base);
-  }
-  .wip-stub-icon { color: var(--text-faint); margin-bottom: var(--sp-xs); }
-  .wip-stub-title {
-    font-size: var(--fs-xl); font-weight: 600; color: var(--text);
-    letter-spacing: -0.01em;
-  }
-  .wip-stub-body {
-    font-size: var(--fs-sm); color: var(--text-soft);
-    line-height: var(--lh-px-md);
-    max-width: 50ch;
-  }
-  .wip-stub-back {
-    margin-top: var(--sp-sm);
-    font-size: var(--fs-sm); font-weight: 600;
-    color: var(--highlight); text-decoration: none;
-  }
-  .wip-stub-back:hover { text-decoration: underline; }
-  .wip-stub-kbd {
-    display: flex; gap: var(--sp-micro); flex-wrap: wrap; justify-content: center;
-    margin-bottom: var(--sp-sm);
-  }
-  .wip-kbd {
-    font-family: 'SF Mono', Menlo, monospace;
-    font-size: var(--fs-nano); font-weight: 600;
-    padding: 3px 7px; border-radius: 4px;
-    background: var(--kbd-bg); border: 1px solid var(--kbd-border);
-    color: var(--text-muted);
-  }
+  /* .wip-stub* placeholder view and .wip-kbd shortcut chip (~40 lines)
+     used to sit here. No React code renders either — the stub-view
+     pattern was replaced by real content. Audit: wip M1. */
 
   /* Edit red-flag modal */
   .wip-modal-overlay {
@@ -11717,28 +11239,10 @@
     box-shadow: 0 0 0 3px var(--highlight-soft);
   }
   .wip-field-textarea { resize: vertical; min-height: 72px; max-height: 180px; font-family: inherit; }
-  .wip-field-severity { gap: var(--sp-sm); }
-  .wip-sev-row { display: flex; gap: var(--sp-sm); flex-wrap: wrap; }
-  .wip-sev-opt { display: inline-flex; align-items: center; cursor: pointer; }
-  .wip-sev-opt input { position: absolute; opacity: 0; pointer-events: none; }
-  .wip-sev-chip {
-    display: inline-flex; align-items: center; gap: var(--sp-xs);
-    padding: var(--sp-micro) var(--sp-base);
-    border-radius: 980px;
-    font-size: var(--fs-xs); font-weight: 500;
-    border: 1px solid transparent;
-    transition: border-color var(--dur-fast);
-  }
-  .wip-sev-chip.fire { background: var(--status-fire-soft); color: var(--status-fire); }
-  .wip-sev-chip.risk { background: var(--status-risk-soft); color: var(--status-risk); }
-  .wip-sev-chip.track { background: var(--status-track-soft); color: var(--status-track); }
-  .wip-sev-opt input:checked + .wip-sev-chip {
-    border-color: currentColor;
-    box-shadow: 0 0 0 2px color-mix(in srgb, currentColor 18%, transparent);
-  }
-  .wip-sev-opt input:focus-visible + .wip-sev-chip {
-    outline: 2px solid var(--highlight); outline-offset: 2px;
-  }
+  /* .wip-field-severity + .wip-sev-* radio-chip group (~22 lines)
+     used to sit here. No form renders a severity picker today — the
+     red-flag modal was removed and no other modal ships this
+     pattern. Audit: wip M1. */
   .wip-modal-foot {
     display: flex; align-items: center; justify-content: flex-end;
     gap: var(--sp-sm);
@@ -11748,20 +11252,10 @@
     border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;
   }
 
-  /* Severity dots inside flag cards */
-  .wip-flag-sev-dot {
-    width: 6px; height: 6px; border-radius: 50%;
-    flex-shrink: 0;
-    margin-right: var(--sp-xs);
-  }
-  .wip-flag-sev-dot.fire { background: var(--status-fire); }
-  .wip-flag-sev-dot.risk { background: var(--status-risk); }
-  .wip-flag-sev-dot.track { background: var(--status-track); }
+  /* .wip-flag-sev-dot trio removed — the flag-card surface that used
+     these was deleted with .wip-flag-card. Audit: wip M1. */
 
   /* Responsive */
-  @media (max-width: 1024px) {
-    .wip-agenda-grid { grid-template-columns: 1fr; }
-  }
   @media (max-width: 640px) {
     .wip-page { padding: var(--sp-2xl) var(--sp-xl) 80px; }
     .wip-header { flex-direction: column; gap: var(--sp-base); }
@@ -11770,8 +11264,7 @@
 
   @media (prefers-reduced-motion: reduce) {
     .wip-modal-overlay, .wip-modal,
-    .wip-tab, .wip-btn, .wip-run-block, .wip-icon-btn,
-    .wip-run-expand, .wip-save-hint, .wip-field-input { transition: none; }
+    .wip-tab, .wip-btn, .wip-field-input { transition: none; }
   }
 
   /* ═══════ TEMPLATES VIEW ═══════ */
