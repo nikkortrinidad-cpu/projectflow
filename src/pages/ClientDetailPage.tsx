@@ -807,7 +807,7 @@ function ServicesSection({ services, onAdd, editing, onToggleEdit, onDelete, onM
         {/* Wrapper div so `.detail-section-header > *:last-child { margin-left: auto }`
             pushes both buttons to the right as a group — same trick as the
             Team section. */}
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+        <div className="section-header-actions">
           <button
             type="button"
             className="detail-section-link"
@@ -1649,8 +1649,9 @@ function AboutSection({ client, data }: { client: Client; data: FlizowData }) {
           </div>
           {/* Wrap the two right-side buttons so the CSS rule
               `.detail-section-header > *:last-child { margin-left: auto }`
-              pushes both of them to the right as a pair. */}
-          <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+              pushes both of them to the right as a pair. Gap is
+              `var(--sp-md)` via .section-header-actions. */}
+          <div className="section-header-actions">
             {team.length > 0 && (
               <button
                 type="button"
@@ -1778,7 +1779,7 @@ function ContactsCard({ contacts, onAdd, editing, onToggleEdit, onRemove, onTogg
         {/* Two-button right side wrapped in a flex group. Edit button hides
             when the list is empty — nothing to edit, and the button would
             just add noise. */}
-        <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+        <div className="section-header-actions">
           {contacts.length > 0 && (
             <button
               type="button"
@@ -1801,17 +1802,9 @@ function ContactsCard({ contacts, onAdd, editing, onToggleEdit, onRemove, onTogg
       </div>
 
       {contacts.length === 0 ? (
-        <div style={{ padding: '12px 0', color: 'var(--text-soft)', fontSize: 14 }}>
+        <div className="section-empty-text">
           No contacts yet.{' '}
-          <button
-            type="button"
-            onClick={onAdd}
-            style={{
-              background: 'none', border: 'none', padding: 0,
-              color: 'var(--highlight)', fontSize: 'inherit', font: 'inherit',
-              cursor: 'pointer', textDecoration: 'underline',
-            }}
-          >
+          <button type="button" className="inline-link-btn" onClick={onAdd}>
             Add the first person
           </button>{' '}
           we work with here.
@@ -1952,7 +1945,7 @@ function QuickLinksCard({ links, onAdd, editing, onToggleEdit, onRemove, onEdit 
     <div className="relationship-card">
       <div className="relationship-card-head">
         <div className="relationship-card-label">Quick links</div>
-        <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+        <div className="section-header-actions">
           {links.length > 0 && (
             <button
               type="button"
@@ -2092,17 +2085,9 @@ function TeamGrid({ am, team, onAdd, onRemove }: {
         <div className="team-group-label">Project team</div>
         <div className="team-group-row">
           {team.length === 0 ? (
-            <span style={{ color: 'var(--text-soft)', fontSize: 14 }}>
+            <span className="section-empty-text">
               No operators attached yet.{' '}
-              <button
-                type="button"
-                onClick={onAdd}
-                style={{
-                  background: 'none', border: 'none', padding: 0,
-                  color: 'var(--highlight)', fontSize: 'inherit', font: 'inherit',
-                  cursor: 'pointer', textDecoration: 'underline',
-                }}
-              >
+              <button type="button" className="inline-link-btn" onClick={onAdd}>
                 Add the first one
               </button>.
             </span>

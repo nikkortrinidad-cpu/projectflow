@@ -7521,6 +7521,35 @@
   }
   .detail-section-link:hover { text-decoration: underline; }
 
+  /* Right-aligned pair of buttons in a section header. Used to sit
+     inline at four call sites with gap values of 12, 14, or 16;
+     now standardized. Audit: client-detail M4 + L2. */
+  .section-header-actions {
+    display: flex; align-items: center; gap: var(--sp-md);
+  }
+
+  /* Muted block of empty-state copy inside a section body ("No
+     contacts yet…", "Nothing logged yet…"). Replaces several inline
+     styles scattered around ClientDetailPage. Audit: client-detail M4. */
+  .section-empty-text {
+    padding: var(--sp-md) 0;
+    color: var(--text-soft);
+    font-size: var(--fs-base);
+  }
+
+  /* Inline "link-style" button — renders flat like a hyperlink but
+     lives inside a <button type="button"> for correct keyboard +
+     screen-reader semantics. Used for "Add the first person / one"
+     CTAs inside section empty states. Audit: client-detail M4. */
+  .inline-link-btn {
+    background: none; border: none; padding: 0;
+    color: var(--highlight);
+    font: inherit;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+  .inline-link-btn:hover { text-decoration: none; }
+
   /* Services list — each service is first-class */
   .services-list { display: flex; flex-direction: column; gap: var(--sp-base); }
   .service-card {
