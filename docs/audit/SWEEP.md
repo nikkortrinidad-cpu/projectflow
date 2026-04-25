@@ -159,6 +159,50 @@ The audit-flagged queue is empty, and the Wave 6 product-call deferral on Templa
 
 ---
 
+## Wave 8 — chrome + first-run + codebase health (10 commits)
+
+After Wave 7 wrapped the per-page audits, the obvious gaps were the
+surfaces that didn't get a dedicated audit doc (top nav, login,
+notifications, account, first-run, mobile) and the codebase-health
+work the audits had been deferring (bundle splitting, tests, the
+legacy BoardStore that hadn't owned anything but theme for months).
+Three sub-waves, all green at ship.
+
+### B — chrome + first-run audits
+
+| Commit | Surface | What |
+|---|---|---|
+| `6f1c012` | Top nav | **B1** — Templates promoted to a 6th nav peer (was a right-toolbar icon). Nav links get `white-space: nowrap` so "Weekly WIP" stops wrapping. Search bar shrinks gracefully (`flex: 1 1 auto; min-width: 0; max-width: 340px`). Search label hides under 900px. `header-nav` overflow-x: auto with hidden scrollbar so every slot stays reachable when the viewport tightens. |
+| `44552d0` | Login | **B2** — visible focus ring on the dark CTA (Tailwind defaults vanish on `#1d1d1f`); `<main>` landmark wraps the page; friendlier error copy for `popup-blocked` / `popup-closed-by-user` (silent) / `network-request-failed` / `unauthorized-domain`. |
+| `da19c7a` | Notifications panel | **B3** — `role="tab"` was orphaned (no tabpanel pairing); replaced with `aria-pressed` toggle buttons inside `role="group"`. Esc returns focus to the bell trigger. Group labels promoted from styled `<div>`s to `<h3>` with `role="group"` + `aria-labelledby`. Footer arrow wrapped in `aria-hidden`. |
+| `68a9ca1` | Account modal | **B4** — focus trap (Tab cycles within the modal). Tab/tabpanel pairing closed via `acct-tab-{section}` / `acct-panel-{section}` ids + `aria-controls` / `aria-labelledby`. Form labels associated to inputs via `htmlFor`/`id`. `autocomplete` attributes on Profile inputs. Italic note in the Profile header so users know field-saving isn't wired yet. |
+| `4fa9128` | Overview | **B5** — first-run welcome banner. Renders only when `clients.length === 0` AND a localStorage flag isn't set. Two CTAs: "Try the demo" (calls `store.loadDemoData()`) and "Add my first client" (navigates to `#clients`). Plus `×` dismiss. Returning users with clients get the flag set silently so the banner never ambushes them later if they clear their workspace. |
+| `002ee04` | Mobile responsive | **B6** — three HIGH gaps closed under 600px: health strip stacks to 1 column (was 3-up + dividers); analytics workload row drops the bar (count + chevron survive — bar comparison isn't usable on a phone anyway); `.list-pane-toggle` hit area grows to 44×44 via an invisible `::before` (visual stays 28×28). `.page` horizontal padding shrinks on phones. App is desktop-primary; deeper mobile parity is a separate pass. |
+
+### C — Overview re-audit with the lens that landed in B
+
+| Commit | What |
+|---|---|
+| `307de65` | Re-audit found three gaps the original Overview pass missed: **(1)** week-tabs lacked `aria-pressed` (same fix as the notif filter buttons), **(2)** no skip-to-main-content link anywhere in the app — keyboard users walked through ~10 Tab stops before reaching content; standard skip link added, target lives in PageShell as a `tabIndex={-1}` anchor span so it works for every route, **(3)** welcome-banner CTAs had no explicit focus rings — same lesson as the login CTA fix. |
+
+### D — codebase health
+
+| Commit | What |
+|---|---|
+| `45eea17` | **D1** — bundle code-splitting. PageShell uses `React.lazy()` + Suspense for all 7 routes; App.tsx lazy-loads the two top-level modals (Account + Command Palette) and now mounts them conditionally so the chunk doesn't fetch until the user opens them. Initial bundle: **1,374 KB → 228 KB** (gzip 399 → 70 KB). The Vite "chunks larger than 500 kB" warning is gone for the first time. |
+| `a8d01b1` | **D2** — first automated tests. Vitest + jsdom + a `firebase/firestore` stub via `vi.mock`. 21 tests covering `flizowStore`'s high-stakes paths: cascade deletes (clients → services → tasks → comments), `addService` auto-seed, templates CRUD (recently shipped, no manual coverage before), reset behavior, and the Ops-seed contract that backs the first-run audit. Build still green; tests run via `npm test`. |
+| `f2f4775` | **D3** — retire the legacy BoardStore. Theme moves into FlizowData (one-shot read of the legacy `kanban-board-state` localStorage key in `migrate()` so returning dark-mode users don't reset). App.tsx and FlizowAccountModal switch to `useFlizow()` for theme. **Deleted** `src/store/boardStore.ts`, `src/store/useStore.ts`, `src/types.ts` — net **−1,084 lines** vs **+55**. One store, one Firestore doc per user. Initial bundle drops another **20 KB → 208 KB** (gzip 65 KB). |
+
+### Wave 8 numbers
+
+- **Surfaces audited:** 6 chrome + first-run + responsive (B1–B6) plus the Overview re-audit (C), 13 in total counting the re-audit.
+- **Codebase health:** initial bundle **1,374 KB → 208 KB** (−85%), first 21 automated tests on the books, dual-store consolidated into one.
+- **Net code change across the wave:** +~600 lines of audit/test/banner code, −1,084 lines of dead store + types.
+
+
+
+---
+
 ## Filter question, one last time
 
 > **"Does this respect the person using the app?"**
