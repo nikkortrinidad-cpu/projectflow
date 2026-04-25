@@ -224,14 +224,19 @@ export default function FlizowNotificationsPanel({ open, onClose, triggerRef, on
   }, [state]);
 
   // Esc closes (matches the account modal and card modal).
+  // We also restore focus to the bell trigger so keyboard users
+  // don't get dumped to <body>. Audit: notif HIGH (focus return).
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        onClose();
+        triggerRef.current?.focus();
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [open, onClose]);
+  }, [open, onClose, triggerRef]);
 
   // Outside click closes — but ignore clicks on the trigger button, so the
   // bell's own onClick can drive toggle behaviour without fighting us.
@@ -345,20 +350,31 @@ export default function FlizowNotificationsPanel({ open, onClose, triggerRef, on
         </button>
       </header>
 
-      <div className="notif-tabs" role="tablist" aria-label="Notification filters">
-        <TabButton
+      {/* Filter buttons (NOT ARIA tabs). The previous revision used
+          role="tab" / role="tablist" but the WAI-ARIA tabs pattern
+          requires a paired tabpanel with aria-controls / aria-labelledby
+          — we don't have that, the body just re-filters in place. So
+          these are toggle buttons with aria-pressed, which conveys the
+          active state without lying to screen readers about a panel
+          relationship. Audit: notif HIGH (broken tabs ARIA). */}
+      <div
+        className="notif-tabs"
+        role="group"
+        aria-label="Notification filters"
+      >
+        <FilterButton
           label="All"
           count={countFor('all')}
           active={filter === 'all'}
           onClick={() => setFilter('all')}
         />
-        <TabButton
+        <FilterButton
           label="Unread"
           count={countFor('unread')}
           active={filter === 'unread'}
           onClick={() => setFilter('unread')}
         />
-        <TabButton
+        <FilterButton
           label="Mentions"
           count={countFor('mentions')}
           active={filter === 'mentions'}
@@ -389,8 +405,12 @@ export default function FlizowNotificationsPanel({ open, onClose, triggerRef, on
             const items = groups[g];
             if (!items || items.length === 0) return null;
             return (
-              <div key={g} className="notif-group">
-                <div className="notif-group-label">{g}</div>
+              <div key={g} className="notif-group" role="group" aria-labelledby={`notif-group-${g}`}>
+                {/* h3 (not div) so screen reader users can navigate
+                    by section landmark. Visual styling stays the
+                    same — `.notif-group-label` controls all of that.
+                    Audit: notif MED (no semantic group headings). */}
+                <h3 className="notif-group-label" id={`notif-group-${g}`}>{g}</h3>
                 {items.map((n) => (
                   <NotificationRow
                     key={n.id}
@@ -413,7 +433,10 @@ export default function FlizowNotificationsPanel({ open, onClose, triggerRef, on
             onClose();
           }}
         >
-          View all in Weekly WIP &rarr;
+          View all in Weekly WIP{' '}
+          {/* Decorative arrow — hidden from screen readers because
+              the link text already says where it goes. Audit: notif LOW. */}
+          <span aria-hidden="true">&rarr;</span>
         </a>
       </footer>
     </div>
@@ -422,20 +445,19 @@ export default function FlizowNotificationsPanel({ open, onClose, triggerRef, on
 
 /* ── Sub-components ─────────────────────────────────────────────────────── */
 
-interface TabButtonProps {
+interface FilterButtonProps {
   label: string;
   count: number;
   active: boolean;
   onClick: () => void;
 }
 
-function TabButton({ label, count, active, onClick }: TabButtonProps) {
+function FilterButton({ label, count, active, onClick }: FilterButtonProps) {
   return (
     <button
-      role="tab"
       className="notif-tab"
       type="button"
-      aria-selected={active}
+      aria-pressed={active}
       onClick={onClick}
     >
       {label} <span className="notif-tab-count">{count}</span>
