@@ -2,6 +2,9 @@ import { useLayoutEffect, useMemo, useState } from 'react';
 import { useRoute, navigate } from '../router';
 import { useFlizow } from '../store/useFlizow';
 import { resolveTemplates, isBuiltInTemplate } from '../data/templates';
+import { useCanEditTemplates } from '../hooks/useCanEditTemplates';
+import { InlineText } from '../components/shared/InlineText';
+import { flizowStore } from '../store/flizowStore';
 import type { TemplateRecord, TemplateIcon } from '../types/flizow';
 
 /**
@@ -20,10 +23,8 @@ import type { TemplateRecord, TemplateIcon } from '../types/flizow';
 
 // `TemplateDef` was the old hardcoded shape. The live shape now lives
 // in src/types/flizow.ts as TemplateRecord. The local alias keeps the
-// rest of this file's signatures readable while we plumb the editor in.
+// rest of this file's signatures readable.
 type TemplateDef = TemplateRecord;
-// Flag held for use once inline editing lands in commit 2.
-void isBuiltInTemplate;
 
 // Live template list now flows from the store via resolveTemplates().
 // The pristine BUILT_IN_TEMPLATES live in src/data/builtInTemplates.ts;
@@ -263,6 +264,18 @@ function DetailPane({ template }: { template: TemplateDef }) {
   const [openPhases, setOpenPhases] = useState<Record<string, Set<number>>>({});
   const openSet = openPhases[template.id] ?? new Set<number>();
 
+  // Edit gate. Returns true unconditionally today; later the hook will
+  // wire to a role check. Every <InlineText disabled={!canEdit}> below
+  // gates through this so admin-only is a one-line change. Audit:
+  // templates M2.
+  const canEdit = useCanEditTemplates();
+  const isBuiltIn = isBuiltInTemplate(template.id);
+  const hasBeenEdited = template.editedAt !== null;
+  // "Reset to default" only makes sense for built-in templates (there's
+  // no default for user-created records) and only when there are
+  // actual edits to revert.
+  const canReset = isBuiltIn && hasBeenEdited && canEdit;
+
   function togglePhase(index: number) {
     setOpenPhases((prev) => {
       const currentSet = prev[template.id] ?? new Set<number>();
@@ -273,6 +286,36 @@ function DetailPane({ template }: { template: TemplateDef }) {
     });
   }
 
+  // Tiny helper: every save handler in this pane is "patch the record
+  // on top of the current `template` and upsert." The function body
+  // changes per field; the wrapper stays the same.
+  function save(patch: Partial<TemplateDef>) {
+    flizowStore.upsertTemplate({ ...template, ...patch });
+  }
+
+  // Helpers for editing nested arrays — keep the call sites readable
+  // by isolating the index math.
+  function savePhaseName(index: number, name: string) {
+    const phases = template.phases.map((p, i) => i === index ? { ...p, name } : p);
+    save({ phases });
+  }
+  function saveSubtask(phaseIndex: number, subIndex: number, text: string) {
+    const phases = template.phases.map((p, i) => {
+      if (i !== phaseIndex) return p;
+      const subtasks = p.subtasks.map((s, j) => j === subIndex ? text : s);
+      return { ...p, subtasks };
+    });
+    save({ phases });
+  }
+  function saveOnboarding(side: 'client' | 'us', index: number, text: string) {
+    const list = template.onboarding[side].map((item, i) => i === index ? text : item);
+    save({ onboarding: { ...template.onboarding, [side]: list } });
+  }
+  function saveBriefField(index: number, text: string) {
+    const brief = template.brief.map((b, i) => i === index ? text : b);
+    save({ brief });
+  }
+
   return (
     <div className="templates-detail-pane">
       <section className="template-detail-page">
@@ -281,18 +324,50 @@ function DetailPane({ template }: { template: TemplateDef }) {
             <TemplateIcon kind={template.icon} />
           </div>
           <div className="template-hero-body">
-            <div className="template-hero-title">{template.name}</div>
+            <div className="template-hero-title">
+              <InlineText
+                value={template.name}
+                onSave={(name) => save({ name })}
+                disabled={!canEdit}
+                ariaLabel="Template name"
+              />
+            </div>
             <div className="template-hero-meta">
-              <span className="template-category-chip">{template.category}</span>
-              {/* Honest call-out: the surface looks editable (hero +
-                  phases + checklists + brief fields) but the data is
-                  hard-coded in TEMPLATE_DEF until the admin editor
-                  ships. Says so plainly here so the user doesn't try
-                  to click into a phase and find nothing happens.
-                  Audit: templates M2. */}
-              <span className="template-readonly-tag" title="Templates ship as part of the product. The admin editor is on the roadmap.">
-                Read-only
+              <span className="template-category-chip">
+                <InlineText
+                  value={template.category}
+                  onSave={(category) => save({ category })}
+                  disabled={!canEdit}
+                  ariaLabel="Template category"
+                />
               </span>
+              {/* Read-only tag is honest about the editor state: it
+                  shows on never-edited records (the "ships with the
+                  product" baseline) and disappears the moment the
+                  user touches anything. Drives clarity in the audit
+                  M2 sense — the surface no longer lies about its
+                  state in either direction. */}
+              {!hasBeenEdited && (
+                <span
+                  className="template-readonly-tag"
+                  title="No edits yet. Click any field to start customizing."
+                >
+                  Read-only
+                </span>
+              )}
+              {/* Reset-to-default only renders on built-in templates
+                  the user has actually edited. Audit: templates M2
+                  (decision 5: yes to Reset to default). */}
+              {canReset && (
+                <button
+                  type="button"
+                  className="template-reset-btn"
+                  onClick={() => flizowStore.resetTemplate(template.id)}
+                  title="Restore this template to its built-in defaults"
+                >
+                  Reset to default
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -301,7 +376,16 @@ function DetailPane({ template }: { template: TemplateDef }) {
         <div className="template-section">
           <div className="template-section-header">
             <div className="template-section-title">Phases</div>
-            <div className="template-section-sub">{template.phasesSub}</div>
+            <div className="template-section-sub">
+              <InlineText
+                value={template.phasesSub}
+                onSave={(phasesSub) => save({ phasesSub })}
+                disabled={!canEdit}
+                allowEmpty
+                placeholder="Describe how this template's phases are paced"
+                ariaLabel="Phases description"
+              />
+            </div>
           </div>
           <div className="template-phase-list">
             {template.phases.map((phase, i) => {
@@ -309,27 +393,41 @@ function DetailPane({ template }: { template: TemplateDef }) {
               const panelId = `template-${template.id}-phase-${i}-subtasks`;
               return (
                 <div key={i} className={`template-phase${expanded ? ' expanded' : ''}`}>
-                  <button
-                    type="button"
-                    className="template-phase-toggle"
-                    aria-expanded={expanded}
-                    aria-controls={panelId}
-                    onClick={() => togglePhase(i)}
-                  >
+                  <div className="template-phase-toggle template-phase-row">
                     <div className="template-phase-num">{i + 1}</div>
-                    <div className="template-phase-name">{phase.name}</div>
+                    <div className="template-phase-name">
+                      <InlineText
+                        value={phase.name}
+                        onSave={(name) => savePhaseName(i, name)}
+                        disabled={!canEdit}
+                        ariaLabel={`Phase ${i + 1} name`}
+                      />
+                    </div>
                     <div className="template-phase-meta">{phase.subtasks.length} subtasks</div>
-                    <ChevronDown className="template-phase-chevron" />
-                  </button>
-                  {/* Subtask panel carries the id that aria-controls on
-                      the toggle references. Without it, the toggle
-                      announced "expanded / collapsed" but not *what*
-                      expanded. Audit: templates L4. */}
+                    {/* Chevron lives in its own button so the click
+                        target for expand/collapse doesn't collide with
+                        the InlineText edit gesture on the name. */}
+                    <button
+                      type="button"
+                      className="template-phase-expand"
+                      aria-expanded={expanded}
+                      aria-controls={panelId}
+                      aria-label={expanded ? `Collapse ${phase.name} subtasks` : `Expand ${phase.name} subtasks`}
+                      onClick={() => togglePhase(i)}
+                    >
+                      <ChevronDown className="template-phase-chevron" />
+                    </button>
+                  </div>
                   <div id={panelId} className="template-phase-subtasks">
                     {phase.subtasks.map((st, j) => (
                       <div key={j} className="template-phase-subtask">
                         <span className="dot" />
-                        {st}
+                        <InlineText
+                          value={st}
+                          onSave={(text) => saveSubtask(i, j, text)}
+                          disabled={!canEdit}
+                          ariaLabel={`Subtask ${j + 1} of ${phase.name}`}
+                        />
                       </div>
                     ))}
                   </div>
@@ -351,7 +449,14 @@ function DetailPane({ template }: { template: TemplateDef }) {
               {template.onboarding.client.map((item, i) => (
                 <div key={i} className="template-checklist-item">
                   <span className="dot" />
-                  <div className="template-checklist-item-label">{item}</div>
+                  <div className="template-checklist-item-label">
+                    <InlineText
+                      value={item}
+                      onSave={(text) => saveOnboarding('client', i, text)}
+                      disabled={!canEdit}
+                      ariaLabel={`From-client onboarding item ${i + 1}`}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
@@ -362,7 +467,14 @@ function DetailPane({ template }: { template: TemplateDef }) {
               {template.onboarding.us.map((item, i) => (
                 <div key={i} className="template-checklist-item">
                   <span className="dot" />
-                  <div className="template-checklist-item-label">{item}</div>
+                  <div className="template-checklist-item-label">
+                    <InlineText
+                      value={item}
+                      onSave={(text) => saveOnboarding('us', i, text)}
+                      disabled={!canEdit}
+                      ariaLabel={`From-us onboarding item ${i + 1}`}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
@@ -378,20 +490,19 @@ function DetailPane({ template }: { template: TemplateDef }) {
           <div className="template-brief-fields">
             {template.brief.map((field, i) => (
               <div key={i} className="template-brief-field">
-                {field}
+                <InlineText
+                  value={field}
+                  onSave={(text) => saveBriefField(i, text)}
+                  disabled={!canEdit}
+                  ariaLabel={`Brief field ${i + 1}`}
+                />
               </div>
             ))}
           </div>
         </div>
 
-        {/* Activity section deleted — the empty state rendered
-            "No activity yet. Edits you make to this template will
-            show up here." on every template, but TEMPLATES is a
-            hard-coded first-pass array with no write path, so the
-            list will never populate. Same "unbuilt feature shown as
-            empty state" trap we cleaned up on Analytics and Weekly
-            WIP. Put the section back when the admin editor ships
-            the timestamps. Audit: templates M3. */}
+        {/* Activity section deleted in Wave 4 (Templates M3). Will
+            return when there's a real audit log to fill it. */}
       </section>
     </div>
   );

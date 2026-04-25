@@ -7453,6 +7453,50 @@
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--highlight) 32%, transparent);
   }
 
+  /* `<InlineText>` helper — same affordance pattern as .inline-edit
+     but generic enough that any callsite can drop it in for "click to
+     edit a string." Used by the Templates editor. Audit: templates M2. */
+  .inline-text-readonly {
+    cursor: text;
+    border-radius: 6px;
+    padding: 1px 6px;
+    margin: -1px -6px;
+    transition: background 0.15s, box-shadow 0.15s;
+  }
+  .inline-text-readonly:hover {
+    background: color-mix(in srgb, var(--highlight) 9%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--highlight) 22%, transparent);
+  }
+  .inline-text-readonly:focus-visible {
+    outline: none;
+    background: var(--bg-soft);
+    box-shadow: 0 0 0 2px var(--highlight-soft);
+  }
+  .inline-text-placeholder {
+    color: var(--text-faint);
+    font-style: italic;
+  }
+  .inline-text-input {
+    /* Inherit type from the parent — the editor sits inline inside a
+       title, a body row, a checklist item, etc. The look should match
+       its surroundings, not the form-input default. */
+    font: inherit;
+    color: inherit;
+    background: var(--bg);
+    border: 1px solid var(--highlight);
+    border-radius: 6px;
+    padding: 1px 6px;
+    margin: -2px -7px;
+    width: 100%;
+    box-sizing: border-box;
+    box-shadow: 0 0 0 3px var(--highlight-soft);
+  }
+  .inline-text-input:focus { outline: none; }
+  textarea.inline-text-input {
+    resize: vertical;
+    min-height: 48px;
+  }
+
   /* The inline input that replaces static text during editing */
   .inline-edit-input {
     font: inherit; color: inherit; letter-spacing: inherit;
@@ -11706,8 +11750,10 @@
     letter-spacing: 0.005em;
   }
   /* Honest "you can read but not edit" badge sitting next to the
-     category chip. Sets the user's expectations before they click
-     into a phase that doesn't expand-to-edit. Audit: templates M2. */
+     category chip. Wave 6 added it as a permanent fixture; the
+     M2 admin editor flips it conditional — shows on never-edited
+     templates, disappears the moment the user touches anything.
+     Audit: templates M2. */
   .template-readonly-tag {
     margin-left: 8px;
     padding: 2px 8px;
@@ -11718,6 +11764,34 @@
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
+  }
+  /* "Reset to default" lives next to the (now-hidden) Read-only tag
+     once a built-in template has been edited. Tier-4 (text-only,
+     no chrome until hover) so it doesn't shout — destructive
+     enough to need confirmation? No: the user can re-edit
+     immediately. Just a one-click rewind. */
+  .template-reset-btn {
+    margin-left: 8px;
+    background: transparent;
+    border: none;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font: inherit;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: var(--text-soft);
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    transition: background 0.12s, color 0.12s;
+  }
+  .template-reset-btn:hover {
+    background: var(--bg-faint);
+    color: var(--text);
+  }
+  .template-reset-btn:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
   }
   .template-hero-meta .sep {
     width: 3px; height: 3px; border-radius: 50%;
@@ -11750,20 +11824,43 @@
     border: 1px solid var(--hairline-soft);
     overflow: hidden;
   }
-  .template-phase-toggle {
+  /* Phase row used to be a single <button> for expand/collapse. With
+     inline editing the name needs its own click-to-edit gesture, so
+     the row is a div now and only the chevron is a button. The grid
+     layout (number / name / meta / chevron) is unchanged. */
+  .template-phase-toggle,
+  .template-phase-row {
     display: grid;
     grid-template-columns: 22px 1fr auto 14px;
     align-items: center; gap: var(--sp-base);
     width: 100%; padding: var(--sp-md) var(--sp-lg);
     background: none; border: 0;
     font: inherit; color: inherit; text-align: left;
-    cursor: pointer;
     transition: background 0.12s ease;
   }
+  .template-phase-toggle { cursor: pointer; }
   .template-phase-toggle:hover { background: var(--hover-tint); }
   .template-phase-toggle:focus-visible {
     outline: none;
     background: var(--hover-tint);
+  }
+  /* The expand button is just the chevron — keeps the click target
+     minimal so it doesn't compete with InlineText on the name. */
+  .template-phase-expand {
+    background: transparent; border: 0; padding: 0;
+    color: var(--text-faint); cursor: pointer;
+    width: 20px; height: 20px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 4px;
+    transition: background 0.12s, color 0.12s;
+  }
+  .template-phase-expand:hover {
+    background: var(--bg-faint);
+    color: var(--text-muted);
+  }
+  .template-phase-expand:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
   }
   .template-phase-num {
     width: 22px; height: 22px; border-radius: 6px;
