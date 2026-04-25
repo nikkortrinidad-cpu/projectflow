@@ -13454,6 +13454,12 @@
     box-shadow: inset 0 0 0 2px rgba(255,255,255,0.9);
   }
 
+  /* Spinner keyframe used by the Suspense route fallback (PageShell)
+     and any other ad-hoc loading state. Tailwind's animate-spin lives
+     in a separate utility — defining a primitive here keeps the
+     component free of utility-class dependencies. Audit: D1. */
+  @keyframes spin { to { transform: rotate(360deg); } }
+
   /* Skip-to-main-content link. Hidden offscreen until it gets
      keyboard focus, then drops into the top-left corner with a
      blue button treatment so it's impossible to miss. Standard

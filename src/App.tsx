@@ -1,13 +1,19 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { LoginPage } from './components/LoginPage';
 import { TopNav } from './components/TopNav';
 import { PageShell } from './components/PageShell';
-import FlizowAccountModal from './components/FlizowAccountModal';
-import FlizowCommandPalette from './components/FlizowCommandPalette';
 import { useAuth } from './contexts/AuthContext';
 import { useBoard } from './store/useStore';
 import { store } from './store/boardStore';
 import { flizowStore } from './store/flizowStore';
+
+// Lazy-load top-level modals. Account settings opens rarely (once a
+// session at most) and the command palette opens on-demand via ⌘K —
+// no reason to ship either with the initial bundle. Each is mounted
+// only when its open flag flips on, so the lazy chunk doesn't even
+// fetch until the user asks for it. Audit: D1.
+const FlizowAccountModal    = lazy(() => import('./components/FlizowAccountModal'));
+const FlizowCommandPalette  = lazy(() => import('./components/FlizowCommandPalette'));
 
 function App() {
   const { user, loading } = useAuth();
@@ -98,13 +104,27 @@ function AppShell() {
         onOpenCmdk={() => setCmdkOpen(true)}
       />
       <PageShell />
-      {accountOpen && (
-        <FlizowAccountModal onClose={() => setAccountOpen(false)} />
-      )}
-      <FlizowCommandPalette
-        open={cmdkOpen}
-        onClose={() => setCmdkOpen(false)}
-      />
+      {/* Suspense for lazy modals: fallback is null because the
+          modals are overlays — there's nothing to "show" while
+          loading other than the page underneath. The module fetch
+          is fast (~one chunk) and the user is still looking at the
+          page they came from. */}
+      <Suspense fallback={null}>
+        {accountOpen && (
+          <FlizowAccountModal onClose={() => setAccountOpen(false)} />
+        )}
+        {/* Command palette: now conditionally mounted so the lazy
+            chunk only fetches on first ⌘K press. The component's
+            internal `if (!open) return null` was already a no-op
+            for the same case; switching to conditional mount is
+            cleaner and lets React.lazy actually defer the fetch. */}
+        {cmdkOpen && (
+          <FlizowCommandPalette
+            open={cmdkOpen}
+            onClose={() => setCmdkOpen(false)}
+          />
+        )}
+      </Suspense>
     </>
   );
 }
