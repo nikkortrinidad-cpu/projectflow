@@ -13,8 +13,11 @@ const ACTIVE_NAV_BY_ROUTE: Record<string, string> = {
   ops: 'ops',
   analytics: 'analytics',
   wip: 'wip',
-  templates: '',
-  'template-detail': '',
+  // Templates is now a first-class nav slot (was a right-toolbar
+  // icon only). Audit: top-nav MED — Templates was the only major
+  // surface without a peer nav entry. The detail route inherits.
+  templates: 'templates',
+  'template-detail': 'templates',
 };
 
 interface TopNavProps {
@@ -96,6 +99,7 @@ export function TopNav({
           <a href="#ops" className={active === 'ops' ? 'on' : ''} aria-current={active === 'ops' ? 'page' : undefined}>Ops</a>
           <a href="#analytics" className={active === 'analytics' ? 'on' : ''} aria-current={active === 'analytics' ? 'page' : undefined}>Analytics</a>
           <a href="#wip/agenda" className={active === 'wip' ? 'on' : ''} aria-current={active === 'wip' ? 'page' : undefined}>Weekly WIP</a>
+          <a href="#templates" className={active === 'templates' ? 'on' : ''} aria-current={active === 'templates' ? 'page' : undefined}>Templates</a>
         </nav>
       </div>
       <div className="header-right">
@@ -113,14 +117,11 @@ export function TopNav({
           <span className="cmdk-label">Search clients, tasks, people…</span>
           <span className="cmdk-kbd">⌘K</span>
         </button>
-        <a href="#templates" className="header-tool" aria-label="Service templates" title="Service templates">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <rect x="3" y="3" width="8" height="8" rx="1.5"/>
-            <rect x="13" y="3" width="8" height="8" rx="1.5"/>
-            <rect x="3" y="13" width="8" height="8" rx="1.5"/>
-            <rect x="13" y="13" width="8" height="8" rx="1.5"/>
-          </svg>
-        </a>
+        {/* Templates icon used to live here as a right-toolbar
+            shortcut. Promoted to a first-class nav slot in the
+            header-nav above (peer with Home / Clients / etc.) so
+            users find it the same way they find every other major
+            surface. Audit: top-nav MED. */}
         <div className="notif-wrap">
           <button
             ref={notifBtnRef}
