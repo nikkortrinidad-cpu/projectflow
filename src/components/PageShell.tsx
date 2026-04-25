@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react';
 import { useRoute } from '../router';
 import { OverviewPage } from '../pages/OverviewPage';
 import { ClientsSplit } from '../pages/ClientsSplit';
@@ -10,20 +11,33 @@ import { TemplatesPage } from '../pages/TemplatesPage';
 export function PageShell() {
   const route = useRoute();
 
+  let page: ReactElement;
   switch (route.name) {
-    case 'overview':         return <OverviewPage />;
+    case 'overview':         page = <OverviewPage />; break;
     // Clients list and client detail share one layout (`.clients-split-wrapper`).
     // Keeping them under a single component means the list pane never
     // unmounts when the user clicks into a detail row — scroll state,
     // filters, and search all stay put.
-    case 'clients':          return <ClientsSplit />;
-    case 'client-detail':    return <ClientsSplit />;
-    case 'board':            return <BoardPage />;
-    case 'ops':              return <OpsPage />;
-    case 'analytics':        return <AnalyticsPage />;
-    case 'wip':              return <WipPage />;
-    case 'templates':        return <TemplatesPage />;
-    case 'template-detail':  return <TemplatesPage />;
-    default:                 return <OverviewPage />;
+    case 'clients':          page = <ClientsSplit />; break;
+    case 'client-detail':    page = <ClientsSplit />; break;
+    case 'board':            page = <BoardPage />; break;
+    case 'ops':              page = <OpsPage />; break;
+    case 'analytics':        page = <AnalyticsPage />; break;
+    case 'wip':              page = <WipPage />; break;
+    case 'templates':        page = <TemplatesPage />; break;
+    case 'template-detail':  page = <TemplatesPage />; break;
+    default:                 page = <OverviewPage />;
   }
+
+  return (
+    <>
+      {/* Skip-link target. tabIndex=-1 lets the link move focus here
+          without making it a Tab stop. The next Tab from this anchor
+          lands on the first focusable inside the page — bypasses the
+          top nav entirely. Audit: overview re-audit MED (no skip
+          target). */}
+      <span id="main-content" tabIndex={-1} style={{ outline: 'none' }} />
+      {page}
+    </>
+  );
 }

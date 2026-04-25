@@ -84,6 +84,12 @@ function AppShell() {
 
   return (
     <>
+      {/* Skip link — first focusable in the document. Visible only on
+          focus (CSS keeps it offscreen otherwise). Lets keyboard users
+          jump past the 6 nav items + search + notifications + avatar
+          to land on page content in one Tab. Audit: overview re-audit
+          MED (no skip link). */}
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       <TopNav
         onOpenAccount={() => setAccountOpen(true)}
         notifOpen={notifOpen}

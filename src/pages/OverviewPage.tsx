@@ -339,10 +339,18 @@ export function OverviewPage() {
           <div className="block-header">
             <div className="block-title" id="block-schedule-title">Schedule</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div className="week-tabs">
+              {/* Toggle buttons — NOT ARIA tabs (no paired tabpanel below
+                  these; the schedule grid swaps content in place via the
+                  .show-next class). aria-pressed conveys the active state
+                  to screen readers without lying about a panel
+                  relationship. role="group" gives the pair a single
+                  landmark. Audit: overview re-audit HIGH (matches the
+                  notifications-panel filter-button fix). */}
+              <div className="week-tabs" role="group" aria-label="Schedule week">
                 <button
                   type="button"
                   className={`week-tab ${weekTab === 'current' ? 'active' : ''}`}
+                  aria-pressed={weekTab === 'current'}
                   onClick={() => setWeekTab('current')}
                 >
                   This week
@@ -353,6 +361,7 @@ export function OverviewPage() {
                 <button
                   type="button"
                   className={`week-tab ${weekTab === 'next' ? 'active' : ''}`}
+                  aria-pressed={weekTab === 'next'}
                   onClick={() => setWeekTab('next')}
                 >
                   Next week
