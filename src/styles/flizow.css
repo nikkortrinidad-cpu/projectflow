@@ -2567,9 +2567,16 @@
   }
   .progress-fill {
     height: 100%;
-    background: #30d158;
+    background: var(--status-track);
     border-radius: 980px;
-    transition: width 0.3s ease;
+    /* 200ms ease-out feels responsive on a checklist toggle without
+       being lazy. The previous 300ms ease was a hair too slow at
+       this small scale, and reduced-motion users skip the
+       transition entirely. Audit: card-modal L3. */
+    transition: width 200ms ease-out;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .progress-fill { transition: none; }
   }
   .progress-pct {
     font-size: var(--fs-xs); font-weight: 600;
@@ -2837,6 +2844,14 @@
     margin: 6px 0 0 4px;
     font-size: var(--fs-xs); color: var(--text-soft);
   }
+  /* Reply / Delete inline buttons in the comment meta row.
+     Used to share a single .reply-btn class regardless of action,
+     which made CSS searches misleading ("why is the delete button
+     called reply-btn?"). Renamed .comment-action-btn with an
+     .is-danger modifier for the destructive variant — its red hover
+     reads as a heat tone instead of the neutral blue. Audit:
+     card-modal L1. */
+  .comment-meta .comment-action-btn,
   .comment-meta button {
     background: transparent; border: none; cursor: pointer;
     font-size: var(--fs-xs); color: var(--text-soft);
@@ -2844,7 +2859,9 @@
     padding: 0;
     letter-spacing: -0.005em;
   }
+  .comment-meta .comment-action-btn:hover,
   .comment-meta button:hover { color: var(--hover-blue); }
+  .comment-meta .comment-action-btn.is-danger:hover { color: var(--status-fire); }
   .reaction-pill {
     display: inline-flex; align-items: center; gap: var(--sp-micro);
     padding: 1px 7px;

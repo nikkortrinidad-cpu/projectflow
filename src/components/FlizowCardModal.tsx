@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useFlizow } from '../store/useFlizow';
 import type { ColumnId, Priority, Member, TaskComment, TaskActivity, Task, OpsTask } from '../types/flizow';
 import { flizowStore } from '../store/flizowStore';
@@ -701,9 +702,23 @@ export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDupl
                       if (!lbl) {
                         // Orphaned label id — still show the raw token so
                         // the data stays visible, just without a colour.
+                        // Remove × is wired so the user can clean up
+                        // stale labels left over from a deleted custom
+                        // label. Audit: card-modal L2.
                         return (
                           <span key={id} className="label-pill" data-label={id}>
                             {id}
+                            <button
+                              type="button"
+                              className="label-pill-remove"
+                              aria-label={`Remove ${id}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleLabel(id);
+                              }}
+                            >
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
                           </span>
                         );
                       }
@@ -952,7 +967,12 @@ export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDupl
         </div>
       </div>
 
-      {showDeleteConfirm && task && (
+      {/* Stacked dialogs portal to <body> so they aren't subject to
+          this modal's scroll position, transform, or z-index stack.
+          A confirm dialog inside a tall comments thread used to
+          inherit the parent's overflow:auto and end up rendered
+          below the visible scroll viewport. Audit: card-modal L5. */}
+      {showDeleteConfirm && task && createPortal(
         <ConfirmDangerDialog
           title={`Delete "${task.title}"?`}
           body="This removes the card from the board permanently. Any comments and activity on it go with it."
@@ -963,14 +983,16 @@ export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDupl
             onClose();
           }}
           onClose={() => setShowDeleteConfirm(false)}
-        />
+        />,
+        document.body,
       )}
 
-      {shareOpen && task && !isOps && (
+      {shareOpen && task && !isOps && createPortal(
         <FlizowShareModal
           taskId={task.id}
           onClose={() => setShareOpen(false)}
-        />
+        />,
+        document.body,
       )}
     </div>
   );
@@ -1331,7 +1353,10 @@ function CommentsPanel({
         const body = isTopLevel && replyCount > 0
           ? `Removes this comment and the ${replyCount} ${replyCount === 1 ? 'reply' : 'replies'} underneath it. This can't be undone.`
           : "This can't be undone.";
-        return (
+        // Portal alongside the card-modal's other stacked dialogs so
+        // the confirm can't be hidden by the comments panel's
+        // overflow:auto. Audit: card-modal L5.
+        return createPortal(
           <ConfirmDangerDialog
             title={title}
             body={body}
@@ -1341,7 +1366,8 @@ function CommentsPanel({
               setDeleteTarget(null);
             }}
             onClose={() => setDeleteTarget(null)}
-          />
+          />,
+          document.body,
         );
       })()}
     </div>
@@ -1398,9 +1424,9 @@ function CommentItem({
         <div className="comment-meta">
           <span>{formatCommentTime(comment.createdAt)}</span>
           {comment.updatedAt && <span>· Edited</span>}
-          <button type="button" className="reply-btn" onClick={onStartReply}>Reply</button>
+          <button type="button" className="comment-action-btn" onClick={onStartReply}>Reply</button>
           {isOwn && (
-            <button type="button" className="reply-btn" onClick={() => onRequestDelete(comment)}>Delete</button>
+            <button type="button" className="comment-action-btn is-danger" onClick={() => onRequestDelete(comment)}>Delete</button>
           )}
         </div>
 
@@ -1470,7 +1496,7 @@ function ReplyItem({
           <span>{formatCommentTime(comment.createdAt)}</span>
           {comment.updatedAt && <span>· Edited</span>}
           {isOwn && (
-            <button type="button" className="reply-btn" onClick={() => onRequestDelete(comment)}>Delete</button>
+            <button type="button" className="comment-action-btn is-danger" onClick={() => onRequestDelete(comment)}>Delete</button>
           )}
         </div>
       </div>
