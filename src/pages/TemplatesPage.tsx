@@ -1,7 +1,7 @@
 import { useLayoutEffect, useMemo, useState } from 'react';
 import { useRoute, navigate } from '../router';
 import { useFlizow } from '../store/useFlizow';
-import { resolveTemplates, isBuiltInTemplate } from '../data/templates';
+import { resolveTemplates, isBuiltInTemplate, blankTemplate } from '../data/templates';
 import { useCanEditTemplates } from '../hooks/useCanEditTemplates';
 import { InlineText } from '../components/shared/InlineText';
 import { flizowStore } from '../store/flizowStore';
@@ -99,6 +99,40 @@ function ChevronDown({ className }: { className?: string }) {
   );
 }
 
+function PlusIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden width="14" height="14">
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden width="12" height="12">
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  );
+}
+
+function ArrowUpIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden width="12" height="12">
+      <polyline points="18 15 12 9 6 15" />
+    </svg>
+  );
+}
+
+function ArrowDownIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden width="12" height="12">
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+}
+
 // ── Page ─────────────────────────────────────────────────────────────
 
 export function TemplatesPage() {
@@ -144,6 +178,17 @@ export function TemplatesPage() {
     );
   }, [query, templates]);
 
+  const canEdit = useCanEditTemplates();
+  // "+ New template" — mints a blank record, persists it, and
+  // navigates to its detail URL so the user lands on the editor with
+  // the name input ready to go. crypto.randomUUID() over a ts+random
+  // recipe — same reasoning as the contact-id fix in Wave 6.
+  function handleNewTemplate() {
+    const id = `tpl-${crypto.randomUUID()}`;
+    flizowStore.upsertTemplate(blankTemplate(id));
+    navigate(`#templates/${id}`);
+  }
+
   // Defensive empty-state — built-in templates can't be hard-deleted,
   // but if all five are archived AND no user-created records exist
   // we'd reach here with `selected` undefined. Show a one-line "no
@@ -166,6 +211,8 @@ export function TemplatesPage() {
           selectedId={selectedId ?? ''}
           query={query}
           onQuery={setQuery}
+          canEdit={canEdit}
+          onNewTemplate={handleNewTemplate}
         />
         <DetailPane template={selected} />
       </div>
@@ -180,11 +227,15 @@ function ListPane({
   selectedId,
   query,
   onQuery,
+  canEdit,
+  onNewTemplate,
 }: {
   templates: TemplateDef[];
   selectedId: string;
   query: string;
   onQuery: (q: string) => void;
+  canEdit: boolean;
+  onNewTemplate: () => void;
 }) {
   return (
     <aside className="templates-list-pane" aria-label="Service templates">
@@ -193,12 +244,6 @@ function ListPane({
         <div className="templates-list-subtitle">Reusable blueprints for onboarding and kanban boards</div>
       </div>
 
-      {/* No "+ Add template" button yet — templates are defined in
-          types/flizow.ts as constants and there's no editor UI to open.
-          A styled button that did nothing was worse than a missing
-          button: it read as Tier-1 CTA (same class as Clients' New
-          Client) and every click was a broken promise. Add back here
-          when the editor lands. Audit: templates.md H1. */}
       <div className="templates-list-toolbar">
         <label className="list-pane-search">
           <SearchIcon />
@@ -210,6 +255,22 @@ function ListPane({
             onChange={(e) => onQuery(e.target.value)}
           />
         </label>
+        {/* "+ New template" — gated through useCanEditTemplates so the
+            admin-only future is a one-line change. Spawns a blank
+            user-created record and navigates straight to it so the
+            user can rename + fill it in without an extra click.
+            Audit: templates M2 (commit 3/4). */}
+        {canEdit && (
+          <button
+            type="button"
+            className="list-pane-add-btn"
+            aria-label="New template"
+            onClick={onNewTemplate}
+          >
+            <PlusIcon />
+            <span>New template</span>
+          </button>
+        )}
       </div>
 
       {/* The row container used to carry role="list" and each anchor
@@ -316,6 +377,67 @@ function DetailPane({ template }: { template: TemplateDef }) {
     save({ brief });
   }
 
+  // ── Structure changes (commit 3 of M2 sequence) ───────────────────
+  // Add / remove / reorder helpers. Phases get up/down arrows for
+  // reordering instead of drag-and-drop because (a) it's keyboard-
+  // accessible by default and (b) it doesn't drag in dnd-kit for a
+  // surface that only needs to move 5–7 items. Subtasks / onboarding /
+  // brief items don't get reordering — the audit only called for it on
+  // phases, and the leaf lists are short enough that delete + re-add
+  // covers the rare reorder case.
+
+  function addPhase() {
+    const phases = [...template.phases, { name: 'New phase', subtasks: [] }];
+    save({ phases });
+    // Auto-open the new phase so the user can start adding subtasks
+    // immediately. Same UX as the inline card composer's enter-then-
+    // type pattern.
+    setOpenPhases((prev) => {
+      const currentSet = prev[template.id] ?? new Set<number>();
+      const next = new Set(currentSet);
+      next.add(phases.length - 1);
+      return { ...prev, [template.id]: next };
+    });
+  }
+  function removePhase(index: number) {
+    const phases = template.phases.filter((_, i) => i !== index);
+    save({ phases });
+  }
+  function movePhase(index: number, direction: -1 | 1) {
+    const target = index + direction;
+    if (target < 0 || target >= template.phases.length) return;
+    const phases = template.phases.slice();
+    [phases[index], phases[target]] = [phases[target], phases[index]];
+    save({ phases });
+  }
+  function addSubtask(phaseIndex: number) {
+    const phases = template.phases.map((p, i) =>
+      i === phaseIndex ? { ...p, subtasks: [...p.subtasks, 'New subtask'] } : p,
+    );
+    save({ phases });
+  }
+  function removeSubtask(phaseIndex: number, subIndex: number) {
+    const phases = template.phases.map((p, i) => {
+      if (i !== phaseIndex) return p;
+      return { ...p, subtasks: p.subtasks.filter((_, j) => j !== subIndex) };
+    });
+    save({ phases });
+  }
+  function addOnboarding(side: 'client' | 'us') {
+    const list = [...template.onboarding[side], 'New item'];
+    save({ onboarding: { ...template.onboarding, [side]: list } });
+  }
+  function removeOnboarding(side: 'client' | 'us', index: number) {
+    const list = template.onboarding[side].filter((_, i) => i !== index);
+    save({ onboarding: { ...template.onboarding, [side]: list } });
+  }
+  function addBriefField() {
+    save({ brief: [...template.brief, 'New field'] });
+  }
+  function removeBriefField(index: number) {
+    save({ brief: template.brief.filter((_, i) => i !== index) });
+  }
+
   return (
     <div className="templates-detail-pane">
       <section className="template-detail-page">
@@ -391,9 +513,11 @@ function DetailPane({ template }: { template: TemplateDef }) {
             {template.phases.map((phase, i) => {
               const expanded = openSet.has(i);
               const panelId = `template-${template.id}-phase-${i}-subtasks`;
+              const isFirst = i === 0;
+              const isLast = i === template.phases.length - 1;
               return (
                 <div key={i} className={`template-phase${expanded ? ' expanded' : ''}`}>
-                  <div className="template-phase-toggle template-phase-row">
+                  <div className="template-phase-row">
                     <div className="template-phase-num">{i + 1}</div>
                     <div className="template-phase-name">
                       <InlineText
@@ -404,6 +528,43 @@ function DetailPane({ template }: { template: TemplateDef }) {
                       />
                     </div>
                     <div className="template-phase-meta">{phase.subtasks.length} subtasks</div>
+                    {/* Hover-revealed structure controls. Up/down for
+                        reorder (disabled at the endpoints), × for
+                        remove. Auto-hidden in read-only mode. Audit:
+                        templates M2 (commit 3). */}
+                    {canEdit && (
+                      <div className="template-phase-actions">
+                        <button
+                          type="button"
+                          className="template-phase-action"
+                          onClick={() => movePhase(i, -1)}
+                          disabled={isFirst}
+                          aria-label={`Move ${phase.name} up`}
+                          title="Move up"
+                        >
+                          <ArrowUpIcon />
+                        </button>
+                        <button
+                          type="button"
+                          className="template-phase-action"
+                          onClick={() => movePhase(i, 1)}
+                          disabled={isLast}
+                          aria-label={`Move ${phase.name} down`}
+                          title="Move down"
+                        >
+                          <ArrowDownIcon />
+                        </button>
+                        <button
+                          type="button"
+                          className="template-phase-action is-remove"
+                          onClick={() => removePhase(i)}
+                          aria-label={`Remove ${phase.name}`}
+                          title="Remove phase"
+                        >
+                          <CloseIcon />
+                        </button>
+                      </div>
+                    )}
                     {/* Chevron lives in its own button so the click
                         target for expand/collapse doesn't collide with
                         the InlineText edit gesture on the name. */}
@@ -428,12 +589,43 @@ function DetailPane({ template }: { template: TemplateDef }) {
                           disabled={!canEdit}
                           ariaLabel={`Subtask ${j + 1} of ${phase.name}`}
                         />
+                        {canEdit && (
+                          <button
+                            type="button"
+                            className="template-row-remove"
+                            onClick={() => removeSubtask(i, j)}
+                            aria-label={`Remove subtask ${st}`}
+                            title="Remove subtask"
+                          >
+                            <CloseIcon />
+                          </button>
+                        )}
                       </div>
                     ))}
+                    {canEdit && (
+                      <button
+                        type="button"
+                        className="template-add-row"
+                        onClick={() => addSubtask(i)}
+                      >
+                        <PlusIcon />
+                        Add subtask
+                      </button>
+                    )}
                   </div>
                 </div>
               );
             })}
+            {canEdit && (
+              <button
+                type="button"
+                className="template-add-row template-add-row--phase"
+                onClick={addPhase}
+              >
+                <PlusIcon />
+                Add phase
+              </button>
+            )}
           </div>
         </div>
 
@@ -457,8 +649,29 @@ function DetailPane({ template }: { template: TemplateDef }) {
                       ariaLabel={`From-client onboarding item ${i + 1}`}
                     />
                   </div>
+                  {canEdit && (
+                    <button
+                      type="button"
+                      className="template-row-remove"
+                      onClick={() => removeOnboarding('client', i)}
+                      aria-label={`Remove ${item}`}
+                      title="Remove item"
+                    >
+                      <CloseIcon />
+                    </button>
+                  )}
                 </div>
               ))}
+              {canEdit && (
+                <button
+                  type="button"
+                  className="template-add-row"
+                  onClick={() => addOnboarding('client')}
+                >
+                  <PlusIcon />
+                  Add item
+                </button>
+              )}
             </div>
           </div>
           <div className="template-checklist-group">
@@ -475,8 +688,29 @@ function DetailPane({ template }: { template: TemplateDef }) {
                       ariaLabel={`From-us onboarding item ${i + 1}`}
                     />
                   </div>
+                  {canEdit && (
+                    <button
+                      type="button"
+                      className="template-row-remove"
+                      onClick={() => removeOnboarding('us', i)}
+                      aria-label={`Remove ${item}`}
+                      title="Remove item"
+                    >
+                      <CloseIcon />
+                    </button>
+                  )}
                 </div>
               ))}
+              {canEdit && (
+                <button
+                  type="button"
+                  className="template-add-row"
+                  onClick={() => addOnboarding('us')}
+                >
+                  <PlusIcon />
+                  Add item
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -496,8 +730,29 @@ function DetailPane({ template }: { template: TemplateDef }) {
                   disabled={!canEdit}
                   ariaLabel={`Brief field ${i + 1}`}
                 />
+                {canEdit && (
+                  <button
+                    type="button"
+                    className="template-row-remove"
+                    onClick={() => removeBriefField(i)}
+                    aria-label={`Remove ${field}`}
+                    title="Remove field"
+                  >
+                    <CloseIcon />
+                  </button>
+                )}
               </div>
             ))}
+            {canEdit && (
+              <button
+                type="button"
+                className="template-add-row"
+                onClick={addBriefField}
+              >
+                <PlusIcon />
+                Add field
+              </button>
+            )}
           </div>
         </div>
 

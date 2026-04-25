@@ -11862,6 +11862,110 @@
     outline: 2px solid var(--highlight);
     outline-offset: 2px;
   }
+
+  /* Hover-revealed structure controls — up/down/× on phases.
+     Hidden at rest so the row reads as data, not a control surface;
+     opacity ramps up on hover or focus-within. Audit: templates M2
+     (commit 3, structure changes). */
+  .template-phase-actions {
+    display: inline-flex; align-items: center; gap: 2px;
+    opacity: 0;
+    transition: opacity 140ms ease;
+    margin-right: var(--sp-xs);
+  }
+  .template-phase-row:hover .template-phase-actions,
+  .template-phase-row:focus-within .template-phase-actions { opacity: 1; }
+  .template-phase-action {
+    width: 22px; height: 22px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: transparent; border: 1px solid transparent;
+    border-radius: 5px;
+    color: var(--text-faint);
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+  }
+  .template-phase-action:hover:not(:disabled) {
+    background: var(--bg-elev);
+    border-color: var(--hairline);
+    color: var(--text);
+  }
+  .template-phase-action:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+  .template-phase-action.is-remove:hover:not(:disabled) {
+    background: var(--status-fire-soft);
+    border-color: color-mix(in srgb, var(--status-fire) 30%, transparent);
+    color: var(--status-fire);
+  }
+  .template-phase-action:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
+  }
+
+  /* Per-row × on subtask / onboarding / brief items. Same hover-
+     reveal pattern as the phase actions. */
+  .template-checklist-item,
+  .template-phase-subtask,
+  .template-brief-field {
+    position: relative;
+  }
+  .template-row-remove {
+    width: 20px; height: 20px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: transparent; border: none;
+    border-radius: 4px;
+    color: var(--text-faint);
+    cursor: pointer;
+    opacity: 0;
+    margin-left: auto;
+    transition: opacity 140ms ease, background 120ms, color 120ms;
+  }
+  .template-checklist-item:hover .template-row-remove,
+  .template-checklist-item:focus-within .template-row-remove,
+  .template-phase-subtask:hover .template-row-remove,
+  .template-phase-subtask:focus-within .template-row-remove,
+  .template-brief-field:hover .template-row-remove,
+  .template-brief-field:focus-within .template-row-remove { opacity: 1; }
+  .template-row-remove:hover {
+    background: var(--status-fire-soft);
+    color: var(--status-fire);
+  }
+  .template-row-remove:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
+    opacity: 1;
+  }
+
+  /* "+ Add phase / subtask / item / field" rows. Sit at the bottom
+     of their list as a Tier-4 (text-only with subtle hover) action. */
+  .template-add-row {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 10px;
+    margin-top: var(--sp-xs);
+    background: transparent; border: 1px dashed var(--hairline);
+    border-radius: 8px;
+    color: var(--text-soft);
+    font: inherit;
+    font-size: var(--fs-sm);
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+  }
+  .template-add-row:hover {
+    background: var(--bg-faint);
+    border-color: var(--hover-blue);
+    color: var(--hover-blue);
+  }
+  .template-add-row:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
+  }
+  .template-add-row--phase {
+    margin-top: var(--sp-md);
+    padding: 10px 14px;
+    width: 100%;
+    justify-content: center;
+  }
   .template-phase-num {
     width: 22px; height: 22px; border-radius: 6px;
     display: inline-flex; align-items: center; justify-content: center;
@@ -11960,11 +12064,20 @@
     display: flex; flex-wrap: wrap; gap: var(--sp-xs);
   }
   .template-brief-field {
+    /* Inline pill — InlineText + the hover-revealed × sit side by
+       side so the pill remains the row instead of stacking. */
+    display: inline-flex; align-items: center; gap: 4px;
     padding: 5px 11px; border-radius: 6px;
     background: var(--bg-soft);
     border: 1px solid var(--hairline-soft);
     font-size: var(--fs-md); color: var(--text-muted);
     letter-spacing: -0.003em;
+  }
+  .template-brief-field .template-row-remove {
+    /* Inside a pill the × button is tighter and doesn't auto-margin
+       all the way (the pill IS the row). */
+    margin-left: 0;
+    width: 16px; height: 16px;
   }
 
   /* The .as-* Add Service modal (~140 lines) and .template-activity-*
