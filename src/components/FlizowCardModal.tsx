@@ -785,9 +785,10 @@ export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDupl
                   <span role="heading" aria-level={3}>Description</span>
                 </div>
                 {editingDesc ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div className="description-edit">
                     <textarea
                       autoFocus
+                      className="description-edit-textarea"
                       value={descDraft}
                       onChange={(e) => setDescDraft(e.target.value)}
                       onKeyDown={(e) => {
@@ -795,31 +796,22 @@ export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDupl
                         if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { saveDesc(); }
                       }}
                       placeholder="Add more detail for the team…"
-                      style={{
-                        width: '100%',
-                        minHeight: 120,
-                        padding: 12,
-                        borderRadius: 10,
-                        border: '1px solid var(--hairline)',
-                        background: 'var(--bg)',
-                        color: 'var(--text)',
-                        fontFamily: 'inherit',
-                        fontSize: 14,
-                        lineHeight: 1.55,
-                        resize: 'vertical',
-                      }}
                     />
-                    <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                    <div className="description-edit-actions">
                       <button
                         type="button"
+                        className="description-edit-btn is-cancel"
                         onClick={cancelDesc}
-                        style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid var(--hairline)', background: 'transparent', color: 'var(--text)', fontSize: 13, cursor: 'pointer' }}
-                      >Cancel</button>
+                      >
+                        Cancel
+                      </button>
                       <button
                         type="button"
+                        className="description-edit-btn is-save"
                         onClick={saveDesc}
-                        style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: 'var(--highlight)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
-                      >Save</button>
+                      >
+                        Save
+                      </button>
                     </div>
                   </div>
                 ) : (
@@ -1062,16 +1054,9 @@ function ChecklistRow({
       )}
       <button
         type="button"
+        className="checklist-delete-btn"
         aria-label="Delete task"
         onClick={onDelete}
-        style={{
-          marginLeft: 'auto',
-          width: 24, height: 24,
-          border: 'none', background: 'transparent',
-          color: 'var(--text-faint)', cursor: 'pointer',
-          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          borderRadius: 6,
-        }}
         title="Delete task"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
