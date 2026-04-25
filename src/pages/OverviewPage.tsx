@@ -1,8 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { navigate } from '../router';
 import { useFlizow } from '../store/useFlizow';
 import type { Client, Task, Touchpoint, ClientStatus } from '../types/flizow';
+
+/** localStorage key for the one-time first-run welcome banner. Versioned
+ *  so a future revision can re-show the banner if we change the
+ *  onboarding hand-off. */
+const WELCOME_KEY = 'flizow-welcome-dismissed-v1';
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const MONTHS = [
@@ -23,7 +28,40 @@ function firstNameOf(displayName: string | null | undefined): string {
 
 export function OverviewPage() {
   const { user } = useAuth();
-  const { data } = useFlizow();
+  const { data, store } = useFlizow();
+
+  // First-run welcome banner. Renders only when (a) the user hasn't
+  // dismissed it before and (b) the workspace is genuinely empty
+  // (zero clients). Dismissed via the close button OR by triggering
+  // either CTA. Once a client lands in the store, the banner stops
+  // matching the visibility predicate even without the flag — so
+  // someone who adds a client without dismissing won't see it
+  // re-appear later if they delete that client. Audit: first-run B5.
+  const [welcomeDismissed, setWelcomeDismissed] = useState<boolean>(() => {
+    try { return localStorage.getItem(WELCOME_KEY) === 'true'; } catch { return false; }
+  });
+  // If the user already has clients (returning user, or imported via
+  // demo before the banner shipped), set the flag silently so we
+  // don't pop the banner if they ever clear their workspace later.
+  useEffect(() => {
+    if (data.clients.length > 0 && !welcomeDismissed) {
+      try { localStorage.setItem(WELCOME_KEY, 'true'); } catch {}
+      setWelcomeDismissed(true);
+    }
+  }, [data.clients.length, welcomeDismissed]);
+  function dismissWelcome() {
+    try { localStorage.setItem(WELCOME_KEY, 'true'); } catch {}
+    setWelcomeDismissed(true);
+  }
+  async function handleTryDemo() {
+    dismissWelcome();
+    await store.loadDemoData();
+  }
+  function handleAddFirst() {
+    dismissWelcome();
+    navigate('#clients');
+  }
+  const showWelcome = !welcomeDismissed && data.clients.length === 0;
   // Land on "next week" when today is Sat/Sun — the 5-col grid skips the
   // weekend, so "this week" would be 100% grayed out and useless. Lazy
   // init so this only runs once on mount.
@@ -113,6 +151,55 @@ export function OverviewPage() {
   return (
     <div className="view view-overview active">
       <main className="page">
+        {/* First-run welcome banner. Only renders when the workspace
+            is genuinely empty AND the banner hasn't been dismissed.
+            Two CTAs (demo vs add-first) covers both evaluator paths
+            without forcing one. The banner sits above the page
+            header so it claims attention before "Good morning…",
+            but uses tinted card styling so it reads as a hint, not
+            a takeover. Audit: first-run B5. */}
+        {showWelcome && (
+          <section className="welcome-banner" role="region" aria-label="Welcome to Flizow">
+            <div className="welcome-banner-text">
+              <h2 className="welcome-banner-title">
+                Welcome to Flizow, {firstNameOf(user?.displayName)}.
+              </h2>
+              <p className="welcome-banner-sub">
+                Your workspace is empty. Try the demo to see what Flizow looks like with sample clients,
+                or jump in by adding your first one.
+              </p>
+            </div>
+            <div className="welcome-banner-actions">
+              <button
+                type="button"
+                className="welcome-banner-cta-primary"
+                onClick={handleTryDemo}
+              >
+                Try the demo
+              </button>
+              <button
+                type="button"
+                className="welcome-banner-cta-secondary"
+                onClick={handleAddFirst}
+              >
+                Add my first client
+              </button>
+              <button
+                type="button"
+                className="welcome-banner-dismiss"
+                aria-label="Dismiss welcome message"
+                onClick={dismissWelcome}
+                title="Dismiss"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+          </section>
+        )}
+
         {/* Two-line header: the greeting eyebrow + the title. The
             rotating tagline row used to sit below, rendering one of
             14 strings per day-of-year — ambient decoration with no
