@@ -288,7 +288,13 @@ function ListPane({
         </label>
       </div>
 
-      <div className="templates-list" role="list">
+      {/* The row container used to carry role="list" and each anchor
+          role="listitem" + tabIndex={0}. Anchors with href are already
+          focusable and are announced as links by screen readers — the
+          extra role/tabIndex made every row read as "link, list item,
+          tab-stop". Native <a> semantics are enough. Audit: templates
+          L2 + L3. */}
+      <div className="templates-list">
         {templates.length === 0 && (
           <div style={{ padding: '24px 12px', color: 'var(--text-soft)', fontSize: 'var(--fs-sm)' }}>
             No templates match "{query}".
@@ -302,8 +308,6 @@ function ListPane({
             <a
               key={t.id}
               className={`template-row${isSelected ? ' selected' : ''}`}
-              role="listitem"
-              tabIndex={0}
               href={href}
               onClick={(e) => {
                 e.preventDefault();
@@ -375,12 +379,14 @@ function DetailPane({ template }: { template: TemplateDef }) {
           <div className="template-phase-list">
             {template.phases.map((phase, i) => {
               const expanded = openSet.has(i);
+              const panelId = `template-${template.id}-phase-${i}-subtasks`;
               return (
                 <div key={i} className={`template-phase${expanded ? ' expanded' : ''}`}>
                   <button
                     type="button"
                     className="template-phase-toggle"
                     aria-expanded={expanded}
+                    aria-controls={panelId}
                     onClick={() => togglePhase(i)}
                   >
                     <div className="template-phase-num">{i + 1}</div>
@@ -388,7 +394,11 @@ function DetailPane({ template }: { template: TemplateDef }) {
                     <div className="template-phase-meta">{phase.subtasks.length} subtasks</div>
                     <ChevronDown className="template-phase-chevron" />
                   </button>
-                  <div className="template-phase-subtasks">
+                  {/* Subtask panel carries the id that aria-controls on
+                      the toggle references. Without it, the toggle
+                      announced "expanded / collapsed" but not *what*
+                      expanded. Audit: templates L4. */}
+                  <div id={panelId} className="template-phase-subtasks">
                     {phase.subtasks.map((st, j) => (
                       <div key={j} className="template-phase-subtask">
                         <span className="dot" />

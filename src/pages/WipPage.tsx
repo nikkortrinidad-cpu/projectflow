@@ -205,12 +205,31 @@ export function WipPage() {
         </header>
 
         <nav className="wip-tabs" role="tablist" aria-label="Weekly WIP sections">
-          <TabLink active={tab === 'agenda'} onClick={() => setTab('agenda')}>Agenda</TabLink>
-          <TabLink active={tab === 'live'} onClick={() => setTab('live')}>Live meeting</TabLink>
+          <TabLink
+            active={tab === 'agenda'}
+            onClick={() => setTab('agenda')}
+            id="wip-tab-agenda"
+            controls="wip-panel-agenda"
+          >
+            Agenda
+          </TabLink>
+          <TabLink
+            active={tab === 'live'}
+            onClick={() => setTab('live')}
+            id="wip-tab-live"
+            controls="wip-panel-live"
+          >
+            Live meeting
+          </TabLink>
         </nav>
 
         {tab === 'agenda' && (
-          <section className="wip-sub wip-agenda" aria-label="Agenda builder">
+          <section
+            id="wip-panel-agenda"
+            className="wip-sub wip-agenda"
+            role="tabpanel"
+            aria-labelledby="wip-tab-agenda"
+          >
             <AgendaToolbar
               count={itemCount}
               onAdd={() => setModal({ kind: 'add' })}
@@ -348,16 +367,24 @@ function AgendaToolbar({ count, onAdd, onStart, onSendPreRead }: {
 
 // ── Tabs ─────────────────────────────────────────────────────────────────
 
-function TabLink({ active, children, onClick }: {
+function TabLink({ active, children, onClick, id, controls }: {
   active: boolean;
   children: React.ReactNode;
   onClick: () => void;
+  /** id the matching <section role="tabpanel"> uses for
+   *  aria-labelledby — closes the tabs ↔ panel loop. Audit: wip L3. */
+  id: string;
+  /** id of the panel this tab controls. */
+  controls: string;
 }) {
   return (
     <a
       href="#wip"
+      id={id}
       className={`wip-tab${active ? ' on' : ''}`}
       role="tab"
+      aria-selected={active}
+      aria-controls={controls}
       aria-current={active ? 'page' : undefined}
       onClick={(e) => { e.preventDefault(); onClick(); }}
     >
@@ -1144,7 +1171,13 @@ function LiveMeetingPrestart({ itemCount, estMinutes, nextMeeting, onStart }: {
 }) {
   const hasAgenda = itemCount > 0;
   return (
-    <section className="wip-sub" aria-label="Live meeting">
+    <section
+      id="wip-panel-live"
+      className="wip-sub"
+      role="tabpanel"
+      aria-labelledby="wip-tab-live"
+      aria-label="Live meeting"
+    >
       <div className="wip-live-prestart">
         <div className="wip-live-prestart-eyebrow">Live meeting</div>
         <h2 className="wip-live-prestart-title">
@@ -1258,7 +1291,13 @@ function LiveMeeting({
   });
 
   return (
-    <section className="wip-sub" aria-label="Live meeting in progress">
+    <section
+      id="wip-panel-live"
+      className="wip-sub"
+      role="tabpanel"
+      aria-labelledby="wip-tab-live"
+      aria-label="Live meeting in progress"
+    >
       <div className="wip-live-root">
         <header className="wip-live-topbar">
           <span className="wip-live-topbar-kicker">Weekly WIP · In session</span>

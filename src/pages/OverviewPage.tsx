@@ -144,9 +144,19 @@ export function OverviewPage() {
         </div>
 
         {/* BLOCK 1 — Portfolio Health */}
-        <div className="block" data-block-id="health">
+        {/* Each block is a logical region, so we give it role="region"
+            + aria-labelledby pointing at the block title. Screen reader
+            users can now jump between blocks with R (landmarks). Before
+            this, every block rendered as a plain div and was invisible
+            to landmark navigation. Audit: overview L2. */}
+        <section
+          className="block"
+          data-block-id="health"
+          role="region"
+          aria-labelledby="block-health-title"
+        >
           <div className="block-header">
-            <div className="block-title">Portfolio Health</div>
+            <div className="block-title" id="block-health-title">Portfolio Health</div>
             <div className="block-sub"><span>Across {health.active} active clients</span></div>
           </div>
           <div className="health-strip">
@@ -188,12 +198,17 @@ export function OverviewPage() {
               icon={<polyline points="20 6 9 17 4 12" />}
             />
           </div>
-        </div>
+        </section>
 
         {/* BLOCK 2 — Needs Your Attention */}
-        <div className="block" data-block-id="attention">
+        <section
+          className="block"
+          data-block-id="attention"
+          role="region"
+          aria-labelledby="block-attention-title"
+        >
           <div className="block-header">
-            <div className="block-title">Needs Your Attention</div>
+            <div className="block-title" id="block-attention-title">Needs Your Attention</div>
           </div>
           <div className="attention-list">
             {attention.length === 0 ? (
@@ -243,12 +258,17 @@ export function OverviewPage() {
               </>
             )}
           </div>
-        </div>
+        </section>
 
         {/* BLOCK 4 — Schedule */}
-        <div className="block" data-block-id="schedule">
+        <section
+          className="block"
+          data-block-id="schedule"
+          role="region"
+          aria-labelledby="block-schedule-title"
+        >
           <div className="block-header">
-            <div className="block-title">Schedule</div>
+            <div className="block-title" id="block-schedule-title">Schedule</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div className="week-tabs">
                 <button
@@ -307,12 +327,17 @@ export function OverviewPage() {
               </div>
             ))}
           </div>
-        </div>
+        </section>
 
         {/* BLOCK 5 — My Boards */}
-        <div className="block" data-block-id="myboards">
+        <section
+          className="block"
+          data-block-id="myboards"
+          role="region"
+          aria-labelledby="block-myboards-title"
+        >
           <div className="block-header">
-            <div className="block-title">My Boards</div>
+            <div className="block-title" id="block-myboards-title">My Boards</div>
             {myBoards.length > 0 && (
               <div className="block-sub"><span>{myBoards.length} pinned</span></div>
             )}
@@ -350,7 +375,7 @@ export function OverviewPage() {
               ))}
             </div>
           </div>
-        </div>
+        </section>
       </main>
     </div>
   );

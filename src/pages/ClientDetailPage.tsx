@@ -1396,10 +1396,16 @@ function OnboardingRow({ item, onToggle, onDelete, onRename }: {
   };
 
   return (
-    <label
+    // Used to wrap this row in <label> so "tap anywhere on the row
+    // toggles the checkbox" worked via implicit association. The
+    // inner "checkbox" is actually a <button role="checkbox">, not a
+    // real <input>, so <label> had no form control to associate with
+    // — the semantics were a hack. The <div> gives the same visual
+    // + click behaviour (the button's aria-checked announces state,
+    // and the button's onClick still fires when it's the click
+    // target) without the mis-matched <label>. Audit: client-detail L3.
+    <div
       className={`onboarding-item${item.done ? ' done' : ''}${editing ? ' editing' : ''}`}
-      // The whole row is clickable for the same reason toggles on iOS let
-      // you tap anywhere on the row: bigger target, fewer missed taps.
     >
       <button
         type="button"
@@ -1473,7 +1479,7 @@ function OnboardingRow({ item, onToggle, onDelete, onRename }: {
           </svg>
         </button>
       )}
-    </label>
+    </div>
   );
 }
 
