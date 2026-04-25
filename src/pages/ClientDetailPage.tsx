@@ -14,6 +14,7 @@ import { ConfirmDangerDialog } from '../components/ConfirmDangerDialog';
 import { defaultNextDeliverableAt } from '../data/serviceTemplateOptions';
 import { ServiceMetadataForm } from '../components/shared/ServiceMetadataForm';
 import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
+import { useModalAutofocus } from '../hooks/useModalAutofocus';
 
 /**
  * Right-hand pane of the Clients split view. Ports the Acme detail layout
@@ -2268,16 +2269,11 @@ function AddContactModal({ clientId, existingPrimary, contact, onClose }: {
   const modalRef = useRef<HTMLDivElement>(null);
   useModalFocusTrap(modalRef, !pendingDemotion);
 
-  useEffect(() => {
-    const t = window.setTimeout(() => {
-      nameRef.current?.focus();
-      // In edit mode the name is already filled — select-all is more
-      // useful than leaving the cursor floating at the end, since the
-      // user opened this to change something.
-      if (isEdit) nameRef.current?.select();
-    }, 80);
-    return () => window.clearTimeout(t);
-  }, [isEdit]);
+  // Autofocus the name input. In edit mode select-all so a quick typo
+  // fix is one keystroke away. The 80ms delay used to live as a bare
+  // setTimeout here; the shared hook owns the timing now. Audit:
+  // add-contact-modal L1.
+  useModalAutofocus(nameRef, { select: isEdit });
 
   // True when saving with `primary === true` would demote a *different*
   // contact. Editing the existing primary with primary still true is a
@@ -2303,7 +2299,13 @@ function AddContactModal({ clientId, existingPrimary, contact, onClose }: {
         primary: primary || undefined,
       });
     } else {
-      const id = `ct-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+      // crypto.randomUUID() over the old `ct-${Date}-${Math.random()
+      // 4-char tail}` recipe. The 4-char random tail gave ~1.7M
+      // possible values, low enough to collide on bulk imports. UUID
+      // is 122 bits of entropy — collision-proof at any practical
+      // scale. Prefix retained for grep-ability when scanning JSON.
+      // Audit: add-contact-modal L3.
+      const id = `ct-${crypto.randomUUID()}`;
       const next: Contact = {
         id,
         clientId,
@@ -2438,12 +2440,18 @@ function AddContactModal({ clientId, existingPrimary, contact, onClose }: {
 
           <label className="wip-field">
             <span className="wip-field-label">Role</span>
+            {/* Trim on blur. The save handler also trims, but doing it
+                on blur means a row of pasted whitespace visibly
+                collapses to empty as the user tabs away — they can
+                see the field is going to save as nothing. Audit:
+                add-contact-modal L2. */}
             <input
               type="text"
               className="wip-field-input"
               value={role}
               maxLength={80}
               onChange={(e) => setRole(e.target.value)}
+              onBlur={() => { const t = role.trim(); if (t !== role) setRole(t); }}
               placeholder="e.g. VP Marketing"
             />
           </label>
@@ -2457,6 +2465,7 @@ function AddContactModal({ clientId, existingPrimary, contact, onClose }: {
                 value={email}
                 maxLength={200}
                 onChange={(e) => { setEmail(e.target.value); if (emailError) setEmailError(false); }}
+                onBlur={() => { const t = email.trim(); if (t !== email) setEmail(t); }}
                 placeholder="jamie@acme.com"
                 style={emailError ? { borderColor: 'var(--status-fire)' } : undefined}
                 aria-invalid={emailError || undefined}
@@ -2480,6 +2489,7 @@ function AddContactModal({ clientId, existingPrimary, contact, onClose }: {
                 value={phone}
                 maxLength={40}
                 onChange={(e) => { setPhone(e.target.value); if (phoneError) setPhoneError(false); }}
+                onBlur={() => { const t = phone.trim(); if (t !== phone) setPhone(t); }}
                 placeholder="+1 555 1234"
                 style={phoneError ? { borderColor: 'var(--status-fire)' } : undefined}
                 aria-invalid={phoneError || undefined}
