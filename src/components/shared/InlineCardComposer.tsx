@@ -71,19 +71,10 @@ export function InlineCardComposer({
   const hasContent = title.trim().length > 0;
 
   return (
-    <div
-      style={{
-        border: '1px solid var(--hairline)',
-        borderRadius: 12,
-        background: 'var(--bg-elev)',
-        padding: 12,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 10,
-      }}
-    >
+    <div className="inline-card-composer">
       <textarea
         ref={inputRef}
+        className="inline-card-composer-input"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         onKeyDown={(e) => {
@@ -93,32 +84,16 @@ export function InlineCardComposer({
         }}
         placeholder={placeholder}
         rows={2}
-        style={{
-          resize: 'none',
-          border: '1px solid var(--hairline-soft)',
-          borderRadius: 8,
-          padding: '8px 10px',
-          fontFamily: 'inherit',
-          fontSize: 'var(--fs-base)',
-          color: 'var(--text)',
-          background: 'var(--bg)',
-          outline: 'none',
-        }}
       />
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+      <div className="inline-card-composer-actions">
         <button type="button" className="btn-sm" onClick={cancel}>
           Cancel
         </button>
         <button
           type="button"
-          className="btn-sm"
+          className={`btn-sm inline-card-composer-submit${hasContent ? ' is-ready' : ''}`}
           onClick={submit}
           disabled={!hasContent}
-          style={{
-            background: hasContent ? 'var(--highlight)' : 'var(--bg-soft)',
-            color: hasContent ? '#fff' : 'var(--text-faint)',
-            borderColor: hasContent ? 'var(--highlight)' : 'var(--hairline)',
-          }}
         >
           {submitLabel}
         </button>

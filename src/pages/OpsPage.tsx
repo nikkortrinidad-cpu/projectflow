@@ -69,9 +69,13 @@ export function OpsPage() {
   // titlebar menu in FlizowCardModal.
   const liveTasks = useMemo(() => tasks.filter(t => !t.archived), [tasks]);
 
+  // data.today is the demo-aware "today" — the store can override it
+  // for time-travel demos. Reading from there instead of `new Date()`
+  // means the same date flows to applyFilters, dueDescriptor, and
+  // anywhere else on the page. Audit: ops L3.
   const filteredTasks = useMemo(
-    () => applyFilters(liveTasks, filters, todayISO(), search),
-    [liveTasks, filters, search],
+    () => applyFilters(liveTasks, filters, data.today, search),
+    [liveTasks, filters, search, data.today],
   );
 
   const tasksByColumn = useMemo(() => {
@@ -173,6 +177,7 @@ export function OpsPage() {
                 dot={col.dot}
                 tasks={colTasks}
                 members={members}
+                today={data.today}
                 onOpenTask={(id) => setSelectedId(id)}
               />
             );
@@ -180,7 +185,7 @@ export function OpsPage() {
         </div>
 
         <DragOverlay dropAnimation={null}>
-          {activeTask ? <CardTile task={activeTask} members={members} dragging /> : null}
+          {activeTask ? <CardTile task={activeTask} members={members} today={data.today} dragging /> : null}
         </DragOverlay>
       </DndContext>
 
@@ -279,6 +284,7 @@ function Column({
   dot,
   tasks,
   members,
+  today,
   onOpenTask,
 }: {
   columnId: ColumnId;
@@ -286,6 +292,7 @@ function Column({
   dot: string;
   tasks: OpsTask[];
   members: Member[];
+  today: string;
   onOpenTask: (id: string) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `col:${columnId}` });
@@ -315,6 +322,7 @@ function Column({
             key={task.id}
             task={task}
             members={members}
+            today={today}
             onOpen={() => onOpenTask(task.id)}
           />
         ))}
@@ -358,10 +366,12 @@ function AddOpsCardInline() {
 function DraggableCard({
   task,
   members,
+  today,
   onOpen,
 }: {
   task: OpsTask;
   members: Member[];
+  today: string;
   onOpen: () => void;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: task.id });
@@ -407,7 +417,7 @@ function DraggableCard({
       tabIndex={0}
       aria-label={`Open card: ${task.title}`}
     >
-      <CardTile task={task} members={members} />
+      <CardTile task={task} members={members} today={today} />
     </div>
   );
 }
@@ -415,14 +425,19 @@ function DraggableCard({
 function CardTile({
   task,
   members,
+  today,
   dragging,
 }: {
   task: OpsTask;
   members: Member[];
+  /** Demo-aware "today" sourced from data.today, not `new Date()`,
+   *  so the per-card overdue / due-soon labels follow time-travel
+   *  demos. Audit: ops L3. */
+  today: string;
   dragging?: boolean;
 }) {
   const isDone = task.columnId === 'done';
-  const due = dueDescriptor(task);
+  const due = dueDescriptor(task, today);
   const assignee = task.assigneeId ? members.find(m => m.id === task.assigneeId) : null;
 
   return (
@@ -489,14 +504,13 @@ function CardTile({
 
 type DueDescriptor = { label: string; mod: DueMod; icon: ReactElement };
 
-function dueDescriptor(task: OpsTask): DueDescriptor | null {
+function dueDescriptor(task: OpsTask, today: string): DueDescriptor | null {
   if (task.overrideMod || task.overrideLabel) {
     const icon = task.overrideMod === 'due-blocked' ? <BlockedIcon /> : <ClockIcon />;
     return { label: task.overrideLabel ?? '', mod: task.overrideMod ?? '', icon };
   }
   if (task.columnId === 'done') return null;
   if (!task.dueDate) return null;
-  const today = todayISO();
   const diff = daysBetween(today, task.dueDate);
   if (diff < 0) {
     return { label: `Overdue ${Math.abs(diff)}d`, mod: 'due-overdue', icon: <ClockIcon /> };
@@ -507,13 +521,10 @@ function dueDescriptor(task: OpsTask): DueDescriptor | null {
   return { label: formatMonthDay(task.dueDate), mod: '', icon: <CalIcon /> };
 }
 
-function todayISO(): string {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
+// `todayISO()` lived here as a parallel "today" computation. Removed
+// in favour of `data.today` from the store, which BoardPage already
+// uses and which a future demo-mode date override can target.
+// Audit: ops L3.
 
 // ── Icons ────────────────────────────────────────────────────────────
 // Only the icons used inside cards (due pill, comment/attachment meta)

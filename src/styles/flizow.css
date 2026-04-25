@@ -1789,6 +1789,50 @@
     background: var(--hover-tint);
   }
 
+  /* Inline "+ Add Card" composer (open state). Migrated from inline
+     styles so the textarea can claim a real focus ring and the
+     submit button can drive its primary tint via a class instead of
+     reading hasContent on every render. Audit: ops L4 + card-modal
+     M2 spillover. */
+  .inline-card-composer {
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    background: var(--bg-elev);
+    padding: var(--sp-md);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .inline-card-composer-input {
+    resize: none;
+    border: 1px solid var(--hairline-soft);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-family: inherit;
+    font-size: var(--fs-base);
+    color: var(--text);
+    background: var(--bg);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .inline-card-composer-input:focus-visible {
+    outline: none;
+    border-color: var(--highlight);
+    box-shadow: 0 0 0 3px var(--highlight-soft);
+  }
+  .inline-card-composer-actions {
+    display: flex; justify-content: flex-end; gap: 8px;
+  }
+  .inline-card-composer-submit {
+    background: var(--bg-soft);
+    color: var(--text-faint);
+    border-color: var(--hairline);
+  }
+  .inline-card-composer-submit.is-ready {
+    background: var(--highlight);
+    color: #fff;
+    border-color: var(--highlight);
+  }
+
   /* Swimlanes — applied only when the board is in .has-swimlanes mode
      (retainer services). Stacks horizontal swimlane rows vertically, each
      with its own label + column row. Project boards keep the flat layout. */
@@ -10204,10 +10248,17 @@
     letter-spacing: -0.005em;
   }
   .ops-header-stat strong {
-    font-size: 22px;
-    font-weight: 700;
+    /* Stats used to render at 22px/700 — same weight as primary
+       interactive metrics elsewhere in the app, so users would
+       reach to click them. They aren't clickable (the columns are
+       already side-by-side; "filter to In Progress" doesn't have a
+       UI). Dropped to --fs-xl (20px) / 600 so the number still
+       reads as "the important value in the header" without
+       promising a tap. Audit: ops L2. */
+    font-size: var(--fs-xl);
+    font-weight: 600;
     color: var(--text);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.015em;
     line-height: 1;
   }
   /* Use the canonical --status-fire token (which already switches at
