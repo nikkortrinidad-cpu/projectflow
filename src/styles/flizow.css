@@ -11896,6 +11896,25 @@
     background: var(--bg-elev);
     box-shadow: inset 0 0 0 2px var(--highlight);
   }
+  /* Expanded state — gives the row a clear "this panel is open"
+     cue so the user can see the toggle has fired AND that clicking
+     again will close it. The phase number badge also flips to the
+     highlight color so the eye lands on the open row immediately
+     when scanning the list. Audit: post-Wave-7 user feedback
+     ("the checklist drawer doesn't show when I click phases" — the
+     panel WAS opening; the user just couldn't tell). */
+  .template-phase.expanded .template-phase-row {
+    background: var(--highlight-soft);
+  }
+  .template-phase.expanded .template-phase-num {
+    background: var(--highlight);
+    border-color: var(--highlight);
+    color: #fff;
+  }
+  .template-phase.expanded .template-phase-name {
+    color: var(--highlight);
+    font-weight: 600;
+  }
   /* canEdit:false fallback (admin gate) renders the row without a
      drag handle and without the actions column — three columns,
      no toggle cursor. */
