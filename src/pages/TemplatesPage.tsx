@@ -361,11 +361,15 @@ function DetailPane({ template }: { template: TemplateDef }) {
             <div className="template-hero-title">{template.name}</div>
             <div className="template-hero-meta">
               <span className="template-category-chip">{template.category}</span>
-              {/* "Last edited —" used to render a literal em-dash in
-                  place of a timestamp because TEMPLATE_DEF has no
-                  lastEdited field. The em-dash read as broken data,
-                  not as "no data yet." Removed until real timestamps
-                  flow through the admin editor. Audit: templates M4. */}
+              {/* Honest call-out: the surface looks editable (hero +
+                  phases + checklists + brief fields) but the data is
+                  hard-coded in TEMPLATE_DEF until the admin editor
+                  ships. Says so plainly here so the user doesn't try
+                  to click into a phase and find nothing happens.
+                  Audit: templates M2. */}
+              <span className="template-readonly-tag" title="Templates ship as part of the product. The admin editor is on the roadmap.">
+                Read-only
+              </span>
             </div>
           </div>
         </div>

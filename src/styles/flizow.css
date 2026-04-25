@@ -11622,6 +11622,20 @@
     color: var(--text-muted);
     letter-spacing: 0.005em;
   }
+  /* Honest "you can read but not edit" badge sitting next to the
+     category chip. Sets the user's expectations before they click
+     into a phase that doesn't expand-to-edit. Audit: templates M2. */
+  .template-readonly-tag {
+    margin-left: 8px;
+    padding: 2px 8px;
+    border-radius: 980px;
+    background: color-mix(in srgb, var(--status-soft) 14%, transparent);
+    color: var(--status-soft);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
   .template-hero-meta .sep {
     width: 3px; height: 3px; border-radius: 50%;
     background: var(--text-faint);
