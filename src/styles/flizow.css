@@ -10160,6 +10160,14 @@
     background: color-mix(in srgb, #ff453a 14%, transparent);
     color: #ff453a;
   }
+  /* Focus-visible on the editor's icon + format buttons. Tab onto
+     the toolbar previously gave no visible focus indicator —
+     keyboard users couldn't tell where they were. Audit: notes MED. */
+  .notes-icon-btn:focus-visible,
+  .notes-fmt-btn:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
+  }
 
   .notes-toolbar {
     display: flex;

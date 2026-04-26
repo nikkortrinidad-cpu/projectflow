@@ -106,7 +106,12 @@ export function NotesTab({ clientId, notes, store }: Props) {
 
           <div className="notes-list">
             {filtered.length === 0 ? (
-              <div className="notes-list-empty">
+              // aria-live="polite" announces "Nothing matches that
+              // search." after a search filters the list to zero,
+              // so a screen reader user typing in the search box
+              // hears the result instead of staring at silence.
+              // Audit: notes MED (silent search empty state).
+              <div className="notes-list-empty" role="status" aria-live="polite">
                 {clientNotes.length === 0
                   ? 'No notes yet. Press New note to start one.'
                   : 'Nothing matches that search.'}
@@ -262,7 +267,17 @@ function NoteEditor({ note, store, onDelete }: {
     content: note.body || '',
     editable: !note.locked,
     editorProps: {
-      attributes: { class: 'notes-body-editor' },
+      // aria-label gives the contentEditable an accessible name so
+      // screen reader users land on "Note body, edit text" instead of
+      // a nameless "edit text" region. role="textbox" + aria-multiline
+      // make the widget category explicit. Audit: notes HIGH (editor
+      // had no accessible name).
+      attributes: {
+        class: 'notes-body-editor',
+        'aria-label': 'Note body',
+        role: 'textbox',
+        'aria-multiline': 'true',
+      },
     },
     onUpdate: ({ editor: ed }) => {
       setSavedLabel('Saving…');
@@ -350,12 +365,23 @@ function NoteEditor({ note, store, onDelete }: {
 
       <EditorContent editor={editor} />
 
-      <div className="notes-editor-footer" style={{
-        padding: '8px 16px',
-        fontSize: 12,
-        color: 'var(--text-faint)',
-        borderTop: '1px solid var(--hairline-soft)',
-      }}>
+      {/* role="status" + aria-live="polite" so screen readers
+          announce save state changes ("Saving…" → "All changes
+          saved") without stealing focus. The lock state is static
+          per-note so it doesn't need announcement — but we leave the
+          live region in either branch so the polite queue stays
+          consistent. Audit: notes HIGH (silent autosave). */}
+      <div
+        className="notes-editor-footer"
+        role="status"
+        aria-live="polite"
+        style={{
+          padding: '8px 16px',
+          fontSize: 12,
+          color: 'var(--text-faint)',
+          borderTop: '1px solid var(--hairline-soft)',
+        }}
+      >
         {note.locked ? 'Locked — read-only' : savedLabel}
       </div>
 
