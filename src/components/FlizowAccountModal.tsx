@@ -314,8 +314,8 @@ export default function FlizowAccountModal({ onClose }: Props) {
                   </Field>
                 </div>
 
-                <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid var(--hairline)' }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 10 }}>
+                <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px solid var(--hairline)' }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 8 }}>
                     Workspace data
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
@@ -325,7 +325,7 @@ export default function FlizowAccountModal({ onClose }: Props) {
                     <span style={{ color: 'var(--text-faint)', fontSize: 12 }}>· Seeds the mockup's 50 demo clients</span>
                   </div>
 
-                  <div style={{ marginTop: 16 }}>
+                  <div style={{ marginTop: 12 }}>
                     {resetPhase === 'idle' ? (
                       <button
                         type="button"
@@ -494,12 +494,12 @@ export default function FlizowAccountModal({ onClose }: Props) {
                   </a>
                 </div>
 
-                <div style={{ marginTop: 20, paddingTop: 20, borderTop: '1px solid var(--hairline)' }}>
+                <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--hairline)' }}>
                   <button
                     type="button"
                     onClick={handleSignOut}
                     style={{
-                      padding: '10px 18px', borderRadius: 8,
+                      padding: '8px 16px', borderRadius: 8,
                       background: 'transparent',
                       border: '1px solid var(--hairline)',
                       color: 'var(--text)',
