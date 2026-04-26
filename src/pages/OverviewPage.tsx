@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { navigate } from '../router';
 import { useFlizow } from '../store/useFlizow';
-import type { Client, Task, Touchpoint, ClientStatus } from '../types/flizow';
+import type { Client, Task, Touchpoint, ClientStatus, OnboardingItem, Service } from '../types/flizow';
 
 /** localStorage key for the one-time first-run welcome banner. Versioned
  *  so a future revision can re-show the banner if we change the
@@ -98,17 +98,38 @@ export function OverviewPage() {
   const liveTasks = useMemo(() => data.tasks.filter(t => !t.archived), [data.tasks]);
 
   // Needs-attention cards — the clients you actually need to open today.
-  // Order: fire first, then risk, capped at 6 so the block stays scannable.
-  // Overflow spills into a "View all" link rather than an ever-growing list.
+  // Order: fire first, then risk, then unfinished onboarding (mine).
+  // Capped at 6 so the block stays scannable; overflow spills into a
+  // "View all" link rather than an ever-growing list.
+  //
+  // The currentMemberId filter applies to onboarding only — fire/risk
+  // are workspace-wide. Onboarding is "you forgot to chase this," so
+  // it has to attribute to whoever owns the client (the AM). Without
+  // this filter every AM would see every other AM's stalled
+  // onboarding.
+  const currentMemberId = store.getCurrentMemberId();
   const attention = useMemo(() => {
-    return buildAttentionCards(data.clients, liveTasks).slice(0, 6);
-  }, [data.clients, liveTasks]);
+    return buildAttentionCards(
+      data.clients,
+      liveTasks,
+      data.onboardingItems,
+      data.services,
+      currentMemberId,
+    ).slice(0, 6);
+  }, [data.clients, liveTasks, data.onboardingItems, data.services, currentMemberId]);
+  // hiddenAttention counts cards that didn't make the 6-cap. Includes
+  // fire/risk (workspace-wide) + onboarding (mine only) so the "View
+  // all" link's count matches what the user can scroll to find.
   const hiddenAttention = useMemo(() => {
-    return Math.max(
-      0,
-      data.clients.filter(c => c.status === 'fire' || c.status === 'risk').length - attention.length,
-    );
-  }, [data.clients, attention.length]);
+    const total = buildAttentionCards(
+      data.clients,
+      liveTasks,
+      data.onboardingItems,
+      data.services,
+      currentMemberId,
+    ).length;
+    return Math.max(0, total - attention.length);
+  }, [data.clients, liveTasks, data.onboardingItems, data.services, currentMemberId, attention.length]);
 
   // Schedule grid: Mon–Fri this week + Mon–Fri next week. Tasks with a
   // `_schedule` meta (deadline/meeting/milestone) and touchpoints with
@@ -286,34 +307,48 @@ export function OverviewPage() {
               </div>
             ) : (
               <>
-                {attention.map((card) => (
-                  <div
-                    key={card.clientId}
-                    className={`attn-card ${card.severity === 'critical' ? 'critical' : 'warn'}`}
-                    role="button"
-                    tabIndex={0}
-                    aria-label={`Open ${card.clientName}`}
-                    onClick={() => navigate(`#clients/${card.clientId}`)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        navigate(`#clients/${card.clientId}`);
-                      }
-                    }}
-                  >
-                    <div className="attn-content">
-                      <div className="attn-row1">
-                        <span className={`attn-severity ${card.severity === 'critical' ? 'critical' : 'warning'}`}>
-                          <span className="dot" />{card.severityLabel}
-                        </span>
-                        <span className="attn-client">{card.clientName}</span>
-                        <span className="attn-age">{card.ageLabel}</span>
+                {attention.map((card) => {
+                  // Card variant + severity-pill class share the same
+                  // tier name. Three tiers: critical (fire) → warn
+                  // (risk) → onboard (preventive). Class names match
+                  // the CSS modifiers so styling stays per-tier.
+                  const cardTier =
+                    card.severity === 'critical' ? 'critical'
+                    : card.severity === 'warning' ? 'warn'
+                    : 'onboard';
+                  const sevTier =
+                    card.severity === 'critical' ? 'critical'
+                    : card.severity === 'warning' ? 'warning'
+                    : 'onboarding';
+                  return (
+                    <div
+                      key={card.clientId}
+                      className={`attn-card ${cardTier}`}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Open ${card.clientName}`}
+                      onClick={() => navigate(`#clients/${card.clientId}`)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          navigate(`#clients/${card.clientId}`);
+                        }
+                      }}
+                    >
+                      <div className="attn-content">
+                        <div className="attn-row1">
+                          <span className={`attn-severity ${sevTier}`}>
+                            <span className="dot" />{card.severityLabel}
+                          </span>
+                          <span className="attn-client">{card.clientName}</span>
+                          <span className="attn-age">{card.ageLabel}</span>
+                        </div>
+                        <div className="attn-title">{card.title}</div>
+                        {card.desc && <div className="attn-desc">{card.desc}</div>}
                       </div>
-                      <div className="attn-title">{card.title}</div>
-                      {card.desc && <div className="attn-desc">{card.desc}</div>}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
                 {hiddenAttention > 0 && (
                   <a
                     className="attn-more"
@@ -643,8 +678,13 @@ function ScheduleTagIcon({ tag }: { tag: ScheduleTag }) {
 type AttentionCard = {
   clientId: string;
   clientName: string;
-  severity: 'critical' | 'warning';
-  severityLabel: 'On Fire' | 'At Risk';
+  /** critical = client status fire (drop everything).
+   *  warning  = client status risk (drifting).
+   *  onboarding = unfinished onboarding for one of the user's clients
+   *               (preventive — easy to skip, causes mid-project
+   *                delays per the AM workflow rationale). */
+  severity: 'critical' | 'warning' | 'onboarding';
+  severityLabel: 'On Fire' | 'At Risk' | 'Onboarding';
   title: string;
   ageLabel: string;
   desc?: string;
@@ -656,7 +696,21 @@ type AttentionCard = {
 // said, whether a retainer is up for renewal. A card per task would push
 // the same client 3x when they have three overdue items, which trains
 // the eye to ignore repeats instead of act on them.
-function buildAttentionCards(clients: Client[], tasks: Task[]): AttentionCard[] {
+//
+// Onboarding cards live in the same feed but use a softer severity
+// ('onboarding'). Reason: unfinished onboarding gets overlooked — the
+// AM is heads-down on cards in flight, the seeded-but-unchecked
+// onboarding list quietly rots, and 3 weeks later the project hits a
+// blocker traceable to a missing brand asset or unsigned MSA from
+// onboarding. Surfacing it here is preventive: not "this is on fire
+// right now," but "this WILL be on fire if you don't close it out."
+function buildAttentionCards(
+  clients: Client[],
+  tasks: Task[],
+  onboardingItems: OnboardingItem[],
+  services: Service[],
+  currentMemberId: string | null,
+): AttentionCard[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const todayMs = today.getTime();
@@ -684,12 +738,7 @@ function buildAttentionCards(clients: Client[], tasks: Task[]): AttentionCard[] 
     });
 
   // Sort by severity (fire before risk), then by total urgent items
-  // desc, then by oldest overdue asc. The old flow was just
-  // `[...fire, ...risk]` — which meant a client with 1 overdue could
-  // appear above one with 7 overdue inside the same bucket, purely
-  // because of `data.clients` array order. The block caps at 6 cards,
-  // so a truly-urgent client at position 7 was invisible until "View
-  // all." Audit: overview M3.
+  // desc, then by oldest overdue asc.
   enriched.sort((a, b) => {
     const sevA = a.client.status === 'fire' ? 0 : 1;
     const sevB = b.client.status === 'fire' ? 0 : 1;
@@ -700,54 +749,141 @@ function buildAttentionCards(clients: Client[], tasks: Task[]): AttentionCard[] 
     return a.oldestDueMs - b.oldestDueMs;
   });
 
-  return enriched.map(({ client: c, overdue, blocked, oldestDueMs }) => {
-    const isCritical = c.status === 'fire';
+  const fireRiskCards: AttentionCard[] = enriched.map(
+    ({ client: c, overdue, blocked, oldestDueMs }) => {
+      const isCritical = c.status === 'fire';
 
-    let title: string;
-    if (overdue.length && blocked.length) {
-      title = `${overdue.length} overdue · ${blocked.length} blocked`;
-    } else if (overdue.length) {
-      title = overdue.length === 1 ? '1 overdue card' : `${overdue.length} overdue cards`;
-    } else if (blocked.length) {
-      title = blocked.length === 1 ? '1 blocked card' : `${blocked.length} blocked cards`;
-    } else if (isCritical) {
-      title = 'Marked on fire — no blocker logged yet';
-    } else {
-      title = 'Drifting — time for a check-in';
+      let title: string;
+      if (overdue.length && blocked.length) {
+        title = `${overdue.length} overdue · ${blocked.length} blocked`;
+      } else if (overdue.length) {
+        title = overdue.length === 1 ? '1 overdue card' : `${overdue.length} overdue cards`;
+      } else if (blocked.length) {
+        title = blocked.length === 1 ? '1 blocked card' : `${blocked.length} blocked cards`;
+      } else if (isCritical) {
+        title = 'Marked on fire — no blocker logged yet';
+      } else {
+        title = 'Drifting — time for a check-in';
+      }
+
+      // Age label anchors on the oldest overdue task so the AM sees
+      // worst-case staleness at a glance. Falls back to a status hint
+      // when nothing is measurably late.
+      let ageLabel: string;
+      if (overdue.length) {
+        const days = Math.max(1, Math.floor((todayMs - oldestDueMs) / 86_400_000));
+        ageLabel = days === 1 ? '1 day overdue' : `${days} days overdue`;
+      } else if (blocked.length) {
+        ageLabel = 'Blocked';
+      } else {
+        ageLabel = 'Needs review';
+      }
+
+      // Optional longer sentence when a blocker reason is present —
+      // surfaces the human context ("waiting on brand assets") so the AM
+      // can triage without opening the card.
+      let desc: string | undefined;
+      const firstBlocker = blocked.find((t) => t.blockerReason)?.blockerReason;
+      if (firstBlocker) {
+        desc = `Blocked: ${firstBlocker}`;
+      }
+
+      return {
+        clientId: c.id,
+        clientName: c.name,
+        severity: isCritical ? 'critical' : 'warning',
+        severityLabel: isCritical ? 'On Fire' : 'At Risk',
+        title,
+        ageLabel,
+        desc,
+      };
+    },
+  );
+
+  // ── Onboarding cards (mine only) ──────────────────────────────────
+  // Only surfaces clients where the user is the AM. Skips clients
+  // already represented in fireRiskCards — those will already pull the
+  // AM's attention to the client where the onboarding will be visible.
+  // We don't double-card; one card per client across the whole feed.
+  const onboardingCards: AttentionCard[] = [];
+  if (currentMemberId) {
+    const fireRiskClientIds = new Set(fireRiskCards.map((c) => c.clientId));
+    // Pre-index onboarding items by serviceId so the per-client loop
+    // is cheap even with hundreds of items across dozens of services.
+    const itemsByService = new Map<string, OnboardingItem[]>();
+    for (const item of onboardingItems) {
+      const arr = itemsByService.get(item.serviceId) ?? [];
+      arr.push(item);
+      itemsByService.set(item.serviceId, arr);
+    }
+    const servicesByClient = new Map<string, Service[]>();
+    for (const s of services) {
+      const arr = servicesByClient.get(s.clientId) ?? [];
+      arr.push(s);
+      servicesByClient.set(s.clientId, arr);
     }
 
-    // Age label anchors on the oldest overdue task so the AM sees
-    // worst-case staleness at a glance. Falls back to a status hint
-    // when nothing is measurably late.
-    let ageLabel: string;
-    if (overdue.length) {
-      const days = Math.max(1, Math.floor((todayMs - oldestDueMs) / 86_400_000));
-      ageLabel = days === 1 ? '1 day overdue' : `${days} days overdue`;
-    } else if (blocked.length) {
-      ageLabel = 'Blocked';
-    } else {
-      ageLabel = 'Needs review';
+    for (const c of clients) {
+      if (c.amId !== currentMemberId) continue;
+      if (fireRiskClientIds.has(c.id)) continue;
+
+      // Roll up open onboarding items across all services for this
+      // client. Split by group so the card copy can tell the AM
+      // whether the next action is on them ('us') or on the client.
+      let openUs = 0;
+      let openClient = 0;
+      const clientServices = servicesByClient.get(c.id) ?? [];
+      for (const s of clientServices) {
+        const items = itemsByService.get(s.id) ?? [];
+        for (const item of items) {
+          if (item.done) continue;
+          if (item.group === 'us') openUs++;
+          else openClient++;
+        }
+      }
+      const total = openUs + openClient;
+      if (total === 0) continue;
+
+      // Title prioritises 'us' items because those are the ones the AM
+      // can act on right now. Items waiting on the client become the
+      // descriptor — they're real attention but the action is "chase
+      // the client," not "do the work."
+      let title: string;
+      let desc: string | undefined;
+      if (openUs > 0 && openClient > 0) {
+        title = `${openUs} onboarding ${openUs === 1 ? 'step' : 'steps'} waiting on you`;
+        desc = `${openClient} more waiting on the client`;
+      } else if (openUs > 0) {
+        title = `${openUs} onboarding ${openUs === 1 ? 'step' : 'steps'} waiting on you`;
+      } else {
+        title = `${openClient} onboarding ${openClient === 1 ? 'item' : 'items'} waiting on the client`;
+      }
+
+      onboardingCards.push({
+        clientId: c.id,
+        clientName: c.name,
+        severity: 'onboarding',
+        severityLabel: 'Onboarding',
+        title,
+        ageLabel: total === 1 ? '1 open item' : `${total} open items`,
+        desc,
+      });
     }
 
-    // Optional longer sentence when a blocker reason is present —
-    // surfaces the human context ("waiting on brand assets") so the AM
-    // can triage without opening the card.
-    let desc: string | undefined;
-    const firstBlocker = blocked.find((t) => t.blockerReason)?.blockerReason;
-    if (firstBlocker) {
-      desc = `Blocked: ${firstBlocker}`;
-    }
+    // Sort onboarding cards by total open items desc — bigger backlogs
+    // surface higher in the slice, so the worst-stalled clients win
+    // the cap before lighter ones.
+    onboardingCards.sort((a, b) => {
+      const totalA = parseInt(a.ageLabel, 10) || 0;
+      const totalB = parseInt(b.ageLabel, 10) || 0;
+      return totalB - totalA;
+    });
+  }
 
-    return {
-      clientId: c.id,
-      clientName: c.name,
-      severity: isCritical ? 'critical' : 'warning',
-      severityLabel: isCritical ? 'On Fire' : 'At Risk',
-      title,
-      ageLabel,
-      desc,
-    };
-  });
+  // Final order: critical (fire) → warning (risk) → onboarding.
+  // Fires + risks are reactive and drop-everything; onboarding is
+  // preventive. Don't bury an active fire behind preventive nudges.
+  return [...fireRiskCards, ...onboardingCards];
 }
 
 function HealthCell({ label, value, sub, icon, onClick, ariaLabel, valueClass, iconClass }: HealthCellProps) {

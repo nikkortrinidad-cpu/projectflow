@@ -6204,6 +6204,10 @@
   }
   .attn-card.critical::before { background: var(--accent); opacity: 1; }
   .attn-card.warn::before { background: var(--text-soft); opacity: 0.7; }
+  /* Onboarding tier — preventive attention. Brand-blue rail so it
+     reads as "you should look at this" without competing with the
+     reactive red/amber tiers. Audit: needs-attention onboarding. */
+  .attn-card.onboard::before { background: #0a84ff; opacity: 0.85; }
   .attn-card:hover {
     box-shadow: var(--shadow-hover);
     transform: translateY(-1px);
@@ -6232,6 +6236,11 @@
   .attn-severity.warning .dot { background: var(--text-muted); }
   .attn-severity.info { color: var(--text-muted); }
   .attn-severity.info .dot { background: var(--text-muted); }
+  /* Onboarding pill — brand-blue, matches the .attn-card.onboard
+     left rail. Distinct from fire-red and risk-grey so the user
+     can scan the feed and know which row is preventive. */
+  .attn-severity.onboarding { color: #0a84ff; }
+  .attn-severity.onboarding .dot { background: #0a84ff; }
 
   .attn-client {
     font-size: var(--fs-sm); font-weight: 600; color: var(--text-muted);
