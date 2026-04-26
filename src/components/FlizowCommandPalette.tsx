@@ -124,17 +124,33 @@ export default function FlizowCommandPalette({ open, onClose }: Props) {
   const [activeIdx, setActiveIdx] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const activeRowRef = useRef<HTMLDivElement>(null);
+  // Track which input device drove the last interaction. Mouse hover
+  // should NOT yank the active row away while the user is arrow-key
+  // navigating — that's a classic command-palette antipattern. We
+  // flip to 'keyboard' on any arrow keystroke, and back to 'mouse'
+  // on the next mousemove. Audit: cmdk HIGH (hover-jacks-keyboard).
+  const interactionRef = useRef<'mouse' | 'keyboard'>('mouse');
+  // Element that had focus when the palette opened. Restored on close
+  // so keyboard users don't get dumped to <body>. Audit: cmdk MED.
+  const triggerRef = useRef<HTMLElement | null>(null);
 
   // Reset state every time the palette opens — the mockup clears input
   // and scroll on open so the user always starts from the top.
   useEffect(() => {
     if (open) {
+      // Capture whoever opened us so we can restore focus on close.
+      triggerRef.current = document.activeElement as HTMLElement | null;
       setQuery('');
       setActiveIdx(0);
+      interactionRef.current = 'keyboard';
       // Focus on next frame so the input exists in the DOM before we focus.
       requestAnimationFrame(() => {
         inputRef.current?.focus();
       });
+    } else if (triggerRef.current) {
+      // Closing — return focus to whoever opened us.
+      triggerRef.current.focus?.();
+      triggerRef.current = null;
     }
   }, [open]);
 
@@ -280,10 +296,22 @@ export default function FlizowCommandPalette({ open, onClose }: Props) {
   const handleInputKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
+      interactionRef.current = 'keyboard';
       setActiveIdx((i) => Math.min(items.length - 1, i + 1));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
+      interactionRef.current = 'keyboard';
       setActiveIdx((i) => Math.max(0, i - 1));
+    } else if (e.key === 'Home') {
+      // Bonus: Home jumps to first, End to last — cheap quality-of-life
+      // for power users who want to navigate long result lists.
+      e.preventDefault();
+      interactionRef.current = 'keyboard';
+      setActiveIdx(0);
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      interactionRef.current = 'keyboard';
+      setActiveIdx(Math.max(0, items.length - 1));
     } else if (e.key === 'Enter') {
       e.preventDefault();
       const it = items[activeIdx];
@@ -304,6 +332,14 @@ export default function FlizowCommandPalette({ open, onClose }: Props) {
     grouped[it.type].push({ item: it, idx });
   });
 
+  // Trimmed query for the empty-state echo. We show the user what they
+  // actually typed so they know the search ran.
+  const queryEcho = query.trim();
+  // Stable id for the active option, threaded into the input via
+  // aria-activedescendant. AT can now follow the keyboard navigation
+  // even though focus stays in the input. Audit: cmdk HIGH.
+  const activeOptionId = items[activeIdx] ? `cmdk-option-${activeIdx}` : undefined;
+
   return (
     <div
       className="cmdk-overlay open"
@@ -313,6 +349,12 @@ export default function FlizowCommandPalette({ open, onClose }: Props) {
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
+      // Mousemove flips us back to mouse mode after keyboard nav. We
+      // bind on the overlay (not each row) so a single move anywhere
+      // counts. mouseenter on the row only fires if mode is 'mouse',
+      // which prevents the active highlight from chasing the cursor
+      // while the user is arrow-keying. Audit: cmdk HIGH.
+      onMouseMove={() => { interactionRef.current = 'mouse'; }}
     >
       <div
         className="cmdk-modal"
@@ -324,12 +366,22 @@ export default function FlizowCommandPalette({ open, onClose }: Props) {
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
             <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242.656a5 5 0 1 1 0-10 5 5 0 0 1 0 10z" />
           </svg>
+          {/* WAI-ARIA combobox pattern. Input drives a listbox below;
+              aria-activedescendant tells AT which option is "active"
+              even though focus stays on the input. Without this, the
+              visible highlighted row was invisible to screen readers.
+              Audit: cmdk HIGH (broken combobox/listbox pairing). */}
           <input
             ref={inputRef}
             type="text"
             className="cmdk-input"
             placeholder="Search clients, tasks, people, or commands…"
             aria-label="Search clients, tasks, people, or commands"
+            role="combobox"
+            aria-expanded="true"
+            aria-controls="cmdk-listbox"
+            aria-autocomplete="list"
+            aria-activedescendant={activeOptionId}
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
@@ -339,29 +391,53 @@ export default function FlizowCommandPalette({ open, onClose }: Props) {
           />
           <span className="cmdk-esc">ESC</span>
         </div>
-        <div className="cmdk-results">
+        <div
+          className="cmdk-results"
+          id="cmdk-listbox"
+          role="listbox"
+          aria-label="Search results"
+        >
           {items.length === 0 ? (
-            <div className="cmdk-group">
+            <div className="cmdk-group" role="presentation">
               <div className="cmdk-group-label">No results</div>
+              {/* Friendlier empty state — echo the query and give the
+                  user a hint about what to try. Audit: cmdk MED. */}
+              <div className="cmdk-empty-hint" role="status" aria-live="polite">
+                {queryEcho ? (
+                  <>
+                    No matches for <strong>"{queryEcho}"</strong>. Try a client name,
+                    a board, or a command like <em>Go to Analytics</em>.
+                  </>
+                ) : (
+                  <>Start typing to search clients, boards, tasks, people, or commands.</>
+                )}
+              </div>
             </div>
           ) : (
             GROUP_ORDER.map((key) => {
               const grp = grouped[key];
               if (grp.length === 0) return null;
               return (
-                <div key={key} className="cmdk-group">
+                <div key={key} className="cmdk-group" role="presentation">
                   <div className="cmdk-group-label">{GROUP_LABEL[key]}</div>
                   {grp.map(({ item, idx }) => (
                     <div
                       key={`${key}-${idx}`}
+                      id={`cmdk-option-${idx}`}
                       ref={idx === activeIdx ? activeRowRef : undefined}
                       className={`cmdk-item${idx === activeIdx ? ' active' : ''}`}
                       role="option"
                       aria-selected={idx === activeIdx}
-                      onMouseEnter={() => setActiveIdx(idx)}
+                      // Only let mouse hover claim the highlight if the
+                      // user is actually interacting with the mouse.
+                      // Suppresses the "cursor at rest under the panel"
+                      // jerk during keyboard nav.
+                      onMouseEnter={() => {
+                        if (interactionRef.current === 'mouse') setActiveIdx(idx);
+                      }}
                       onClick={() => activate(item)}
                     >
-                      <div className="cmdk-icon">{item.icon}</div>
+                      <div className="cmdk-icon" aria-hidden="true">{item.icon}</div>
                       <div className="cmdk-item-main">
                         <div className="cmdk-item-title">{item.title}</div>
                         <div className="cmdk-item-sub">{item.sub}</div>

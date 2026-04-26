@@ -1054,6 +1054,17 @@
     text-transform: uppercase; letter-spacing: 0.08em;
     padding: 8px 22px;
   }
+  /* Empty-state hint copy under "No results" — quieter than the
+     group label, normal-case, sized down. Echoes the query so the
+     user knows the search ran. Audit: cmdk MED. */
+  .cmdk-empty-hint {
+    padding: 0 22px 14px;
+    font-size: var(--fs-md);
+    color: var(--text-soft);
+    line-height: 1.45;
+  }
+  .cmdk-empty-hint strong { color: var(--text); font-weight: 600; }
+  .cmdk-empty-hint em { font-style: italic; color: var(--text-muted); }
   .cmdk-item {
     display: flex; align-items: center; gap: var(--sp-lg);
     padding: 12px 22px; cursor: pointer;
