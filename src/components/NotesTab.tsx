@@ -283,8 +283,19 @@ function NoteEditor({ note, store, onDelete }: {
       setSavedLabel('Saving…');
       if (saveTimer.current) clearTimeout(saveTimer.current);
       saveTimer.current = setTimeout(() => {
-        store.updateNote(note.id, { body: ed.getHTML() });
-        setSavedLabel('All changes saved');
+        // TipTap's getHTML() can throw if the doc is in a bad state
+        // (corrupt content, custom marks the schema doesn't know).
+        // Without a guard, the timer callback throws unhandled and
+        // the next save never fires — the user keeps typing and
+        // savedLabel sticks at "Saving…" forever. Audit: notes MED.
+        try {
+          store.updateNote(note.id, { body: ed.getHTML() });
+          setSavedLabel('All changes saved');
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.error('[NotesTab] failed to serialise editor HTML:', err);
+          setSavedLabel("Couldn't save — your last changes may not have persisted");
+        }
       }, 400);
     },
   });
@@ -296,12 +307,21 @@ function NoteEditor({ note, store, onDelete }: {
   }, [editor, note.locked]);
 
   // On unmount, flush any pending save so a tab-switch doesn't lose the
-  // last few characters.
+  // last few characters. getHTML() guarded — see onUpdate above for
+  // why. A flush failure here is silent because the unmount path can't
+  // surface a savedLabel update anymore.
   useEffect(() => {
     return () => {
       if (saveTimer.current) {
         clearTimeout(saveTimer.current);
-        if (editor) store.updateNote(note.id, { body: editor.getHTML() });
+        if (editor) {
+          try {
+            store.updateNote(note.id, { body: editor.getHTML() });
+          } catch (err) {
+            // eslint-disable-next-line no-console
+            console.error('[NotesTab] flush on unmount failed:', err);
+          }
+        }
       }
     };
   }, [editor, note.id, store]);

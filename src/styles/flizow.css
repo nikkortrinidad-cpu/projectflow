@@ -13521,6 +13521,39 @@
     box-shadow: inset 0 0 0 2px rgba(255,255,255,0.9);
   }
 
+  /* Sync-error banner — appears at the very top of the app shell when
+     the store can't write to localStorage or Firestore. Amber tint so
+     it reads as "heads up," not "broken." Sits above the top nav so
+     it can't be missed. Audit: error/offline HIGH (silent saves). */
+  .sync-error-banner {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 16px;
+    background: rgba(245, 158, 11, 0.14);
+    border-bottom: 1px solid rgba(245, 158, 11, 0.28);
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  .sync-error-banner svg { color: #b45309; flex-shrink: 0; }
+  .sync-error-banner-text { flex: 1; min-width: 0; }
+  .sync-error-banner-dismiss {
+    width: 24px; height: 24px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: transparent; border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.12s, color 0.12s;
+  }
+  .sync-error-banner-dismiss:hover {
+    background: rgba(0, 0, 0, 0.06);
+    color: var(--text);
+  }
+  .sync-error-banner-dismiss:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 1px;
+  }
+
   /* Spinner keyframe used by the Suspense route fallback (PageShell)
      and any other ad-hoc loading state. Tailwind's animate-spin lives
      in a separate utility — defining a primitive here keeps the

@@ -1,5 +1,6 @@
 import { lazy, Suspense, type ReactElement } from 'react';
 import { useRoute } from '../router';
+import { ErrorBoundary } from './ErrorBoundary';
 
 // Route-level code splitting. Each page is its own chunk so the
 // initial bundle no longer includes Recharts (Analytics), TipTap
@@ -45,13 +46,22 @@ export function PageShell() {
           top nav entirely. Audit: overview re-audit MED (no skip
           target). */}
       <span id="main-content" tabIndex={-1} style={{ outline: 'none' }} />
-      {/* Suspense fallback is a quiet, full-page spinner. Most chunks
-          are <100 KB gzipped so the flash is brief; the spinner only
-          shows up on the first visit to a route, then the chunk is
-          cached for the session. */}
-      <Suspense fallback={<RouteFallback />}>
-        {page}
-      </Suspense>
+      {/* ErrorBoundary catches any render-time throw inside the page
+          tree — bad route params, missing client lookup, undefined
+          access. Without it, one TypeError takes down the whole app
+          and leaves the user staring at a blank screen. The boundary
+          key={route.name} resets the boundary state when the user
+          navigates away from a broken page, so a "Try again" or a
+          plain navigation both recover. Audit: error/offline HIGH. */}
+      <ErrorBoundary scope="route" key={route.name}>
+        {/* Suspense fallback is a quiet, full-page spinner. Most chunks
+            are <100 KB gzipped so the flash is brief; the spinner only
+            shows up on the first visit to a route, then the chunk is
+            cached for the session. */}
+        <Suspense fallback={<RouteFallback />}>
+          {page}
+        </Suspense>
+      </ErrorBoundary>
     </>
   );
 }

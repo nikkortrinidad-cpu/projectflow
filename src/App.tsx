@@ -1,7 +1,8 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState, useSyncExternalStore } from 'react';
 import { LoginPage } from './components/LoginPage';
 import { TopNav } from './components/TopNav';
 import { PageShell } from './components/PageShell';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { useAuth } from './contexts/AuthContext';
 import { flizowStore } from './store/flizowStore';
 import { useFlizow } from './store/useFlizow';
@@ -93,6 +94,7 @@ function AppShell() {
           to land on page content in one Tab. Audit: overview re-audit
           MED (no skip link). */}
       <a href="#main-content" className="skip-link">Skip to main content</a>
+      <SyncErrorBanner />
       <TopNav
         onOpenAccount={() => setAccountOpen(true)}
         notifOpen={notifOpen}
@@ -101,28 +103,65 @@ function AppShell() {
         onOpenCmdk={() => setCmdkOpen(true)}
       />
       <PageShell />
-      {/* Suspense for lazy modals: fallback is null because the
-          modals are overlays — there's nothing to "show" while
-          loading other than the page underneath. The module fetch
-          is fast (~one chunk) and the user is still looking at the
-          page they came from. */}
-      <Suspense fallback={null}>
-        {accountOpen && (
-          <FlizowAccountModal onClose={() => setAccountOpen(false)} />
-        )}
-        {/* Command palette: now conditionally mounted so the lazy
-            chunk only fetches on first ⌘K press. The component's
-            internal `if (!open) return null` was already a no-op
-            for the same case; switching to conditional mount is
-            cleaner and lets React.lazy actually defer the fetch. */}
-        {cmdkOpen && (
-          <FlizowCommandPalette
-            open={cmdkOpen}
-            onClose={() => setCmdkOpen(false)}
-          />
-        )}
-      </Suspense>
+      {/* Suspense + ErrorBoundary for lazy modals. Modals portal to
+          document.body, so they sit OUTSIDE PageShell's boundary —
+          they need their own. Each modal gets its own boundary so a
+          crash in one doesn't take down the other. fallback={null}
+          on Suspense because the page underneath stays visible
+          during the chunk fetch. Audit: error/offline HIGH. */}
+      {accountOpen && (
+        <ErrorBoundary scope="modal">
+          <Suspense fallback={null}>
+            <FlizowAccountModal onClose={() => setAccountOpen(false)} />
+          </Suspense>
+        </ErrorBoundary>
+      )}
+      {/* Command palette: conditionally mounted so the lazy chunk only
+          fetches on first ⌘K press. */}
+      {cmdkOpen && (
+        <ErrorBoundary scope="modal">
+          <Suspense fallback={null}>
+            <FlizowCommandPalette
+              open={cmdkOpen}
+              onClose={() => setCmdkOpen(false)}
+            />
+          </Suspense>
+        </ErrorBoundary>
+      )}
     </>
+  );
+}
+
+/** Sync-error banner — surfaces silent localStorage / Firestore
+ *  failures the user used to never know about. The store exposes
+ *  syncError as a separate observable so a banner re-render doesn't
+ *  cascade through every data consumer. Audit: error/offline HIGH. */
+function SyncErrorBanner() {
+  const error = useSyncExternalStore(
+    flizowStore.subscribeSyncError,
+    flizowStore.getSyncError,
+  );
+  if (!error) return null;
+  return (
+    <div className="sync-error-banner" role="status" aria-live="polite">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+        <line x1="12" y1="9" x2="12" y2="13" />
+        <line x1="12" y1="17" x2="12.01" y2="17" />
+      </svg>
+      <span className="sync-error-banner-text">{error}</span>
+      <button
+        type="button"
+        className="sync-error-banner-dismiss"
+        onClick={flizowStore.clearSyncError}
+        aria-label="Dismiss sync warning"
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    </div>
   );
 }
 

@@ -193,10 +193,60 @@ class FlizowStore {
   /** When we write to Firestore, the snapshot listener would fire right
    *  back with the same payload — this flag swallows that echo. */
   private ignoreNextSnapshot = false;
+  /** User-facing sync error. null when everything is healthy. Set when
+   *  localStorage quota is hit, when Firestore writes fail, when the
+   *  user is offline. App.tsx renders a banner reading this. Cleared
+   *  on the next successful save. Audit: error/offline HIGH (silent
+   *  Firestore failures + silent localStorage quota errors). */
+  private syncError: string | null = null;
+  private syncErrorListeners: Set<Listener> = new Set();
 
   constructor() {
     this.data = loadFromLocalStorage();
   }
+
+  /** Wrap localStorage.setItem so a thrown QuotaExceededError (Safari
+   *  private mode, full device storage, etc.) gets surfaced to the UI
+   *  instead of crashing the whole app. Returns true on success.
+   *  Audit: error/offline HIGH (4 unguarded setItem calls). */
+  private safeSetItem(key: string, value: string): boolean {
+    try {
+      localStorage.setItem(key, value);
+      return true;
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[flizowStore] localStorage write failed:', err);
+      this.setSyncError(
+        "Couldn't save to local storage — your browser may be full or in private mode. Changes still try to sync to the cloud.",
+      );
+      return false;
+    }
+  }
+
+  // ── Sync-error subscription (parallel to data subscription) ─────────
+
+  /** Separate listener set so a banner re-render doesn't cascade all
+   *  data consumers, and a data mutation doesn't re-render the banner
+   *  unless the error state actually changed. */
+  subscribeSyncError = (listener: Listener): (() => void) => {
+    this.syncErrorListeners.add(listener);
+    return () => { this.syncErrorListeners.delete(listener); };
+  };
+
+  getSyncError = (): string | null => this.syncError;
+
+  private setSyncError(msg: string | null) {
+    if (this.syncError === msg) return;
+    this.syncError = msg;
+    this.syncErrorListeners.forEach((l) => l());
+  }
+
+  /** Called by the UI when the user dismisses the sync banner. Doesn't
+   *  guarantee subsequent saves will succeed — just clears the message
+   *  so it's not a permanent fixture. */
+  clearSyncError = () => {
+    this.setSyncError(null);
+  };
 
   // ── Subscription (useSyncExternalStore plumbing) ─────────────────────
 
@@ -241,7 +291,7 @@ class FlizowStore {
     }
 
     this.upsertOwnMember(userId, displayName, email, photoURL);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+    this.safeSetItem(STORAGE_KEY, JSON.stringify(this.data));
     this.notify();
 
     const docRef = doc(db, DOC_COLLECTION, userId);
@@ -267,7 +317,7 @@ class FlizowStore {
               (raw.opsTasks?.length ?? 0) !== cloud.opsTasks.length;
             this.data = cloud;
             this.upsertOwnMember(userId, displayName, email, photoURL);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+            this.safeSetItem(STORAGE_KEY, JSON.stringify(this.data));
             this.notify();
             if (seededMembers || seededOpsTasks) {
               this.saveToFirestore();
@@ -316,7 +366,7 @@ class FlizowStore {
   // ── Persistence ──────────────────────────────────────────────────────
 
   private save() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+    this.safeSetItem(STORAGE_KEY, JSON.stringify(this.data));
     this.notify();
     this.saveToFirestore();
   }
@@ -332,9 +382,31 @@ class FlizowStore {
           data: JSON.stringify(this.data),
           updatedAt: new Date().toISOString(),
         });
+        // Successful sync — clear any prior error banner. Local-only
+        // failures don't auto-clear (we'd need to tell user-storage-
+        // worked) but the network round-trip succeeding is a strong
+        // enough signal that things are healthy. Audit: error/offline.
+        if (this.syncError) this.setSyncError(null);
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.error('Failed to save Flizow state to Firestore:', err);
         this.ignoreNextSnapshot = false;
+        // Translate the most common Firebase error codes into plain
+        // language. Anything we don't recognise falls through to a
+        // generic "couldn't reach the cloud" message — never the raw
+        // Firebase string, which leaks SDK internals to the user.
+        const code = (err as { code?: string } | null)?.code ?? '';
+        let msg: string;
+        if (code === 'permission-denied') {
+          msg = 'Cloud save failed — you may have been signed out. Reload to sign back in.';
+        } else if (code === 'unavailable' || code === 'deadline-exceeded') {
+          msg = "You're offline. Changes are saved locally and will sync when you reconnect.";
+        } else if (code === 'resource-exhausted') {
+          msg = 'Cloud save failed — daily write limit hit. Try again later.';
+        } else {
+          msg = "Couldn't sync to the cloud. Changes are saved locally for now.";
+        }
+        this.setSyncError(msg);
       }
     }, FIRESTORE_DEBOUNCE_MS);
   }
