@@ -482,18 +482,8 @@ function deriveInitials(name: string): string {
   return (words[0][0] + words[1][0]).toUpperCase();
 }
 
-/**
- * Default renewal date = one year from today. Written out so we don't
- * pull in a date library just for this one calculation.
- */
-function defaultRenewsAt(todayISO: string): string {
-  const d = new Date(todayISO);
-  if (Number.isNaN(d.getTime())) {
-    return new Date(Date.now() + 365 * 86_400_000).toISOString().slice(0, 10);
-  }
-  d.setFullYear(d.getFullYear() + 1);
-  return d.toISOString().slice(0, 10);
-}
+// defaultRenewsAt() lived here. Removed 2026-04-26 along with the
+// renewsAt field on Client.
 
 function AddClientModal({ members, todayISO, onClose }: {
   members: Member[];
@@ -504,8 +494,6 @@ function AddClientModal({ members, todayISO, onClose }: {
   const [industry, setIndustry] = useState('');
   const [industryCategory, setIndustryCategory] = useState<IndustryCategory>('saas');
   const [amId, setAmId] = useState<string>('');
-  const [mrr, setMrr] = useState<string>('0');
-  const [renewsAt, setRenewsAt] = useState<string>(() => defaultRenewsAt(todayISO));
   const [status, setStatus] = useState<ClientStatus>('onboard');
   const [logoClass, setLogoClass] = useState<typeof LOGO_CLASSES[number]>('logo-indigo');
   const [nameError, setNameError] = useState(false);
@@ -540,8 +528,6 @@ function AddClientModal({ members, todayISO, onClose }: {
       industry: industry.trim() || 'Uncategorized',
       industryCategory,
       amId: amId || null,
-      mrr: Math.max(0, parseInt(mrr, 10) || 0),
-      renewsAt,
       startedAt: todayISO,
       serviceIds: [],
       teamIds: [],
@@ -632,29 +618,9 @@ function AddClientModal({ members, todayISO, onClose }: {
             </select>
           </label>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <label className="wip-field">
-              <span className="wip-field-label">MRR (USD)</span>
-              <input
-                type="number"
-                className="wip-field-input"
-                value={mrr}
-                onChange={(e) => setMrr(e.target.value)}
-                min="0"
-                step="100"
-                placeholder="0"
-              />
-            </label>
-            <label className="wip-field">
-              <span className="wip-field-label">Renewal date</span>
-              <input
-                type="date"
-                className="wip-field-input"
-                value={renewsAt}
-                onChange={(e) => setRenewsAt(e.target.value)}
-              />
-            </label>
-          </div>
+          {/* MRR + Renewal-date inputs used to live here. Removed
+              2026-04-26 — Flizow no longer tracks per-client revenue
+              or renewal dates. */}
 
           <label className="wip-field">
             <span className="wip-field-label">Status</span>

@@ -31,8 +31,6 @@ const baseClient = (overrides: Partial<Client> = {}): Client => ({
   industry: 'SaaS',
   industryCategory: 'saas',
   amId: null,
-  mrr: 5000,
-  renewsAt: '2026-12-01',
   startedAt: '2025-01-01',
   serviceIds: [],
   teamIds: [],

@@ -6,7 +6,7 @@ import type {
   OnboardingItem, Contact, QuickLink,
 } from '../types/flizow';
 import { flizowStore, type FlizowStore } from '../store/flizowStore';
-import { formatMonthYear, formatMonthDay, formatMrr, daysBetween } from '../utils/dateFormat';
+import { formatMonthYear, formatMonthDay, daysBetween } from '../utils/dateFormat';
 import { NotesTab } from '../components/NotesTab';
 import { TouchpointsTab } from '../components/TouchpointsTab';
 import { StatsTab } from '../components/StatsTab';
@@ -141,7 +141,7 @@ function ClientDetail({ client, data, store }: DetailProps) {
 
       {activeTab === 'overview' && (
         <>
-          <AttentionSection client={client} tasks={openTasks} services={services} />
+          <AttentionSection tasks={openTasks} services={services} />
           <ServicesSection
             services={services}
             onAdd={() => setShowAddService(true)}
@@ -486,22 +486,11 @@ function Hero({ client, am, onRequestDelete }: {
               </span>
             </>
           )}
-
-          {client.mrr > 0 && (
-            <>
-              <span className="meta-dot" />
-              <span className="hero-billing">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <rect x="2" y="5" width="20" height="14" rx="2" />
-                  <line x1="2" y1="10" x2="22" y2="10" />
-                </svg>
-                <span><strong>{formatMrr(client.mrr)}</strong>/mo</span>
-                {client.renewsAt && (
-                  <span className="renew">· Renews {formatMonthDay(client.renewsAt)}</span>
-                )}
-              </span>
-            </>
-          )}
+          {/* Billing pill (MRR + renewal date) used to live here.
+              Removed 2026-04-26 — Flizow no longer tracks per-client
+              revenue or renewal dates. The fields came out of the
+              Client type and the renewal-reminder spillover further
+              down the file went with them. */}
         </div>
       </div>
 
@@ -560,12 +549,11 @@ function TabsRow({ tabs, activeTab, onChange }: TabsRowProps) {
 
 // ── Overview · Needs Attention ────────────────────────────────────────────
 
-function AttentionSection({ client, tasks, services }: {
-  client: Client;
+function AttentionSection({ tasks, services }: {
   tasks: Task[];
   services: Service[];
 }) {
-  const chips = useMemo(() => buildAttentionChips(client, tasks, services), [client, tasks, services]);
+  const chips = useMemo(() => buildAttentionChips(tasks, services), [tasks, services]);
 
   if (chips.length === 0) {
     // No urgent signals — say so directly rather than render an empty block.
@@ -626,9 +614,10 @@ interface AttentionChip {
 
 /** Build the attention strip from the live task state. Keeping this as a
  *  pure function makes the "no signal, nothing to show" path trivially
- *  testable and keeps render code free of branching. */
+ *  testable and keeps render code free of branching. The `client`
+ *  argument used to drive a renewal-window chip; that chip went away
+ *  with the renewsAt field on 2026-04-26. */
 function buildAttentionChips(
-  client: Client,
   openTasks: Task[],
   services: Service[],
 ): AttentionChip[] {
@@ -674,26 +663,11 @@ function buildAttentionChips(
     });
   }
 
-  // 3. Renewal within 30 days — a gentle heads-up, never urgent.
-  if (client.renewsAt) {
-    const days = daysBetween(new Date().toISOString().slice(0, 10), client.renewsAt);
-    if (days >= 0 && days <= 30) {
-      out.push({
-        key: 'renewal',
-        value: days === 0 ? 'Renews today' : `Renews in ${days}d`,
-        label: `${formatMonthDay(client.renewsAt)} · finance pings this automatically`,
-        href: `#clients/${client.id}`,
-        icon: (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-            <line x1="16" y1="2" x2="16" y2="6" />
-            <line x1="8" y1="2" x2="8" y2="6" />
-            <line x1="3" y1="10" x2="21" y2="10" />
-          </svg>
-        ),
-      });
-    }
-  }
+  // The "Renewal within 30 days" reminder used to live here. Removed
+  // 2026-04-26 along with the mrr + renewsAt fields. If a future
+  // milestone-tracking surface needs the same shape (contracts, NDAs,
+  // SLA renewals) it should be its own opt-in field, not a hidden
+  // money-coupled date on every client.
 
   return out;
 }

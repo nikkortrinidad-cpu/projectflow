@@ -12,7 +12,8 @@ export function formatMonthYear(iso: string): string {
   return d.toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
 }
 
-/** "Aug 12" — no year. Used for renewal dates in the current year. */
+/** "Aug 12" — no year. Used for short-form date displays across
+ *  service "Next deliverable" chips, schedule items, and similar. */
 export function formatMonthDay(iso: string): string {
   const d = parseISO(iso);
   if (!d) return '';
@@ -26,14 +27,11 @@ export function formatFullDate(iso: string): string {
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-/** USD currency with no decimals for clean hero presentation. */
-export function formatMrr(amount: number): string {
-  return amount.toLocaleString('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 0,
-  });
-}
+// formatMrr() lived here. Removed 2026-04-26 along with the mrr
+// field on Client. If currency formatting comes back later (different
+// surface, not tied to the dropped pill), prefer Intl.NumberFormat
+// directly at the call site rather than reviving this helper — the
+// hardcoded 'en-US'/'USD' was already an i18n blocker (see i18n.md).
 
 /** Days between two ISO dates (b − a), rounded. Negative when `b` is past. */
 export function daysBetween(aISO: string, bISO: string): number {

@@ -193,22 +193,8 @@ function progressForStatus(status: ClientSeed['status'], seed: number): number {
   return map[status];
 }
 
-function mrrForCategory(cat: IndustryCategory, seed: number): number {
-  const ranges: Record<IndustryCategory, [number, number]> = {
-    saas:         [8000, 18000],
-    ecommerce:    [6000, 14000],
-    healthcare:   [5000, 12000],
-    fnb:          [3000,  8000],
-    education:    [4000, 10000],
-    professional: [7000, 16000],
-    realestate:   [4000, 10000],
-    services:     [3000,  7000],
-    industrial:   [8000, 20000],
-    media:        [5000, 12000],
-  };
-  const [lo, hi] = ranges[cat];
-  return Math.round((lo + (seed % (hi - lo))) / 500) * 500;
-}
+// mrrForCategory() lived here. Removed 2026-04-26 along with the
+// mrr field on Client.
 
 // ── Date helpers ─────────────────────────────────────────────────────────
 
@@ -796,8 +782,6 @@ export function generateDemoData(): FlizowData {
       industry: seedRow.industry,
       industryCategory: cat,
       amId,
-      mrr: mrrForCategory(cat, seed),
-      renewsAt: daysFromTodayISO(today, 30 + (seed % 240)),
       startedAt: daysFromTodayISO(today, -180 - (seed % 900)),
       serviceIds: [],
       teamIds,

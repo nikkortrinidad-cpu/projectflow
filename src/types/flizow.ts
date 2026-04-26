@@ -137,11 +137,6 @@ export interface Client {
   industry: string;
   industryCategory: IndustryCategory;
   amId: string | null;
-  /** Monthly recurring revenue in USD. Stub values from the mockup
-   *  generator; real numbers come from the billing integration later. */
-  mrr: number;
-  /** ISO date (YYYY-MM-DD). When the retainer next renews. */
-  renewsAt: string;
   /** ISO date. When this client first onboarded. */
   startedAt: string;
   /** Ordered — oldest first, except project services get unshifted to the
