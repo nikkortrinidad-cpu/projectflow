@@ -221,13 +221,38 @@ contrast had never been swept. This wave closes those.
 
 ---
 
-## Still unaudited (intentionally deferred)
+## Wave 10 — coverage closeout (5 commits)
 
-- **AddQuickLinkModal** — referenced from client detail; no dedicated audit. Small surface, low risk.
-- **MarkdownEditor + CommentEditor (TipTap)** — touched in card-modal.md but never audited as their own surfaces. Toolbar density, mobile usability, scheduled-comment flow.
-- **Error / offline paths** — what shows when Firestore goes offline mid-edit, when localStorage quota throws, when the Google sign-in popup is blocked but the store-load already succeeded. No error boundaries anywhere.
-- **Print stylesheet** — zero `@media print` rules. WIP agendas + analytics reports are the obvious print targets.
-- **i18n readiness** — every string hardcoded in English. Not relevant for v1.
+The five surfaces flagged "still unaudited" at the end of Wave 9. All
+shipped or documented as intentional v1 scope.
+
+| Commit | Surface | What |
+|---|---|---|
+| `e984551` | AddQuickLinkModal | Wired `useModalFocusTrap` (closes both HIGH gaps in one wire-up: trap + focus return). URL validation upgraded from presence-only to "rejects whitespace OR no-dot" inputs. Killed the timed-clear on error states (used to vanish under the user's hand). aria-hidden on close-button SVG. |
+| `6e879f5` | NotesTab (TipTap) | TipTap `<EditorContent>` got `aria-label="Note body"` + `role="textbox"` + `aria-multiline` via editorProps so screen readers stop landing on a nameless "edit text" region. Save-status "Saving…/All changes saved" wrapped in `role="status"` + `aria-live="polite"`. Search empty state in a live region. `:focus-visible` rings on `.notes-icon-btn` + `.notes-fmt-btn` (toolbar was previously a focus dead zone). |
+| `0c4648d` | **Error / offline** (cross-cutting) | Created `ErrorBoundary` class component (scope-aware copy + reset / go-home / report). Wrapped `PageShell` Suspense + each lazy-loaded modal in App.tsx. `safeSetItem` helper around all 4 unguarded `localStorage.setItem` calls — Safari private mode no longer crashes the app. `saveToFirestore` now branches on Firebase err.code (permission-denied / unavailable / resource-exhausted) and surfaces friendly messages via a parallel `syncError` observable on the store. New `SyncErrorBanner` component renders amber-tint banner above the top nav, dismissible, auto-clears on next successful save. Deferred: re-auth detection on stale Firebase auth, optimistic-rollback. |
+| `44db313` | **Print stylesheet** (cross-cutting) | First `@media print` rules. Forces light tokens regardless of `data-theme`, hides chrome (top nav, skip link, sync banner, modals, search, drag handles, action buttons), strips shadows + decorative backgrounds, lets scrolled regions flow naturally, sets `@page` margins, prints external link URLs after their text. Real targets: WIP agendas, client one-pagers, analytics tables. The kanban board is intentionally not a print target. |
+| `ab66ff9` | **i18n readiness** (cross-cutting) | New `docs/audit/i18n.md`: ~800-1000 strings across 50+ components, USD hardcoded in `formatMrr()`, 20+ directional CSS rules block RTL, plurals are hardcoded ternaries, `weekStart` preference declared but never read. Estimated 3-week plan. **One cheap win shipped**: the CSS-baked "No cards yet" string (`.column-cards::before { content: '...' }`) moved to React JSX in BoardPage so it's translatable. v1 stays English-only by deliberate choice. |
+
+### Wave 10 numbers
+
+- **Surfaces audited:** 2 modals (quicklink, notes/TipTap) + 3 cross-cutting passes (error/offline, print, i18n).
+- **HIGH gaps closed:** 7 (focus trap + URL shape + a11y on editor + a11y on save status + ErrorBoundary + safe localStorage + sync-error surfacing).
+- **New first-class infra:** `ErrorBoundary` component, `safeSetItem` + `syncError` observable on the store, `SyncErrorBanner` UI, `@media print` block, `i18n.md` doc.
+- **Net code:** +~570 lines (ErrorBoundary, sync-banner, print stylesheet, audit docs), no significant deletions.
+
+---
+
+## Still open (deliberately deferred)
+
+These are real gaps but not v1 blockers — flagged so the next pass knows.
+
+- **Re-auth detection** on stale Firebase auth — if a user is signed out server-side mid-session, the app keeps rendering as logged-in until the next reload. Needs an `onAuthStateChanged` retry / re-auth modal flow.
+- **Optimistic-rollback** on failed mutations — every store mutation is optimistic; if `safeSetItem` returns false and Firestore also fails, the local state is silently inconsistent. Rollback needs a pending-ops queue.
+- **Full i18n** — see `docs/audit/i18n.md`. ~3 weeks of focused work. v1 is English-only by choice.
+- **Touch swipe affordance** on the kanban board — works via native scroll but no visual hint.
+- **Templates editor: per-edit history / version revert** — Wave 7 stores latest record only.
+- **Templates editor: per-template permissions** — `useCanEditTemplates()` returns true for everyone.
 
 
 
