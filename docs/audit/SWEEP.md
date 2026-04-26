@@ -199,6 +199,36 @@ Three sub-waves, all green at ship.
 - **Codebase health:** initial bundle **1,374 KB → 208 KB** (−85%), first 21 automated tests on the books, dual-store consolidated into one.
 - **Net code change across the wave:** +~600 lines of audit/test/banner code, −1,084 lines of dead store + types.
 
+---
+
+## Wave 9 — coverage gaps + cross-cutting (3 commits)
+
+After Wave 8 wrapped, the honest answer to "did we audit everything"
+was no — the command palette, the share modal, and dark-mode
+contrast had never been swept. This wave closes those.
+
+| Commit | Surface | What |
+|---|---|---|
+| `eaff5b9` | Command palette (⌘K) | Wired the **WAI-ARIA combobox pattern**: input gets `role="combobox"` + `aria-controls` + `aria-autocomplete` + (the missing glue) `aria-activedescendant`. Results container is now a real `role="listbox"` with stable id; each option has a stable id. Mouse hover no longer hijacks the active row while the user is arrow-key navigating (track interaction mode in a ref; mouseenter only claims highlight if mode is `'mouse'`). Esc returns focus to whoever opened the palette. Empty state echoes the query and suggests what to try. Bonus: Home/End keys jump to first/last result. |
+| `dfe403a` | Share modal | Wired `useModalFocusTrap` — Tab no longer escapes, focus returns to the share button on close. Added a **preview-only banner** in amber tint that explains "invites and link permissions don't send or persist yet" — closes two HIGH honest-copy gaps (the "Invite" button looked like a real send, the "Anyone with link" toggle looked like a real permission change). Click/focus on the share-link input now selects the whole URL so single-click → ⌘C works. Decorative chevron SVGs got `aria-hidden`. |
+| `5379155` | **Dark mode contrast** (cross-cutting) | First systematic dark-mode contrast pass. Three token pairings were failing WCAG AA body (4.5:1): `--text-faint #636366` on `--bg-elev` (2.84:1) and on `--bg-soft` (2.33:1), plus `--text-soft #86868b` on `--bg-soft` (3.85:1). Lifted both tokens in dark mode only: `--text-soft → #a8a8ad`, `--text-faint → #8e8e93`. Light mode untouched (already passes). Plus a single selector that bumps `[disabled]` opacity from 0.4 to 0.6 in dark mode — fixes 21 disabled-button rules that were dropping below 2.2:1 contrast and reading as invisible. |
+
+### Wave 9 numbers
+
+- **Surfaces audited:** 2 modals (cmdk, share) + 1 cross-cutting pass (dark contrast).
+- **WCAG AA body failures closed:** all token-level pairings on `--bg-elev` and `--bg-soft` now pass; disabled-button states pass AA Large for UI components.
+- **Net code:** +~130 lines audit/banner/ARIA changes, no deletions.
+
+---
+
+## Still unaudited (intentionally deferred)
+
+- **AddQuickLinkModal** — referenced from client detail; no dedicated audit. Small surface, low risk.
+- **MarkdownEditor + CommentEditor (TipTap)** — touched in card-modal.md but never audited as their own surfaces. Toolbar density, mobile usability, scheduled-comment flow.
+- **Error / offline paths** — what shows when Firestore goes offline mid-edit, when localStorage quota throws, when the Google sign-in popup is blocked but the store-load already succeeded. No error boundaries anywhere.
+- **Print stylesheet** — zero `@media print` rules. WIP agendas + analytics reports are the obvious print targets.
+- **i18n readiness** — every string hardcoded in English. Not relevant for v1.
+
 
 
 ---
