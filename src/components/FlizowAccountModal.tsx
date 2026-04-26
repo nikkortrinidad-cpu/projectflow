@@ -102,10 +102,10 @@ export default function FlizowAccountModal({ onClose }: Props) {
   const [avatarHex, setAvatarHex] = useState('#5e5ce6');
 
   // Preferences. Appearance is the only one wired through — light/dark/system
-  // ties into the legacy BoardStore since App.tsx currently reads theme
-  // from there. "System" applies the OS-preferred scheme once on select,
-  // then behaves as a one-shot until a real pref-store ships.
-  const [weekStart, setWeekStart] = useState<'sun' | 'mon'>('mon');
+  // routes through flizowStore.setTheme(). "System" applies the OS-preferred
+  // scheme once on select, then behaves as a one-shot until a richer
+  // pref-store ships. weekStart used to live here (Sun/Mon segment) — gone
+  // because the Schedule grid is Mon–Fri-only.
   const [timeFmt, setTimeFmt] = useState<'12h' | '24h'>('12h');
 
   // Notifications — local checkbox state. No persistence yet.
@@ -404,15 +404,12 @@ export default function FlizowAccountModal({ onClose }: Props) {
                   </Segment>
                 </Row>
 
-                <Row
-                  title="Start week on"
-                  sub="Affects calendar, WIP reports, and workload views."
-                >
-                  <Segment>
-                    <SegBtn pressed={weekStart === 'sun'} onClick={() => setWeekStart('sun')}>Sunday</SegBtn>
-                    <SegBtn pressed={weekStart === 'mon'} onClick={() => setWeekStart('mon')}>Monday</SegBtn>
-                  </Segment>
-                </Row>
+                {/* "Start week on" Sun/Mon segment used to live here.
+                    Removed 2026-04-26 — the Schedule grid on Overview
+                    only ever shows Mon–Fri (weekends are skipped by
+                    design), so picking a starting day was a meaningless
+                    setting. If a real Sat/Sun-aware view ships later,
+                    bring it back as part of that view's preferences. */}
 
                 <Row
                   title="Time format"
