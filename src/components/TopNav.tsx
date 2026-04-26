@@ -1,7 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRoute } from '../router';
+import { useFlizow } from '../store/useFlizow';
 import FlizowNotificationsPanel from './FlizowNotificationsPanel';
+import type { AccessLevel } from '../types/flizow';
+
+/** Display label for each access level. Kept in TopNav for now — moves
+ *  to a shared helper when access levels surface in more places (Members
+ *  management, invite flow). */
+const ACCESS_LABEL: Record<AccessLevel, string> = {
+  admin: 'Admin',
+  editor: 'Editor',
+  viewer: 'Viewer',
+};
 
 // Which nav item should be visually active for each route.
 // Sub-routes (e.g. `client-detail`, `board`) inherit their parent's active state.
@@ -45,9 +56,18 @@ export function TopNav({
   const route = useRoute();
   const active = ACTIVE_NAV_BY_ROUTE[route.name] ?? '';
   const { user, logout } = useAuth();
+  const { data } = useFlizow();
   const displayName = user?.displayName || user?.email?.split('@')[0] || 'Signed in';
   const email = user?.email || '';
   const initials = deriveInitials(user?.displayName || user?.email || 'U');
+  // Access level for the signed-in user. Set to 'admin' on every
+  // upsertOwnMember in flizowStore — but read from the member record
+  // here so the pill reacts if the level ever changes (future role
+  // management). Falls back to undefined for the dev-bypass path
+  // where there's no Firebase user.
+  const ownAccessLevel: AccessLevel | undefined = user?.uid
+    ? data.members.find((m) => m.id === user.uid)?.accessLevel
+    : undefined;
   const notifBtnRef = useRef<HTMLButtonElement>(null);
   const [unreadNotifs, setUnreadNotifs] = useState(0);
 
@@ -170,7 +190,17 @@ export function TopNav({
             <div className="account-menu-identity">
               <div className="account-menu-identity-avatar" aria-hidden="true">{initials}</div>
               <div className="account-menu-identity-text">
-                <div className="account-menu-identity-name">{displayName}</div>
+                <div className="account-menu-identity-name">
+                  <span>{displayName}</span>
+                  {ownAccessLevel && (
+                    <span
+                      className={`access-pill access-pill--${ownAccessLevel}`}
+                      title={`${ACCESS_LABEL[ownAccessLevel]} access — full workspace permissions`}
+                    >
+                      {ACCESS_LABEL[ownAccessLevel]}
+                    </span>
+                  )}
+                </div>
                 {email && <div className="account-menu-identity-email">{email}</div>}
               </div>
             </div>

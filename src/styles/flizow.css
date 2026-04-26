@@ -389,7 +389,42 @@
   .account-menu-identity-name {
     font-size: var(--fs-md); font-weight: 600; color: var(--text);
     letter-spacing: -0.005em;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    /* Flex so the access pill sits inline with the name. The name
+       text itself ellipsises; the pill never shrinks. */
+    display: flex; align-items: center; gap: 7px;
+    min-width: 0;
+  }
+  .account-menu-identity-name > span:first-child {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    min-width: 0;
+  }
+  /* Access-level pill — small, brand-blue tinted for admin so it
+     reads as "elevated permissions" without shouting. Lives next to
+     the user name in the avatar popover today; will travel to other
+     surfaces (Members management, invite flow) when those ship.
+     Audit: access-level pill 2026-04-26. */
+  .access-pill {
+    display: inline-flex; align-items: center;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    line-height: 1.4;
+  }
+  .access-pill--admin {
+    background: rgba(10, 132, 255, 0.14);
+    color: #0a84ff;
+  }
+  .access-pill--editor {
+    background: rgba(48, 209, 88, 0.14);
+    color: #30d158;
+  }
+  .access-pill--viewer {
+    background: var(--bg-soft);
+    color: var(--text-muted);
   }
   .account-menu-identity-email {
     font-size: 11px; color: var(--text-muted);

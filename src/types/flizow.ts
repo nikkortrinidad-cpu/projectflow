@@ -40,6 +40,15 @@ export type ServiceType = 'retainer' | 'project';
  *  uniformly. */
 export type MemberType = 'am' | 'operator';
 
+/** Access level governs what a member can do across the workspace.
+ *  Admin = full access (settings, templates, billing). Editor = can
+ *  edit work + cards + comments. Viewer = read-only. The signed-in
+ *  workspace owner is always 'admin'; invited teammates get assigned
+ *  a level when invited. Currently only displayed (pill in avatar
+ *  popover, future placement on Members surface) — `useCanEditTemplates`
+ *  and friends will read this when role-gating ships for real. */
+export type AccessLevel = 'admin' | 'editor' | 'viewer';
+
 export type IntegrationStatus = 'connected' | 'error';
 
 /** Template keys that services point at. Drives the POOL_LABEL pill on
@@ -291,6 +300,10 @@ export interface Member {
    *  as a solid fill instead. */
   bg?: string;
   type: MemberType;
+  /** Access level — undefined on legacy / demo members (no pill shown).
+   *  The signed-in user always gets 'admin' set via upsertOwnMember on
+   *  every sign-in. Future-invited teammates get assigned at invite. */
+  accessLevel?: AccessLevel;
 }
 
 export interface Integration {

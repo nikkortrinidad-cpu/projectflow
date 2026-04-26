@@ -371,6 +371,10 @@ class FlizowStore {
     if (existing) {
       if (displayName) existing.name = displayName;
       existing.initials = existing.initials || initials;
+      // Backfill accessLevel for returning users from before the field
+      // existed. The workspace owner is always admin; ?? preserves any
+      // future override (e.g. if we ever support transferring ownership).
+      existing.accessLevel = existing.accessLevel ?? 'admin';
     } else {
       this.data.members.push({
         id: uid,
@@ -379,6 +383,7 @@ class FlizowStore {
         role: 'Owner',
         color: '#5e5ce6',
         type: 'am',
+        accessLevel: 'admin',
       });
     }
   }
