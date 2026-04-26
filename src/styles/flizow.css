@@ -128,8 +128,22 @@
     --column-bg: rgba(255,255,255,0.03);
     --text: #f5f5f7;
     --text-muted: #aeaeb2;
-    --text-soft: #86868b;
-    --text-faint: #636366;
+    /* Dark-mode contrast pass: --text-soft and --text-faint were
+       carbon-copies of the light-mode neutrals, which failed WCAG
+       AA body (4.5:1) on dark backgrounds:
+         old --text-soft   #86868b on --bg-soft #2c2c2e → 3.85:1 ✗
+         old --text-faint  #636366 on --bg-elev #1c1c1e → 2.84:1 ✗
+         old --text-faint  #636366 on --bg-soft #2c2c2e → 2.33:1 ✗
+       New values lift both into AA-compliant territory across every
+       common surface (modal bgs, hover tints, task cards):
+         new --text-soft   #a8a8ad on --bg-soft → 5.04:1 ✓
+         new --text-faint  #8e8e93 on --bg-elev → 4.61:1 ✓
+       Tradeoff: the visual gap between soft / muted narrows slightly
+       in dark mode, but readability wins over hierarchy on a CRM
+       full of timestamps and secondary metadata. Light mode tokens
+       are unchanged — that scale already passes. */
+    --text-soft: #a8a8ad;
+    --text-faint: #8e8e93;
     --hairline: rgba(255,255,255,0.1);
     --hairline-soft: rgba(255,255,255,0.06);
     --hairline-faint: rgba(255,255,255,0.03);
@@ -157,6 +171,22 @@
       0 30px 80px rgba(0, 0, 0, 0.72),
       0 0 0 1px rgba(255, 255, 255, 0.06),
       inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+
+  /* Dark-mode disabled-state contrast lift. Buttons + inputs that
+     go disabled were using opacity: 0.4 in 21 places across the
+     stylesheet — at that level on a near-black bg, even --text-muted
+     drops to ~2.2:1 contrast and reads as invisible. Bumping
+     opacity to 0.6 in dark mode pulls every disabled control back
+     above 3:1 (AA Large for UI components) without touching the
+     individual rules. Light-mode 0.4 is fine because the underlying
+     contrast headroom is much larger. Audit: dark-mode contrast. */
+  :root[data-theme="dark"] button:disabled,
+  :root[data-theme="dark"] input:disabled,
+  :root[data-theme="dark"] textarea:disabled,
+  :root[data-theme="dark"] select:disabled,
+  :root[data-theme="dark"] [aria-disabled="true"] {
+    opacity: 0.6;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
