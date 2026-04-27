@@ -677,8 +677,8 @@ function AddClientModal({ clients, members, todayISO, onClose }: {
       // rendered field order in the modal.
       const focusOrder: Array<[string, React.RefObject<HTMLInputElement | HTMLSelectElement | null>]> = [
         ['name',         nameRef],
-        ['amId',         amRef],
         ['website',      websiteRef],
+        ['amId',         amRef],
         ['contactName',  contactNameRef],
         ['contactRole',  contactRoleRef],
         ['contactEmail', contactEmailRef],
@@ -805,15 +805,15 @@ function AddClientModal({ clients, members, todayISO, onClose }: {
             )}
           </label>
 
-          {/* Industry + Status share a row. Both are short-label dropdowns
-              that read better paired than stacked — pairing them halves the
-              vertical reach of the modal and groups the two "what is this
-              account" descriptors next to each other. Both are required;
-              the asterisk in the label communicates that, but the
-              dropdowns ship with sensible defaults so the validation
-              gate in handleSave never actually trips on them — the user
-              can't leave either blank. The free-text Industry input that
-              used to live next to the dropdown was removed 2026-04-27. */}
+          {/* Industry + Website share a row — the two "what is this
+              account at a glance" descriptors (what they do, where they
+              live online). Both are required. Industry is a dropdown
+              with a sensible default, so its asterisk is communicative
+              rather than a validation gate; Website is a free-text URL
+              field with full validation: red border + inline error +
+              focus on save when blank. The free-text Industry input
+              that used to live next to the dropdown was removed
+              2026-04-27. */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <label className="wip-field">
               <span className="wip-field-label">
@@ -833,31 +833,39 @@ function AddClientModal({ clients, members, todayISO, onClose }: {
             </label>
             <label className="wip-field">
               <span className="wip-field-label">
-                Status
+                Website
                 <span style={{ color: 'var(--status-fire)' }} aria-hidden="true"> *</span>
               </span>
-              <select
+              <input
+                ref={websiteRef}
+                type="url"
+                inputMode="url"
+                autoComplete="url"
                 className="wip-field-input"
-                value={status}
-                onChange={(e) => setStatus(e.target.value as ClientStatus)}
+                value={website}
+                onChange={(e) => { setWebsite(e.target.value); clearError('website'); }}
+                placeholder="https://acme.com"
+                style={errors.website ? { borderColor: 'var(--status-fire)' } : undefined}
+                aria-invalid={errors.website || undefined}
                 aria-required="true"
-              >
-                <option value="onboard">Onboarding (first 30 days)</option>
-                <option value="track">On track</option>
-                <option value="risk">At risk</option>
-                <option value="fire">On fire</option>
-                <option value="paused">Paused</option>
-              </select>
+                aria-describedby={errors.website ? 'err-website' : undefined}
+              />
+              {errors.website && (
+                <span id="err-website" style={{ fontSize: 'var(--fs-xs)', color: 'var(--status-fire)', marginTop: 4 }}>
+                  Website is required to save.
+                </span>
+              )}
             </label>
           </div>
 
-          {/* Account Manager + Website share a row. AM is now required
-              (no more "Unassigned" default — every new client must have
-              an owner so urgency routing has a target). Website is also
-              required — the company URL is the single most useful piece
-              of context the team needs to do work for a client. Both
-              get full validation: red border + inline error + focus on
-              save when blank. */}
+          {/* Account Manager + Status share a row — the two "how are
+              we engaging this account" descriptors (who owns it, what's
+              its health right now). AM is required (no more "Unassigned"
+              default — every new client must have an owner so urgency
+              routing has a target). Status carries the asterisk for
+              consistency but its dropdown ships with the "Onboarding"
+              default, so the validation gate in handleSave never trips
+              on it. */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <label className="wip-field">
               <span className="wip-field-label">
@@ -887,28 +895,21 @@ function AddClientModal({ clients, members, todayISO, onClose }: {
             </label>
             <label className="wip-field">
               <span className="wip-field-label">
-                Website
+                Status
                 <span style={{ color: 'var(--status-fire)' }} aria-hidden="true"> *</span>
               </span>
-              <input
-                ref={websiteRef}
-                type="url"
-                inputMode="url"
-                autoComplete="url"
+              <select
                 className="wip-field-input"
-                value={website}
-                onChange={(e) => { setWebsite(e.target.value); clearError('website'); }}
-                placeholder="https://acme.com"
-                style={errors.website ? { borderColor: 'var(--status-fire)' } : undefined}
-                aria-invalid={errors.website || undefined}
+                value={status}
+                onChange={(e) => setStatus(e.target.value as ClientStatus)}
                 aria-required="true"
-                aria-describedby={errors.website ? 'err-website' : undefined}
-              />
-              {errors.website && (
-                <span id="err-website" style={{ fontSize: 'var(--fs-xs)', color: 'var(--status-fire)', marginTop: 4 }}>
-                  Website is required to save.
-                </span>
-              )}
+              >
+                <option value="onboard">Onboarding (first 30 days)</option>
+                <option value="track">On track</option>
+                <option value="risk">At risk</option>
+                <option value="fire">On fire</option>
+                <option value="paused">Paused</option>
+              </select>
             </label>
           </div>
 
