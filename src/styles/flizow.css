@@ -6347,7 +6347,15 @@
     margin-bottom: 6px; letter-spacing: -0.022em;
     color: var(--text);
   }
-  .page-date { font-size: var(--fs-lg); color: var(--text-soft); letter-spacing: -0.01em; }
+  /* line-height: --lh-relaxed (1.45) so the smart-tagline reads
+     comfortably if it ever wraps to two lines on a narrow viewport
+     or with a longer name. The default --lh-body (1.4) was on the
+     tight end for 16px text. */
+  .page-date {
+    font-size: var(--fs-lg); color: var(--text-soft);
+    letter-spacing: -0.01em;
+    line-height: var(--lh-relaxed);
+  }
 
   /* --- BACK TO TOP --- */
   .back-to-top {
@@ -7477,7 +7485,9 @@
     .health-divider { display: none; }
     .week-board { grid-template-columns: repeat(5, 1fr); }
     .week-col { height: 380px; }
-    .page-title { font-size: var(--fs-4xl); }
+    /* .page-title font-size override removed 2026-04-27 — base rule
+       already resolves to --fs-4xl after audit M4, so the responsive
+       declaration was dead code. */
   }
 
   /*
