@@ -106,8 +106,9 @@ export function OverviewPage() {
 
   // Needs-attention cards — the clients you actually need to open today.
   // Order: fire first, then risk, then unfinished onboarding (mine).
-  // Capped at 6 so the block stays scannable; overflow spills into a
-  // "View all" link rather than an ever-growing list.
+  // Default cap of 6 keeps the block scannable; the "View all N tasks"
+  // toggle expands in place to show the full list (and "Show less"
+  // collapses back).
   //
   // The currentMemberId filter applies to onboarding only — fire/risk
   // are workspace-wide. Onboarding is "you forgot to chase this," so
@@ -115,28 +116,32 @@ export function OverviewPage() {
   // this filter every AM would see every other AM's stalled
   // onboarding.
   const currentMemberId = store.getCurrentMemberId();
-  const attention = useMemo(() => {
-    return buildAttentionCards(
+  const ATTENTION_INITIAL_CAP = 6;
+  const allAttention = useMemo(
+    () => buildAttentionCards(
       data.clients,
       liveTasks,
       data.onboardingItems,
       data.services,
       currentMemberId,
-    ).slice(0, 6);
-  }, [data.clients, liveTasks, data.onboardingItems, data.services, currentMemberId]);
-  // hiddenAttention counts cards that didn't make the 6-cap. Includes
-  // fire/risk (workspace-wide) + onboarding (mine only) so the "View
-  // all" link's count matches what the user can scroll to find.
-  const hiddenAttention = useMemo(() => {
-    const total = buildAttentionCards(
-      data.clients,
-      liveTasks,
-      data.onboardingItems,
-      data.services,
-      currentMemberId,
-    ).length;
-    return Math.max(0, total - attention.length);
-  }, [data.clients, liveTasks, data.onboardingItems, data.services, currentMemberId, attention.length]);
+    ),
+    [data.clients, liveTasks, data.onboardingItems, data.services, currentMemberId],
+  );
+  const [attentionExpanded, setAttentionExpanded] = useState(false);
+  const attention = attentionExpanded
+    ? allAttention
+    : allAttention.slice(0, ATTENTION_INITIAL_CAP);
+  const hasMoreAttention = allAttention.length > ATTENTION_INITIAL_CAP;
+  // If the list shrinks back below the cap (a teammate cleared some
+  // urgent work, etc.) while we're expanded, snap back to collapsed —
+  // there's nothing left to "show less" of, and the toggle button
+  // disappears anyway. Wrapped in an effect to avoid setState-during-
+  // render warnings.
+  useEffect(() => {
+    if (attentionExpanded && !hasMoreAttention) {
+      setAttentionExpanded(false);
+    }
+  }, [attentionExpanded, hasMoreAttention]);
 
   // Schedule grid: Mon–Fri this week + Mon–Fri next week. Tasks with a
   // `_schedule` meta (deadline/meeting/milestone) and touchpoints with
@@ -307,7 +312,7 @@ export function OverviewPage() {
           <div className="block-header">
             <div className="block-title" id="block-attention-title">Needs Your Attention</div>
           </div>
-          <div className="attention-list">
+          <div className="attention-list" id="attention-list">
             {attention.length === 0 ? (
               <div className="attn-empty" style={{ padding: 24, color: 'var(--text-soft)', fontSize: 14 }}>
                 Nothing urgent right now. Enjoy the quiet.
@@ -371,15 +376,18 @@ export function OverviewPage() {
                     </div>
                   );
                 })}
-                {hiddenAttention > 0 && (
-                  <a
+                {hasMoreAttention && (
+                  <button
+                    type="button"
                     className="attn-more"
-                    href="#clients"
-                    style={{ textDecoration: 'none' }}
-                    aria-label={`View all ${attention.length + hiddenAttention} clients needing attention`}
+                    onClick={() => setAttentionExpanded((v) => !v)}
+                    aria-expanded={attentionExpanded}
+                    aria-controls="attention-list"
                   >
-                    View all {attention.length + hiddenAttention} →
-                  </a>
+                    {attentionExpanded
+                      ? 'Show less ↑'
+                      : `View all ${allAttention.length} tasks ↓`}
+                  </button>
                 )}
               </>
             )}

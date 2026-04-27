@@ -7141,16 +7141,27 @@
     pointer-events: auto;
   }
   .attn-more {
+    /* Now a button (toggles the expanded state) — resets default
+       button chrome (background, border, font) so it reads like the
+       link it used to be. cursor: pointer is the affordance. */
+    display: block;
+    width: 100%;
     text-align: center;
     padding: var(--sp-md);
     font-size: var(--fs-sm); font-weight: 600;
+    font-family: inherit;
     color: var(--text-faint);
-    cursor: default;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
     transition: color 0.15s;
     letter-spacing: -0.005em;
   }
   .attn-more:hover { color: var(--highlight); }
-  .attention-list.expanded .attn-more { display: none;
+  .attn-more:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
+    border-radius: 6px;
   }
 
   /* --- BLOCK 4: TEAM WORKLOAD --- */
