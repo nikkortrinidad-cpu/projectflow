@@ -250,6 +250,10 @@ export interface Client {
    *  display job, and asking for both confused the Add-client modal. */
   industryCategory: IndustryCategory;
   amId: string | null;
+  /** Public website / homepage. Required at modal save (added 2026-04-27),
+   *  but typed optional so existing client docs that pre-date this field
+   *  still parse cleanly. New clients always carry a non-empty value. */
+  website?: string;
   /** ISO date. When this client first onboarded. */
   startedAt: string;
   /** Ordered — oldest first, except project services get unshifted to the

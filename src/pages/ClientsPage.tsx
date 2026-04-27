@@ -577,6 +577,7 @@ function AddClientModal({ clients, members, todayISO, onClose }: {
   const [name, setName] = useState('');
   const [industryCategory, setIndustryCategory] = useState<IndustryCategory>('saas');
   const [amId, setAmId] = useState<string>('');
+  const [website, setWebsite] = useState('');
   const [status, setStatus] = useState<ClientStatus>('onboard');
   // Primary-contact fields — REQUIRED. A new client must ship with one
   // primary point of contact (name, position, email, mobile). Save is
@@ -602,6 +603,8 @@ function AddClientModal({ clients, members, todayISO, onClose }: {
   // Refs for required inputs — used to focus the first invalid one when
   // Save fails so the user lands on the field they need to fix.
   const nameRef = useRef<HTMLInputElement>(null);
+  const amRef = useRef<HTMLSelectElement>(null);
+  const websiteRef = useRef<HTMLInputElement>(null);
   const contactNameRef = useRef<HTMLInputElement>(null);
   const contactRoleRef = useRef<HTMLInputElement>(null);
   const contactEmailRef = useRef<HTMLInputElement>(null);
@@ -644,10 +647,15 @@ function AddClientModal({ clients, members, todayISO, onClose }: {
   }
 
   function handleSave() {
-    // 1. Validate required fields. Five gates: client name + the four
-    //    primary-contact fields. Build the error map first so we can set
-    //    them all at once and focus the first invalid one in DOM order.
+    // 1. Validate required fields. Seven gates that can actually trigger
+    //    an error: client name, account manager, website, and the four
+    //    primary-contact fields. (Industry + Status carry the asterisk
+    //    too but their dropdowns ship with sensible defaults — they
+    //    can't be empty, so they don't need a validation branch here.)
+    //    Build the error map first so we can set them all at once and
+    //    focus the first invalid one in DOM order.
     const trimmedName         = name.trim();
+    const trimmedWebsite      = website.trim();
     const trimmedContactName  = contactName.trim();
     const trimmedContactRole  = contactRole.trim();
     const trimmedContactEmail = contactEmail.trim();
@@ -655,6 +663,8 @@ function AddClientModal({ clients, members, todayISO, onClose }: {
 
     const newErrors: Record<string, boolean> = {};
     if (!trimmedName)         newErrors.name = true;
+    if (!amId)                newErrors.amId = true;
+    if (!trimmedWebsite)      newErrors.website = true;
     if (!trimmedContactName)  newErrors.contactName = true;
     if (!trimmedContactRole)  newErrors.contactRole = true;
     if (!trimmedContactEmail) newErrors.contactEmail = true;
@@ -663,9 +673,12 @@ function AddClientModal({ clients, members, todayISO, onClose }: {
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       // Focus the first invalid field in visual/DOM order so the user
-      // lands on what they need to fix.
-      const focusOrder: Array<[string, React.RefObject<HTMLInputElement | null>]> = [
+      // lands on what they need to fix. The order here matches the
+      // rendered field order in the modal.
+      const focusOrder: Array<[string, React.RefObject<HTMLInputElement | HTMLSelectElement | null>]> = [
         ['name',         nameRef],
+        ['amId',         amRef],
+        ['website',      websiteRef],
         ['contactName',  contactNameRef],
         ['contactRole',  contactRoleRef],
         ['contactEmail', contactEmailRef],
@@ -690,7 +703,10 @@ function AddClientModal({ clients, members, todayISO, onClose }: {
       logoClass: pickLogoClass(clients),
       status,
       industryCategory,
-      amId: amId || null,
+      // amId / website are required at the modal — the validation gate
+      // above guarantees they're set by the time we get here.
+      amId,
+      website: trimmedWebsite,
       startedAt: todayISO,
       serviceIds: [],
       teamIds: [],
@@ -792,17 +808,23 @@ function AddClientModal({ clients, members, todayISO, onClose }: {
           {/* Industry + Status share a row. Both are short-label dropdowns
               that read better paired than stacked — pairing them halves the
               vertical reach of the modal and groups the two "what is this
-              account" descriptors next to each other. The free-text
-              Industry input that used to live next to the dropdown was
-              removed 2026-04-27 — the dropdown's label already does the
-              display job everywhere else in the app. */}
+              account" descriptors next to each other. Both are required;
+              the asterisk in the label communicates that, but the
+              dropdowns ship with sensible defaults so the validation
+              gate in handleSave never actually trips on them — the user
+              can't leave either blank. The free-text Industry input that
+              used to live next to the dropdown was removed 2026-04-27. */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <label className="wip-field">
-              <span className="wip-field-label">Industry</span>
+              <span className="wip-field-label">
+                Industry
+                <span style={{ color: 'var(--status-fire)' }} aria-hidden="true"> *</span>
+              </span>
               <select
                 className="wip-field-input"
                 value={industryCategory}
                 onChange={(e) => setIndustryCategory(e.target.value as IndustryCategory)}
+                aria-required="true"
               >
                 {INDUSTRY_CATEGORIES.map(c => (
                   <option key={c.value} value={c.value}>{c.label}</option>
@@ -810,11 +832,15 @@ function AddClientModal({ clients, members, todayISO, onClose }: {
               </select>
             </label>
             <label className="wip-field">
-              <span className="wip-field-label">Status</span>
+              <span className="wip-field-label">
+                Status
+                <span style={{ color: 'var(--status-fire)' }} aria-hidden="true"> *</span>
+              </span>
               <select
                 className="wip-field-input"
                 value={status}
                 onChange={(e) => setStatus(e.target.value as ClientStatus)}
+                aria-required="true"
               >
                 <option value="onboard">Onboarding (first 30 days)</option>
                 <option value="track">On track</option>
@@ -825,19 +851,66 @@ function AddClientModal({ clients, members, todayISO, onClose }: {
             </label>
           </div>
 
-          <label className="wip-field">
-            <span className="wip-field-label">Account Manager</span>
-            <select
-              className="wip-field-input"
-              value={amId}
-              onChange={(e) => setAmId(e.target.value)}
-            >
-              <option value="">Unassigned</option>
-              {ams.map(m => (
-                <option key={m.id} value={m.id}>{m.name}</option>
-              ))}
-            </select>
-          </label>
+          {/* Account Manager + Website share a row. AM is now required
+              (no more "Unassigned" default — every new client must have
+              an owner so urgency routing has a target). Website is also
+              required — the company URL is the single most useful piece
+              of context the team needs to do work for a client. Both
+              get full validation: red border + inline error + focus on
+              save when blank. */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <label className="wip-field">
+              <span className="wip-field-label">
+                Account Manager
+                <span style={{ color: 'var(--status-fire)' }} aria-hidden="true"> *</span>
+              </span>
+              <select
+                ref={amRef}
+                className="wip-field-input"
+                value={amId}
+                onChange={(e) => { setAmId(e.target.value); clearError('amId'); }}
+                style={errors.amId ? { borderColor: 'var(--status-fire)' } : undefined}
+                aria-invalid={errors.amId || undefined}
+                aria-required="true"
+                aria-describedby={errors.amId ? 'err-amId' : undefined}
+              >
+                <option value="">Choose an Account Manager…</option>
+                {ams.map(m => (
+                  <option key={m.id} value={m.id}>{m.name}</option>
+                ))}
+              </select>
+              {errors.amId && (
+                <span id="err-amId" style={{ fontSize: 'var(--fs-xs)', color: 'var(--status-fire)', marginTop: 4 }}>
+                  Account Manager is required to save.
+                </span>
+              )}
+            </label>
+            <label className="wip-field">
+              <span className="wip-field-label">
+                Website
+                <span style={{ color: 'var(--status-fire)' }} aria-hidden="true"> *</span>
+              </span>
+              <input
+                ref={websiteRef}
+                type="url"
+                inputMode="url"
+                autoComplete="url"
+                className="wip-field-input"
+                value={website}
+                onChange={(e) => { setWebsite(e.target.value); clearError('website'); }}
+                placeholder="https://acme.com"
+                style={errors.website ? { borderColor: 'var(--status-fire)' } : undefined}
+                aria-invalid={errors.website || undefined}
+                aria-required="true"
+                aria-describedby={errors.website ? 'err-website' : undefined}
+              />
+              {errors.website && (
+                <span id="err-website" style={{ fontSize: 'var(--fs-xs)', color: 'var(--status-fire)', marginTop: 4 }}>
+                  Website is required to save.
+                </span>
+              )}
+            </label>
+          </div>
 
           {/* MRR + Renewal-date inputs used to live here. Removed
               2026-04-26 — Flizow no longer tracks per-client revenue
