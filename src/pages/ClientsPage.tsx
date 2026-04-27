@@ -11,7 +11,7 @@ import {
   relativeTimeAgo,
   categoryLabel,
 } from '../utils/clientDerived';
-import type { Client, ClientStatus, Contact, IndustryCategory, Member } from '../types/flizow';
+import type { Client, ClientStatus, IndustryCategory, Member } from '../types/flizow';
 
 /**
  * Clients directory — the left (list) pane of the Mail.app-style split
@@ -486,6 +486,18 @@ function deriveInitials(name: string): string {
 // defaultRenewsAt() lived here. Removed 2026-04-26 along with the
 // renewsAt field on Client.
 
+/** Local-only shape for a queued additional-contact card in the Add
+ *  Client modal. `draftId` is a render key + remove/update handle —
+ *  it's NOT persisted; at save time each non-empty draft becomes a
+ *  Contact record with a fresh `ct-` id. */
+interface DraftExtraContact {
+  draftId: string;
+  name: string;
+  role: string;
+  email: string;
+  phone: string;
+}
+
 function AddClientModal({ members, todayISO, onClose }: {
   members: Member[];
   todayISO: string;
@@ -496,16 +508,34 @@ function AddClientModal({ members, todayISO, onClose }: {
   const [amId, setAmId] = useState<string>('');
   const [status, setStatus] = useState<ClientStatus>('onboard');
   const [logoClass, setLogoClass] = useState<typeof LOGO_CLASSES[number]>('logo-indigo');
-  const [nameError, setNameError] = useState(false);
-  // Primary-contact fields. All optional — a client can be created with
-  // no contact at all and the user can fill them in from the About tab
-  // later. We build a Contact record on save only when contactName is
-  // non-empty; orphan email/phone with no person attached is meaningless.
+  // Primary-contact fields — REQUIRED. A new client must ship with one
+  // primary point of contact (name, position, email, mobile). Save is
+  // blocked until all five required fields (client name + the four
+  // primary-contact fields) are filled. Additional contacts beyond the
+  // primary live in `extraContacts` below and are fully optional.
   const [contactName, setContactName] = useState('');
   const [contactRole, setContactRole] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
+  // Each entry is a draft contact card the user has appended via the
+  // "Add another contact" button. `draftId` is local only (used as the
+  // React key + the key for remove/update) — at save time we generate
+  // fresh `ct-` ids for the persisted Contact records.
+  const [extraContacts, setExtraContacts] = useState<DraftExtraContact[]>([]);
+  // Per-field error map for required fields. Keys: 'name' (client name),
+  // 'contactName', 'contactRole', 'contactEmail', 'contactPhone'. A field
+  // ID appears here only after the user clicks Save with it empty —
+  // typing into a field clears its error so the modal doesn't yell at
+  // someone mid-fix.
+  const [errors, setErrors] = useState<Record<string, boolean>>({});
+
+  // Refs for required inputs — used to focus the first invalid one when
+  // Save fails so the user lands on the field they need to fix.
   const nameRef = useRef<HTMLInputElement>(null);
+  const contactNameRef = useRef<HTMLInputElement>(null);
+  const contactRoleRef = useRef<HTMLInputElement>(null);
+  const contactEmailRef = useRef<HTMLInputElement>(null);
+  const contactPhoneRef = useRef<HTMLInputElement>(null);
 
   // AM picker shows only members typed 'am'. Operators live on the team
   // strip of the client detail page — a new client doesn't pick operators
@@ -514,18 +544,70 @@ function AddClientModal({ members, todayISO, onClose }: {
 
   useModalAutofocus(nameRef);
 
+  // Helper to clear an error key the moment the user starts typing in
+  // that field. Avoids the "still red while I'm fixing it" friction.
+  const clearError = (key: string) => {
+    if (errors[key]) {
+      setErrors(prev => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+    }
+  };
+
+  function addExtraContact() {
+    setExtraContacts(prev => [...prev, {
+      draftId: `draft-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+      name: '', role: '', email: '', phone: '',
+    }]);
+  }
+
+  function removeExtraContact(draftId: string) {
+    setExtraContacts(prev => prev.filter(c => c.draftId !== draftId));
+  }
+
+  function updateExtraContact(draftId: string, field: keyof Omit<DraftExtraContact, 'draftId'>, value: string) {
+    setExtraContacts(prev => prev.map(c =>
+      c.draftId === draftId ? { ...c, [field]: value } : c,
+    ));
+  }
+
   function handleSave() {
-    const trimmedName = name.trim();
-    if (!trimmedName) {
-      setNameError(true);
-      nameRef.current?.focus();
-      window.setTimeout(() => setNameError(false), 1400);
+    // 1. Validate required fields. Five gates: client name + the four
+    //    primary-contact fields. Build the error map first so we can set
+    //    them all at once and focus the first invalid one in DOM order.
+    const trimmedName         = name.trim();
+    const trimmedContactName  = contactName.trim();
+    const trimmedContactRole  = contactRole.trim();
+    const trimmedContactEmail = contactEmail.trim();
+    const trimmedContactPhone = contactPhone.trim();
+
+    const newErrors: Record<string, boolean> = {};
+    if (!trimmedName)         newErrors.name = true;
+    if (!trimmedContactName)  newErrors.contactName = true;
+    if (!trimmedContactRole)  newErrors.contactRole = true;
+    if (!trimmedContactEmail) newErrors.contactEmail = true;
+    if (!trimmedContactPhone) newErrors.contactPhone = true;
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      // Focus the first invalid field in visual/DOM order so the user
+      // lands on what they need to fix.
+      const focusOrder: Array<[string, React.RefObject<HTMLInputElement | null>]> = [
+        ['name',         nameRef],
+        ['contactName',  contactNameRef],
+        ['contactRole',  contactRoleRef],
+        ['contactEmail', contactEmailRef],
+        ['contactPhone', contactPhoneRef],
+      ];
+      const firstErr = focusOrder.find(([k]) => newErrors[k]);
+      firstErr?.[1].current?.focus();
       return;
     }
 
-    // Derive initials at save time so the user doesn't have to maintain
-    // them separately — if they want custom initials later the Client
-    // Detail page is where that lives.
+    // 2. Build + persist the Client. Initials are derived at save time
+    //    so the user doesn't have to maintain them separately.
     const id = `cl-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
     const client: Client = {
       id,
@@ -541,28 +623,41 @@ function AddClientModal({ members, todayISO, onClose }: {
     };
     flizowStore.addClient(client);
 
-    // If the user filled in a contact name, create a primary Contact for
-    // the new client in the same save. Role/email/phone tag along only
-    // if non-empty — Contact's optional fields are typed `string | undef`,
-    // so we omit empties rather than store empty strings (cleaner roundtrip
-    // through Firestore's `ignoreUndefinedProperties`).
-    const trimmedContactName = contactName.trim();
-    if (trimmedContactName) {
-      const contactId = `ct-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
-      const role  = contactRole.trim();
-      const email = contactEmail.trim();
-      const phone = contactPhone.trim();
-      const contact: Contact = {
-        id: contactId,
+    // 3. Persist the primary contact. All four fields are required so
+    //    we know they're populated by the time we get here. Role/email/
+    //    phone are typed `string | undef` on Contact — we pass strings
+    //    because validation guarantees non-empty.
+    flizowStore.addContact({
+      id: `ct-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+      clientId: id,
+      name: trimmedContactName,
+      role: trimmedContactRole,
+      email: trimmedContactEmail,
+      phone: trimmedContactPhone,
+      primary: true,
+    });
+
+    // 4. Persist any additional contacts. Each draft only becomes a
+    //    Contact when its name is non-empty — empty rows the user added
+    //    but never filled in are silently dropped. Role/email/phone are
+    //    omitted from the doc when blank so Firestore's
+    //    ignoreUndefinedProperties keeps the stored shape tidy.
+    extraContacts.forEach(ec => {
+      const ecName = ec.name.trim();
+      if (!ecName) return;
+      const role  = ec.role.trim();
+      const email = ec.email.trim();
+      const phone = ec.phone.trim();
+      flizowStore.addContact({
+        id: `ct-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
         clientId: id,
-        name: trimmedContactName,
-        primary: true,
+        name: ecName,
+        primary: false,
         ...(role  ? { role }  : {}),
         ...(email ? { email } : {}),
         ...(phone ? { phone } : {}),
-      };
-      flizowStore.addContact(contact);
-    }
+      });
+    });
 
     onClose();
     // Land the user on the new client's detail page so they can keep going.
@@ -597,17 +692,27 @@ function AddClientModal({ members, todayISO, onClose }: {
 
         <div className="wip-modal-body">
           <label className="wip-field">
-            <span className="wip-field-label">Client name</span>
+            <span className="wip-field-label">
+              Client name
+              <span style={{ color: 'var(--status-fire)' }} aria-hidden="true"> *</span>
+            </span>
             <input
               ref={nameRef}
               type="text"
               className="wip-field-input"
               value={name}
-              onChange={(e) => { setName(e.target.value); if (nameError) setNameError(false); }}
+              onChange={(e) => { setName(e.target.value); clearError('name'); }}
               placeholder="e.g. Acme Industries"
-              style={nameError ? { borderColor: 'var(--status-fire)' } : undefined}
-              aria-invalid={nameError || undefined}
+              style={errors.name ? { borderColor: 'var(--status-fire)' } : undefined}
+              aria-invalid={errors.name || undefined}
+              aria-required="true"
+              aria-describedby={errors.name ? 'err-name' : undefined}
             />
+            {errors.name && (
+              <span id="err-name" style={{ fontSize: 'var(--fs-xs)', color: 'var(--status-fire)', marginTop: 4 }}>
+                Client name is required to save.
+              </span>
+            )}
           </label>
 
           {/* Industry + Status share a row. Both are short-label dropdowns
@@ -664,71 +769,245 @@ function AddClientModal({ members, todayISO, onClose }: {
               2026-04-26 — Flizow no longer tracks per-client revenue
               or renewal dates. */}
 
-          {/* Primary contact group. All four fields are optional — the
-              user can save the client and add contacts from the About
-              tab later. We only persist a Contact record when the name
-              is filled (orphan email/phone is meaningless). The "(optional)"
-              affix in the header sets that expectation up-front so users
-              don't feel forced to fill it. */}
+          {/* Primary contact group. All four fields are now REQUIRED —
+              a new client must ship with at least one named primary
+              point of contact, with their position, email, and phone.
+              The asterisk on each label and the inline error text after
+              a failed Save make the requirement obvious. Additional
+              contacts (rendered below) stay fully optional — the user
+              can stop after the primary or add as many more as they like. */}
           <div style={{
             fontSize: 'var(--fs-xs)',
             fontWeight: 600,
             color: 'var(--text-muted)',
             marginTop: 4,
           }}>
-            Primary contact{' '}
-            <span style={{ fontWeight: 400, color: 'var(--text-faint)' }}>(optional)</span>
+            Primary contact
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <label className="wip-field">
-              <span className="wip-field-label">Contact name</span>
+              <span className="wip-field-label">
+                Contact name
+                <span style={{ color: 'var(--status-fire)' }} aria-hidden="true"> *</span>
+              </span>
               <input
+                ref={contactNameRef}
                 type="text"
                 className="wip-field-input"
                 value={contactName}
-                onChange={(e) => setContactName(e.target.value)}
+                onChange={(e) => { setContactName(e.target.value); clearError('contactName'); }}
                 placeholder="e.g. Jamie Chen"
+                style={errors.contactName ? { borderColor: 'var(--status-fire)' } : undefined}
+                aria-invalid={errors.contactName || undefined}
+                aria-required="true"
+                aria-describedby={errors.contactName ? 'err-contactName' : undefined}
               />
+              {errors.contactName && (
+                <span id="err-contactName" style={{ fontSize: 'var(--fs-xs)', color: 'var(--status-fire)', marginTop: 4 }}>
+                  Contact name is required to save.
+                </span>
+              )}
             </label>
             <label className="wip-field">
-              <span className="wip-field-label">Position</span>
+              <span className="wip-field-label">
+                Position
+                <span style={{ color: 'var(--status-fire)' }} aria-hidden="true"> *</span>
+              </span>
               <input
+                ref={contactRoleRef}
                 type="text"
                 className="wip-field-input"
                 value={contactRole}
-                onChange={(e) => setContactRole(e.target.value)}
+                onChange={(e) => { setContactRole(e.target.value); clearError('contactRole'); }}
                 placeholder="e.g. VP Marketing"
+                style={errors.contactRole ? { borderColor: 'var(--status-fire)' } : undefined}
+                aria-invalid={errors.contactRole || undefined}
+                aria-required="true"
+                aria-describedby={errors.contactRole ? 'err-contactRole' : undefined}
               />
+              {errors.contactRole && (
+                <span id="err-contactRole" style={{ fontSize: 'var(--fs-xs)', color: 'var(--status-fire)', marginTop: 4 }}>
+                  Position is required to save.
+                </span>
+              )}
             </label>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <label className="wip-field">
-              <span className="wip-field-label">Email address</span>
+              <span className="wip-field-label">
+                Email address
+                <span style={{ color: 'var(--status-fire)' }} aria-hidden="true"> *</span>
+              </span>
               <input
+                ref={contactEmailRef}
                 type="email"
                 inputMode="email"
                 autoComplete="email"
                 className="wip-field-input"
                 value={contactEmail}
-                onChange={(e) => setContactEmail(e.target.value)}
+                onChange={(e) => { setContactEmail(e.target.value); clearError('contactEmail'); }}
                 placeholder="jamie@acme.com"
+                style={errors.contactEmail ? { borderColor: 'var(--status-fire)' } : undefined}
+                aria-invalid={errors.contactEmail || undefined}
+                aria-required="true"
+                aria-describedby={errors.contactEmail ? 'err-contactEmail' : undefined}
               />
+              {errors.contactEmail && (
+                <span id="err-contactEmail" style={{ fontSize: 'var(--fs-xs)', color: 'var(--status-fire)', marginTop: 4 }}>
+                  Email address is required to save.
+                </span>
+              )}
             </label>
             <label className="wip-field">
-              <span className="wip-field-label">Mobile number</span>
+              <span className="wip-field-label">
+                Mobile number
+                <span style={{ color: 'var(--status-fire)' }} aria-hidden="true"> *</span>
+              </span>
               <input
+                ref={contactPhoneRef}
                 type="tel"
                 inputMode="tel"
                 autoComplete="tel"
                 className="wip-field-input"
                 value={contactPhone}
-                onChange={(e) => setContactPhone(e.target.value)}
+                onChange={(e) => { setContactPhone(e.target.value); clearError('contactPhone'); }}
                 placeholder="+1 555 123 4567"
+                style={errors.contactPhone ? { borderColor: 'var(--status-fire)' } : undefined}
+                aria-invalid={errors.contactPhone || undefined}
+                aria-required="true"
+                aria-describedby={errors.contactPhone ? 'err-contactPhone' : undefined}
               />
+              {errors.contactPhone && (
+                <span id="err-contactPhone" style={{ fontSize: 'var(--fs-xs)', color: 'var(--status-fire)', marginTop: 4 }}>
+                  Mobile number is required to save.
+                </span>
+              )}
             </label>
           </div>
+
+          {/* Additional contacts. Optional — the primary above is the
+              only contact required to create a client. Each draft is
+              rendered with its own Remove button; on save, drafts with
+              an empty name are silently dropped (the rest of the row's
+              fields go too — orphan email-with-no-name isn't useful). */}
+          {extraContacts.map((ec, idx) => (
+            <div
+              key={ec.draftId}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'var(--sp-lg)',
+                paddingTop: 'var(--sp-md)',
+                borderTop: '1px solid var(--hairline)',
+                marginTop: 4,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ fontSize: 'var(--fs-xs)', fontWeight: 600, color: 'var(--text-muted)' }}>
+                  Contact {idx + 2}{' '}
+                  <span style={{ fontWeight: 400, color: 'var(--text-faint)' }}>(optional)</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeExtraContact(ec.draftId)}
+                  aria-label={`Remove contact ${idx + 2}`}
+                  style={{
+                    fontSize: 'var(--fs-xs)',
+                    color: 'var(--text-muted)',
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: 4,
+                  }}
+                >
+                  Remove
+                </button>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <label className="wip-field">
+                  <span className="wip-field-label">Contact name</span>
+                  <input
+                    type="text"
+                    className="wip-field-input"
+                    value={ec.name}
+                    onChange={(e) => updateExtraContact(ec.draftId, 'name', e.target.value)}
+                    placeholder="e.g. Sam Patel"
+                  />
+                </label>
+                <label className="wip-field">
+                  <span className="wip-field-label">Position</span>
+                  <input
+                    type="text"
+                    className="wip-field-input"
+                    value={ec.role}
+                    onChange={(e) => updateExtraContact(ec.draftId, 'role', e.target.value)}
+                    placeholder="e.g. Head of Growth"
+                  />
+                </label>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <label className="wip-field">
+                  <span className="wip-field-label">Email address</span>
+                  <input
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    className="wip-field-input"
+                    value={ec.email}
+                    onChange={(e) => updateExtraContact(ec.draftId, 'email', e.target.value)}
+                    placeholder="sam@acme.com"
+                  />
+                </label>
+                <label className="wip-field">
+                  <span className="wip-field-label">Mobile number</span>
+                  <input
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    className="wip-field-input"
+                    value={ec.phone}
+                    onChange={(e) => updateExtraContact(ec.draftId, 'phone', e.target.value)}
+                    placeholder="+1 555 123 4567"
+                  />
+                </label>
+              </div>
+            </div>
+          ))}
+
+          {/* Dashed-border button matches the conventional "add row"
+              pattern — visually distinct from primary CTAs (solid blue)
+              and destructive ones (red), reads as "extend the form".
+              Lives at the bottom of the contact stack so it stays at
+              the natural append point regardless of how many extras
+              the user has added. */}
+          <button
+            type="button"
+            onClick={addExtraContact}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              padding: 'var(--sp-9) var(--sp-base)',
+              background: 'transparent',
+              border: '1px dashed var(--hairline)',
+              borderRadius: 8,
+              fontSize: 'var(--fs-sm)',
+              fontWeight: 500,
+              color: 'var(--text-muted)',
+              cursor: 'pointer',
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Add another contact
+          </button>
 
           <div className="wip-field">
             <span className="wip-field-label">Logo colour</span>
