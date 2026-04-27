@@ -4,16 +4,20 @@ import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import { flizowStore } from '../store/flizowStore';
 import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
 
 /**
- * Project Brief modal — opened from the board's brief strip.
+ * Brief modal — generic over what kind of brief is being edited.
  *
- * The brief is the AM's free-form spec for this service: goals, target
- * audience, success metrics, etc. New services seed the editor with the
- * template's `brief` array as <h2> headings so the AM starts with
- * curated section prompts rather than a blank canvas.
+ * Used today by:
+ *   • Board page (per-service project brief)
+ *   • Ops page (workspace-level Ops brief)
+ *
+ * The title is whatever the caller wants to show ("Project Brief —
+ * Web Redesign" / "Ops Brief"); onSave is the caller's persistence
+ * choice (store.updateServiceBrief vs store.updateOpsBrief). The
+ * modal stays unaware of which surface owns the brief — it only
+ * knows about HTML in, HTML out.
  *
  * Save behaviour: explicit Save / Cancel buttons. Esc / backdrop / X
  * with unsaved edits prompts a discard confirmation; with no edits,
@@ -25,15 +29,23 @@ import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
  * 60–70cpl line length at body text size.
  */
 export function BriefModal({
-  serviceId,
-  serviceName,
+  title,
+  subtitle,
   initialBrief,
+  onSave,
   onClose,
 }: {
-  serviceId: string;
-  serviceName: string;
+  /** Modal heading. e.g. "Project Brief" — call-site decides. */
+  title: string;
+  /** Soft caption next to the title — e.g. service name on a per-
+   *  service brief, or undefined when the title is self-sufficient. */
+  subtitle?: string;
   /** HTML string. Empty/undefined renders the placeholder. */
   initialBrief?: string;
+  /** Called with the new HTML when the user clicks Save. The modal
+   *  closes itself after — caller's onClose runs as part of the
+   *  normal close path. */
+  onSave: (html: string) => void;
   onClose: () => void;
 }) {
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -83,7 +95,7 @@ export function BriefModal({
 
   function handleSave() {
     if (!editor) return;
-    flizowStore.updateServiceBrief(serviceId, editor.getHTML());
+    onSave(editor.getHTML());
     onClose();
   }
 
@@ -138,16 +150,18 @@ export function BriefModal({
       >
         <header className="wip-modal-head">
           <h2 className="wip-modal-title" id="brief-modal-title">
-            Project Brief
-            <span style={{
-              marginLeft: 12,
-              fontSize: 'var(--fs-md)',
-              fontWeight: 400,
-              color: 'var(--text-soft)',
-              letterSpacing: '-0.005em',
-            }}>
-              {serviceName}
-            </span>
+            {title}
+            {subtitle && (
+              <span style={{
+                marginLeft: 12,
+                fontSize: 'var(--fs-md)',
+                fontWeight: 400,
+                color: 'var(--text-soft)',
+                letterSpacing: '-0.005em',
+              }}>
+                {subtitle}
+              </span>
+            )}
           </h2>
           <button type="button" className="wip-modal-close" onClick={handleSoftClose} aria-label="Close">
             <XMarkIcon width={14} height={14} aria-hidden="true" />

@@ -909,4 +909,13 @@ export interface FlizowData {
    *  is the explicit path to a populated workspace. Once flipped to
    *  true, the seeds never run again. */
   opsSeeded: boolean;
+  /** Project Brief for the Ops board — the internal team's working
+   *  notes / charter / standing-meeting agenda doc. Same shape as
+   *  Service.brief but lives at the workspace level because the Ops
+   *  board itself is workspace-wide (not per-service). HTML rich text
+   *  from TipTap. Absent / empty = no brief written yet. */
+  opsBrief?: string;
+  /** ISO timestamp the ops brief was last saved. Drives the
+   *  "Last updated · X ago" indicator on the Ops board's brief strip. */
+  opsBriefUpdatedAt?: string;
 }

@@ -1069,6 +1069,10 @@ class FlizowStore {
     this.data.opsTasks = [];
     this.data.scheduleTaskMap = {};
     this.data.favoriteServiceIds = [];
+    // Workspace-level Ops brief gets wiped too — it's project-y data,
+    // not identity, and a "fresh start" should mean no leftover doc.
+    delete this.data.opsBrief;
+    delete this.data.opsBriefUpdatedAt;
     // Filter demo members out, keep real workspace members. Synthetic
     // ids ('am-1' etc.) seeded by loadDemoData aren't in the
     // workspace's members list; real Firebase UIDs are.
@@ -1257,6 +1261,15 @@ class FlizowStore {
     if (!s) return;
     s.brief = brief;
     s.briefUpdatedAt = new Date().toISOString();
+    this.save();
+  }
+
+  /** Same shape as updateServiceBrief but for the Ops board's
+   *  workspace-level brief. The Ops board has no Service object to
+   *  hang the brief off of, so it lives directly on FlizowData. */
+  updateOpsBrief(brief: string) {
+    this.data.opsBrief = brief;
+    this.data.opsBriefUpdatedAt = new Date().toISOString();
     this.save();
   }
 

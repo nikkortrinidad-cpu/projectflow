@@ -4,6 +4,8 @@ import { DndContext, DragOverlay, PointerSensor, KeyboardSensor, useSensor, useS
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { daysBetween, formatMonthDay } from '../utils/dateFormat';
 import { BoardFilters, applyFilters, EMPTY_FILTERS, type BoardFilterState } from '../components/BoardFilters';
+import { BriefModal } from '../components/BriefModal';
+import { BriefStrip } from '../components/BriefStrip';
 import { useFlizow } from '../store/useFlizow';
 import { flizowStore } from '../store/flizowStore';
 import type { OpsTask, Member, ColumnId } from '../types/flizow';
@@ -54,6 +56,10 @@ export function OpsPage() {
   const [filters, setFilters] = useState<BoardFilterState>(EMPTY_FILTERS);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Ops Brief modal — same surface as the per-service brief on the
+  // client board pages, but the data lives at workspace level
+  // (data.opsBrief) because Ops has no per-service scope.
+  const [briefOpen, setBriefOpen] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -158,6 +164,15 @@ export function OpsPage() {
         members={opsAssigneeMembers}
       />
 
+      <BriefStrip
+        label="Ops Brief"
+        brief={data.opsBrief}
+        briefUpdatedAt={data.opsBriefUpdatedAt}
+        todayISO={data.today}
+        onOpen={() => setBriefOpen(true)}
+        emptyCta="+ Add Ops brief"
+      />
+
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -198,6 +213,15 @@ export function OpsPage() {
           // Duplicate swaps the open modal over to the new card so the
           // user can rename it without a close/reopen flicker.
           onDuplicated={(newId) => setSelectedId(newId)}
+        />
+      )}
+
+      {briefOpen && (
+        <BriefModal
+          title="Ops Brief"
+          initialBrief={data.opsBrief}
+          onSave={(html) => flizowStore.updateOpsBrief(html)}
+          onClose={() => setBriefOpen(false)}
         />
       )}
     </div>
