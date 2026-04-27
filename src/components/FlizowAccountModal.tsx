@@ -2,8 +2,10 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { CheckIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 import { useFlizow } from '../store/useFlizow';
+import { flizowStore } from '../store/flizowStore';
 import type { AccessLevel, Member } from '../types/flizow';
 import { initialsOf } from '../utils/avatar';
+import { ConfirmDangerDialog } from './ConfirmDangerDialog';
 
 /**
  * FlizowAccountModal — the Account Settings overlay reachable from the
@@ -1471,7 +1473,86 @@ function WorkspaceSection({
         </div>
         <ExportWorkspaceButton workspaceName={meta.name} />
       </div>
+
+      {/* Danger zone — owner only. Currently hosts the "Clear workspace"
+          action; future destructive workspace-wide actions (transfer
+          ownership, delete workspace) would land here too. Hidden from
+          non-owner members because the action affects every member's
+          data, not just the clicker's. */}
+      {isOwner && <DangerZone />}
     </section>
+  );
+}
+
+/**
+ * Danger-zone footer of the Workspace tab. Owner-only. Currently a
+ * single action — "Clear workspace data" — that wipes clients /
+ * services / tasks / contacts / notes / activity etc. Workspace
+ * identity (name, logo, members, templates) survives.
+ *
+ * Confirms via ConfirmDangerDialog with red destructive button. The
+ * confirm copy spells out the cascade and the survival list so the
+ * owner knows exactly what's about to disappear.
+ */
+function DangerZone() {
+  const [confirming, setConfirming] = useState(false);
+  return (
+    <>
+      <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px solid var(--hairline)' }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--status-fire)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 10 }}>
+          Danger zone
+        </div>
+        <button
+          type="button"
+          onClick={() => setConfirming(true)}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            padding: '6px 14px',
+            border: '1px solid var(--status-fire)',
+            borderRadius: 980,
+            background: 'transparent',
+            color: 'var(--status-fire)',
+            fontSize: 13,
+            fontWeight: 500,
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+            letterSpacing: '-0.005em',
+          }}
+        >
+          Clear workspace data
+        </button>
+        <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 8, lineHeight: 1.5 }}>
+          Wipes every client, service, task, contact, note, and activity entry.
+          Members, templates, and your workspace identity (name, logo) stay.
+        </div>
+      </div>
+
+      {confirming && (
+        <ConfirmDangerDialog
+          title="Clear all workspace data?"
+          body={
+            <>
+              Removes every client, service, kanban card, contact, quick link,
+              note, touchpoint, and activity entry across the whole workspace.
+              <br /><br />
+              <strong>Survives:</strong> members + roles, templates,
+              workspace name + logo, your sign-in. This is the reset you'd
+              run before walking through a fresh add-client → add-service flow.
+              <br /><br />
+              This can't be undone.
+            </>
+          }
+          confirmLabel="Clear all data"
+          onConfirm={() => {
+            flizowStore.clearWorkspace();
+            setConfirming(false);
+          }}
+          onClose={() => setConfirming(false)}
+        />
+      )}
+    </>
   );
 }
 

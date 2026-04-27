@@ -17,7 +17,7 @@ export const BUILT_IN_TEMPLATES: TemplateRecord[] = [
     name: 'Web Design — Full Stack',
     category: 'Web Development',
     icon: 'web',
-    phasesSub: 'Auto-populate into the To Do column when onboarding completes',
+    phasesSub: 'Phase cards land in To Do; onboarding runs in parallel on its own tab.',
     phases: [
       { name: 'Discovery', subtasks: ['Kickoff call scheduled', 'Stakeholder interviews complete', 'Requirements doc drafted', 'Competitor scan written up', 'Success metrics agreed'] },
       { name: 'IA & Wireframes', subtasks: ['Sitemap draft', 'Key user flows mapped', 'Low-fidelity wireframes', 'Content model defined', 'Internal review signed off'] },

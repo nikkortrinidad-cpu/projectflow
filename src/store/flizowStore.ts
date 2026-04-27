@@ -5,11 +5,13 @@ import type {
   FlizowData, Client, Service, Task, Member, Contact, QuickLink, Note,
   Touchpoint, ActionItem, TaskComment, TaskActivity, TaskActivityKind,
   ManualAgendaItem, OnboardingItem, ColumnId, Priority, OpsTask,
+  TaskChecklistItem,
   TemplateRecord, AccessLevel, WorkspaceDoc, WorkspaceMembership,
   PendingInvite,
 } from '../types/flizow';
 import { ONBOARDING_TEMPLATES } from '../data/onboardingTemplates';
 import { TASK_POOLS } from '../data/taskPools';
+import { findTemplate } from '../data/templates';
 import { OPS_TEAM_MEMBERS, OPS_TASK_SEED } from '../data/opsSeed';
 
 /**
@@ -1029,6 +1031,40 @@ class FlizowStore {
     this.save();
   }
 
+  /**
+   * Wipe every client/service/task plus the records that cascade off
+   * them. Workspace identity (name/logo/owner), members, templates,
+   * theme, today anchor, and the ops-seed flag all stay — this is a
+   * "reset the work" action, not a "delete the account" action.
+   *
+   * Used today by Account Settings → Workspace → Danger zone, so the
+   * user can walk a clean addService() path against an empty workspace
+   * after unloading demo data. Owner-only at the UI; the store doesn't
+   * gate (gating belongs at the call site, not in the data layer).
+   *
+   * Single save() at the end syncs to Firestore in one write rather
+   * than fourteen.
+   */
+  clearWorkspace() {
+    this.data.clients = [];
+    this.data.services = [];
+    this.data.tasks = [];
+    this.data.onboardingItems = [];
+    this.data.integrations = [];
+    this.data.contacts = [];
+    this.data.quickLinks = [];
+    this.data.notes = [];
+    this.data.touchpoints = [];
+    this.data.actionItems = [];
+    this.data.taskComments = [];
+    this.data.taskActivity = [];
+    this.data.manualAgendaItems = [];
+    this.data.opsTasks = [];
+    this.data.scheduleTaskMap = {};
+    this.data.favoriteServiceIds = [];
+    this.save();
+  }
+
   deleteClient(id: string) {
     // Cascade: remove the client's services and tasks too so the data
     // stays consistent. No soft-delete yet — add when the UI does.
@@ -1059,28 +1095,78 @@ class FlizowStore {
   // ── Services ─────────────────────────────────────────────────────────
 
   addService(service: Service) {
-    // Seed 3 starter tasks into To Do so the board doesn't open empty.
-    // This is the delivery side of the Add Service modal's promise:
-    // "Seeds the board with starter columns and a few example cards."
-    // Pulls the first 3 titles from the template's task pool rather than
-    // a random sample — determinism keeps the user from seeing the same
-    // service with different starter cards on different devices.
-    const pool = TASK_POOLS[service.templateKey] ?? [];
-    const starterTitles = pool.slice(0, 3);
+    // Seed cards into the To Do column so the board doesn't open empty.
+    //
+    // Phase-driven seeding (added 2026-04-27): if the resolved template
+    // declares `phases`, each phase becomes one card titled with the
+    // phase name, with the phase's subtasks pre-loaded as a checklist
+    // on that card. This is the delivery for what the Templates page
+    // promises ("Phase cards land in To Do; onboarding runs in
+    // parallel on its own tab"). No hard gate on onboarding — the AM
+    // can start phase work immediately and fill in setup at their
+    // own pace. See built-in templates' `phases[i].subtasks` for the
+    // canonical content.
+    //
+    // TASK_POOLS fallback: user-created templates ship with `phases:
+    // []`, so we fall back to the original "first 3 strings from
+    // TASK_POOLS" behavior to avoid an empty board on day 1. Real
+    // user-created templates will eventually have phases authored
+    // through the editor; until then this keeps the empty case from
+    // shipping a blank board.
+    const liveTemplate = findTemplate(this.data.templateOverrides, service.templateKey);
     const nowISO = new Date().toISOString();
-    const dueISO = new Date(Date.now() + 7 * 86_400_000).toISOString().slice(0, 10);
-    const seededTasks: Task[] = starterTitles.map((title, idx) => ({
-      id: `${service.id}-starter-${idx}`,
-      serviceId: service.id,
-      clientId: service.clientId,
-      title,
-      columnId: 'todo',
-      priority: 'medium',
-      assigneeId: null,
-      labels: [],
-      dueDate: dueISO,
-      createdAt: nowISO,
-    }));
+    let seededTasks: Task[];
+
+    if (liveTemplate && liveTemplate.phases.length > 0) {
+      // Stagger due dates by week so the schedule grid spreads them
+      // across the calendar instead of piling every phase on day 7.
+      // Phase 0 → 7d, phase 1 → 14d, etc. AM can adjust later.
+      seededTasks = liveTemplate.phases.map((phase, idx) => {
+        const dueOffsetDays = (idx + 1) * 7;
+        const dueISO = new Date(Date.now() + dueOffsetDays * 86_400_000)
+          .toISOString().slice(0, 10);
+        const checklist: TaskChecklistItem[] = phase.subtasks.map((text, i) => ({
+          id: `${service.id}-phase-${idx}-c${i}`,
+          text,
+          done: false,
+          assigneeId: null,
+        }));
+        return {
+          id: `${service.id}-phase-${idx}`,
+          serviceId: service.id,
+          clientId: service.clientId,
+          title: phase.name,
+          columnId: 'todo',
+          priority: 'medium',
+          assigneeId: null,
+          labels: [],
+          dueDate: dueISO,
+          createdAt: nowISO,
+          checklist,
+        };
+      });
+    } else {
+      // Fallback for templates with no phases (typically user-created
+      // ones that haven't authored phases yet). Pulls the first 3
+      // titles from TASK_POOLS deterministically — same ids the
+      // pre-2026-04-27 implementation produced, so reloads of older
+      // services don't shift card identity.
+      const pool = TASK_POOLS[service.templateKey] ?? [];
+      const starterTitles = pool.slice(0, 3);
+      const dueISO = new Date(Date.now() + 7 * 86_400_000).toISOString().slice(0, 10);
+      seededTasks = starterTitles.map((title, idx) => ({
+        id: `${service.id}-starter-${idx}`,
+        serviceId: service.id,
+        clientId: service.clientId,
+        title,
+        columnId: 'todo',
+        priority: 'medium',
+        assigneeId: null,
+        labels: [],
+        dueDate: dueISO,
+        createdAt: nowISO,
+      }));
+    }
 
     // Replace the service's taskIds with the ids of the seeded cards so
     // the ServiceCard task counters + onboarding group lookups see them.
