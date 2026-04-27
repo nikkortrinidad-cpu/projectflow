@@ -8295,6 +8295,39 @@
   }
   .detail-section-link:hover { text-decoration: underline; }
 
+  /* Pill-shaped ghost button for the "+ Add X" actions in section
+     headers (Services, Team, Contacts, Quick Links). Promoted from
+     plain text-link styling 2026-04-27 — these actions open creation
+     modals and deserve a clearer affordance than the Edit/Done
+     toggles next to them. The toggles stay as .detail-section-link;
+     creation entry points become unmissable. Subtle 1px border at
+     rest, blue tint on hover. Same pill geometry as .attn-btn so the
+     visual language stays coherent across the app. */
+  .section-add-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-micro);
+    padding: 4px 10px;
+    border: 1px solid var(--hairline);
+    border-radius: 980px;
+    background: transparent;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: var(--fs-md);
+    font-weight: 500;
+    color: var(--highlight);
+    letter-spacing: -0.005em;
+    transition: background var(--dur-fast), border-color var(--dur-fast);
+  }
+  .section-add-btn:hover {
+    background: var(--highlight-soft);
+    border-color: var(--highlight);
+  }
+  .section-add-btn:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
+  }
+
   /* Right-aligned pair of buttons in a section header. Used to sit
      inline at four call sites with gap values of 12, 14, or 16;
      now standardized. Audit: client-detail M4 + L2. */

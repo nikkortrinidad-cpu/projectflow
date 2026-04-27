@@ -784,12 +784,7 @@ function ServicesSection({ services, tasks, todayIso, onAdd, editing, onToggleEd
       <div className="detail-section">
         <div className="detail-section-header">
           <div className="detail-section-title">Active Services</div>
-          <button
-            type="button"
-            className="detail-section-link"
-            onClick={onAdd}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', font: 'inherit' }}
-          >
+          <button type="button" className="section-add-btn" onClick={onAdd}>
             + Add service
           </button>
         </div>
@@ -842,12 +837,7 @@ function ServicesSection({ services, tasks, todayIso, onAdd, editing, onToggleEd
           >
             {editing ? 'Done' : 'Edit'}
           </button>
-          <button
-            type="button"
-            className="detail-section-link"
-            onClick={onAdd}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', font: 'inherit' }}
-          >
+          <button type="button" className="section-add-btn" onClick={onAdd}>
             + Add service
           </button>
         </div>
@@ -1691,9 +1681,8 @@ function AboutSection({ client, data }: { client: Client; data: FlizowData }) {
             )}
             <button
               type="button"
-              className="detail-section-link"
+              className="section-add-btn"
               onClick={() => setShowAddOperator(true)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', font: 'inherit', padding: 0 }}
             >
               + Add operator
             </button>
@@ -1817,12 +1806,7 @@ function ContactsCard({ contacts, onAdd, editing, onToggleEdit, onRemove, onTogg
               {editing ? 'Done' : 'Edit'}
             </button>
           )}
-          <button
-            type="button"
-            className="relationship-card-link"
-            onClick={onAdd}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', font: 'inherit', padding: 0 }}
-          >
+          <button type="button" className="section-add-btn" onClick={onAdd}>
             + Add contact
           </button>
         </div>
@@ -1983,12 +1967,7 @@ function QuickLinksCard({ links, onAdd, editing, onToggleEdit, onRemove, onEdit 
               {editing ? 'Done' : 'Edit'}
             </button>
           )}
-          <button
-            type="button"
-            className="relationship-card-link"
-            onClick={onAdd}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', font: 'inherit', padding: 0 }}
-          >
+          <button type="button" className="section-add-btn" onClick={onAdd}>
             + Add link
           </button>
         </div>
