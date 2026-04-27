@@ -307,7 +307,10 @@ export function OverviewPage() {
           </div>
         </section>
 
-        {/* BLOCK 2 — Needs Your Attention */}
+        {/* BLOCK 2 — My Priorities (renamed 2026-04-27 from "Needs
+            Your Attention" — the section's job is to surface what's
+            most urgent, and "Priorities" names that purpose more
+            tightly than the older content-describing label). */}
         <section
           className="block"
           data-block-id="attention"
@@ -315,7 +318,7 @@ export function OverviewPage() {
           aria-labelledby="block-attention-title"
         >
           <div className="block-header">
-            <div className="block-title" id="block-attention-title">Needs Your Attention</div>
+            <div className="block-title" id="block-attention-title">My Priorities</div>
           </div>
           <div className="attention-list" id="attention-list">
             {allAttention.length === 0 ? (
@@ -365,7 +368,9 @@ export function OverviewPage() {
           </div>
         </section>
 
-        {/* BLOCK 4 — Schedule */}
+        {/* BLOCK 4 — My Schedule (renamed 2026-04-27 from "Schedule"
+            for parallelism with My Priorities + My Boards on either
+            side of it). */}
         <section
           className="block"
           data-block-id="schedule"
@@ -373,7 +378,7 @@ export function OverviewPage() {
           aria-labelledby="block-schedule-title"
         >
           <div className="block-header">
-            <div className="block-title" id="block-schedule-title">Schedule</div>
+            <div className="block-title" id="block-schedule-title">My Schedule</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               {/* Toggle buttons — NOT ARIA tabs (no paired tabpanel below
                   these; the schedule grid swaps content in place via the
