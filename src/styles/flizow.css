@@ -4713,24 +4713,243 @@
   }
   .members-row:hover { background: var(--bg-soft); }
 
-  /* Members-tab specific styles (Account Settings → Members).
-     Lives in the same .members-row pattern as the share modal but
-     adds an invite-link block + revoke button + pending row variant.
-     Audit: workspace MVP 2026-04-27. */
-  .members-invite-block {
+  /* ─────────────────────────────────────────────────────────────
+     Members tab (Account Settings → Members) — redesigned 2026-04-27.
+
+     Belief: user came to invite a teammate or adjust someone's
+     access. Invite controls are chrome; the member LIST is the
+     content. Layout follows the same .acct-row pattern Preferences
+     uses so the modal reads as one design language.
+
+     Grid:
+       - Member rows: 36px avatar | 1fr identity | auto role | auto remove
+       - Invite Row: title+sub (1fr) | role-select + button (auto)
+       - Eyebrows ("Pending · N", "Members · N") pair tight with
+         their lists so the heading reads as belonging below.
+
+     Type:
+       - Eyebrow: 11px / 600 / uppercase / +0.06em tracking
+       - Name: 14px / 600
+       - Sub: 12px / 400 / text-muted
+     ───────────────────────────────────────────────────────────── */
+
+  /* Inline error notice — leaner than the previous full-card variant. */
+  .mbrs-error {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    background: rgba(255, 59, 48, 0.10);
+    border: 1px solid rgba(255, 59, 48, 0.28);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--accent);
+    line-height: 1.4;
+  }
+  .mbrs-error svg { flex-shrink: 0; }
+
+  /* Invite Row — owner-only. Reuses .acct-row shape so it sits in
+     the same rhythm as Preferences (title + sub left, control right).
+     Override the gap to keep the controls cluster tight. */
+  .mbrs-invite-row {
+    gap: 18px;
+  }
+  .mbrs-invite-controls {
+    display: flex; align-items: center; gap: 8px;
+    flex-shrink: 0;
+  }
+  .mbrs-role-select {
+    /* Override the default form input padding to match the Generate
+       button's height — visual alignment matters in a tight cluster. */
+    width: auto;
+    min-width: 110px;
+    padding: 7px 11px;
+    font-size: 13px;
+  }
+  .mbrs-invite-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: #0a84ff;
+    color: #fff;
+    border: none;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    transition: background 0.12s;
+    white-space: nowrap;
+  }
+  .mbrs-invite-btn:hover { background: #0066d6; }
+  .mbrs-invite-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+  .mbrs-invite-btn:focus-visible {
+    outline: 2px solid #0a84ff;
+    outline-offset: 2px;
+  }
+
+  /* Generated-link card — appears under the Invite Row when a link
+     is fresh. Tinted blue so it reads as "the action above produced
+     this." Disappears on next page load (state-only). */
+  .mbrs-link-card {
+    margin-top: 12px;
     padding: 12px;
-    background: var(--bg-soft);
-    border: 1px solid var(--hairline-soft);
+    background: rgba(10, 132, 255, 0.06);
+    border: 1px solid rgba(10, 132, 255, 0.18);
     border-radius: 10px;
   }
-  .members-invite-row {
-    display: flex; align-items: center; gap: 8px;
+  .mbrs-link-row {
+    display: flex; align-items: stretch; gap: 8px;
   }
-  .members-invite-link {
-    display: flex; align-items: center; gap: 8px;
-    margin-top: 10px;
+  .mbrs-link-input {
+    flex: 1;
+    min-width: 0;
+    padding: 7px 10px;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    line-height: 1.3;
+    transition: border-color 0.12s;
   }
-  .members-revoke-btn {
+  .mbrs-link-input:focus {
+    outline: none;
+    border-color: #0a84ff;
+  }
+  .mbrs-link-copy {
+    padding: 7px 14px;
+    border-radius: 8px;
+    background: transparent;
+    border: 1px solid var(--hairline);
+    color: var(--text);
+    font-size: 12px; font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+  }
+  .mbrs-link-copy:hover {
+    background: var(--bg-soft);
+    border-color: var(--text-muted);
+  }
+  .mbrs-link-copy[data-copied="true"] {
+    background: var(--bg-soft);
+    color: #0a84ff;
+    border-color: rgba(10, 132, 255, 0.4);
+  }
+  .mbrs-link-hint {
+    margin: 8px 0 0;
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  /* Group: eyebrow + list pair. Tight margin between them so the
+     heading reads as belonging to the rows below it. The big
+     vertical gap goes BETWEEN groups, not inside them. */
+  .mbrs-group {
+    margin-top: 18px;
+  }
+  .mbrs-eyebrow {
+    font-size: 11px; font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    padding: 0 4px;
+  }
+  .mbrs-list {
+    display: flex; flex-direction: column;
+    /* Hairline between rows reads cleaner than per-row borders or
+       backgrounds — like a real list, not a stack of cards. */
+    border-top: 1px solid var(--hairline-soft);
+  }
+
+  /* Member row grid: avatar | identity | role | remove.
+     align-items center keeps the hairline at consistent y across rows
+     of varying control widths. */
+  .mbrs-row {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 4px;
+    border-bottom: 1px solid var(--hairline-soft);
+  }
+  .mbrs-row:last-child { border-bottom: 0; }
+
+  .mbrs-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600;
+    background: #5e5ce6; color: #fff;
+    letter-spacing: -0.01em;
+  }
+  .mbrs-avatar--pending {
+    background: var(--bg-soft);
+    border: 1px dashed var(--hairline);
+    color: var(--text-muted);
+  }
+  .mbrs-avatar--pending svg { width: 14px; height: 14px; }
+
+  .mbrs-identity {
+    min-width: 0; /* allow ellipsis on long names/emails */
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .mbrs-name {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 14px; font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.005em;
+    /* The name itself ellipsises on overflow; tags don't shrink. */
+    min-width: 0;
+  }
+  .mbrs-name-text {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    min-width: 0;
+  }
+  .mbrs-sub {
+    font-size: 12px; color: var(--text-muted);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  /* Tags next to the name — "You", "Owner". Quieter than the access
+     pill (which is the right-side data point); these are identity
+     hints. */
+  .mbrs-tag {
+    display: inline-flex; align-items: center;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: var(--bg-soft);
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .mbrs-tag--owner {
+    background: rgba(10, 132, 255, 0.10);
+    color: #0a84ff;
+  }
+
+  /* Inline role select on a member row — narrower than the invite
+     one because it sits next to the avatar+name, not in the
+     controls cluster. */
+  .mbrs-role-select--inline {
+    min-width: 92px;
+    padding: 5px 9px;
+    font-size: 12px;
+  }
+
+  /* Pending row — name softened, italicised so the row reads as
+     "not yet a real member." */
+  .mbrs-row--pending .mbrs-name {
+    color: var(--text-muted);
+    font-style: italic;
+    font-weight: 500;
+  }
+
+  /* Right-side action buttons (Revoke / Remove). Subtle by default,
+     red on hover. Smaller than the invite-button so it doesn't
+     compete with the primary CTA above. */
+  .mbrs-action-btn {
     padding: 4px 10px;
     border-radius: 6px;
     background: transparent;
@@ -4739,25 +4958,43 @@
     font-size: 11px;
     font-weight: 600;
     cursor: pointer;
+    white-space: nowrap;
     transition: background 0.12s, color 0.12s, border-color 0.12s;
-    flex-shrink: 0;
   }
-  .members-revoke-btn:hover {
+  .mbrs-action-btn:hover {
+    background: var(--bg-soft);
+    color: var(--text);
+    border-color: var(--text-muted);
+  }
+  .mbrs-action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .mbrs-action-btn--danger:hover {
     background: rgba(255, 59, 48, 0.08);
     color: var(--accent);
     border-color: rgba(255, 59, 48, 0.3);
   }
-  .members-revoke-btn:disabled {
-    opacity: 0.5; cursor: not-allowed;
+  .mbrs-action-btn:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
   }
-  .members-row--pending .members-name {
-    color: var(--text-muted);
-    font-style: italic;
-  }
-  .members-avatar--pending {
-    background: var(--bg-soft);
-    border: 1px dashed var(--hairline);
-    color: var(--text-muted);
+
+  /* Narrow viewport — stack the invite controls under the title
+     instead of cramming everything onto one row. */
+  @media (max-width: 600px) {
+    .mbrs-invite-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .mbrs-invite-controls { width: 100%; }
+    .mbrs-role-select { flex: 1; }
+    .mbrs-row {
+      grid-template-columns: 36px minmax(0, 1fr) auto;
+    }
+    /* On narrow phones the Remove button drops below the role select
+       on its own row to keep the row from clipping. */
+    .mbrs-row .mbrs-action-btn {
+      grid-column: 2 / -1;
+      justify-self: end;
+    }
   }
 
   .members-avatar {

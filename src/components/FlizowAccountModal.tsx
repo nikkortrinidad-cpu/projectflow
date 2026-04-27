@@ -756,6 +756,11 @@ function MembersSection() {
     }
   }
 
+  // Has-link view = Generated link card replaces the invite Row's
+  // helper text. Generated card is denser; the action's already done.
+  const memberCount = meta.members.length;
+  const pendingCount = meta.pendingInvites.length;
+
   return (
     <section
       className="acct-section"
@@ -768,37 +773,40 @@ function MembersSection() {
       <div className="acct-section-header">
         <h3 className="acct-section-title">Members</h3>
         <p className="acct-section-sub">
-          People with access to this workspace. {isOwner ? 'You are the owner.' : 'Only the workspace owner can invite or remove members.'}
+          {isOwner
+            ? 'People with access to this workspace.'
+            : 'Only the workspace owner can invite or remove members.'}
         </p>
       </div>
 
       {actionError && (
-        <div
-          role="alert"
-          style={{
-            padding: '8px 12px',
-            marginBottom: 12,
-            background: 'rgba(255, 59, 48, 0.1)',
-            border: '1px solid rgba(255, 59, 48, 0.3)',
-            borderRadius: 8,
-            fontSize: 13,
-            color: 'var(--accent)',
-          }}
-        >
-          {actionError}
+        <div className="mbrs-error" role="alert">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <span>{actionError}</span>
         </div>
       )}
 
-      {/* Invite block — owner-only. */}
+      {/* Invite Row — owner-only. Follows the same .acct-row pattern
+          the Preferences tab uses (title + sub left, control right) so
+          the whole modal reads as one design language, not two. */}
       {isOwner && (
-        <div className="members-invite-block">
-          <div className="members-invite-row">
+        <div className="acct-row mbrs-invite-row">
+          <div className="acct-row-text">
+            <div className="acct-row-title">Invite teammate</div>
+            <div className="acct-row-sub">
+              Generates a one-time link. They join after signing in with Google.
+            </div>
+          </div>
+          <div className="mbrs-invite-controls">
             <select
-              className="acct-input"
+              className="acct-input mbrs-role-select"
               value={inviteRole}
               onChange={(e) => setInviteRole(e.target.value as AccessLevel)}
-              aria-label="New invite role"
-              style={{ flex: '0 0 140px' }}
+              aria-label="Role for the invited teammate"
               disabled={inviting}
             >
               <option value="editor">Editor</option>
@@ -807,151 +815,140 @@ function MembersSection() {
             </select>
             <button
               type="button"
+              className="mbrs-invite-btn"
               onClick={handleGenerateInvite}
               disabled={inviting}
-              style={{
-                padding: '8px 16px',
-                borderRadius: 8,
-                background: '#0a84ff',
-                color: '#fff',
-                border: 'none',
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: inviting ? 'not-allowed' : 'pointer',
-                opacity: inviting ? 0.6 : 1,
-              }}
             >
-              {inviting ? 'Generating…' : 'Generate invite link'}
+              {inviting ? 'Generating…' : 'Generate link'}
             </button>
           </div>
-          {inviteLink && (
-            <div className="members-invite-link">
-              <input
-                type="text"
-                readOnly
-                value={inviteLink}
-                onClick={(e) => e.currentTarget.select()}
-                onFocus={(e) => e.currentTarget.select()}
-                aria-label="Invite link"
-                className="acct-input"
-                style={{ flex: 1, fontSize: 12 }}
-              />
-              <button
-                type="button"
-                onClick={handleCopy}
-                style={{
-                  padding: '8px 14px',
-                  borderRadius: 8,
-                  background: linkCopied ? 'var(--bg-soft)' : 'transparent',
-                  border: '1px solid var(--hairline)',
-                  color: 'var(--text)',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {linkCopied ? 'Copied' : 'Copy'}
-              </button>
-            </div>
-          )}
-          <p className="acct-field-hint" style={{ margin: '8px 0 0' }}>
-            Share this link via Slack, email, or text. Single-use — anyone clicking it joins as <strong>{inviteRole}</strong> after they sign in with Google.
+        </div>
+      )}
+
+      {/* Generated link block — separate row, only when an invite has
+          just been created. Sits visually under the Invite Row to read
+          as the result of that action. */}
+      {isOwner && inviteLink && (
+        <div className="mbrs-link-card">
+          <div className="mbrs-link-row">
+            <input
+              type="text"
+              readOnly
+              value={inviteLink}
+              onClick={(e) => e.currentTarget.select()}
+              onFocus={(e) => e.currentTarget.select()}
+              aria-label="Invite link"
+              className="mbrs-link-input"
+            />
+            <button
+              type="button"
+              className="mbrs-link-copy"
+              data-copied={linkCopied ? 'true' : undefined}
+              onClick={handleCopy}
+            >
+              {linkCopied ? 'Copied' : 'Copy'}
+            </button>
+          </div>
+          <p className="mbrs-link-hint">
+            Share via Slack, email, or text. Single-use — generate a new link for each teammate.
           </p>
         </div>
       )}
 
-      {/* Pending invites list (owner only). */}
-      {isOwner && meta.pendingInvites.length > 0 && (
-        <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px solid var(--hairline)' }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 8 }}>
-            Pending invites
+      {/* Pending invites — eyebrow + list. Eyebrow is paired tightly
+          with its list (no extra margin between them) so the heading
+          reads as belonging to the rows below. */}
+      {isOwner && pendingCount > 0 && (
+        <div className="mbrs-group">
+          <div className="mbrs-eyebrow">Pending · {pendingCount}</div>
+          <div className="mbrs-list">
+            {meta.pendingInvites.map((inv) => (
+              <div key={inv.token} className="mbrs-row mbrs-row--pending">
+                <div className="mbrs-avatar mbrs-avatar--pending" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                </div>
+                <div className="mbrs-identity">
+                  <div className="mbrs-name">Invite link</div>
+                  <div className="mbrs-sub">
+                    Joins as {inv.role} · created {formatRelativeShort(inv.createdAt)}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleRevoke(inv.token)}
+                  className="mbrs-action-btn mbrs-action-btn--danger"
+                  aria-label="Revoke invite"
+                >
+                  Revoke
+                </button>
+              </div>
+            ))}
           </div>
-          {meta.pendingInvites.map((inv) => (
-            <div key={inv.token} className="members-row members-row--pending">
-              <div className="members-avatar members-avatar--pending" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14 }}>
-                  <circle cx="12" cy="12" r="10" />
-                  <polyline points="12 6 12 12 16 14" />
-                </svg>
-              </div>
-              <div className="members-identity">
-                <div className="members-name">Invite link · {inv.role}</div>
-                <div className="members-sub">Generated {formatRelativeShort(inv.createdAt)}</div>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleRevoke(inv.token)}
-                className="members-revoke-btn"
-                aria-label="Revoke invite"
-              >
-                Revoke
-              </button>
-            </div>
-          ))}
         </div>
       )}
 
       {/* Active members list. */}
-      <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px solid var(--hairline)' }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 8 }}>
-          Members ({meta.members.length})
-        </div>
-        {meta.members.map((m) => {
-          const isThisOwner = m.uid === meta.ownerUid;
-          const isMe = m.uid === ownUid;
-          const initials = (m.displayName || m.email || 'U')
-            .split(/\s+|@/)[0]
-            .slice(0, 2)
-            .toUpperCase();
-          return (
-            <div key={m.uid} className="members-row">
-              <div className="members-avatar" style={{ background: '#5e5ce6', color: '#fff' }}>
-                {initials}
-              </div>
-              <div className="members-identity">
-                <div className="members-name">
-                  {m.displayName || m.email || 'Unnamed'}
-                  {isMe && <span className="members-you-tag">You</span>}
-                  {isThisOwner && <span className="members-you-tag">Owner</span>}
+      <div className="mbrs-group">
+        <div className="mbrs-eyebrow">Members · {memberCount}</div>
+        <div className="mbrs-list">
+          {meta.members.map((m) => {
+            const isThisOwner = m.uid === meta.ownerUid;
+            const isMe = m.uid === ownUid;
+            const initials = (m.displayName || m.email || 'U')
+              .split(/\s+|@/)[0]
+              .slice(0, 2)
+              .toUpperCase();
+            const showSelect = isOwner && !isThisOwner;
+            const showRemove = isOwner && !isThisOwner;
+            return (
+              <div key={m.uid} className="mbrs-row">
+                <div className="mbrs-avatar" aria-hidden="true">{initials}</div>
+                <div className="mbrs-identity">
+                  <div className="mbrs-name">
+                    <span className="mbrs-name-text">{m.displayName || m.email || 'Unnamed'}</span>
+                    {isMe && <span className="mbrs-tag">You</span>}
+                    {isThisOwner && <span className="mbrs-tag mbrs-tag--owner">Owner</span>}
+                  </div>
+                  <div className="mbrs-sub">
+                    {m.email || '—'} · joined {formatRelativeShort(m.joinedAt)}
+                  </div>
                 </div>
-                <div className="members-sub">{m.email || '—'} · joined {formatRelativeShort(m.joinedAt)}</div>
+                {showSelect ? (
+                  <select
+                    className="acct-input mbrs-role-select mbrs-role-select--inline"
+                    value={m.role}
+                    disabled={pendingMemberOp === m.uid}
+                    onChange={(e) => handleRoleChange(m.uid, e.target.value as AccessLevel)}
+                    aria-label={`${m.displayName || m.email}'s access level`}
+                  >
+                    <option value="admin">Admin</option>
+                    <option value="editor">Editor</option>
+                    <option value="viewer">Viewer</option>
+                  </select>
+                ) : (
+                  <span className={`access-pill access-pill--${m.role}`}>
+                    {m.role.charAt(0).toUpperCase() + m.role.slice(1)}
+                  </span>
+                )}
+                {showRemove && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemove(m.uid, m.displayName || m.email || 'this member')}
+                    disabled={pendingMemberOp === m.uid}
+                    className="mbrs-action-btn mbrs-action-btn--danger"
+                    aria-label={`Remove ${m.displayName || m.email}`}
+                    title="Remove member"
+                  >
+                    Remove
+                  </button>
+                )}
               </div>
-              {/* Role select (owner can change anyone but the owner). */}
-              {isOwner && !isThisOwner ? (
-                <select
-                  className="acct-input"
-                  value={m.role}
-                  disabled={pendingMemberOp === m.uid}
-                  onChange={(e) => handleRoleChange(m.uid, e.target.value as AccessLevel)}
-                  aria-label={`${m.displayName || m.email}'s access level`}
-                  style={{ width: 110, fontSize: 12, padding: '6px 8px' }}
-                >
-                  <option value="admin">Admin</option>
-                  <option value="editor">Editor</option>
-                  <option value="viewer">Viewer</option>
-                </select>
-              ) : (
-                <span className={`access-pill access-pill--${m.role}`}>
-                  {m.role.charAt(0).toUpperCase() + m.role.slice(1)}
-                </span>
-              )}
-              {/* Remove (owner can remove anyone but themselves). */}
-              {isOwner && !isThisOwner && (
-                <button
-                  type="button"
-                  onClick={() => handleRemove(m.uid, m.displayName || m.email || 'this member')}
-                  disabled={pendingMemberOp === m.uid}
-                  className="members-revoke-btn"
-                  aria-label={`Remove ${m.displayName || m.email}`}
-                  title="Remove member"
-                >
-                  Remove
-                </button>
-              )}
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </section>
   );
