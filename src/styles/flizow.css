@@ -1014,7 +1014,11 @@
     box-sizing: border-box;
   }
   .acct-footer-status {
-    flex: 1;
+    /* Sits in the right cluster next to the Cancel button (was
+       flex:1, which pushed the status to the far left and the
+       buttons to the far right). The footer's justify-content
+       flex-end now collapses the empty space to the left, so the
+       group reads: ______ [status] [Cancel] [Save]. */
     display: inline-flex; align-items: center; gap: 6px;
     font-size: 12px;
     font-weight: 500;
@@ -1023,6 +1027,9 @@
                        button. Footer is a quiet rail; the toast is
                        the only colored thing here. */
     letter-spacing: -0.005em;
+    /* Slightly bigger margin against the Cancel button so the toast
+       reads as feedback, not another button. */
+    margin-right: 4px;
   }
   .acct-footer-status-icon {
     flex-shrink: 0;
