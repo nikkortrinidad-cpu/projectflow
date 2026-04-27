@@ -141,12 +141,15 @@ export function BriefModal({
         ref={dialogRef}
         className="wip-modal"
         role="document"
-        // 960 wide is the "wider than form modals" call we made — gives
-        // the editor a comfortable 60–70cpl line length at body text.
-        // 85vh max-height + the body's flex:1 + the editor's
-        // overflow-y:auto lets long briefs scroll inside the modal
-        // instead of pushing the footer off-screen.
-        style={{ maxWidth: 960, width: '94vw', maxHeight: '85vh' }}
+        // 640px width matches the rest of Flizow's content modals
+        // (Add Client, Edit Service, etc.) so the brief surface reads
+        // as part of the same family rather than a one-off wide
+        // outlier. Lands at ~55cpl for body text — still inside the
+        // 45–70cpl readability range. 85vh max-height + the body's
+        // flex:1 + the editor's overflow-y:auto lets long briefs
+        // scroll inside the modal instead of pushing the footer
+        // off-screen.
+        style={{ maxWidth: 640, width: '94vw', maxHeight: '85vh' }}
       >
         <header className="wip-modal-head">
           <h2 className="wip-modal-title" id="brief-modal-title">
