@@ -116,7 +116,7 @@ export function OverviewPage() {
   // this filter every AM would see every other AM's stalled
   // onboarding.
   const currentMemberId = store.getCurrentMemberId();
-  const ATTENTION_INITIAL_CAP = 6;
+  const ATTENTION_INITIAL_CAP = 3;
   const allAttention = useMemo(
     () => buildAttentionCards(
       data.clients,
