@@ -243,8 +243,8 @@ export function OverviewPage() {
   // touchpoints cover client meetings, and the schedule is the one
   // place they have to overlap.
   const weekDays = useMemo(() => {
-    return buildWeekGrid(liveTasks, currentMemberId, new Date());
-  }, [liveTasks, currentMemberId]);
+    return buildWeekGrid(liveTasks, currentMemberId, new Date(), data.clients, data.services);
+  }, [liveTasks, currentMemberId, data.clients, data.services]);
   // Tab labels use the week's date range ("Apr 22 – 26") so the user
   // sees at a glance what they're looking at without decoding which
   // Monday we anchored on.
@@ -676,10 +676,64 @@ function formatWeekRange(startIso: string | undefined, endIso: string | undefine
   return `${startMo} ${sd} – ${MONTHS_SHORT[em - 1]} ${ed}`;
 }
 
+/** Day delta between two ISO date strings (YYYY-MM-DD). Positive when
+ *  `from` is later than `to` (i.e. days overdue when `from=today`). */
+function isoDaysBetween(from: string, to: string): number {
+  const [fy, fm, fd] = from.split('-').map(Number);
+  const [ty, tm, td] = to.split('-').map(Number);
+  const a = new Date(fy, fm - 1, fd).getTime();
+  const b = new Date(ty, tm - 1, td).getTime();
+  return Math.round((a - b) / 86_400_000);
+}
+
+/** Auto-generate a useful meta line for a schedule card when the task
+ *  doesn't carry an explicit `_schedule.meta` override. The mockup
+ *  shipped meta strings on every card; real workspace data only sets
+ *  meta on the seeded demo tasks. Without a fallback, ~all real cards
+ *  collapse to title + tag and read as info-thin. This restores the
+ *  "every card has a middle line" density the mockup gets. */
+function autoScheduleMeta(
+  task: Task,
+  todayIso: string,
+  clients: Map<string, Client>,
+  services: Map<string, Service>,
+): string | undefined {
+  // Explicit override (demo data, future per-task notes) wins. Lets a
+  // user / seeder author "10:00 AM · New client onboarding"-style copy
+  // and trust it'll render verbatim.
+  if (task._schedule?.meta) return task._schedule.meta;
+  if (!task.dueDate) return undefined;
+
+  const overdueDays = isoDaysBetween(todayIso, task.dueDate);
+  const client = clients.get(task.clientId);
+  const service = services.get(task.serviceId);
+
+  if (overdueDays > 0) {
+    // Overdue — name the lateness so the card reads urgent at a glance.
+    return overdueDays === 1
+      ? 'Running 1 day behind'
+      : `Running ${overdueDays} days behind`;
+  }
+  if (overdueDays === 0) {
+    // Due today — pair the urgency with client context.
+    return client ? `Due today · ${client.name}` : 'Due today';
+  }
+  if (overdueDays === -1) {
+    return client ? `Tomorrow · ${client.name}` : 'Tomorrow';
+  }
+  // Further-out — quiet context line: client + service.
+  if (client && service) return `${client.name} · ${service.name}`;
+  if (client) return client.name;
+  if (service) return service.name;
+  return undefined;
+}
+
 function buildWeekGrid(
   tasks: Task[],
   memberId: string | null,
   today: Date,
+  clients: Client[],
+  services: Service[],
 ): WeekDay[] {
   // Anchor on Monday of today's week. Sunday is dow=0 and wraps back six
   // days to reach the Monday that just passed — same behavior as the
@@ -690,6 +744,13 @@ function buildWeekGrid(
   monday.setDate(monday.getDate() + daysToMonday);
 
   const todayKey = isoOfLocalDate(today);
+
+  // Build id→record maps once so autoScheduleMeta below is O(1) per
+  // task instead of O(N) — schedule renders run on every store write,
+  // and a 50-client / 200-task workspace would otherwise quadratic
+  // through the list on each render.
+  const clientById = new Map(clients.map(c => [c.id, c]));
+  const serviceById = new Map(services.map(s => [s.id, s]));
 
   // Schedule is task-due-date-driven AND scoped to the signed-in user.
   // Every task with a dueDate AND assigned to me gets a chip on its
@@ -728,7 +789,7 @@ function buildWeekGrid(
       bucket.push({
         id: t.id,
         title: t.title,
-        meta: t._schedule?.meta || undefined,
+        meta: autoScheduleMeta(t, todayKey, clientById, serviceById),
         tag,
         done: !!t._schedule?.done,
         // Deep-link to the specific kanban card modal so clicking a
