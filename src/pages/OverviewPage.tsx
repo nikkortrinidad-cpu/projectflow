@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { navigate } from '../router';
 import { useFlizow } from '../store/useFlizow';
@@ -61,7 +61,14 @@ export function OverviewPage() {
     dismissWelcome();
     navigate('#clients');
   }
-  const showWelcome = !welcomeDismissed && data.clients.length === 0;
+  // Suppress the welcome banner for non-owners (invited members).
+  // Landing in someone else's empty workspace and seeing "Try the demo
+  // / Add my first client" is wrong — it's not THEIR workspace to fill
+  // up, and clicking demo would dump fake clients into the shared
+  // workspace for everyone. Banner is owner-only. Audit: workspace MVP.
+  const wsMeta = useSyncExternalStore(store.subscribeWorkspace, store.getWorkspaceMeta);
+  const isWorkspaceOwner = !wsMeta || wsMeta.ownerUid === user?.uid;
+  const showWelcome = isWorkspaceOwner && !welcomeDismissed && data.clients.length === 0;
   // Land on "next week" when today is Sat/Sun — the 5-col grid skips the
   // weekend, so "this week" would be 100% grayed out and useless. Lazy
   // init so this only runs once on mount.

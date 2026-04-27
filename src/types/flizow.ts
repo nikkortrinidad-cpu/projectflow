@@ -49,6 +49,85 @@ export type MemberType = 'am' | 'operator';
  *  and friends will read this when role-gating ships for real. */
 export type AccessLevel = 'admin' | 'editor' | 'viewer';
 
+// ── Workspace + multi-user types ──────────────────────────────────────────
+
+/**
+ * Per-member record on a workspace doc. Unlike `Member` (which is the
+ * agency-side roster — assignees, AMs, operators), WorkspaceMembership
+ * tracks who has actual sign-in access to the workspace and at what
+ * level. The two concepts can overlap (an Editor with sign-in access is
+ * usually also a Member you can assign cards to) but they aren't the
+ * same — a Member can exist as a record-only assignee for someone who
+ * never signs in. Audit: workspace MVP 2026-04-27.
+ */
+export interface WorkspaceMembership {
+  uid: string;
+  /** Cached display fields so we don't have to look up the user's
+   *  Firebase profile every render. Updated on every sign-in via
+   *  upsertOwnMember. */
+  displayName?: string;
+  email?: string;
+  photoURL?: string;
+  role: AccessLevel;
+  /** ISO timestamp. Used in the Members list ("joined 3 days ago"). */
+  joinedAt: string;
+}
+
+/**
+ * One pending invite stored on the workspace doc. Single-use: once a
+ * user accepts, the invite gets removed from `pendingInvites[]`.
+ * Tokens are random base36 strings ~14 chars long; collision is
+ * vanishingly unlikely at human scale.
+ */
+export interface PendingInvite {
+  token: string;
+  /** What role the new member gets when they accept. */
+  role: AccessLevel;
+  createdAt: string;
+  /** UID of the workspace member who generated the invite. Mostly
+   *  audit trail; not used for any current logic. */
+  createdByUid: string;
+  /** Optional display string the inviter wrote into the invite (e.g.
+   *  "for Sarah"). Helps when revoking pending invites. */
+  note?: string;
+}
+
+/**
+ * Top-level workspace document. Lives at `workspaces/{wsId}` in
+ * Firestore. The wsId is the owner's UID at creation time — simple
+ * mapping that survives the lifetime of the workspace (we don't
+ * support ownership transfer in the MVP).
+ */
+export interface WorkspaceDoc {
+  ownerUid: string;
+  /** Full member objects with roles + display info. */
+  members: WorkspaceMembership[];
+  /** Denormalized UID list. Firestore rules can't easily check
+   *  `members.some(m => m.uid === request.auth.uid)`, so we keep a
+   *  flat array of UIDs for permission queries. Must stay in sync
+   *  with `members[]`. */
+  memberUids: string[];
+  /** Outstanding invites — one entry per generated link. */
+  pendingInvites: PendingInvite[];
+  /** The actual workspace data. Same shape that used to live at
+   *  `flizow/{uid}.data` in the single-user model. */
+  data: FlizowData;
+  /** ISO timestamps for audit + the Members "Joined" column. */
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Tiny lookup doc at `users/{uid}` mapping a signed-in user to their
+ * workspace. Without this, every sign-in would have to query "find
+ * workspaces where my uid is in memberUids." A direct doc read is
+ * simpler. One workspace per user for MVP — when multi-workspace
+ * ships, this becomes an array.
+ */
+export interface UserLookup {
+  workspaceId: string;
+}
+
 export type IntegrationStatus = 'connected' | 'error';
 
 /** Template keys that services point at. Drives the POOL_LABEL pill on

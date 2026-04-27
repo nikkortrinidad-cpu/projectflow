@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useFlizow } from '../store/useFlizow';
+import type { AccessLevel } from '../types/flizow';
 
 /**
  * FlizowAccountModal — the Account Settings overlay reachable from the
@@ -28,7 +29,7 @@ import { useFlizow } from '../store/useFlizow';
  *   • Timezone-driven date formatting — future pass
  */
 
-type Section = 'profile' | 'preferences' | 'notifications' | 'signin';
+type Section = 'profile' | 'preferences' | 'notifications' | 'members' | 'signin';
 
 const AVATAR_COLORS = [
   { id: 'indigo', hex: '#5e5ce6' },
@@ -196,6 +197,14 @@ export default function FlizowAccountModal({ onClose }: Props) {
             </NavItem>
             <NavItem section="notifications" label="Notifications" active={section === 'notifications'} onClick={() => setSection('notifications')}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </NavItem>
+            <NavItem section="members" label="Members" active={section === 'members'} onClick={() => setSection('members')}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
             </NavItem>
             <NavItem section="signin" label="Sign-in" active={section === 'signin'} onClick={() => setSection('signin')}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -456,6 +465,11 @@ export default function FlizowAccountModal({ onClose }: Props) {
               </section>
             )}
 
+            {/* ── Members ────────────────────────────────────────── */}
+            {section === 'members' && (
+              <MembersSection />
+            )}
+
             {/* ── Sign-in ────────────────────────────────────────── */}
             {section === 'signin' && (
               <section
@@ -631,4 +645,328 @@ function Toggle({
       onClick={() => onChange(!checked)}
     />
   );
+}
+
+// ── Members tab ─────────────────────────────────────────────────────────
+
+/** Members tab — workspace-level membership management. Lists every
+ *  signed-in member, their access level, and lets the owner remove or
+ *  re-role them. "Invite teammate" generates a one-time link the owner
+ *  shares manually (Slack/text/email — not auto-emailed in MVP). */
+function MembersSection() {
+  const { store } = useFlizow();
+  // Subscribe to workspace metadata only (not the full data slice) so
+  // a card edit elsewhere doesn't re-render this list.
+  const meta = useSyncExternalStore(store.subscribeWorkspace, store.getWorkspaceMeta);
+  const ownUid = store.getCurrentMemberId();
+
+  const [inviting, setInviting] = useState(false);
+  const [inviteRole, setInviteRole] = useState<AccessLevel>('editor');
+  const [inviteLink, setInviteLink] = useState<string | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [pendingMemberOp, setPendingMemberOp] = useState<string | null>(null);
+
+  if (!meta) {
+    return (
+      <section
+        className="acct-section"
+        role="tabpanel"
+        id="acct-panel-members"
+        aria-labelledby="acct-tab-members"
+        tabIndex={0}
+        data-active="true"
+      >
+        <div className="acct-section-header">
+          <h3 className="acct-section-title">Members</h3>
+          <p className="acct-section-sub">Loading workspace…</p>
+        </div>
+      </section>
+    );
+  }
+
+  const isOwner = ownUid === meta.ownerUid;
+
+  async function handleGenerateInvite() {
+    setActionError(null);
+    setInviting(true);
+    setLinkCopied(false);
+    try {
+      const url = await store.createInvite(inviteRole);
+      setInviteLink(url);
+      // Try to copy automatically — saves a click in the common case.
+      // Fail-soft if clipboard is blocked (older browsers, http dev).
+      try {
+        await navigator.clipboard.writeText(url);
+        setLinkCopied(true);
+      } catch { /* user can click the copy button */ }
+    } catch (err) {
+      setActionError(
+        err instanceof Error ? err.message : 'Could not create invite link.',
+      );
+    } finally {
+      setInviting(false);
+    }
+  }
+
+  async function handleCopy() {
+    if (!inviteLink) return;
+    try {
+      await navigator.clipboard.writeText(inviteLink);
+      setLinkCopied(true);
+      window.setTimeout(() => setLinkCopied(false), 1800);
+    } catch {
+      setActionError('Copy failed — select the link and copy manually.');
+    }
+  }
+
+  async function handleRevoke(token: string) {
+    setActionError(null);
+    try {
+      await store.revokeInvite(token);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Revoke failed.');
+    }
+  }
+
+  async function handleRemove(uid: string, name: string) {
+    if (!window.confirm(`Remove ${name} from the workspace? They'll lose access immediately.`)) {
+      return;
+    }
+    setActionError(null);
+    setPendingMemberOp(uid);
+    try {
+      await store.removeWorkspaceMember(uid);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Could not remove member.');
+    } finally {
+      setPendingMemberOp(null);
+    }
+  }
+
+  async function handleRoleChange(uid: string, role: AccessLevel) {
+    setActionError(null);
+    setPendingMemberOp(uid);
+    try {
+      await store.changeMemberRole(uid, role);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Could not change role.');
+    } finally {
+      setPendingMemberOp(null);
+    }
+  }
+
+  return (
+    <section
+      className="acct-section"
+      role="tabpanel"
+      id="acct-panel-members"
+      aria-labelledby="acct-tab-members"
+      tabIndex={0}
+      data-active="true"
+    >
+      <div className="acct-section-header">
+        <h3 className="acct-section-title">Members</h3>
+        <p className="acct-section-sub">
+          People with access to this workspace. {isOwner ? 'You are the owner.' : 'Only the workspace owner can invite or remove members.'}
+        </p>
+      </div>
+
+      {actionError && (
+        <div
+          role="alert"
+          style={{
+            padding: '8px 12px',
+            marginBottom: 12,
+            background: 'rgba(255, 59, 48, 0.1)',
+            border: '1px solid rgba(255, 59, 48, 0.3)',
+            borderRadius: 8,
+            fontSize: 13,
+            color: 'var(--accent)',
+          }}
+        >
+          {actionError}
+        </div>
+      )}
+
+      {/* Invite block — owner-only. */}
+      {isOwner && (
+        <div className="members-invite-block">
+          <div className="members-invite-row">
+            <select
+              className="acct-input"
+              value={inviteRole}
+              onChange={(e) => setInviteRole(e.target.value as AccessLevel)}
+              aria-label="New invite role"
+              style={{ flex: '0 0 140px' }}
+              disabled={inviting}
+            >
+              <option value="editor">Editor</option>
+              <option value="viewer">Viewer</option>
+              <option value="admin">Admin</option>
+            </select>
+            <button
+              type="button"
+              onClick={handleGenerateInvite}
+              disabled={inviting}
+              style={{
+                padding: '8px 16px',
+                borderRadius: 8,
+                background: '#0a84ff',
+                color: '#fff',
+                border: 'none',
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: inviting ? 'not-allowed' : 'pointer',
+                opacity: inviting ? 0.6 : 1,
+              }}
+            >
+              {inviting ? 'Generating…' : 'Generate invite link'}
+            </button>
+          </div>
+          {inviteLink && (
+            <div className="members-invite-link">
+              <input
+                type="text"
+                readOnly
+                value={inviteLink}
+                onClick={(e) => e.currentTarget.select()}
+                onFocus={(e) => e.currentTarget.select()}
+                aria-label="Invite link"
+                className="acct-input"
+                style={{ flex: 1, fontSize: 12 }}
+              />
+              <button
+                type="button"
+                onClick={handleCopy}
+                style={{
+                  padding: '8px 14px',
+                  borderRadius: 8,
+                  background: linkCopied ? 'var(--bg-soft)' : 'transparent',
+                  border: '1px solid var(--hairline)',
+                  color: 'var(--text)',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {linkCopied ? 'Copied' : 'Copy'}
+              </button>
+            </div>
+          )}
+          <p className="acct-field-hint" style={{ margin: '8px 0 0' }}>
+            Share this link via Slack, email, or text. Single-use — anyone clicking it joins as <strong>{inviteRole}</strong> after they sign in with Google.
+          </p>
+        </div>
+      )}
+
+      {/* Pending invites list (owner only). */}
+      {isOwner && meta.pendingInvites.length > 0 && (
+        <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px solid var(--hairline)' }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 8 }}>
+            Pending invites
+          </div>
+          {meta.pendingInvites.map((inv) => (
+            <div key={inv.token} className="members-row members-row--pending">
+              <div className="members-avatar members-avatar--pending" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14 }}>
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+              </div>
+              <div className="members-identity">
+                <div className="members-name">Invite link · {inv.role}</div>
+                <div className="members-sub">Generated {formatRelativeShort(inv.createdAt)}</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleRevoke(inv.token)}
+                className="members-revoke-btn"
+                aria-label="Revoke invite"
+              >
+                Revoke
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Active members list. */}
+      <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px solid var(--hairline)' }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 8 }}>
+          Members ({meta.members.length})
+        </div>
+        {meta.members.map((m) => {
+          const isThisOwner = m.uid === meta.ownerUid;
+          const isMe = m.uid === ownUid;
+          const initials = (m.displayName || m.email || 'U')
+            .split(/\s+|@/)[0]
+            .slice(0, 2)
+            .toUpperCase();
+          return (
+            <div key={m.uid} className="members-row">
+              <div className="members-avatar" style={{ background: '#5e5ce6', color: '#fff' }}>
+                {initials}
+              </div>
+              <div className="members-identity">
+                <div className="members-name">
+                  {m.displayName || m.email || 'Unnamed'}
+                  {isMe && <span className="members-you-tag">You</span>}
+                  {isThisOwner && <span className="members-you-tag">Owner</span>}
+                </div>
+                <div className="members-sub">{m.email || '—'} · joined {formatRelativeShort(m.joinedAt)}</div>
+              </div>
+              {/* Role select (owner can change anyone but the owner). */}
+              {isOwner && !isThisOwner ? (
+                <select
+                  className="acct-input"
+                  value={m.role}
+                  disabled={pendingMemberOp === m.uid}
+                  onChange={(e) => handleRoleChange(m.uid, e.target.value as AccessLevel)}
+                  aria-label={`${m.displayName || m.email}'s access level`}
+                  style={{ width: 110, fontSize: 12, padding: '6px 8px' }}
+                >
+                  <option value="admin">Admin</option>
+                  <option value="editor">Editor</option>
+                  <option value="viewer">Viewer</option>
+                </select>
+              ) : (
+                <span className={`access-pill access-pill--${m.role}`}>
+                  {m.role.charAt(0).toUpperCase() + m.role.slice(1)}
+                </span>
+              )}
+              {/* Remove (owner can remove anyone but themselves). */}
+              {isOwner && !isThisOwner && (
+                <button
+                  type="button"
+                  onClick={() => handleRemove(m.uid, m.displayName || m.email || 'this member')}
+                  disabled={pendingMemberOp === m.uid}
+                  className="members-revoke-btn"
+                  aria-label={`Remove ${m.displayName || m.email}`}
+                  title="Remove member"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+/** Tiny relative-time helper local to the Members tab — keeps the
+ *  full date out of the row but still gives a sense of when. */
+function formatRelativeShort(iso: string): string {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '—';
+  const diffMs = Date.now() - d.getTime();
+  const days = Math.floor(diffMs / 86_400_000);
+  if (days < 1) return 'today';
+  if (days === 1) return 'yesterday';
+  if (days < 7) return `${days}d ago`;
+  if (days < 30) return `${Math.floor(days / 7)}w ago`;
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }

@@ -4,7 +4,7 @@ import { TopNav } from './components/TopNav';
 import { PageShell } from './components/PageShell';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useAuth } from './contexts/AuthContext';
-import { flizowStore } from './store/flizowStore';
+import { flizowStore, stashPendingJoin } from './store/flizowStore';
 import { useFlizow } from './store/useFlizow';
 
 // Lazy-load top-level modals. Account settings opens rarely (once a
@@ -27,6 +27,29 @@ function App() {
     document.documentElement.classList.toggle('dark', isDark);
     document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
   }, [isDark]);
+
+  // Detect invite link on boot. `?join=<workspaceId>&token=<token>` in
+  // the URL means a teammate clicked an invite. We stash the params in
+  // sessionStorage so they survive the Google sign-in popup, then
+  // remove them from the URL so a refresh after sign-in doesn't try
+  // to consume the same invite twice. setUser picks them up inside
+  // resolveWorkspaceId after the user authenticates.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const join = params.get('join');
+    const token = params.get('token');
+    if (join && token) {
+      stashPendingJoin(join, token);
+      params.delete('join');
+      params.delete('token');
+      const remaining = params.toString();
+      const url =
+        window.location.pathname +
+        (remaining ? `?${remaining}` : '') +
+        window.location.hash;
+      window.history.replaceState({}, '', url);
+    }
+  }, []);
 
   // Hook the FlizowStore up to the signed-in user. We used to also
   // hook the legacy BoardStore here (theme was the only thing it

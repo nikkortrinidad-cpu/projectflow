@@ -1,32 +1,47 @@
-import { doc, setDoc, onSnapshot, type Unsubscribe } from 'firebase/firestore';
+import { doc, setDoc, getDoc, onSnapshot, type Unsubscribe } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import type {
   FlizowData, Client, Service, Task, Member, Contact, QuickLink, Note,
   Touchpoint, ActionItem, TaskComment, TaskActivity, TaskActivityKind,
   ManualAgendaItem, OnboardingItem, ColumnId, Priority, OpsTask,
-  TemplateRecord,
+  TemplateRecord, AccessLevel, WorkspaceDoc, WorkspaceMembership,
+  PendingInvite,
 } from '../types/flizow';
 import { ONBOARDING_TEMPLATES } from '../data/onboardingTemplates';
 import { TASK_POOLS } from '../data/taskPools';
 import { OPS_TEAM_MEMBERS, OPS_TASK_SEED } from '../data/opsSeed';
 
 /**
- * FlizowStore — central data container for the new product surface
- * (Overview, Clients, Analytics, Kanban, WIP, Templates).
+ * FlizowStore — central data container.
  *
- * Mirrors the legacy BoardStore pattern (useSyncExternalStore +
- * localStorage + debounced Firestore write-through) so the two stores
- * behave identically from the UI's point of view. Once the legacy
- * kanban board migrates, BoardStore goes away and this is the only
- * store left.
+ * As of 2026-04-27, this is workspace-centric (multi-user). Each
+ * signed-in user belongs to exactly one workspace, identified by
+ * `workspaces/{wsId}` in Firestore, and a `users/{uid}` lookup doc
+ * tells us which workspace they're in. The wsId for a workspace is
+ * the original owner's UID — simple mapping, no ID generator needed.
  *
- * Firestore layout:  flizow/{uid}  →  { data: <FlizowData JSON>, updatedAt }
- * localStorage key:  flizow-state
+ * Firestore layout (current):
+ *   workspaces/{wsId} → WorkspaceDoc (data + members + invites)
+ *   users/{uid}       → { workspaceId }
+ *
+ * Firestore layout (legacy, for migration only):
+ *   flizow/{uid} → { data: <FlizowData JSON>, updatedAt }
+ *
+ * On first sign-in post-deploy, if `users/{uid}` is absent we look at
+ * `flizow/{uid}`. If it has data, we migrate it into a new workspace
+ * with the current user as owner. Legacy doc is left in place as a
+ * one-week safety net.
  */
 
 const STORAGE_KEY = 'flizow-state';
-const DOC_COLLECTION = 'flizow';
+const WORKSPACES_COLLECTION = 'workspaces';
+const USERS_COLLECTION = 'users';
+const LEGACY_COLLECTION = 'flizow';
 const FIRESTORE_DEBOUNCE_MS = 1000;
+/** sessionStorage key — pre-auth, App.tsx stashes `?join=...&token=...`
+ *  query params here so the post-sign-in setUser path can pick them
+ *  up and run the accept-invite flow. */
+const PENDING_JOIN_KEY = 'flizow-pending-join';
 
 // ── Factory / load / persist ─────────────────────────────────────────────
 
@@ -204,6 +219,34 @@ function slugLabel(label: string): string {
     .slice(0, 40) || 'item';
 }
 
+/** Pre-auth stash for invite query params. App.tsx reads `?join=&token=`
+ *  on boot and calls `stashPendingJoin` so the params survive the
+ *  Google sign-in redirect. setUser then reads it to run the accept
+ *  flow inside resolveWorkspaceId. sessionStorage (not localStorage)
+ *  so the stash dies with the tab — leftover invite tokens don't
+ *  haunt future sessions. */
+export function stashPendingJoin(workspaceId: string, token: string): void {
+  try {
+    sessionStorage.setItem(PENDING_JOIN_KEY, JSON.stringify({ workspaceId, token }));
+  } catch { /* private mode — invite just won't auto-resume across sign-in */ }
+}
+
+export function readPendingJoin(): { workspaceId: string; token: string } | null {
+  try {
+    const raw = sessionStorage.getItem(PENDING_JOIN_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && parsed.workspaceId && parsed.token) {
+      return { workspaceId: String(parsed.workspaceId), token: String(parsed.token) };
+    }
+  } catch { /* corrupt — clear it */ }
+  return null;
+}
+
+export function clearPendingJoin(): void {
+  try { sessionStorage.removeItem(PENDING_JOIN_KEY); } catch { /* ignore */ }
+}
+
 // ── Store class ──────────────────────────────────────────────────────────
 
 type Listener = () => void;
@@ -212,6 +255,18 @@ class FlizowStore {
   private data: FlizowData;
   private listeners: Set<Listener> = new Set();
   private userId: string | null = null;
+  /** Workspace the signed-in user belongs to. Null in local-only /
+   *  dev-bypass mode. Set during setUser(uid). */
+  private workspaceId: string | null = null;
+  /** Workspace-level metadata: members, invites, ownerUid. Separate
+   *  from `data` (which holds clients/services/etc.) so the Members UI
+   *  can subscribe without re-rendering on every card edit. */
+  private workspaceMeta: {
+    ownerUid: string;
+    members: WorkspaceMembership[];
+    pendingInvites: PendingInvite[];
+  } | null = null;
+  private workspaceListeners: Set<Listener> = new Set();
   private firestoreUnsub: Unsubscribe | null = null;
   private saveTimeout: ReturnType<typeof setTimeout> | null = null;
   /** When we write to Firestore, the snapshot listener would fire right
@@ -289,12 +344,16 @@ class FlizowStore {
 
   // ── Auth / sync ──────────────────────────────────────────────────────
 
-  setUser(
+  /** Async because workspace resolution (lookup → migrate → subscribe)
+   *  involves multiple Firestore round trips. Callers don't need to
+   *  await; they can fire-and-forget. The store handles its own state
+   *  updates via notify() once the workspace lands. */
+  async setUser(
     userId: string | null,
     displayName?: string,
     email?: string,
     photoURL?: string,
-  ) {
+  ): Promise<void> {
     if (this.firestoreUnsub) {
       this.firestoreUnsub();
       this.firestoreUnsub = null;
@@ -305,55 +364,212 @@ class FlizowStore {
     if (this.userId && userId && this.userId !== userId) {
       localStorage.removeItem(STORAGE_KEY);
       this.data = emptyData();
+      this.workspaceMeta = null;
+      this.workspaceId = null;
     }
 
     this.userId = userId;
 
     if (!userId) {
+      this.workspaceId = null;
+      this.workspaceMeta = null;
       this.notify();
+      this.notifyWorkspace();
       return;
     }
 
-    this.upsertOwnMember(userId, displayName, email, photoURL);
-    this.safeSetItem(STORAGE_KEY, JSON.stringify(this.data));
-    this.notify();
+    // Resolve which workspace this user belongs to. Three cases handled
+    // inside resolveWorkspaceId: existing user via users/{uid} lookup,
+    // legacy single-user data at flizow/{uid} (migrated to a new
+    // workspace), pending invite stashed by App.tsx (joined to an
+    // inviter's workspace), or brand-new user (fresh workspace).
+    let wsId: string;
+    try {
+      wsId = await this.resolveWorkspaceId(userId, displayName, email, photoURL);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[flizowStore] workspace resolution failed:', err);
+      this.setSyncError(
+        "Couldn't load your workspace. Reload to retry. If this keeps happening, check your connection.",
+      );
+      return;
+    }
+    this.workspaceId = wsId;
 
-    const docRef = doc(db, DOC_COLLECTION, userId);
-    this.firestoreUnsub = onSnapshot(docRef, (snapshot) => {
+    // Subscribe to the workspace doc. Snapshot fires immediately with
+    // current data, then on every server-side change.
+    const wsRef = doc(db, WORKSPACES_COLLECTION, wsId);
+    this.firestoreUnsub = onSnapshot(wsRef, (snap) => {
       if (this.ignoreNextSnapshot) {
         this.ignoreNextSnapshot = false;
         return;
       }
-      if (snapshot.exists()) {
-        const payload = snapshot.data();
-        if (payload && typeof payload.data === 'string') {
-          try {
-            const raw = JSON.parse(payload.data) as Partial<FlizowData>;
-            const cloud = migrate(raw);
-            // Did migrate() add anything? If the cloud doc was written by
-            // a build that pre-dates a seed (Ops team, Ops tasks, etc.),
-            // our in-memory copy now has entries the cloud doesn't. Push
-            // back so the seed persists — otherwise every sign-in would
-            // re-apply the same migration silently across devices.
-            const seededMembers =
-              (raw.members?.length ?? 0) !== cloud.members.length;
-            const seededOpsTasks =
-              (raw.opsTasks?.length ?? 0) !== cloud.opsTasks.length;
-            this.data = cloud;
-            this.upsertOwnMember(userId, displayName, email, photoURL);
-            this.safeSetItem(STORAGE_KEY, JSON.stringify(this.data));
-            this.notify();
-            if (seededMembers || seededOpsTasks) {
-              this.saveToFirestore();
-            }
-          } catch (err) {
-            console.error('Failed to parse Flizow cloud state:', err);
-          }
-        }
-      } else {
-        // No cloud doc yet — push whatever we have locally.
-        this.saveToFirestore();
+      if (!snap.exists()) {
+        // Workspace was deleted from under us. Edge case for MVP — log
+        // and keep showing what we have locally. A later pass might
+        // surface a "workspace removed" banner.
+        // eslint-disable-next-line no-console
+        console.warn('[flizowStore] workspace doc disappeared:', wsId);
+        return;
       }
+      const ws = snap.data() as WorkspaceDoc;
+      // Pull data through migrate() so older fields backfill (theme,
+      // opsSeeded, templateOverrides, etc.). Same pattern as before;
+      // just sourced from the workspace doc instead of flizow/{uid}.
+      const cloud = migrate(ws.data ?? {});
+      this.data = cloud;
+      this.workspaceMeta = {
+        ownerUid: ws.ownerUid,
+        members: ws.members ?? [],
+        pendingInvites: ws.pendingInvites ?? [],
+      };
+      this.upsertOwnMember(userId, displayName, email, photoURL);
+      this.safeSetItem(STORAGE_KEY, JSON.stringify(this.data));
+      this.notify();
+      this.notifyWorkspace();
+    });
+  }
+
+  /** Decide which workspace this user belongs to. Side effects:
+   *   - Creates `users/{uid}` lookup doc if missing
+   *   - Migrates legacy `flizow/{uid}` data into a new workspace
+   *   - Joins a workspace via stashed invite if present
+   *   - Creates a fresh empty workspace for first-time users
+   */
+  private async resolveWorkspaceId(
+    uid: string,
+    displayName?: string,
+    email?: string,
+    photoURL?: string,
+  ): Promise<string> {
+    // 1. Already in the system? users/{uid} lookup tells us where.
+    const userDocRef = doc(db, USERS_COLLECTION, uid);
+    const userSnap = await getDoc(userDocRef);
+    if (userSnap.exists()) {
+      const data = userSnap.data() as { workspaceId?: string };
+      if (data.workspaceId) return data.workspaceId;
+    }
+
+    // 2. Pending invite stashed by App.tsx pre-auth? Try to join.
+    //    If the invite is valid, this user becomes a member of an
+    //    existing workspace.
+    const pending = readPendingJoin();
+    if (pending) {
+      try {
+        await this.acceptPendingJoin(pending, uid, displayName, email, photoURL);
+        clearPendingJoin();
+        // After successful join, write the lookup and return the wsId.
+        await setDoc(userDocRef, { workspaceId: pending.workspaceId });
+        return pending.workspaceId;
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('[flizowStore] invite accept failed:', err);
+        clearPendingJoin();
+        // Fall through to legacy/fresh path so the user isn't stranded.
+      }
+    }
+
+    // 3. Legacy single-user doc at flizow/{uid}? Migrate it forward.
+    const legacyRef = doc(db, LEGACY_COLLECTION, uid);
+    const legacySnap = await getDoc(legacyRef);
+    let legacyData: FlizowData | null = null;
+    if (legacySnap.exists()) {
+      const payload = legacySnap.data();
+      if (payload && typeof payload.data === 'string') {
+        try {
+          legacyData = migrate(JSON.parse(payload.data) as Partial<FlizowData>);
+        } catch {
+          // Corrupt JSON in legacy doc — proceed as a fresh user.
+        }
+      }
+    }
+
+    // 4. Create a new workspace doc with this user as sole owner.
+    //    The workspace ID is the user's UID — clean 1:1 mapping for
+    //    the lifetime of the workspace.
+    const wsId = uid;
+    const now = new Date().toISOString();
+    const initials = initialsOf(displayName || email || 'You');
+    const ownMembership: WorkspaceMembership = {
+      uid,
+      displayName: displayName || undefined,
+      email: email || undefined,
+      photoURL: photoURL || undefined,
+      role: 'admin',
+      joinedAt: now,
+    };
+    const wsDoc: WorkspaceDoc = {
+      ownerUid: uid,
+      members: [ownMembership],
+      memberUids: [uid],
+      pendingInvites: [],
+      data: legacyData ?? emptyData(),
+      createdAt: now,
+      updatedAt: now,
+    };
+    // Make sure the legacy data also has THIS user as a Member record
+    // (not just a workspace member) so assignee pickers etc. resolve.
+    const ownMember = wsDoc.data.members.find((m) => m.id === uid);
+    if (!ownMember) {
+      wsDoc.data.members.push({
+        id: uid,
+        initials,
+        name: displayName || 'You',
+        role: 'Owner',
+        color: '#5e5ce6',
+        type: 'am',
+        accessLevel: 'admin',
+      });
+    }
+    const wsRef = doc(db, WORKSPACES_COLLECTION, wsId);
+    await setDoc(wsRef, wsDoc);
+    await setDoc(userDocRef, { workspaceId: wsId });
+    return wsId;
+  }
+
+  /** Validate a pending invite and add the current user to the
+   *  target workspace. Throws on any validation failure (caller
+   *  catches and falls through to the legacy/fresh path). */
+  private async acceptPendingJoin(
+    pending: { workspaceId: string; token: string },
+    uid: string,
+    displayName?: string,
+    email?: string,
+    photoURL?: string,
+  ): Promise<void> {
+    const wsRef = doc(db, WORKSPACES_COLLECTION, pending.workspaceId);
+    const snap = await getDoc(wsRef);
+    if (!snap.exists()) throw new Error('Invite target workspace not found');
+    const ws = snap.data() as WorkspaceDoc;
+    const invite = (ws.pendingInvites ?? []).find((i) => i.token === pending.token);
+    if (!invite) throw new Error('Invite token not found or already used');
+
+    // Already a member? Just consume the invite and skip adding.
+    const alreadyMember = (ws.memberUids ?? []).includes(uid);
+    const now = new Date().toISOString();
+    const newMembership: WorkspaceMembership = {
+      uid,
+      displayName: displayName || undefined,
+      email: email || undefined,
+      photoURL: photoURL || undefined,
+      role: invite.role,
+      joinedAt: now,
+    };
+    const nextMembers = alreadyMember
+      ? ws.members
+      : [...(ws.members ?? []), newMembership];
+    const nextMemberUids = alreadyMember
+      ? ws.memberUids
+      : [...(ws.memberUids ?? []), uid];
+    const nextPendingInvites = (ws.pendingInvites ?? []).filter(
+      (i) => i.token !== pending.token,
+    );
+    await setDoc(wsRef, {
+      ...ws,
+      members: nextMembers,
+      memberUids: nextMemberUids,
+      pendingInvites: nextPendingInvites,
+      updatedAt: now,
     });
   }
 
@@ -392,6 +608,23 @@ class FlizowStore {
     return this.userId;
   }
 
+  // ── Workspace subscription (parallel to data subscription) ──────────
+
+  /** Members + invites + ownerUid live behind their own observable so
+   *  the Members UI doesn't re-render on every card move. */
+  subscribeWorkspace = (listener: Listener): (() => void) => {
+    this.workspaceListeners.add(listener);
+    return () => { this.workspaceListeners.delete(listener); };
+  };
+
+  getWorkspaceMeta = (): typeof this.workspaceMeta => this.workspaceMeta;
+
+  getWorkspaceId = (): string | null => this.workspaceId;
+
+  private notifyWorkspace() {
+    this.workspaceListeners.forEach((l) => l());
+  }
+
   // ── Persistence ──────────────────────────────────────────────────────
 
   private save() {
@@ -401,29 +634,30 @@ class FlizowStore {
   }
 
   private saveToFirestore() {
-    if (!this.userId) return;
+    if (!this.userId || !this.workspaceId || !this.workspaceMeta) return;
     if (this.saveTimeout) clearTimeout(this.saveTimeout);
     this.saveTimeout = setTimeout(async () => {
       try {
         this.ignoreNextSnapshot = true;
-        const docRef = doc(db, DOC_COLLECTION, this.userId!);
-        await setDoc(docRef, {
-          data: JSON.stringify(this.data),
+        const wsRef = doc(db, WORKSPACES_COLLECTION, this.workspaceId!);
+        // Write the full workspace doc shape — data + the metadata we
+        // already have in memory. Workspace metadata changes (members,
+        // invites) go through dedicated methods that also write the
+        // workspace doc; this is the data-only path that fires after
+        // every store mutation.
+        await setDoc(wsRef, {
+          ownerUid: this.workspaceMeta!.ownerUid,
+          members: this.workspaceMeta!.members,
+          memberUids: this.workspaceMeta!.members.map((m) => m.uid),
+          pendingInvites: this.workspaceMeta!.pendingInvites,
+          data: this.data,
           updatedAt: new Date().toISOString(),
-        });
-        // Successful sync — clear any prior error banner. Local-only
-        // failures don't auto-clear (we'd need to tell user-storage-
-        // worked) but the network round-trip succeeding is a strong
-        // enough signal that things are healthy. Audit: error/offline.
+        }, { merge: true });
         if (this.syncError) this.setSyncError(null);
       } catch (err) {
         // eslint-disable-next-line no-console
         console.error('Failed to save Flizow state to Firestore:', err);
         this.ignoreNextSnapshot = false;
-        // Translate the most common Firebase error codes into plain
-        // language. Anything we don't recognise falls through to a
-        // generic "couldn't reach the cloud" message — never the raw
-        // Firebase string, which leaks SDK internals to the user.
         const code = (err as { code?: string } | null)?.code ?? '';
         let msg: string;
         if (code === 'permission-denied') {
@@ -438,6 +672,107 @@ class FlizowStore {
         this.setSyncError(msg);
       }
     }, FIRESTORE_DEBOUNCE_MS);
+  }
+
+  // ── Member + invite operations ────────────────────────────────────────
+
+  /** Generate an invite link that any new user can click to join this
+   *  workspace as an Editor (or whatever role passed). Returns the
+   *  full URL to share. Token is a single-use random string stored on
+   *  the workspace doc; consumed atomically when the invitee accepts. */
+  async createInvite(role: AccessLevel = 'editor', note?: string): Promise<string> {
+    if (!this.workspaceId || !this.workspaceMeta || !this.userId) {
+      throw new Error('Cannot invite — no active workspace');
+    }
+    const token = `inv_${Math.random().toString(36).slice(2, 11)}${Math.random().toString(36).slice(2, 11)}`;
+    const newInvite: PendingInvite = {
+      token,
+      role,
+      createdAt: new Date().toISOString(),
+      createdByUid: this.userId,
+      note: note?.trim() || undefined,
+    };
+    this.workspaceMeta = {
+      ...this.workspaceMeta,
+      pendingInvites: [...this.workspaceMeta.pendingInvites, newInvite],
+    };
+    // Persist immediately (skip the data-only debounce) so the link
+    // works the second the inviter copies it.
+    const wsRef = doc(db, WORKSPACES_COLLECTION, this.workspaceId);
+    await setDoc(wsRef, {
+      pendingInvites: this.workspaceMeta.pendingInvites,
+      updatedAt: new Date().toISOString(),
+    }, { merge: true });
+    this.notifyWorkspace();
+    // Build the URL. Use window.location.origin + the app's base path
+    // so the link works regardless of dev/prod hosting.
+    const base = window.location.origin + window.location.pathname.split('#')[0];
+    return `${base}?join=${encodeURIComponent(this.workspaceId)}&token=${encodeURIComponent(token)}`;
+  }
+
+  /** Revoke an outstanding invite by token. The link becomes invalid
+   *  immediately — anyone who hadn't clicked it yet gets "invite not
+   *  found" on next attempt. */
+  async revokeInvite(token: string): Promise<void> {
+    if (!this.workspaceId || !this.workspaceMeta) return;
+    const next = this.workspaceMeta.pendingInvites.filter((i) => i.token !== token);
+    this.workspaceMeta = { ...this.workspaceMeta, pendingInvites: next };
+    const wsRef = doc(db, WORKSPACES_COLLECTION, this.workspaceId);
+    await setDoc(wsRef, {
+      pendingInvites: next,
+      updatedAt: new Date().toISOString(),
+    }, { merge: true });
+    this.notifyWorkspace();
+  }
+
+  /** Remove a workspace member (sign-in user). Distinct from
+   *  removeMember() further down, which operates on the agency-side
+   *  Member roster (assignees, AMs, operators — records that may not
+   *  have a sign-in account). Owner can't be removed; the caller
+   *  should hide the remove button for the owner row. */
+  async removeWorkspaceMember(uid: string): Promise<void> {
+    if (!this.workspaceId || !this.workspaceMeta) return;
+    if (uid === this.workspaceMeta.ownerUid) {
+      throw new Error("Can't remove the workspace owner");
+    }
+    const nextMembers = this.workspaceMeta.members.filter((m) => m.uid !== uid);
+    const nextMemberUids = nextMembers.map((m) => m.uid);
+    this.workspaceMeta = {
+      ...this.workspaceMeta,
+      members: nextMembers,
+    };
+    const wsRef = doc(db, WORKSPACES_COLLECTION, this.workspaceId);
+    await setDoc(wsRef, {
+      members: nextMembers,
+      memberUids: nextMemberUids,
+      updatedAt: new Date().toISOString(),
+    }, { merge: true });
+    // Also clear the user's lookup so they don't keep loading this
+    // workspace on next sign-in. Best-effort — failure here means the
+    // removed user might briefly land back on the workspace until the
+    // Firestore rule blocks them.
+    try {
+      await setDoc(doc(db, USERS_COLLECTION, uid), { workspaceId: null }, { merge: true });
+    } catch { /* swallow — non-fatal */ }
+    this.notifyWorkspace();
+  }
+
+  /** Update a member's access level. The owner's level stays admin. */
+  async changeMemberRole(uid: string, role: AccessLevel): Promise<void> {
+    if (!this.workspaceId || !this.workspaceMeta) return;
+    if (uid === this.workspaceMeta.ownerUid && role !== 'admin') {
+      throw new Error("Workspace owner must remain admin");
+    }
+    const nextMembers = this.workspaceMeta.members.map((m) =>
+      m.uid === uid ? { ...m, role } : m,
+    );
+    this.workspaceMeta = { ...this.workspaceMeta, members: nextMembers };
+    const wsRef = doc(db, WORKSPACES_COLLECTION, this.workspaceId);
+    await setDoc(wsRef, {
+      members: nextMembers,
+      updatedAt: new Date().toISOString(),
+    }, { merge: true });
+    this.notifyWorkspace();
   }
 
   // ── Clients ──────────────────────────────────────────────────────────
