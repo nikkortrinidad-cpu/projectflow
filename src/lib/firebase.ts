@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { initializeFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB3m0UFv_f0Wfh5mOoY9bhQ9X2te46Ejz4",
@@ -26,4 +27,9 @@ export const googleProvider = new GoogleAuthProvider();
 export const db = initializeFirestore(app, {
   ignoreUndefinedProperties: true,
 });
+// Firebase Storage — used by the workspace-logo uploader. Bucket is
+// configured in firebaseConfig.storageBucket above. Storage rules
+// for write/read access live in docs/firestore-rules.md alongside
+// the Firestore rules.
+export const storage = getStorage(app);
 export default app;

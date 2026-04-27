@@ -836,6 +836,14 @@
     flex-shrink: 0;
     background: #5e5ce6; /* default; overridden by JS */
   }
+  /* Image variant — uploaded workspace logo. Uses object-fit cover
+     so non-square images crop to a centered circle without
+     distortion. Background color stays underneath as the loading
+     placeholder while the image fetches. */
+  .acct-avatar-large--image {
+    object-fit: cover;
+    object-position: center;
+  }
   .acct-avatar-colors {
     display: flex; align-items: center; gap: 8px;
     flex-wrap: wrap;

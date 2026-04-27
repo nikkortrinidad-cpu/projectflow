@@ -1,5 +1,6 @@
-import { doc, setDoc, getDoc, onSnapshot, type Unsubscribe } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { doc, setDoc, getDoc, onSnapshot, deleteField, type Unsubscribe } from 'firebase/firestore';
+import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { db, storage } from '../lib/firebase';
 import type {
   FlizowData, Client, Service, Task, Member, Contact, QuickLink, Note,
   Touchpoint, ActionItem, TaskComment, TaskActivity, TaskActivityKind,
@@ -278,15 +279,16 @@ class FlizowStore {
   /** Workspace the signed-in user belongs to. Null in local-only /
    *  dev-bypass mode. Set during setUser(uid). */
   private workspaceId: string | null = null;
-  /** Workspace-level metadata: identity (name/initials/color), members,
-   *  invites, ownerUid, timestamps. Separate from `data` (which holds
-   *  clients/services/etc.) so the Members UI can subscribe without
-   *  re-rendering on every card edit. */
+  /** Workspace-level metadata: identity (name/initials/color/logoUrl),
+   *  members, invites, ownerUid, timestamps. Separate from `data`
+   *  (which holds clients/services/etc.) so the Members UI can
+   *  subscribe without re-rendering on every card edit. */
   private workspaceMeta: {
     ownerUid: string;
     name: string;
     initials: string;
     color: string;
+    logoUrl?: string;
     members: WorkspaceMembership[];
     pendingInvites: PendingInvite[];
     createdAt: string;
@@ -460,6 +462,7 @@ class FlizowStore {
         name: wsName,
         initials: wsInitials,
         color: wsColor,
+        logoUrl: ws.logoUrl || undefined,
         members: ws.members ?? [],
         pendingInvites: ws.pendingInvites ?? [],
         createdAt: ws.createdAt || new Date().toISOString(),
@@ -780,6 +783,83 @@ class FlizowStore {
       color: fields.color,
       updatedAt: new Date().toISOString(),
     }, { merge: true });
+  }
+
+  // ── Workspace logo (Firebase Storage) ─────────────────────────────────
+
+  /** Upload an image file as the workspace logo. Stores at
+   *  `workspaces/{wsId}/logo` (single file per workspace, overwrites
+   *  on re-upload — no orphaned files to clean up). After upload,
+   *  writes the download URL to the workspace doc's `logoUrl` so all
+   *  members see the new logo on their next snapshot.
+   *
+   *  Caller responsibilities:
+   *    - File-type check (the UI restricts the picker to image/*)
+   *    - Size check before calling (Storage rules also enforce a
+   *      5MB cap as defense-in-depth, but a client-side warning is
+   *      a better UX than a Storage permission-denied error)
+   *
+   *  Throws on failure — caller surfaces the error in the UI. */
+  async uploadWorkspaceLogo(file: File): Promise<void> {
+    if (!this.workspaceId) {
+      throw new Error('Cannot upload logo — no active workspace');
+    }
+    // Single file per workspace. Re-uploads overwrite, so we don't
+    // accumulate orphan files in Storage. The path includes a tiny
+    // version suffix derived from the file name to bust the
+    // download URL cache when the same logo is replaced — without
+    // this, browsers + Firebase's getDownloadURL can return a stale
+    // URL pointing at the new bytes but with old cache headers.
+    // Path stays simple; the cache-bust lives in the URL we write
+    // to Firestore.
+    const objectPath = `workspaces/${this.workspaceId}/logo`;
+    const objectRef = storageRef(storage, objectPath);
+    await uploadBytes(objectRef, file, {
+      contentType: file.type || 'image/png',
+    });
+    const url = await getDownloadURL(objectRef);
+    // Append a cache-bust query so re-uploads of the SAME path show
+    // immediately (Firebase's download URL is stable per object;
+    // browsers cache aggressively). The query is harmless to
+    // Firebase Storage — it ignores unknown params.
+    const bustedUrl = `${url}${url.includes('?') ? '&' : '?'}t=${Date.now()}`;
+    if (!this.workspaceMeta) return;
+    this.workspaceMeta = { ...this.workspaceMeta, logoUrl: bustedUrl };
+    this.notifyWorkspace();
+    const wsRef = doc(db, WORKSPACES_COLLECTION, this.workspaceId);
+    await setDoc(wsRef, {
+      logoUrl: bustedUrl,
+      updatedAt: new Date().toISOString(),
+    }, { merge: true });
+  }
+
+  /** Remove the workspace logo. Deletes the Storage object AND
+   *  clears `logoUrl` from the workspace doc. The avatar tile falls
+   *  back to initials + color rendering. Storage delete failures are
+   *  swallowed (orphan file is harmless; the doc-level clear is
+   *  what matters for rendering). */
+  async removeWorkspaceLogo(): Promise<void> {
+    if (!this.workspaceId || !this.workspaceMeta) return;
+    // Optimistic local clear.
+    this.workspaceMeta = { ...this.workspaceMeta, logoUrl: undefined };
+    this.notifyWorkspace();
+    // Clear the doc field. deleteField() removes it from Firestore
+    // entirely (vs writing null) so the read-back doesn't carry a
+    // null value forever.
+    const wsRef = doc(db, WORKSPACES_COLLECTION, this.workspaceId);
+    await setDoc(wsRef, {
+      logoUrl: deleteField(),
+      updatedAt: new Date().toISOString(),
+    }, { merge: true });
+    // Best-effort delete the Storage object too.
+    try {
+      const objectRef = storageRef(storage, `workspaces/${this.workspaceId}/logo`);
+      await deleteObject(objectRef);
+    } catch {
+      // Object might not exist (never uploaded) or permission
+      // failed — non-fatal. The Firestore clear is the source of
+      // truth for rendering.
+    }
   }
 
   // ── Member + invite operations ────────────────────────────────────────

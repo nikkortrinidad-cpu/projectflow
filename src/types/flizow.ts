@@ -111,8 +111,16 @@ export interface WorkspaceDoc {
    *  of the first two words). User can override. */
   initials: string;
   /** Hex color for the workspace mark tile. Reuses the same 7-swatch
-   *  palette as user avatars. Defaults to brand indigo (#5e5ce6). */
+   *  palette as user avatars. Defaults to brand indigo (#5e5ce6).
+   *  Used as the tile's background when no logo image is uploaded. */
   color: string;
+  /** Optional uploaded logo URL. When present, the workspace mark
+   *  tile renders this image instead of the initials+color. Lives
+   *  in Firebase Storage at `workspaces/{wsId}/logo`; the URL here
+   *  is the long-form download URL with auth token. Initials + color
+   *  remain as fallback (used when this is unset, when the URL is
+   *  unreachable, etc.). */
+  logoUrl?: string;
   /** Full member objects with roles + display info. */
   members: WorkspaceMembership[];
   /** Denormalized UID list. Firestore rules can't easily check

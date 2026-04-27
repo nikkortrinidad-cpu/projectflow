@@ -1352,15 +1352,25 @@ function WorkspaceSection({
           avatar block so the two sections feel like family. The tile
           previews the DRAFT identity (live as the user edits) so the
           Save click feels predictable: what you see is what gets
-          committed. */}
+          committed. When a logo image is uploaded, the tile renders
+          that instead of initials+color. */}
       <div className="acct-avatar-block">
-        <div
-          className="acct-avatar-large"
-          style={{ background: colorDraft, color: '#fff', fontSize: 17 }}
-          aria-hidden="true"
-        >
-          {initialsDraft || meta.initials}
-        </div>
+        {meta.logoUrl ? (
+          <img
+            src={meta.logoUrl}
+            alt={`${meta.name} logo`}
+            className="acct-avatar-large acct-avatar-large--image"
+            style={{ background: colorDraft }}
+          />
+        ) : (
+          <div
+            className="acct-avatar-large"
+            style={{ background: colorDraft, color: '#fff', fontSize: 17 }}
+            aria-hidden="true"
+          >
+            {initialsDraft || meta.initials}
+          </div>
+        )}
         <div style={{ flex: 1, minWidth: 0 }}>
           <Field label="Workspace name" htmlFor="acct-ws-name">
             <input
@@ -1408,9 +1418,22 @@ function WorkspaceSection({
               </div>
             </Field>
           </div>
-          <p className="acct-section-sub" style={{ marginTop: 12, color: 'var(--text-faint)', fontStyle: 'italic' }}>
-            Image-upload logo lands when image storage wires up. The 2-letter tile carries the same identity in pickers + invite landings for now.
-          </p>
+
+          {/* Logo image uploader — separate from initials/color
+              because uploading is an immediate action (not buffered
+              by the modal-wide Save) and writes through to Firebase
+              Storage + the workspace doc. When set, the upload
+              overrides the initials+color tile rendering. Remove
+              falls back to initials+color. */}
+          <div style={{ marginTop: 14 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>
+              Logo image
+            </div>
+            <WorkspaceLogoUploader hasLogo={!!meta.logoUrl} />
+            <p className="acct-field-hint" style={{ marginTop: 8 }}>
+              PNG, JPG, or WebP up to 5 MB. Replaces the {initialsDraft || meta.initials} tile when uploaded; remove to fall back to initials.
+            </p>
+          </div>
         </>
       )}
 
@@ -1461,6 +1484,144 @@ function WorkspaceSection({
 
 /** One-click JSON download. Builds the export object via the store,
  *  serializes, triggers a Blob download with a sensible filename. */
+/** Logo uploader block. Hidden file input + visible Upload / Replace
+ *  / Remove buttons. State is local — the upload itself fires
+ *  immediately on file selection, NOT through the modal-wide Save
+ *  button. (Storage operations are explicit actions, like the
+ *  Members tab's invite/revoke; the Save flow only buffers field
+ *  edits.) */
+function WorkspaceLogoUploader({ hasLogo }: { hasLogo: boolean }) {
+  const { store } = useFlizow();
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  // 5MB hard cap, matching the Storage rule. We check client-side
+  // for a friendlier error than "Storage permission denied."
+  const MAX_BYTES = 5 * 1024 * 1024;
+
+  function pickFile() {
+    setError(null);
+    inputRef.current?.click();
+  }
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    // Reset the input value so picking the same file twice still
+    // fires onChange (browsers skip otherwise).
+    e.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setError('Please pick an image file (PNG, JPG, or WebP).');
+      return;
+    }
+    if (file.size > MAX_BYTES) {
+      setError(`Image is ${(file.size / 1024 / 1024).toFixed(1)} MB. Max is 5 MB.`);
+      return;
+    }
+    setError(null);
+    setUploading(true);
+    try {
+      await store.uploadWorkspaceLogo(file);
+    } catch (err) {
+      // Translate Firebase Storage error codes into plain copy.
+      const code = (err as { code?: string } | null)?.code ?? '';
+      if (code === 'storage/unauthorized' || code === 'storage/unauthenticated') {
+        setError("Couldn't upload — you may not have permission, or you're signed out. Reload and try again.");
+      } else if (code === 'storage/quota-exceeded') {
+        setError('Storage quota exceeded. Contact support.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Upload failed.');
+      }
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleRemove() {
+    if (!window.confirm('Remove the workspace logo? The tile will fall back to initials.')) {
+      return;
+    }
+    setError(null);
+    try {
+      await store.removeWorkspaceLogo();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Remove failed.');
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        onChange={handleFileChange}
+        style={{ display: 'none' }}
+        aria-label="Choose workspace logo image"
+      />
+      <button
+        type="button"
+        onClick={pickFile}
+        disabled={uploading}
+        style={{
+          padding: '7px 14px',
+          borderRadius: 8,
+          border: '1px solid var(--hairline)',
+          background: 'var(--bg-elev)',
+          color: 'var(--text)',
+          fontSize: 13,
+          fontWeight: 500,
+          cursor: uploading ? 'not-allowed' : 'pointer',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 6,
+          opacity: uploading ? 0.6 : 1,
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="17 8 12 3 7 8" />
+          <line x1="12" y1="3" x2="12" y2="15" />
+        </svg>
+        {uploading ? 'Uploading…' : hasLogo ? 'Replace logo' : 'Upload logo'}
+      </button>
+      {hasLogo && !uploading && (
+        <button
+          type="button"
+          onClick={handleRemove}
+          style={{
+            padding: '7px 14px',
+            borderRadius: 8,
+            border: '1px solid rgba(255, 59, 48, 0.4)',
+            background: 'transparent',
+            color: 'var(--accent)',
+            fontSize: 13,
+            fontWeight: 500,
+            cursor: 'pointer',
+          }}
+        >
+          Remove
+        </button>
+      )}
+      {error && (
+        <p
+          role="alert"
+          style={{
+            flexBasis: '100%',
+            margin: 0,
+            fontSize: 12,
+            color: 'var(--accent)',
+            lineHeight: 1.4,
+          }}
+        >
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function ExportWorkspaceButton({ workspaceName }: { workspaceName: string }) {
   const { store } = useFlizow();
   const [exporting, setExporting] = useState(false);
