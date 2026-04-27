@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { navigate } from '../router';
 import { useFlizow } from '../store/useFlizow';
-import type { Client, Task, Touchpoint, ClientStatus, OnboardingItem, Service } from '../types/flizow';
+import type { Client, Task, ClientStatus, OnboardingItem, Service } from '../types/flizow';
 
 /** localStorage key for the one-time first-run welcome banner. Versioned
  *  so a future revision can re-show the banner if we change the
@@ -149,8 +149,8 @@ export function OverviewPage() {
   // touchpoints cover client meetings, and the schedule is the one
   // place they have to overlap.
   const weekDays = useMemo(() => {
-    return buildWeekGrid(liveTasks, data.touchpoints, data.clients, new Date());
-  }, [liveTasks, data.touchpoints, data.clients]);
+    return buildWeekGrid(liveTasks, new Date());
+  }, [liveTasks]);
   // Tab labels use the week's date range ("Apr 22 – 26") so the user
   // sees at a glance what they're looking at without decoding which
   // Monday we anchored on.
@@ -537,6 +537,10 @@ type HealthCellProps = {
 
 // ── Schedule grid (Block 4) ────────────────────────────────────────────────
 
+// 'meeting' stays in the union for back-compat with existing data
+// that may still carry the tag, but the schedule builder filters
+// those tasks out before they reach the render path. The icon +
+// label entries below are dead for new data; left in defensively.
 type ScheduleTag = 'deadline' | 'meeting' | 'milestone';
 const TAG_LABEL: Record<ScheduleTag, string> = {
   deadline: 'Deadline',
@@ -592,8 +596,6 @@ function formatWeekRange(startIso: string | undefined, endIso: string | undefine
 
 function buildWeekGrid(
   tasks: Task[],
-  touchpoints: Touchpoint[],
-  clients: Client[],
   today: Date,
 ): WeekDay[] {
   // Anchor on Monday of today's week. Sunday is dow=0 and wraps back six
@@ -606,43 +608,36 @@ function buildWeekGrid(
 
   const todayKey = isoOfLocalDate(today);
 
-  // Bucket scheduled work by iso date. Tasks with `_schedule` carry a
-  // tag explicitly; touchpoints always render as 'meeting'. Touchpoints
-  // also carry a time-of-day hint in meta that tasks don't.
+  // Schedule is task-due-date-driven now. Every task with a dueDate
+  // gets a chip on its day, no `_schedule` opt-in required. Two
+  // exclusions:
+  //   - Tasks whose existing _schedule.tag is 'meeting' get filtered
+  //     out — meetings no longer surface here. Live touchpoints
+  //     (which used to populate the grid as 'meeting') were also
+  //     dropped from this builder; they still exist on the client
+  //     detail's Touchpoints tab.
+  //   - Done tasks pass through but render with the done style; they
+  //     don't pollute the active count.
   const byDate: Record<string, ScheduleItem[]> = {};
   for (const t of tasks) {
-    if (!t._schedule || !t.dueDate) continue;
+    if (!t.dueDate) continue;
+    if (t._schedule?.tag === 'meeting') continue;
     const bucket = (byDate[t.dueDate] ||= []);
+    // Pull tag/meta/done from _schedule when present (tasks the
+    // user explicitly tagged as deadlines or milestones); fall back
+    // to 'deadline' for plain task due dates.
+    const tag: ScheduleTag = t._schedule?.tag ?? 'deadline';
     bucket.push({
       id: t.id,
       title: t.title,
-      meta: t._schedule.meta || undefined,
-      tag: t._schedule.tag,
-      done: !!t._schedule.done,
-      // Link into the service board so the card context is one click
-      // away. We don't yet deep-link to the individual card.
-      href: `#board/${t.serviceId}`,
-    });
-  }
-
-  const clientName: Record<string, string> = {};
-  for (const c of clients) clientName[c.id] = c.name;
-
-  for (const tp of touchpoints) {
-    if (!tp.scheduled || !tp.occurredAt) continue;
-    const at = new Date(tp.occurredAt);
-    if (isNaN(at.getTime())) continue;
-    const iso = isoOfLocalDate(at);
-    const timeLabel = at.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
-    const who = clientName[tp.clientId] || 'Client';
-    const bucket = (byDate[iso] ||= []);
-    bucket.push({
-      id: tp.id,
-      title: tp.topic || 'Meeting',
-      meta: `${timeLabel} · ${who}`,
-      tag: 'meeting',
-      done: false,
-      href: `#clients/${tp.clientId}`,
+      meta: t._schedule?.meta || undefined,
+      tag,
+      done: !!t._schedule?.done,
+      // Deep-link to the specific kanban card modal so clicking a
+      // schedule chip opens the work directly (matches the
+      // attention-card behaviour). BoardPage's auto-open effect
+      // catches the URL.
+      href: `#board/${t.serviceId}/card/${t.id}`,
     });
   }
 
