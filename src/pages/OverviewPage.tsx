@@ -285,6 +285,7 @@ export function OverviewPage() {
               label="At Risk"
               value={health.risk}
               sub="need review"
+              iconClass="warn"
               onClick={() => navigate('#clients/view/risk')}
               ariaLabel="View At Risk clients"
               icon={<>
@@ -298,6 +299,7 @@ export function OverviewPage() {
               label="On Track"
               value={health.track}
               sub="clients healthy"
+              iconClass="success"
               onClick={() => navigate('#clients/view/track')}
               ariaLabel="View On Track clients"
               icon={<polyline points="20 6 9 17 4 12" />}

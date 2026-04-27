@@ -6528,6 +6528,20 @@
     background: var(--accent-soft);
     color: var(--accent);
   }
+  /* Tinted variants for the other two health cells. Mirrors the
+     alert recipe but pulls from the status-risk / status-track
+     tokens so the icon glyph echoes the chip + dot colours used
+     elsewhere on the page (Clients list status dots, status chips
+     on the client hero). Keeps a single source of truth for what
+     "at risk" and "on track" look like. */
+  .health-icon.warn {
+    background: var(--status-risk-soft);
+    color: var(--status-risk);
+  }
+  .health-icon.success {
+    background: var(--status-track-soft);
+    color: var(--status-track);
+  }
   .health-icon svg { width: 20px; height: 20px; }
   .health-label {
     font-size: var(--fs-xs); font-weight: 500; color: var(--text-soft);
