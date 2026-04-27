@@ -1,4 +1,5 @@
 import type { FlizowData, NotificationItem } from '../types/flizow';
+import { categoryLabel } from '../utils/clientDerived';
 
 /**
  * Derive notifications from live store data — no event log required.
@@ -124,7 +125,7 @@ export function deriveNotifications(
         group: 'Today',
         ago: 'Now',
         text: `<strong>${escapeHTML(c.name)}</strong> is marked <em>On Fire</em>`,
-        context: `${escapeHTML(c.industry)} · Client status`,
+        context: `${escapeHTML(categoryLabel(c.industryCategory))} · Client status`,
         href: `#clients/${c.id}`,
       });
     }

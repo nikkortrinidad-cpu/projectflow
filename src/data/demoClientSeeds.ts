@@ -9,7 +9,11 @@ import type { ClientStatus } from '../types/flizow';
  * Fields:
  *   id          — URL slug, matches `data-client-id` on the HTML row
  *   name        — display name (supports ampersands; no HTML entities)
- *   industry    — "Category · Specific" string the Clients grid shows
+ *   industry    — Authoring-only descriptor. Fed into demoData's
+ *                 `categoryFor()` regex to derive an `industryCategory`
+ *                 enum on each generated Client. NOT shown to the user;
+ *                 the rendered "Industry" label comes from the category
+ *                 enum's friendly name (see categoryLabel in clientDerived).
  *   initials    — two letters for the logo tile
  *   logoClass   — colour token on the logo tile (logo-indigo etc.)
  *   status      — health tier; drives the status dot and filtering

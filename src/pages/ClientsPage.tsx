@@ -9,6 +9,7 @@ import {
   clientMetric,
   clientLastTouched,
   relativeTimeAgo,
+  categoryLabel,
 } from '../utils/clientDerived';
 import type { Client, ClientStatus, IndustryCategory, Member } from '../types/flizow';
 
@@ -319,7 +320,7 @@ function ClientRow({ client, selected }: RowProps) {
         <div className={`client-logo ${client.logoClass}`}>{client.initials}</div>
         <div className="client-identity-body">
           <div className="client-name">{client.name}</div>
-          <div className="client-industry">{client.industry}</div>
+          <div className="client-industry">{categoryLabel(client.industryCategory)}</div>
         </div>
       </div>
 
@@ -405,7 +406,7 @@ function filterClients(
   const matchesSearch = (c: Client): boolean => {
     if (!q) return true;
     return c.name.toLowerCase().includes(q)
-        || c.industry.toLowerCase().includes(q);
+        || categoryLabel(c.industryCategory).toLowerCase().includes(q);
   };
 
   const matchesMine = (c: Client): boolean => {
@@ -491,7 +492,6 @@ function AddClientModal({ members, todayISO, onClose }: {
   onClose: () => void;
 }) {
   const [name, setName] = useState('');
-  const [industry, setIndustry] = useState('');
   const [industryCategory, setIndustryCategory] = useState<IndustryCategory>('saas');
   const [amId, setAmId] = useState<string>('');
   const [status, setStatus] = useState<ClientStatus>('onboard');
@@ -525,7 +525,6 @@ function AddClientModal({ members, todayISO, onClose }: {
       initials: deriveInitials(trimmedName),
       logoClass,
       status,
-      industry: industry.trim() || 'Uncategorized',
       industryCategory,
       amId: amId || null,
       startedAt: todayISO,
@@ -579,30 +578,23 @@ function AddClientModal({ members, todayISO, onClose }: {
             />
           </label>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <label className="wip-field">
-              <span className="wip-field-label">Industry</span>
-              <input
-                type="text"
-                className="wip-field-input"
-                value={industry}
-                onChange={(e) => setIndustry(e.target.value)}
-                placeholder="e.g. B2B SaaS"
-              />
-            </label>
-            <label className="wip-field">
-              <span className="wip-field-label">Category</span>
-              <select
-                className="wip-field-input"
-                value={industryCategory}
-                onChange={(e) => setIndustryCategory(e.target.value as IndustryCategory)}
-              >
-                {INDUSTRY_CATEGORIES.map(c => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
-                ))}
-              </select>
-            </label>
-          </div>
+          {/* The free-text Industry input used to live alongside this
+              dropdown. Removed 2026-04-27 — the category label was
+              already doing the same display job, and asking for both
+              confused users into thinking they were different things.
+              The dropdown now owns the row. */}
+          <label className="wip-field">
+            <span className="wip-field-label">Industry</span>
+            <select
+              className="wip-field-input"
+              value={industryCategory}
+              onChange={(e) => setIndustryCategory(e.target.value as IndustryCategory)}
+            >
+              {INDUSTRY_CATEGORIES.map(c => (
+                <option key={c.value} value={c.value}>{c.label}</option>
+              ))}
+            </select>
+          </label>
 
           <label className="wip-field">
             <span className="wip-field-label">Account Manager</span>

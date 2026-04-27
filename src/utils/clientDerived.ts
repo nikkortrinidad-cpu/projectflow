@@ -1,4 +1,28 @@
-import type { Client, Service, Task, FlizowData } from '../types/flizow';
+import type { Client, IndustryCategory, Service, Task, FlizowData } from '../types/flizow';
+
+/**
+ * Human-readable label for a category enum value. The dropdown in the Add
+ * Client modal owns the same mapping; centralising it here means the list
+ * row, the detail-page hero, the command palette, and the notifications
+ * digest all read the same string. Falls back to the raw key if a future
+ * category slips in without a label — better to render "saas" than nothing.
+ */
+const CATEGORY_LABELS: Record<IndustryCategory, string> = {
+  saas:         'SaaS / Tech',
+  ecommerce:    'E-commerce / Retail',
+  healthcare:   'Healthcare / Wellness',
+  fnb:          'Food & Beverage',
+  education:    'Education',
+  professional: 'Professional services',
+  realestate:   'Real estate',
+  services:     'Consumer services',
+  industrial:   'Industrial / Manufacturing',
+  media:        'Media & Publishing',
+};
+
+export function categoryLabel(cat: IndustryCategory): string {
+  return CATEGORY_LABELS[cat] ?? cat;
+}
 
 /**
  * Pure helpers for deriving row-level display data on the Clients list.

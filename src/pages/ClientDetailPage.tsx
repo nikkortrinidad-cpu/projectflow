@@ -7,6 +7,7 @@ import type {
 } from '../types/flizow';
 import { flizowStore, type FlizowStore } from '../store/flizowStore';
 import { formatMonthYear, formatMonthDay, daysBetween } from '../utils/dateFormat';
+import { categoryLabel } from '../utils/clientDerived';
 import { NotesTab } from '../components/NotesTab';
 import { TouchpointsTab } from '../components/TouchpointsTab';
 import { StatsTab } from '../components/StatsTab';
@@ -458,7 +459,7 @@ function Hero({ client, am, onRequestDelete }: {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
             </svg>
-            <span>{client.industry}</span>
+            <span>{categoryLabel(client.industryCategory)}</span>
           </span>
 
           {am && (

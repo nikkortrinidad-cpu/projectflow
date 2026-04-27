@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFlizow } from '../store/useFlizow';
 import { navigate } from '../router';
 import type { Client, Service, Task, Member, ColumnId, ClientStatus } from '../types/flizow';
+import { categoryLabel } from '../utils/clientDerived';
 
 /**
  * Flizow Command Palette — the ⌘K surface.
@@ -169,17 +170,18 @@ export default function FlizowCommandPalette({ open, onClose }: Props) {
     const clientById = new Map<string, Client>(data.clients.map((c) => [c.id, c]));
     const serviceById = new Map<string, Service>(data.services.map((s) => [s.id, s]));
 
-    // Clients. Match on name OR industry.
+    // Clients. Match on name OR industry (category label).
     let n = 0;
     const clientCap = q ? LIMITS.clients.query : LIMITS.clients.empty;
     for (const c of data.clients) {
       if (n >= clientCap) break;
-      if (q && !matches(c.name, q) && !matches(c.industry, q)) continue;
+      const industry = categoryLabel(c.industryCategory);
+      if (q && !matches(c.name, q) && !matches(industry, q)) continue;
       n++;
       out.push({
         type: 'client',
         title: c.name,
-        sub: `${c.industry} · ${STATUS_LABEL[c.status] ?? c.status}`,
+        sub: `${industry} · ${STATUS_LABEL[c.status] ?? c.status}`,
         icon: c.initials,
         hash: `#clients/${c.id}`,
       });

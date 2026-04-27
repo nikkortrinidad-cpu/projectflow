@@ -779,7 +779,6 @@ export function generateDemoData(): FlizowData {
       initials: seedRow.initials,
       logoClass: seedRow.logoClass,
       status: seedRow.status,
-      industry: seedRow.industry,
       industryCategory: cat,
       amId,
       startedAt: daysFromTodayISO(today, -180 - (seed % 900)),

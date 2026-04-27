@@ -243,7 +243,11 @@ export interface Client {
    *  the stylesheet so dark/light modes swap together. */
   logoClass: string;
   status: ClientStatus;
-  industry: string;
+  /** One of ten preset categories. Drives display text on the list/hero
+   *  AND service-template suggestions when adding a new service. The
+   *  free-text `industry` field that used to live alongside this got
+   *  removed 2026-04-27 — the category label was already doing the same
+   *  display job, and asking for both confused the Add-client modal. */
   industryCategory: IndustryCategory;
   amId: string | null;
   /** ISO date. When this client first onboarded. */

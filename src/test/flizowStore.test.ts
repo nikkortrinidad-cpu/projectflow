@@ -28,7 +28,6 @@ const baseClient = (overrides: Partial<Client> = {}): Client => ({
   initials: 'AC',
   logoClass: 'logo-indigo',
   status: 'track',
-  industry: 'SaaS',
   industryCategory: 'saas',
   amId: null,
   startedAt: '2025-01-01',

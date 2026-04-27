@@ -4,6 +4,7 @@ import { flizowStore } from '../store/flizowStore';
 import { useFlizow } from '../store/useFlizow';
 import type { Client, ManualAgendaItem, Service, Task } from '../types/flizow';
 import { daysBetween } from '../utils/dateFormat';
+import { categoryLabel } from '../utils/clientDerived';
 import { useActivatableRow } from '../hooks/useActivatableRow';
 import { useModalAutofocus } from '../hooks/useModalAutofocus';
 import { useModalKeyboard } from '../hooks/useModalKeyboard';
@@ -668,7 +669,7 @@ function buildAgenda(
         key: `nc-${c.id}`,
         kind: 'client',
         label: c.name,
-        meta: `${c.industry}${c.startedAt ? ` · started ${formatWhen(c.startedAt, todayISO)}` : ''}`,
+        meta: `${categoryLabel(c.industryCategory)}${c.startedAt ? ` · started ${formatWhen(c.startedAt, todayISO)}` : ''}`,
         status: 'new',
         clientId: c.id,
       })),
