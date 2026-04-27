@@ -1,5 +1,13 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ComponentType, type SVGProps } from 'react';
-import { CheckIcon, ExclamationTriangleIcon, FireIcon } from '@heroicons/react/24/outline';
+import {
+  BellAlertIcon,
+  CalendarDaysIcon,
+  CheckIcon,
+  ExclamationTriangleIcon,
+  FireIcon,
+  HeartIcon,
+  ViewColumnsIcon,
+} from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 import { navigate } from '../router';
 import { flizowStore } from '../store/flizowStore';
@@ -355,7 +363,10 @@ export function OverviewPage() {
           aria-labelledby="block-health-title"
         >
           <div className="block-header">
-            <div className="block-title" id="block-health-title">Portfolio Health</div>
+            <div className="block-title" id="block-health-title">
+              <HeartIcon width={14} height={14} aria-hidden="true" />
+              Portfolio Health
+            </div>
             <div className="block-sub"><span>Across {health.active} active clients</span></div>
           </div>
           <div className="health-strip">
@@ -408,7 +419,10 @@ export function OverviewPage() {
           aria-labelledby="block-attention-title"
         >
           <div className="block-header">
-            <div className="block-title" id="block-attention-title">My Priorities</div>
+            <div className="block-title" id="block-attention-title">
+              <BellAlertIcon width={14} height={14} aria-hidden="true" />
+              My Priorities
+            </div>
           </div>
           <div className="attention-list" id="attention-list">
             {allAttention.length === 0 ? (
@@ -468,7 +482,10 @@ export function OverviewPage() {
           aria-labelledby="block-schedule-title"
         >
           <div className="block-header">
-            <div className="block-title" id="block-schedule-title">My Schedule</div>
+            <div className="block-title" id="block-schedule-title">
+              <CalendarDaysIcon width={14} height={14} aria-hidden="true" />
+              My Schedule
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               {/* Toggle buttons — NOT ARIA tabs (no paired tabpanel below
                   these; the schedule grid swaps content in place via the
@@ -546,7 +563,10 @@ export function OverviewPage() {
           aria-labelledby="block-myboards-title"
         >
           <div className="block-header">
-            <div className="block-title" id="block-myboards-title">My Boards</div>
+            <div className="block-title" id="block-myboards-title">
+              <ViewColumnsIcon width={14} height={14} aria-hidden="true" />
+              My Boards
+            </div>
             {myBoards.length > 0 && (
               <div className="block-sub"><span>{myBoards.length} pinned</span></div>
             )}

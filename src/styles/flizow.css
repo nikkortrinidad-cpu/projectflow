@@ -6486,6 +6486,12 @@
   .block-title {
     font-size: var(--fs-sm); font-weight: 600; color: var(--text-soft);
     text-transform: uppercase; letter-spacing: 0.08em;
+    /* inline-flex so the leading Heroicon and the label sit on the
+       same baseline. Title color cascades to the icon via
+       `currentColor` on the SVG stroke. */
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-xs);
   }
   .block-sub { font-size: var(--fs-sm); color: var(--text-faint); letter-spacing: -0.005em; }
   .block-link {
