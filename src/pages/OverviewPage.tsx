@@ -149,8 +149,8 @@ export function OverviewPage() {
   // touchpoints cover client meetings, and the schedule is the one
   // place they have to overlap.
   const weekDays = useMemo(() => {
-    return buildWeekGrid(liveTasks, new Date());
-  }, [liveTasks]);
+    return buildWeekGrid(liveTasks, currentMemberId, new Date());
+  }, [liveTasks, currentMemberId]);
   // Tab labels use the week's date range ("Apr 22 – 26") so the user
   // sees at a glance what they're looking at without decoding which
   // Monday we anchored on.
@@ -596,6 +596,7 @@ function formatWeekRange(startIso: string | undefined, endIso: string | undefine
 
 function buildWeekGrid(
   tasks: Task[],
+  memberId: string | null,
   today: Date,
 ): WeekDay[] {
   // Anchor on Monday of today's week. Sunday is dow=0 and wraps back six
@@ -608,9 +609,11 @@ function buildWeekGrid(
 
   const todayKey = isoOfLocalDate(today);
 
-  // Schedule is task-due-date-driven now. Every task with a dueDate
-  // gets a chip on its day, no `_schedule` opt-in required. Two
-  // exclusions:
+  // Schedule is task-due-date-driven AND scoped to the signed-in user.
+  // Every task with a dueDate AND assigned to me gets a chip on its
+  // day. Three exclusions:
+  //   - Tasks not assigned to me — the schedule is "my week," not
+  //     the workspace's calendar. Other AMs see their own work.
   //   - Tasks whose existing _schedule.tag is 'meeting' get filtered
   //     out — meetings no longer surface here. Live touchpoints
   //     (which used to populate the grid as 'meeting') were also
@@ -618,27 +621,41 @@ function buildWeekGrid(
   //     detail's Touchpoints tab.
   //   - Done tasks pass through but render with the done style; they
   //     don't pollute the active count.
+  // Pre-auth / dev-bypass with no memberId → byDate stays empty, the
+  // day-shells loop below renders an empty grid. No "see everyone's
+  // work" fallback because the schedule has always been a "your
+  // week" surface, not the workspace calendar.
   const byDate: Record<string, ScheduleItem[]> = {};
-  for (const t of tasks) {
-    if (!t.dueDate) continue;
-    if (t._schedule?.tag === 'meeting') continue;
-    const bucket = (byDate[t.dueDate] ||= []);
-    // Pull tag/meta/done from _schedule when present (tasks the
-    // user explicitly tagged as deadlines or milestones); fall back
-    // to 'deadline' for plain task due dates.
-    const tag: ScheduleTag = t._schedule?.tag ?? 'deadline';
-    bucket.push({
-      id: t.id,
-      title: t.title,
-      meta: t._schedule?.meta || undefined,
-      tag,
-      done: !!t._schedule?.done,
-      // Deep-link to the specific kanban card modal so clicking a
-      // schedule chip opens the work directly (matches the
-      // attention-card behaviour). BoardPage's auto-open effect
-      // catches the URL.
-      href: `#board/${t.serviceId}/card/${t.id}`,
-    });
+  if (memberId) {
+    for (const t of tasks) {
+      if (!t.dueDate) continue;
+      if (t._schedule?.tag === 'meeting') continue;
+      // "Assigned to me" — handle both shapes the codebase uses:
+      // `assigneeId` (single) and `assigneeIds` (array, multi-owner).
+      // A task counts as mine if I'm in EITHER. Tasks with neither
+      // field set are unassigned and don't appear in anyone's grid.
+      const assignedToMe =
+        t.assigneeId === memberId ||
+        (Array.isArray(t.assigneeIds) && t.assigneeIds.includes(memberId));
+      if (!assignedToMe) continue;
+      const bucket = (byDate[t.dueDate] ||= []);
+      // Pull tag/meta/done from _schedule when present (tasks the
+      // user explicitly tagged as deadlines or milestones); fall back
+      // to 'deadline' for plain task due dates.
+      const tag: ScheduleTag = t._schedule?.tag ?? 'deadline';
+      bucket.push({
+        id: t.id,
+        title: t.title,
+        meta: t._schedule?.meta || undefined,
+        tag,
+        done: !!t._schedule?.done,
+        // Deep-link to the specific kanban card modal so clicking a
+        // schedule chip opens the work directly (matches the
+        // attention-card behaviour). BoardPage's auto-open effect
+        // catches the URL.
+        href: `#board/${t.serviceId}/card/${t.id}`,
+      });
+    }
   }
 
   const days: WeekDay[] = [];
