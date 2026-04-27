@@ -7167,7 +7167,7 @@
   /* Height-auto animation for the "View all N tasks" expand toggle
      under Needs Your Attention. Uses the grid-template-rows: 0fr ↔ 1fr
      trick — when 1fr behaves like auto (sized by content), we get a
-     true height-auto transition without measuring with JS. 220ms
+     true height-auto transition without measuring with JS. 150ms
      ease-out matches the snappier UI standard (Linear, Notion); was
      1s originally and felt sluggish. ease-out finishes briskly into
      the final state, which reads as decisive on both expand and
@@ -7183,7 +7183,7 @@
        fixes the visual width regression after the expand-animation
        change. */
     grid-template-columns: minmax(0, 1fr);
-    transition: grid-template-rows 220ms ease-out;
+    transition: grid-template-rows 150ms ease-out;
   }
   .attn-extras.expanded {
     grid-template-rows: 1fr;
