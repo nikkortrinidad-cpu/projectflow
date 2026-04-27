@@ -805,19 +805,33 @@ class FlizowStore {
       throw new Error('Cannot upload logo — no active workspace');
     }
     // Single file per workspace. Re-uploads overwrite, so we don't
-    // accumulate orphan files in Storage. The path includes a tiny
-    // version suffix derived from the file name to bust the
-    // download URL cache when the same logo is replaced — without
-    // this, browsers + Firebase's getDownloadURL can return a stale
-    // URL pointing at the new bytes but with old cache headers.
-    // Path stays simple; the cache-bust lives in the URL we write
-    // to Firestore.
+    // accumulate orphan files in Storage. The path stays simple;
+    // the cache-bust lives in the URL we write to Firestore.
     const objectPath = `workspaces/${this.workspaceId}/logo`;
     const objectRef = storageRef(storage, objectPath);
-    await uploadBytes(objectRef, file, {
-      contentType: file.type || 'image/png',
+
+    // Race the upload against a 60-second timeout. Without this, if
+    // Firebase Storage is misconfigured (bucket doesn't exist, rules
+    // not published, project Storage not enabled) the upload promise
+    // can hang silently, leaving the UI stuck on "Uploading…". 60
+    // seconds is generous for slow networks but short enough that
+    // a real configuration issue surfaces quickly.
+    const timeoutMs = 60_000;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(
+        () => reject(new Error(
+          `Upload timed out after ${timeoutMs / 1000}s. Check that Firebase Storage is enabled in your Firebase console and the Storage rules from docs/firestore-rules.md are published.`,
+        )),
+        timeoutMs,
+      );
     });
-    const url = await getDownloadURL(objectRef);
+    await Promise.race([
+      uploadBytes(objectRef, file, {
+        contentType: file.type || 'image/png',
+      }),
+      timeoutPromise,
+    ]);
+    const url = await Promise.race([getDownloadURL(objectRef), timeoutPromise]);
     // Append a cache-bust query so re-uploads of the SAME path show
     // immediately (Firebase's download URL is stable per object;
     // browsers cache aggressively). The query is harmless to
