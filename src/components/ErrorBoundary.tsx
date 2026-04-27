@@ -285,7 +285,7 @@ function DefaultFallback({
           style={{
             padding: '8px 14px',
             borderRadius: 8,
-            background: '#007aff',
+            background: '#F15A24',
             color: '#fff',
             border: 'none',
             fontSize: 13, fontWeight: 600,

@@ -21,13 +21,18 @@
     --kbd-border: #d2d2d7;
     --nav-bg: rgba(255,255,255,0.72);
     --btn-bg: #ffffff;
-    --btn-bg-hover: rgba(0,122,255,0.08);
-    --hover-tint: rgba(0,122,255,0.08);
-    --hover-tint-strong: rgba(0,122,255,0.14);
-    --hover-blue: #007AFF;
-    --hover-blue-dark: #0066D6;
-    --highlight: #007AFF;
-    --highlight-soft: rgba(0,122,255,0.08);
+    /* Brand interactive accent — Flizow orange. The variable names
+       still read `--hover-blue` etc. for back-compat; the value
+       behind them is the brand color, currently #F15A24. Keep this
+       block in sync with the dark-mode counterparts below — they
+       use the same RGB with higher alphas for visibility on dark. */
+    --btn-bg-hover: rgba(241,90,36,0.08);
+    --hover-tint: rgba(241,90,36,0.08);
+    --hover-tint-strong: rgba(241,90,36,0.14);
+    --hover-blue: #F15A24;
+    --hover-blue-dark: #C84818;
+    --highlight: #F15A24;
+    --highlight-soft: rgba(241,90,36,0.08);
     --link-blue: #0066CC;           /* darker blue for readable links on light bg */
     --tag-bg: rgba(0,0,0,0.04);
     --tag-text: #636366;
@@ -157,13 +162,17 @@
     --kbd-border: rgba(255,255,255,0.15);
     --nav-bg: rgba(0,0,0,0.72);
     --btn-bg: #1c1c1e;
-    --btn-bg-hover: rgba(10,132,255,0.18);
-    --hover-tint: rgba(10,132,255,0.16);
-    --hover-tint-strong: rgba(10,132,255,0.24);
-    --hover-blue: #0A84FF;
-    --hover-blue-dark: #0071E3;
-    --highlight: #0A84FF;
-    --highlight-soft: rgba(10,132,255,0.14);
+    /* Dark-mode counterparts of the brand interactive accent. Same
+       hex as light mode (#F15A24) — orange holds up on black without
+       needing the brightness bump Apple's blue gets. Higher alphas
+       on the soft tints for visibility against the darker bg. */
+    --btn-bg-hover: rgba(241,90,36,0.18);
+    --hover-tint: rgba(241,90,36,0.16);
+    --hover-tint-strong: rgba(241,90,36,0.24);
+    --hover-blue: #F15A24;
+    --hover-blue-dark: #C84818;
+    --highlight: #F15A24;
+    --highlight-soft: rgba(241,90,36,0.14);
     --link-blue: #5AC8FA;           /* Apple Light Blue — WCAG-AA contrast on black */
     --tag-bg: rgba(255,255,255,0.06);
     --tag-text: #aeaeb2;
@@ -223,7 +232,7 @@
   }
   .header-logo:hover { background: var(--hover-tint, rgba(10, 132, 255, 0.08)); }
   .header-logo:focus-visible {
-    outline: 2px solid var(--highlight, #0a84ff);
+    outline: 2px solid var(--highlight, #F15A24);
     outline-offset: 2px;
     background: var(--hover-tint, rgba(10, 132, 255, 0.08));
   }
@@ -416,7 +425,7 @@
   }
   .access-pill--admin {
     background: rgba(10, 132, 255, 0.14);
-    color: #0a84ff;
+    color: #F15A24;
   }
   .access-pill--editor {
     background: rgba(48, 209, 88, 0.14);
@@ -799,9 +808,9 @@
   }
   .acct-nav-item:hover { background: var(--bg-soft); color: var(--text); }
   .acct-nav-item[aria-selected="true"] {
-    background: var(--hover-tint); color: #0a84ff;
+    background: var(--hover-tint); color: #F15A24;
   }
-  .acct-nav-item[aria-selected="true"] svg { color: #0a84ff; }
+  .acct-nav-item[aria-selected="true"] svg { color: #F15A24; }
 
   .acct-content {
     flex: 1; min-width: 0;
@@ -891,7 +900,7 @@
   }
   .acct-form-field .acct-input:focus {
     outline: none;
-    border-color: #0a84ff;
+    border-color: #F15A24;
     background: var(--bg);
   }
   .acct-form-field .acct-input[readonly] {
@@ -963,7 +972,7 @@
   .acct-toggle[aria-checked="true"] { background: #34c759; }
   .acct-toggle[aria-checked="true"]::after { transform: translateX(16px); }
   .acct-toggle:focus-visible {
-    outline: 2px solid #0a84ff; outline-offset: 2px;
+    outline: 2px solid #F15A24; outline-offset: 2px;
   }
 
   /* Sign-in section */
@@ -991,7 +1000,7 @@
     font-size: 12px; color: var(--text-muted); margin-top: 2px;
   }
   .acct-external-link {
-    font-size: var(--fs-md); color: #0a84ff;
+    font-size: var(--fs-md); color: #F15A24;
     text-decoration: none; font-weight: 500;
     display: inline-flex; align-items: center; gap: 4px;
     flex-shrink: 0;
@@ -1004,7 +1013,7 @@
     display: inline-flex; align-items: center; justify-content: center;
     padding: 8px 16px; border-radius: 980px;
     background: transparent;
-    border: 1px solid #0a84ff; color: #0a84ff;
+    border: 1px solid #F15A24; color: #F15A24;
     font-size: var(--fs-md); font-weight: 500;
     cursor: pointer;
     transition: background 0.12s;
@@ -1064,7 +1073,7 @@
      transactional Save/Cancel. */
   .acct-btn-save {
     padding: 8px 18px; border-radius: 980px;
-    background: #0a84ff; border: 0;
+    background: #F15A24; border: 0;
     color: #fff; font-size: var(--fs-md); font-weight: 600;
     cursor: pointer;
     transition: background 0.12s, opacity 0.12s;
@@ -1077,7 +1086,7 @@
     color: var(--text-muted);
   }
   .acct-btn-save:focus-visible {
-    outline: 2px solid #0a84ff;
+    outline: 2px solid #F15A24;
     outline-offset: 2px;
   }
   .acct-btn-text:focus-visible {
@@ -1086,7 +1095,7 @@
   }
   .acct-btn-solid {
     padding: 8px 18px; border-radius: 980px;
-    background: #0a84ff; border: 0;
+    background: #F15A24; border: 0;
     color: #fff; font-size: var(--fs-md); font-weight: 500;
     cursor: pointer;
     transition: background 0.12s, opacity 0.12s;
@@ -1650,7 +1659,7 @@
     flex-shrink: 0;
     background: var(--text-faint);
   }
-  .column[data-dot="todo"]     .column-dot { background: #0a84ff; }
+  .column[data-dot="todo"]     .column-dot { background: #F15A24; }
   .column[data-dot="progress"] .column-dot { background: #ff9f0a; }
   .column[data-dot="blocked"]  .column-dot { background: #ff453a; }
   .column[data-dot="review"]   .column-dot { background: #bf5af2; }
@@ -1845,7 +1854,7 @@
   .card:hover {
     border-color: var(--hover-blue);
     transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(10,132,255,0.10);
+    box-shadow: 0 4px 14px rgba(241,90,36,0.10);
   }
   /* priority = subtle 2px left accent stripe (replaces corner dot) */
   .card::before {
@@ -2415,7 +2424,7 @@
     width: 8px; height: 8px; border-radius: 50%;
     display: inline-block; flex-shrink: 0;
   }
-  .dot-todo { background: #0a84ff; }
+  .dot-todo { background: #F15A24; }
   .dot-progress { background: #ff9f0a; }
   .dot-review { background: #bf5af2; }
   .dot-done { background: #30d158; }
@@ -3063,7 +3072,7 @@
   .comment-text .mention,
   .comment-input .mention {
     background: rgba(10, 132, 255, 0.18);
-    color: #0a84ff;
+    color: #F15A24;
     padding: 1px 5px;
     border-radius: 4px;
     font-weight: 600;
@@ -3109,11 +3118,11 @@
     user-select: none;
   }
   .reaction-pill:hover { background: var(--hover-tint); border-color: var(--hover-blue); color: var(--hover-blue); }
-  .reaction-pill:focus-visible { border-color: var(--hover-blue); box-shadow: 0 0 0 2px rgba(10,132,255,0.2); }
+  .reaction-pill:focus-visible { border-color: var(--hover-blue); box-shadow: 0 0 0 2px rgba(241,90,36,0.2); }
   .reaction-pill:active { transform: scale(0.92); }
   .reaction-pill.you {
     background: rgba(10, 132, 255, 0.15);
-    color: #0a84ff;
+    color: #F15A24;
     border-color: rgba(10, 132, 255, 0.25);
   }
   .reaction-pill.popping { animation: reaction-pop var(--dur-slow) var(--ease-snap); }
@@ -4196,7 +4205,7 @@
     display: inline-flex;
     border-radius: 980px;
     overflow: hidden;
-    background: #0a84ff;
+    background: #F15A24;
     transition: opacity 0.15s, background 0.15s;
   }
   .send-group.disabled { opacity: 0.4; cursor: not-allowed; background: var(--bg-soft); }
@@ -4391,7 +4400,7 @@
   .settings-input:focus,
   .settings-textarea:focus {
     outline: none;
-    border-color: #0a84ff;
+    border-color: #F15A24;
     background: var(--bg);
   }
 
@@ -4533,7 +4542,7 @@
     border-radius: 50%;
     flex-shrink: 0;
   }
-  .settings-list-row[data-dot="todo"]     .settings-list-dot { background: #0a84ff; }
+  .settings-list-row[data-dot="todo"]     .settings-list-dot { background: #F15A24; }
   .settings-list-row[data-dot="progress"] .settings-list-dot { background: #ff9f0a; }
   .settings-list-row[data-dot="blocked"]  .settings-list-dot { background: #ff453a; }
   .settings-list-row[data-dot="review"]   .settings-list-dot { background: #bf5af2; }
@@ -4554,7 +4563,7 @@
   .settings-list-row .settings-row-input:hover { background: var(--bg); }
   .settings-list-row .settings-row-input:focus {
     background: var(--bg);
-    border-color: #0a84ff;
+    border-color: #F15A24;
     outline: none;
   }
   .settings-wip {
@@ -4585,7 +4594,7 @@
   }
   .settings-wip-input:focus {
     outline: none;
-    border-color: #0a84ff;
+    border-color: #F15A24;
   }
   .settings-row-action {
     width: 28px; height: 28px;
@@ -4713,7 +4722,7 @@
   .members-invite-input::placeholder { color: var(--text-faint); }
   .members-invite-input:focus {
     outline: none;
-    border-color: #0a84ff;
+    border-color: #F15A24;
     background: var(--bg);
   }
   .members-invite-role {
@@ -4728,7 +4737,7 @@
   }
   .members-invite-btn {
     padding: var(--sp-9) var(--sp-xl);
-    background: #0a84ff;
+    background: #F15A24;
     border: none;
     border-radius: 8px;
     color: #fff;
@@ -4828,7 +4837,7 @@
   .mbrs-invite-btn {
     padding: 8px 16px;
     border-radius: 8px;
-    background: #0a84ff;
+    background: #F15A24;
     color: #fff;
     border: none;
     font-size: 13px; font-weight: 600;
@@ -4839,7 +4848,7 @@
   .mbrs-invite-btn:hover { background: #0066d6; }
   .mbrs-invite-btn:disabled { opacity: 0.55; cursor: not-allowed; }
   .mbrs-invite-btn:focus-visible {
-    outline: 2px solid #0a84ff;
+    outline: 2px solid #F15A24;
     outline-offset: 2px;
   }
 
@@ -4871,7 +4880,7 @@
   }
   .mbrs-link-input:focus {
     outline: none;
-    border-color: #0a84ff;
+    border-color: #F15A24;
   }
   .mbrs-link-copy {
     padding: 7px 14px;
@@ -4890,7 +4899,7 @@
   }
   .mbrs-link-copy[data-copied="true"] {
     background: var(--bg-soft);
-    color: #0a84ff;
+    color: #F15A24;
     border-color: rgba(10, 132, 255, 0.4);
   }
   .mbrs-link-hint {
@@ -4986,7 +4995,7 @@
   }
   .mbrs-tag--owner {
     background: rgba(10, 132, 255, 0.10);
-    color: #0a84ff;
+    color: #F15A24;
   }
 
   /* Inline role select on a member row — narrower than the invite
@@ -5098,11 +5107,11 @@
     letter-spacing: 0.02em;
   }
   .avatar-color-1 { background: linear-gradient(135deg, #ff6b9d, #ff3366); }
-  .avatar-color-2 { background: linear-gradient(135deg, #0a84ff, #0a6fcc); }
+  .avatar-color-2 { background: linear-gradient(135deg, #F15A24, #0a6fcc); }
   .avatar-color-3 { background: linear-gradient(135deg, #30d158, #0aaf41); }
   .avatar-color-4 { background: linear-gradient(135deg, #ff9f0a, #cc7000); }
   .avatar-color-5 { background: linear-gradient(135deg, #bf5af2, #8e3ecc); }
-  .avatar-color-6 { background: linear-gradient(135deg, #64d2ff, #0a84ff); }
+  .avatar-color-6 { background: linear-gradient(135deg, #64d2ff, #F15A24); }
 
   .members-identity {
     flex: 1;
@@ -5231,7 +5240,7 @@
     transition: transform 0.15s;
     box-shadow: 0 1px 3px rgba(0,0,0,0.3);
   }
-  .members-toggle.on { background: #0a84ff; }
+  .members-toggle.on { background: #F15A24; }
   .members-toggle.on::after { transform: translateX(16px); }
 
   /* ============================================================
@@ -5349,8 +5358,8 @@
   .analytics-summary-icon {
     width: 28px; height: 28px;
     flex-shrink: 0;
-    background: rgba(10,132,255,0.14);
-    color: #0a84ff;
+    background: rgba(241,90,36,0.14);
+    color: #F15A24;
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -5440,7 +5449,7 @@
   .analytics-blocked-banner-link {
     font-size: var(--fs-sm);
     font-weight: 500;
-    color: #0a84ff;
+    color: #F15A24;
     text-decoration: none;
     cursor: pointer;
   }
@@ -6185,7 +6194,7 @@
     transition: background 0.12s, color 0.12s;
   }
   .share-access-row.public .share-access-icon {
-    background: rgba(10,132,255,0.14);
+    background: rgba(241,90,36,0.14);
     color: var(--hover-blue);
   }
   .share-access-icon svg { width: 16px; height: 16px; }
@@ -6607,7 +6616,7 @@
   /* Onboarding tier — preventive attention. Brand-blue rail so it
      reads as "you should look at this" without competing with the
      reactive red/amber tiers. Audit: needs-attention onboarding. */
-  .attn-card.onboard::before { background: #0a84ff; opacity: 0.85; }
+  .attn-card.onboard::before { background: var(--status-onboard); opacity: 0.85; }
   .attn-card:hover {
     box-shadow: var(--shadow-hover);
     transform: translateY(-1px);
@@ -6639,8 +6648,8 @@
   /* Onboarding pill — brand-blue, matches the .attn-card.onboard
      left rail. Distinct from fire-red and risk-grey so the user
      can scan the feed and know which row is preventive. */
-  .attn-severity.onboarding { color: #0a84ff; }
-  .attn-severity.onboarding .dot { background: #0a84ff; }
+  .attn-severity.onboarding { color: var(--status-onboard); }
+  .attn-severity.onboarding .dot { background: var(--status-onboard); }
 
   .attn-client {
     font-size: var(--fs-sm); font-weight: 600; color: var(--text-muted);
@@ -7870,8 +7879,12 @@
 
   /* Brand logo colors (generated for mock clients — reuse avatar palette) */
   .logo-indigo { background: linear-gradient(135deg, #5e5ce6, #3d3ab5); }
-  .logo-sky    { background: linear-gradient(135deg, #64d2ff, #0a84ff); }
-  .logo-teal   { background: linear-gradient(135deg, #5ac8fa, #007aff); }
+  /* Avatar palette gradients — literal blues here are intentional
+     (not the brand interactive accent). Uppercase hex protects them
+     from any future case-sensitive sweep that flips lowercase
+     #F15A24 / #F15A24 to brand color. */
+  .logo-sky    { background: linear-gradient(135deg, #64d2ff, #0A84FF); }
+  .logo-teal   { background: linear-gradient(135deg, #5ac8fa, #007AFF); }
   .logo-green  { background: linear-gradient(135deg, #30d158, #0aaf41); }
   .logo-amber  { background: linear-gradient(135deg, #ffd60a, #d97700); }
   .logo-orange { background: linear-gradient(135deg, #ff9f0a, #d46900); }
@@ -9204,7 +9217,7 @@
     color: var(--text-muted);
   }
   .meeting-type-icon svg { width: 13px; height: 13px; }
-  .meeting-type-icon[data-type="meeting"]  { background: color-mix(in srgb, #0a84ff 14%, transparent); color: #0a84ff; }
+  .meeting-type-icon[data-type="meeting"]  { background: color-mix(in srgb, #F15A24 14%, transparent); color: #F15A24; }
   .meeting-type-icon[data-type="call"]     { background: color-mix(in srgb, #30d158 14%, transparent); color: #30d158; }
   .meeting-type-icon[data-type="email"]    { background: color-mix(in srgb, #bf5af2 14%, transparent); color: #bf5af2; }
   .meeting-type-icon[data-type="in-person"]{ background: color-mix(in srgb, #ff9f0a 14%, transparent); color: #ff9f0a; }
@@ -11797,12 +11810,12 @@
     opacity: 0.4;
   }
   .wip-agenda-card-row.is-drop-target {
-    background: color-mix(in srgb, var(--highlight, #0a84ff) 8%, transparent);
-    box-shadow: inset 0 2px 0 0 var(--highlight, #0a84ff);
+    background: color-mix(in srgb, var(--highlight, #F15A24) 8%, transparent);
+    box-shadow: inset 0 2px 0 0 var(--highlight, #F15A24);
   }
   .wip-agenda-card-row.is-drop-target-bottom {
-    background: color-mix(in srgb, var(--highlight, #0a84ff) 8%, transparent);
-    box-shadow: inset 0 -2px 0 0 var(--highlight, #0a84ff);
+    background: color-mix(in srgb, var(--highlight, #F15A24) 8%, transparent);
+    box-shadow: inset 0 -2px 0 0 var(--highlight, #F15A24);
   }
   .wip-agenda-drag {
     display: inline-flex; align-items: center; justify-content: center;
@@ -11890,12 +11903,12 @@
     opacity: 0.4;
   }
   .wip-agenda-flat-row.is-drop-target {
-    background: color-mix(in srgb, var(--highlight, #0a84ff) 8%, transparent);
-    box-shadow: inset 0 2px 0 0 var(--highlight, #0a84ff);
+    background: color-mix(in srgb, var(--highlight, #F15A24) 8%, transparent);
+    box-shadow: inset 0 2px 0 0 var(--highlight, #F15A24);
   }
   .wip-agenda-flat-row.is-drop-target-bottom {
-    background: color-mix(in srgb, var(--highlight, #0a84ff) 8%, transparent);
-    box-shadow: inset 0 -2px 0 0 var(--highlight, #0a84ff);
+    background: color-mix(in srgb, var(--highlight, #F15A24) 8%, transparent);
+    box-shadow: inset 0 -2px 0 0 var(--highlight, #F15A24);
   }
   /* .wip-agenda-flat-note and .wip-agenda-group--custom overrides
      deleted — no React renders either class. Audit: wip M1. */
@@ -14013,7 +14026,7 @@
   .welcome-banner-cta-primary {
     padding: 8px 14px;
     border-radius: 8px;
-    background: #007aff;
+    background: #F15A24;
     color: #fff;
     border: none;
     font-size: 13px; font-weight: 600;
@@ -14025,7 +14038,7 @@
     padding: 8px 14px;
     border-radius: 8px;
     background: transparent;
-    color: #007aff;
+    color: #F15A24;
     border: 1px solid rgba(0, 122, 255, 0.4);
     font-size: 13px; font-weight: 600;
     cursor: pointer;
@@ -14033,7 +14046,7 @@
   }
   .welcome-banner-cta-secondary:hover {
     background: rgba(0, 122, 255, 0.08);
-    border-color: #007aff;
+    border-color: #F15A24;
   }
   .welcome-banner-dismiss {
     width: 28px; height: 28px;
@@ -14067,7 +14080,7 @@
      page. Audit: login HIGH (invisible focus on the only action). */
   .login-cta { outline: none; }
   .login-cta:focus-visible {
-    outline: 2px solid #007aff;
+    outline: 2px solid #F15A24;
     outline-offset: 3px;
     box-shadow: inset 0 0 0 2px rgba(255,255,255,0.9);
   }
@@ -14220,7 +14233,7 @@
     top: 0;
     z-index: 9999;
     padding: 10px 16px;
-    background: #007aff;
+    background: #F15A24;
     color: #fff;
     font-size: 14px;
     font-weight: 600;
@@ -14241,7 +14254,7 @@
   .welcome-banner-cta-primary:focus-visible,
   .welcome-banner-cta-secondary:focus-visible,
   .welcome-banner-dismiss:focus-visible {
-    outline: 2px solid #007aff;
+    outline: 2px solid #F15A24;
     outline-offset: 2px;
   }
 
