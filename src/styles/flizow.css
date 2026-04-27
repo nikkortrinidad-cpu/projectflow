@@ -1032,9 +1032,16 @@
     background: transparent; border: 0;
     color: var(--text); font-size: var(--fs-md); font-weight: 500;
     cursor: pointer;
-    transition: background 0.12s;
+    transition: background 0.12s, opacity 0.12s, color 0.12s;
   }
   .acct-btn-text:hover { background: var(--bg-soft); }
+  .acct-btn-text:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    color: var(--text-muted);
+    background: transparent;
+  }
+  .acct-btn-text:disabled:hover { background: transparent; }
   /* Primary footer Save button. Tier 1 in the blue hierarchy: solid
      fill, white text, brand blue. Disabled when no draft has
      diverged from the source values, to make "no changes to save"

@@ -310,8 +310,31 @@ export default function FlizowAccountModal({ onClose }: Props) {
     showToast('Changes saved');
   }
 
+  /** Cancel — revert every draft back to its source-of-truth value
+   *  WITHOUT closing the modal. Symmetric with Save (which persists
+   *  + stays open). User wants to keep the modal open to keep
+   *  tweaking; they'll close via X / Esc / backdrop. The Cancel
+   *  button itself is disabled when nothing is dirty (no work to
+   *  undo), mirroring Save's disabled state. */
+  function handleCancel() {
+    setNameDraft(myMember?.name ?? user?.displayName ?? '');
+    setPreferredDraft(myMember?.preferredName ?? '');
+    setRoleDraft(myMember?.role ?? '');
+    setTzDraft(myMember?.timezone ?? 'pst');
+    setAvatarHex(myMember?.color ?? '#5e5ce6');
+    setDraftWsName(wsMeta?.name ?? '');
+    setDraftWsInitials(wsMeta?.initials ?? '');
+    setDraftWsColor(wsMeta?.color ?? '#5e5ce6');
+    setDraftTheme(data.theme === 'dark' ? 'dark' : 'light');
+    setDraftNotifDigest(myMember?.notifPrefs?.digest !== false);
+    setDraftNotifUrgent(myMember?.notifPrefs?.urgent !== false);
+    showToast('Changes reverted');
+  }
+
   /** Close-with-dirty-check used by the X button, Esc handler, and
-   *  the backdrop click. Cancel button uses the same path. */
+   *  the backdrop click. Distinct from Cancel — these are the
+   *  IMPLICIT close gestures where the user might dismiss accidentally,
+   *  so we still prompt when there are unsaved changes. */
   function handleClose() {
     if (isDirty && !window.confirm('Discard your unsaved changes?')) {
       return;
@@ -764,7 +787,9 @@ export default function FlizowAccountModal({ onClose }: Props) {
           <button
             type="button"
             className="acct-btn-text"
-            onClick={handleClose}
+            onClick={handleCancel}
+            disabled={!isDirty}
+            aria-label={isDirty ? 'Discard changes' : 'No changes to discard'}
           >
             Cancel
           </button>
