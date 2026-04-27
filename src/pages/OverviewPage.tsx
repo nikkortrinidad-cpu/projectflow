@@ -327,18 +327,33 @@ export function OverviewPage() {
                     card.severity === 'critical' ? 'critical'
                     : card.severity === 'warning' ? 'warning'
                     : 'onboarding';
+                  // Deep-link target. When the attention card is
+                  // backed by a specific kanban task (overdue or
+                  // blocked), open that card's modal directly via
+                  // `#board/{svcId}/card/{cardId}`. BoardPage's
+                  // auto-open effect catches the URL and pops the
+                  // modal. When there's no primary task (onboarding
+                  // cards, or status-only fire alerts), fall back to
+                  // the client detail page.
+                  const target =
+                    card.primaryTaskId && card.primaryServiceId
+                      ? `#board/${card.primaryServiceId}/card/${card.primaryTaskId}`
+                      : `#clients/${card.clientId}`;
+                  const ariaLabel = card.primaryTaskTitle
+                    ? `Open card: ${card.primaryTaskTitle} (${card.clientName})`
+                    : `Open ${card.clientName}`;
                   return (
                     <div
                       key={card.clientId}
                       className={`attn-card ${cardTier}`}
                       role="button"
                       tabIndex={0}
-                      aria-label={`Open ${card.clientName}`}
-                      onClick={() => navigate(`#clients/${card.clientId}`)}
+                      aria-label={ariaLabel}
+                      onClick={() => navigate(target)}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault();
-                          navigate(`#clients/${card.clientId}`);
+                          navigate(target);
                         }
                       }}
                     >
@@ -695,6 +710,21 @@ type AttentionCard = {
   title: string;
   ageLabel: string;
   desc?: string;
+  /** When set, clicking the card deep-links to a specific kanban
+   *  card modal (`#board/{primaryServiceId}/card/{primaryTaskId}`)
+   *  instead of the client detail page. Picked from the worst-case
+   *  open task for the client — oldest overdue, then first blocked,
+   *  then nothing (falls back to client detail).
+   *
+   *  Onboarding cards leave both unset because onboarding items
+   *  aren't kanban cards; they live on the client detail's
+   *  onboarding tab. Click → client detail page. */
+  primaryTaskId?: string;
+  primaryServiceId?: string;
+  /** Title of the primary task (e.g., "Draft launch post") so the
+   *  attention card's description can hint which specific card the
+   *  click will open. Reads better than just "3 overdue cards →". */
+  primaryTaskTitle?: string;
 };
 
 // Why we group by client (not by task): the AM's first move when the
@@ -786,13 +816,37 @@ function buildAttentionCards(
         ageLabel = 'Needs review';
       }
 
+      // Pick the primary task to deep-link the click into. Worst-case
+      // first: oldest overdue beats first blocked beats nothing. The
+      // sort here finds the oldest overdue without re-walking the
+      // whole list. Onboarding-driven attention cards leave this
+      // unset — they fall back to the client detail page.
+      let primaryTask: Task | undefined;
+      if (overdue.length > 0) {
+        primaryTask = overdue.reduce((worst, t) => {
+          const due = new Date(t.dueDate).getTime();
+          const worstDue = new Date(worst.dueDate).getTime();
+          return due < worstDue ? t : worst;
+        });
+      } else if (blocked.length > 0) {
+        primaryTask = blocked[0];
+      }
+
       // Optional longer sentence when a blocker reason is present —
-      // surfaces the human context ("waiting on brand assets") so the AM
-      // can triage without opening the card.
+      // surfaces the human context ("waiting on brand assets") so the
+      // AM can triage without opening the card. Falls back to the
+      // primary task's title when there's no blocker reason but we DO
+      // have a target task — gives the user a heads-up about which
+      // card the click will open.
       let desc: string | undefined;
       const firstBlocker = blocked.find((t) => t.blockerReason)?.blockerReason;
       if (firstBlocker) {
         desc = `Blocked: ${firstBlocker}`;
+      } else if (primaryTask && (overdue.length + blocked.length) > 1) {
+        // Only show the "→ task name" hint when there are multiple
+        // urgent items and we're picking one. With a single urgent
+        // item the title already names it well enough.
+        desc = `Opens: ${primaryTask.title}`;
       }
 
       return {
@@ -803,6 +857,9 @@ function buildAttentionCards(
         title,
         ageLabel,
         desc,
+        primaryTaskId: primaryTask?.id,
+        primaryServiceId: primaryTask?.serviceId,
+        primaryTaskTitle: primaryTask?.title,
       };
     },
   );
