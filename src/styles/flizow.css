@@ -7176,6 +7176,13 @@
   .attn-extras {
     display: grid;
     grid-template-rows: 0fr;
+    /* Force the single grid column to span the full wrapper width.
+       Without this, grid-auto-columns defaults to `auto` which sizes
+       to content — making the inner cards narrower than cards 1-3
+       that live directly in the parent flex column. Setting 1fr here
+       fixes the visual width regression after the expand-animation
+       change. */
+    grid-template-columns: minmax(0, 1fr);
     transition: grid-template-rows 220ms ease-out;
   }
   .attn-extras.expanded {
