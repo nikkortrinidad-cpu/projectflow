@@ -223,12 +223,32 @@
   }
   .header-left { display: flex; align-items: center; gap: var(--sp-3xl); }
   .header-logo {
+    /* Compound logo: F-mark (img) + "Flizow" wordmark (text). Both
+       inherit the brand orange; flex keeps them on the same baseline. */
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     font-size: var(--fs-xl); font-weight: 600; letter-spacing: -0.022em;
-    color: var(--text); text-decoration: none;
+    color: var(--highlight); text-decoration: none;
     /* Tiny padding so the hover tint reads as a hit target, not a floating rect. */
     padding: 4px 6px; margin: -4px -6px;
     border-radius: 8px;
     transition: background 0.15s ease, color 0.15s ease;
+  }
+  .header-mark {
+    /* Sized to match the wordmark's cap-height. height:20px lines up
+       cleanly with --fs-xl text. width:auto preserves the mark's
+       native aspect ratio. */
+    height: 20px;
+    width: auto;
+    display: block;
+    flex-shrink: 0;
+  }
+  .header-wordmark {
+    /* The text inherits color + font-size from .header-logo; this
+       class exists so future styling can target it independently
+       without unsettling the parent's hit-target rules. */
+    line-height: 1;
   }
   .header-logo:hover { background: var(--hover-tint, rgba(10, 132, 255, 0.08)); }
   .header-logo:focus-visible {

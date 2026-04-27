@@ -124,7 +124,19 @@ export function TopNav({
   return (
     <div className="header">
       <div className="header-left">
-        <a href="#overview" className="header-logo" aria-label="Flizow home">Flizow</a>
+        {/* Brand mark + wordmark. The PNG ships from public/ and gets
+            prefixed with Vite's base path so the same JSX works in dev
+            (/) and prod (/flizow/). The "Flizow" text is HTML so it
+            inherits the app's Inter font + the brand orange via CSS. */}
+        <a href="#overview" className="header-logo" aria-label="Flizow home">
+          <img
+            className="header-mark"
+            src={`${import.meta.env.BASE_URL}Flizow_Mark_v1.png`}
+            alt=""
+            aria-hidden="true"
+          />
+          <span className="header-wordmark">Flizow</span>
+        </a>
         <nav className="header-nav">
           <a href="#overview" className={active === 'overview' ? 'on' : ''} aria-current={active === 'overview' ? 'page' : undefined}>Home</a>
           <a href="#clients" className={active === 'clients' ? 'on' : ''} aria-current={active === 'clients' ? 'page' : undefined}>Clients</a>
