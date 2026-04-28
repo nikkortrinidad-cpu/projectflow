@@ -360,7 +360,7 @@ function Header({
             on the 300th. Trimmed to the essential-at-a-glance line;
             the rest was re-learnable by context. Audit: ops M5. */}
         <p className="ops-header-sub">
-          Hiring, finance, process, tooling — work the team does for itself.
+          The work the team does for itself.
         </p>
       </div>
       {showStats && (

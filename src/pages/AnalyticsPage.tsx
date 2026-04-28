@@ -124,7 +124,7 @@ export function AnalyticsPage() {
           <div className="anlx-header-text">
             <div className="page-greeting">Analytics</div>
             <h1 className="page-title">Delivery health</h1>
-            <p className="page-date">What's landing next, who's stretched, what's slipping. Updated live.</p>
+            <p className="page-date">Where to look when something feels off.</p>
           </div>
         </header>
 
