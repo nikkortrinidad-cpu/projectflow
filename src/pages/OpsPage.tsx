@@ -5,13 +5,13 @@ import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { daysBetween, formatMonthDay } from '../utils/dateFormat';
 import { BoardFilters, applyFilters, EMPTY_FILTERS, type BoardFilterState } from '../components/BoardFilters';
 import { BriefModal } from '../components/BriefModal';
-import { BriefStrip } from '../components/BriefStrip';
 import { useFlizow } from '../store/useFlizow';
 import { flizowStore } from '../store/flizowStore';
 import type { OpsTask, Member, ColumnId } from '../types/flizow';
 import FlizowCardModal from '../components/FlizowCardModal';
 import { InlineCardComposer } from '../components/shared/InlineCardComposer';
 import { TeamCapacityHeatmap } from '../components/TeamCapacityHeatmap';
+import { relativeTimeAgo } from '../utils/clientDerived';
 
 /**
  * Ops board — internal-team kanban for the work the agency does for
@@ -48,7 +48,7 @@ const COLUMNS: Array<{ id: ColumnId; title: string; dot: string }> = [
 
 // ── Page ─────────────────────────────────────────────────────────────
 
-type OpsTab = 'board' | 'capacity';
+type OpsTab = 'board' | 'brief' | 'capacity';
 
 export function OpsPage() {
   const { data } = useFlizow();
@@ -167,11 +167,14 @@ export function OpsPage() {
     <div className="view active">
       <Header stats={stats} showStats={tab === 'board'} />
 
-      {/* Tabs — peer surfaces, not nested. Board is the default
-          (the kanban is still the day-to-day work surface), Capacity
-          is the planning view. Wrapping them as tabs lets the
-          heatmap stay quiet until the user actively reaches for it,
-          instead of stealing space above the board on every visit. */}
+      {/* Tabs — three peer surfaces.
+            Board     = the kanban (day-to-day execution)
+            Brief     = the team's weekly steer (strategic context)
+            Capacity  = workspace-wide load heatmap (planning)
+          Board stays default — it's the most-used surface; surprising
+          existing users with a different landing tab earns nothing.
+          Brief sits between because it's the "why" between work
+          (Board) and resourcing (Capacity). */}
       <div className="ops-tabs" role="tablist" aria-label="Ops views">
         <button
           type="button"
@@ -183,6 +186,17 @@ export function OpsPage() {
           onClick={() => setTab('board')}
         >
           Ops Board
+        </button>
+        <button
+          type="button"
+          id="ops-tab-brief"
+          role="tab"
+          aria-selected={tab === 'brief'}
+          aria-controls="ops-panel-brief"
+          className={`ops-tab${tab === 'brief' ? ' on' : ''}`}
+          onClick={() => setTab('brief')}
+        >
+          Ops Brief
         </button>
         <button
           type="button"
@@ -211,14 +225,10 @@ export function OpsPage() {
             members={opsAssigneeMembers}
           />
 
-          <BriefStrip
-            label="Ops Brief"
-            brief={data.opsBrief}
-            briefUpdatedAt={data.opsBriefUpdatedAt}
-            todayISO={data.today}
-            onOpen={() => setBriefOpen(true)}
-            emptyCta="+ Add Ops brief"
-          />
+          {/* BriefStrip used to live here as a passive reminder above
+              the kanban. Removed when Brief became its own tab —
+              having two routes to the same content was clutter, not
+              clarity. The Brief tab is the canonical surface now. */}
 
           <DndContext
             sensors={sensors}
@@ -251,6 +261,21 @@ export function OpsPage() {
               {activeTask ? <CardTile task={activeTask} members={members} today={data.today} dragging /> : null}
             </DragOverlay>
           </DndContext>
+        </section>
+      )}
+
+      {tab === 'brief' && (
+        <section
+          id="ops-panel-brief"
+          role="tabpanel"
+          aria-labelledby="ops-tab-brief"
+        >
+          <OpsBriefPanel
+            brief={data.opsBrief}
+            briefUpdatedAt={data.opsBriefUpdatedAt}
+            todayISO={data.today}
+            onEdit={() => setBriefOpen(true)}
+          />
         </section>
       )}
 
@@ -674,5 +699,86 @@ function AttachIcon() {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
     </svg>
+  );
+}
+
+// ── Ops Brief panel (Brief tab) ──────────────────────────────────────
+//
+// Reading view for the workspace's Ops Brief. Shows the full brief
+// HTML rendered in-place, the last-updated timestamp, and an Edit
+// button that opens the existing BriefModal. When the brief is empty,
+// a short empty state nudges the user to add one.
+//
+// Why a separate component (instead of inlining): keeps the empty /
+// populated branching out of the OpsPage render tree, which is
+// already busy gating three tabpanels. Co-located in OpsPage.tsx
+// (rather than a new file) because it's not generic — it's the Ops
+// Brief specifically. If Project briefs ever land their own tab on
+// per-service boards, generalise then.
+
+function OpsBriefPanel({
+  brief,
+  briefUpdatedAt,
+  todayISO,
+  onEdit,
+}: {
+  brief?: string;
+  briefUpdatedAt?: string;
+  todayISO: string;
+  onEdit: () => void;
+}) {
+  // TipTap auto-seeds an empty paragraph (<p></p>) into a "blank"
+  // editor; treat that as empty too. Same trick as in BriefStrip.
+  const hasBrief = !!brief && brief.trim() !== '' && brief !== '<p></p>';
+  const lastUpdated = briefUpdatedAt
+    ? relativeTimeAgo(briefUpdatedAt, todayISO)
+    : null;
+
+  if (!hasBrief) {
+    return (
+      <section className="ops-brief-panel ops-brief-panel--empty">
+        <h3 className="ops-brief-empty-title">No Ops brief yet</h3>
+        <p className="ops-brief-empty-sub">
+          Set the team's weekly steer — what we're focused on, what
+          shifted, what's blocked. Brief surfaces across the workspace
+          so everyone knows what matters this week without asking.
+        </p>
+        <button
+          type="button"
+          className="ops-brief-empty-cta"
+          onClick={onEdit}
+        >
+          + Add Ops brief
+        </button>
+      </section>
+    );
+  }
+
+  return (
+    <section className="ops-brief-panel">
+      <header className="ops-brief-panel-head">
+        {lastUpdated && (
+          <span className="ops-brief-panel-time">
+            Last updated · {lastUpdated}
+          </span>
+        )}
+        <button
+          type="button"
+          className="ops-brief-panel-edit"
+          onClick={onEdit}
+        >
+          Edit
+        </button>
+      </header>
+      {/* Brief HTML is authored by workspace owners via the TipTap
+          modal (StarterKit + Link). Single-tenant data, owner-only
+          writes — same trust posture as every other rich-text surface
+          in the app. The modal sanitises on save; rendering trusted
+          input here matches the pattern. */}
+      <div
+        className="ops-brief-panel-body"
+        dangerouslySetInnerHTML={{ __html: brief! }}
+      />
+    </section>
   );
 }

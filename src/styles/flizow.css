@@ -6135,6 +6135,157 @@
     outline-offset: 2px;
   }
 
+  /* ───── Ops Brief panel (Ops page → Brief tab) ───── */
+  /* Reading view for the Ops brief. Renders the full brief HTML in
+     a wide centered column with comfortable line-length (max 70ch)
+     so prose stays readable; an Edit button in the header opens the
+     existing BriefModal for changes. Keeps the strip's discovery
+     vocabulary ("Last updated · X ago") so the user has the same
+     trust signals here as on the old strip. */
+  .ops-brief-panel {
+    margin: 16px 24px 24px;
+    padding: 24px 28px;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 16px;
+  }
+  .ops-brief-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--hairline-soft);
+  }
+  .ops-brief-panel-time {
+    font-size: var(--fs-xs);
+    color: var(--text-soft);
+    letter-spacing: 0.02em;
+  }
+  .ops-brief-panel-edit {
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--hairline);
+    background: var(--bg-soft);
+    color: var(--text);
+    font-family: inherit;
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--dur-fast), border-color var(--dur-fast);
+  }
+  .ops-brief-panel-edit:hover {
+    background: var(--bg-faint);
+    border-color: var(--text-faint);
+  }
+  .ops-brief-panel-edit:focus-visible {
+    outline: 2px solid var(--hover-blue);
+    outline-offset: 2px;
+  }
+  .ops-brief-panel-body {
+    max-width: 70ch;
+    color: var(--text);
+    font-size: var(--fs-md);
+    line-height: var(--lh-relaxed);
+  }
+  /* Brief is rich text from TipTap (StarterKit + Link). Inherit the
+     prose vocabulary — headings, lists, blockquote — from the same
+     scoped tokens the modal preview uses; just bumped a hair to feel
+     like a real reading view rather than a strip preview. */
+  .ops-brief-panel-body h1,
+  .ops-brief-panel-body h2,
+  .ops-brief-panel-body h3 {
+    margin-top: 1.4em;
+    margin-bottom: 0.5em;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .ops-brief-panel-body h1:first-child,
+  .ops-brief-panel-body h2:first-child,
+  .ops-brief-panel-body h3:first-child {
+    margin-top: 0;
+  }
+  .ops-brief-panel-body h1 { font-size: var(--fs-2xl); font-weight: 700; }
+  .ops-brief-panel-body h2 { font-size: var(--fs-xl); font-weight: 700; }
+  .ops-brief-panel-body h3 { font-size: var(--fs-lg); font-weight: 600; }
+  .ops-brief-panel-body p {
+    margin: 0 0 0.85em;
+  }
+  .ops-brief-panel-body ul,
+  .ops-brief-panel-body ol {
+    margin: 0 0 0.85em;
+    padding-left: 1.4em;
+  }
+  .ops-brief-panel-body li {
+    margin-bottom: 0.3em;
+  }
+  .ops-brief-panel-body a {
+    color: var(--hover-blue);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .ops-brief-panel-body a:hover {
+    text-decoration: none;
+  }
+  .ops-brief-panel-body blockquote {
+    margin: 1em 0;
+    padding-left: 14px;
+    border-left: 3px solid var(--hairline);
+    color: var(--text-soft);
+  }
+  .ops-brief-panel-body code {
+    background: var(--bg-soft);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.92em;
+    font-family: ui-monospace, 'SF Mono', Monaco, monospace;
+  }
+  .ops-brief-panel-body hr {
+    border: none;
+    border-top: 1px solid var(--hairline-soft);
+    margin: 1.5em 0;
+  }
+
+  /* Empty state — no brief yet. Friendly, short, single CTA. */
+  .ops-brief-panel--empty {
+    text-align: center;
+    padding: 60px 28px;
+  }
+  .ops-brief-empty-title {
+    margin: 0 0 8px;
+    font-size: var(--fs-xl);
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .ops-brief-empty-sub {
+    margin: 0 auto 22px;
+    max-width: 52ch;
+    font-size: var(--fs-md);
+    line-height: var(--lh-relaxed);
+    color: var(--text-soft);
+  }
+  .ops-brief-empty-cta {
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: none;
+    background: var(--hover-blue);
+    color: #fff;
+    font-family: inherit;
+    font-size: var(--fs-md);
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity var(--dur-fast);
+  }
+  .ops-brief-empty-cta:hover {
+    opacity: 0.9;
+  }
+  .ops-brief-empty-cta:focus-visible {
+    outline: 2px solid var(--hover-blue);
+    outline-offset: 2px;
+  }
+
   /* ───── Team Capacity heatmap (Ops page → Capacity tab) ───── */
   /* The "is anyone slammed this week?" surface. Rows = members,
      columns = next 10 weekdays. Each cell shows load/soft tinted by
