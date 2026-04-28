@@ -1,5 +1,16 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { CheckIcon, ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import {
+  ArrowTrendingUpIcon,
+  BriefcaseIcon,
+  CalendarDaysIcon,
+  CheckIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  FireIcon,
+  NoSymbolIcon,
+  UsersIcon,
+} from '@heroicons/react/24/outline';
+import type { ComponentType, SVGProps } from 'react';
 import { navigate } from '../router';
 import { useFlizow } from '../store/useFlizow';
 import type { Task, Member, Client, Service } from '../types/flizow';
@@ -461,11 +472,30 @@ interface Kpi {
   foot: string;
 }
 
+/**
+ * Per-KPI category icon. Lives in the label row alongside the
+ * eyebrow text — small, muted, doesn't compete with the big value.
+ * Mapped by the discriminator key so the icon stays in sync if the
+ * label copy ever changes.
+ *
+ *   ontime    — trending up, performance metric
+ *   blocked   — universal "no" / blocker
+ *   deadlines — calendar (when, by when)
+ *   clients   — fire, since "flagged" almost always means fire/risk
+ */
+const KPI_ICONS: Record<Kpi['key'], ComponentType<SVGProps<SVGSVGElement>>> = {
+  ontime: ArrowTrendingUpIcon,
+  blocked: NoSymbolIcon,
+  deadlines: CalendarDaysIcon,
+  clients: FireIcon,
+};
+
 function KpiCard({ kpi, isOpen, onClick }: {
   kpi: Kpi;
   isOpen: boolean;
   onClick: () => void;
 }) {
+  const Icon = KPI_ICONS[kpi.key];
   return (
     <button
       type="button"
@@ -475,7 +505,10 @@ function KpiCard({ kpi, isOpen, onClick }: {
       aria-label={`${kpi.label}. ${kpi.foot}. ${isOpen ? 'Drill-down open.' : 'Open drill-down.'}`}
       onClick={onClick}
     >
-      <span className="anlx-kpi-label">{kpi.label}</span>
+      <span className="anlx-kpi-label">
+        <Icon width={12} height={12} aria-hidden="true" />
+        {kpi.label}
+      </span>
       <div className="anlx-kpi-value">
         {kpi.value}
         <span className="anlx-kpi-value-unit">{kpi.unit}</span>
@@ -821,6 +854,12 @@ function MemberDrillPanel({
       </div>
       {rows.length === 0 ? (
         <div className="anlx-drill-empty">
+          <BriefcaseIcon
+            width={32}
+            height={32}
+            aria-hidden="true"
+            className="anlx-empty-icon"
+          />
           {member ? `${member.name.split(' ')[0]} has nothing open. Quiet week.` : 'Nothing open.'}
         </div>
       ) : (
@@ -979,7 +1018,10 @@ function UpcomingSection({ tasks, services, members, clients, todayISO }: {
   return (
     <section className="anlx-section" aria-labelledby="anlx-up-title">
       <div className="anlx-section-head">
-        <div className="anlx-section-title" id="anlx-up-title">Upcoming deliverables</div>
+        <div className="anlx-section-title" id="anlx-up-title">
+          <CalendarDaysIcon width={14} height={14} aria-hidden="true" />
+          Upcoming deliverables
+        </div>
         <div className="anlx-up-tabs" role="tablist" aria-label="Time range">
           <TabButton active={bucket === 'today'} onClick={() => setBucket('today')}>
             Today <span className="anlx-up-tab-count">{counts.today}</span>
@@ -995,6 +1037,12 @@ function UpcomingSection({ tasks, services, members, clients, todayISO }: {
 
       {rows.length === 0 ? (
         <div className="anlx-up-empty">
+          <CalendarDaysIcon
+            width={32}
+            height={32}
+            aria-hidden="true"
+            className="anlx-empty-icon"
+          />
           Nothing on the schedule for this window. Enjoy the quiet.
         </div>
       ) : (
@@ -1164,7 +1212,10 @@ function WorkloadSection({ rows, openMemberId, onToggleMember }: {
   return (
     <section className="anlx-section" aria-labelledby="anlx-wl-title">
       <div className="anlx-section-head">
-        <div className="anlx-section-title" id="anlx-wl-title">Team workload</div>
+        <div className="anlx-section-title" id="anlx-wl-title">
+          <UsersIcon width={14} height={14} aria-hidden="true" />
+          Team workload
+        </div>
         <div className="anlx-section-sub">
           Open tasks per teammate. Hours aren't tracked, so this is card count, not time.
         </div>

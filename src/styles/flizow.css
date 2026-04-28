@@ -14128,10 +14128,12 @@
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--highlight) 12%, transparent);
   }
   .anlx-kpi-label {
+    display: inline-flex; align-items: center; gap: 6px;
     font-size: var(--fs-micro); font-weight: 600;
     text-transform: uppercase; letter-spacing: 0.06em;
     color: var(--text-soft);
   }
+  .anlx-kpi-label svg { color: var(--text-faint); flex-shrink: 0; }
   .anlx-kpi-value {
     font-size: var(--fs-3xl); font-weight: 600; line-height: 1.1;
     letter-spacing: -0.02em; color: var(--text);
@@ -14237,6 +14239,13 @@
     text-align: center; color: var(--text-soft);
     font-size: var(--fs-sm);
   }
+  /* Hero icon for empty states — sits above the message, muted so the
+     copy still leads. Shared between .anlx-up-empty and .anlx-drill-empty. */
+  .anlx-empty-icon {
+    display: block;
+    margin: 0 auto 10px;
+    color: var(--text-faint);
+  }
 
   /* ── Section card shell (shared by Upcoming + Workload) ── */
   .anlx-section {
@@ -14251,8 +14260,10 @@
     border-bottom: 1px solid var(--hairline);
   }
   .anlx-section-title {
+    display: inline-flex; align-items: center; gap: 8px;
     font-size: var(--fs-md); font-weight: 600; color: var(--text);
   }
+  .anlx-section-title svg { color: var(--text-soft); flex-shrink: 0; }
   .anlx-section-sub {
     font-size: var(--fs-xs); color: var(--text-soft);
     margin-left: auto;
