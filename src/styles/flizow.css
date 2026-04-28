@@ -13732,7 +13732,7 @@
     overflow-y: auto; background: var(--bg);
   }
   .template-detail-page {
-    padding: var(--sp-36) 44px 80px; max-width: 820px; margin: 0 auto;
+    padding: var(--sp-36) 44px 80px; max-width: 720px; margin: 0 auto;
   }
   .template-detail-page[hidden] { display: none; }
   .template-hero {
@@ -13862,6 +13862,7 @@
   .template-section-sub {
     font-size: var(--fs-md); color: var(--text-faint);
     font-weight: 400; line-height: var(--lh-body);
+    max-width: 65ch;
   }
 
   /* Phases — now a tight stack instead of spaced-out cards.
