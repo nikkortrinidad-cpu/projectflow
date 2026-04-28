@@ -45,12 +45,23 @@
 
        Font-size scale (digital-extended, built around Apple text sizes):
        Uses semantic names so future size shifts are one-line changes.
+
+       NOTE on the 13px default (--fs-md). The traditional typographic
+       scale skips from 12 to 14, and grids audits keep flagging 13px
+       as "off-scale." The choice is deliberate: Inter at 13px (its
+       optimal size for UI dense data, per the typeface designer) reads
+       a hair tighter than 14 — useful for the meta-heavy rows we
+       have all over (card meta, client rows, schedule chips). Bumping
+       everything to 14px tested noticeably looser; the team reverted.
+       The token is still here as `--fs-md` so anyone reaching for
+       "body-small" uses it without thinking. Body-default (14px) lives
+       at `--fs-base` for the cases that genuinely want it.
        ────────────────────────────────────────────────────────── */
     --fs-nano: 9px;      /* avatar "+N" pips, AM/PM flag             */
     --fs-micro: 10px;    /* tiny badges, counts                      */
     --fs-xs: 11px;       /* micro meta, kbd, small labels            */
     --fs-sm: 12px;       /* section labels, chip counts              */
-    --fs-md: 13px;       /* body-small (most common)                 */
+    --fs-md: 13px;       /* body-small (most common — Inter optimal) */
     --fs-base: 14px;     /* body default                             */
     --fs-lg: 16px;       /* body-large, sidebar empty titles         */
     --fs-xl: 18px;       /* H4, logo                                 */
