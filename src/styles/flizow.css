@@ -130,6 +130,23 @@
     --sp-6xl: 48px;       /* hero padding / page-level rhythm         */
     --sp-7xl: 64px;       /* top-level view padding                   */
 
+    /* Z-layer map — named tiers for stacking contexts. Existing
+       hardcoded z-index values live across ~64 selectors with 30
+       unique numbers; new code should use these tokens so the
+       stacking story stays legible. Migrate older selectors as you
+       touch them (don't bulk-rewrite — some hardcodes were tuned
+       for specific stacking-context relationships). */
+    --z-content: 1;            /* small lifts inside a card / row     */
+    --z-sticky: 5;             /* sticky column / swimlane headers    */
+    --z-dropdown: 50;          /* nav menus, picker dropdowns         */
+    --z-tooltip: 100;          /* hover tooltips                      */
+    --z-popover: 200;          /* attached popovers / day-cap edit    */
+    --z-modal-backdrop: 1000;  /* modal-shell overlays                */
+    --z-modal: 1100;           /* modal content above its backdrop    */
+    --z-toast: 1500;           /* toasts / persistent banners         */
+    --z-cmdk: 2000;            /* command palette (top of functional) */
+    --z-debug: 999999;         /* debug overlays only — not for prod  */
+
     /* Motion tokens — Apple HIG #8 "motion explains, it doesn't decorate".
        Duration default floor 100ms (micro-feedback) → ceiling 400ms (page).
        Easing default is ease-out for motion (start fast, settle), spring
@@ -2285,7 +2302,7 @@
     border-radius: 10px;
     cursor: pointer; user-select: none;
     position: sticky; left: 0;
-    z-index: 3;
+    z-index: var(--z-sticky);
   }
   .swimlane-header:hover { background: var(--bg-soft); }
   .swimlane-title {
