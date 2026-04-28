@@ -1876,8 +1876,17 @@
   .filter-reset:hover:not(:disabled) { color: var(--text); background: var(--hover-tint); }
   .filter-reset:disabled { opacity: 0.4; cursor: default; }
 
+  /* Kanban container — used by the Ops Board tab and the per-client
+     service boards. Capped at 1300px and centered so the columns
+     don't sprawl across the full viewport. The columns inside (320px
+     each, 20px gap) still exceed 1300 once you have 4+ columns, so
+     overflow-x: auto kicks in and lets the user scroll horizontally
+     within this column. */
   .board {
     flex: 1;
+    width: 100%;
+    max-width: 1300px;
+    margin: 0 auto;
     display: flex;
     gap: var(--sp-2xl);
     padding: var(--sp-4xl);
