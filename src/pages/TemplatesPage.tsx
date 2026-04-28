@@ -364,7 +364,7 @@ function ListPane({
         <div className="page-greeting">{eyebrowText}</div>
         <h1 className="page-title">Templates</h1>
         <p className="page-date">
-          Service shapes you don't have to build twice.
+          Reusable blueprints for every kind of work you do.
         </p>
       </div>
 
