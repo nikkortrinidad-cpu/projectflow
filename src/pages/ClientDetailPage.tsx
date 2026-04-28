@@ -25,7 +25,10 @@ import { flizowStore, type FlizowStore } from '../store/flizowStore';
 import { formatMonthYear, formatMonthDay, daysBetween } from '../utils/dateFormat';
 import { categoryLabel, serviceHealth, serviceHealthLabel, type ServiceHealth } from '../utils/clientDerived';
 import { NotesTab } from '../components/NotesTab';
-import { TouchpointsTab } from '../components/TouchpointsTab';
+// Touchpoints panel hidden 2026-04-28 by product call — see TABS
+// comment below. Restore: uncomment this import + the tab entry +
+// the panel render block.
+// import { TouchpointsTab } from '../components/TouchpointsTab';
 import { StatsTab } from '../components/StatsTab';
 import { ConfirmDangerDialog } from '../components/ConfirmDangerDialog';
 import { defaultNextDeliverableAt } from '../data/serviceTemplateOptions';
@@ -57,7 +60,13 @@ const TABS: TabDef[] = [
   { key: 'onboarding',  label: 'Onboarding' },
   { key: 'about',       label: 'About' },
   { key: 'stats',       label: 'Stats' },
-  { key: 'touchpoints', label: 'Touchpoints' },
+  // Touchpoints tab hidden 2026-04-28 by product call — feature stays
+  // in the codebase (TouchpointsTab.tsx, TouchpointModal.tsx, store
+  // methods, demo seed, cascade counts) so flipping it back on later
+  // is a one-line restore. Even owner accounts shouldn't see it for
+  // now. To restore: re-add the line below + uncomment the matching
+  // {activeTab === 'touchpoints' && …} block in the panel render.
+  // { key: 'touchpoints', label: 'Touchpoints' },
   { key: 'notes',       label: 'Notes' },
 ];
 
@@ -213,6 +222,11 @@ function ClientDetail({ client, data, store }: DetailProps) {
         <NotesTab clientId={client.id} notes={data.notes} store={store} />
       )}
 
+      {/* Touchpoints panel hidden 2026-04-28 — see comment on the
+          TABS array above. The component, data, and CRUD all still
+          exist; this is just the access point. To restore, uncomment
+          this block AND re-add the touchpoints entry in TABS. */}
+      {/*
       {activeTab === 'touchpoints' && (
         <TouchpointsTab
           client={client}
@@ -225,6 +239,7 @@ function ClientDetail({ client, data, store }: DetailProps) {
           todayISO={data.today}
         />
       )}
+      */}
 
       {activeTab === 'stats' && (
         <StatsTab client={client} />
