@@ -227,7 +227,7 @@ export function WipPage() {
             <div className="page-greeting">Weekly WIP</div>
             <h1 className="page-title">Prep the meeting</h1>
             <p className="page-date">
-              Auto-populated from the kanban. Remove what you'll skip, add what you want to raise, start when ready.
+              Your team's weekly sync, ready to run.
             </p>
           </div>
           <div className="wip-header-meta">
