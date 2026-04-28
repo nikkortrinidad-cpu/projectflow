@@ -861,13 +861,18 @@
   }
   .acct-section { display: none; }
   .acct-section[data-active="true"] { display: block; }
+  /* Section header rhythm — title and sub need to read as a unit
+     before the section's content. Token-driven so the rhythm
+     matches the rest of the spacing scale. Audit account MED:
+     section-header-rhythm. */
   .acct-section-header {
-    margin-bottom: 14px;
+    margin-bottom: var(--sp-xl);
   }
   .acct-section-title {
-    font-size: 16px; font-weight: 600; color: var(--text);
+    font-size: var(--fs-lg); font-weight: 600; color: var(--text);
     letter-spacing: -0.012em;
-    margin: 0 0 2px;
+    line-height: var(--lh-dense);
+    margin: 0 0 var(--sp-xs);
   }
   .acct-section-sub {
     font-size: var(--fs-md); color: var(--text-muted);
@@ -994,11 +999,14 @@
   .acct-form-field { margin: 0; }
   .acct-form-field .acct-field-label {
     display: block;
-    font-size: 11px; font-weight: 600;
+    font-size: var(--fs-xs); font-weight: 600;
     color: var(--text-muted);
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    margin-bottom: 4px;
+    /* Explicit line-height + margin so labels never wrap unpredictably
+       and sit on a stable baseline above the input. Audit account MED. */
+    line-height: var(--lh-dense);
+    margin-bottom: var(--sp-micro);
   }
   .acct-form-field .acct-input,
   .acct-form-field select.acct-input {
