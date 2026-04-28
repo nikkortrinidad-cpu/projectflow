@@ -1,5 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CheckIcon, ChevronRightIcon, ScaleIcon } from '@heroicons/react/24/outline';
+import {
+  ChatBubbleLeftIcon,
+  CheckCircleIcon,
+  CheckIcon,
+  ChevronRightIcon,
+  ClockIcon,
+  DocumentTextIcon,
+  ScaleIcon,
+} from '@heroicons/react/24/outline';
 import {
   loadFor,
   effectiveCapFor,
@@ -918,6 +926,7 @@ export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDupl
               {/* ── Description ──────────────────────────────────── */}
               <div>
                 <div className="section-label">
+                  <DocumentTextIcon width={14} height={14} aria-hidden="true" />
                   <span role="heading" aria-level={3}>Description</span>
                 </div>
                 {editingDesc ? (
@@ -965,6 +974,7 @@ export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDupl
               {/* ── Checklist ────────────────────────────────────── */}
               <div>
                 <div className="section-label">
+                  <CheckCircleIcon width={14} height={14} aria-hidden="true" />
                   <span role="heading" aria-level={3}>Checklist</span>
                   {checklist.length > 0 && (
                     <span className="progress-pct">{doneCount} of {checklist.length} · {pct}%</span>
@@ -1056,6 +1066,7 @@ export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDupl
                 aria-selected={tab === 'comments'}
                 onClick={() => setTab('comments')}
               >
+                <ChatBubbleLeftIcon width={14} height={14} aria-hidden="true" />
                 Comments
               </button>
               <button
@@ -1065,6 +1076,7 @@ export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDupl
                 aria-selected={tab === 'activity'}
                 onClick={() => setTab('activity')}
               >
+                <ClockIcon width={14} height={14} aria-hidden="true" />
                 Activity Log
               </button>
             </div>

@@ -2856,8 +2856,13 @@
     color: var(--text-muted);
     letter-spacing: -0.005em;
     margin-bottom: 12px;
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex; align-items: center; gap: 6px;
   }
+  .section-label svg { color: var(--text-faint); flex-shrink: 0; }
+  /* Progress pill stays right-aligned now that the label uses gap
+     instead of space-between (icons need to hug the heading text on
+     the left, not float across the row). */
+  .section-label .progress-pct { margin-left: auto; }
 
   /* description: flows as text, no form-input chrome */
   .description-box {
