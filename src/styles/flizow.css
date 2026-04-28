@@ -12909,6 +12909,13 @@
   .wip-header {
     display: flex; align-items: flex-start; justify-content: space-between;
     gap: var(--sp-3xl);
+    /* Same 960px cap as .wip-agenda below so the header + tabs +
+       agenda all hang off the same vertical spine. The Live Meeting
+       tab stays uncapped (its run-of-show timeline + stage want
+       the full page width). */
+    max-width: 960px;
+    width: 100%;
+    margin: 0 auto;
   }
   .wip-header-text { max-width: 680px; }
   .wip-header-text .page-title { font-size: var(--fs-5xl); margin-bottom: 4px; }
@@ -12941,6 +12948,10 @@
     display: flex; gap: var(--sp-xs);
     border-bottom: 1px solid var(--hairline);
     padding-bottom: var(--sp-micro);
+    /* Same 960px spine as .wip-header above and .wip-agenda below. */
+    max-width: 960px;
+    width: 100%;
+    margin: 0 auto;
   }
   .wip-tab {
     display: inline-flex; align-items: center; gap: 8px;
