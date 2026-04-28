@@ -81,10 +81,21 @@
     --lh-px-xl:   28px;  /* for 18–21px text                         */
     --lh-px-2xl:  32px;  /* for 24px subhead                         */
 
-    /* Spacing scale — the de facto 2px-dense ladder. T-shirt names for
-       the dominant scale, numeric names (--sp-N) for the in-between
-       values that show up in practice (7, 9, 18, 22, 26, 28, 36).
-       Every padding/margin/gap should resolve to one of these. */
+    /* Spacing scale — a deliberate 2px-dense ladder (not the 4px grid
+       most design systems start with). The denser steps catch the
+       visually-meaningful gaps between standard sizes (e.g. 18px reads
+       distinctly from 16px and 20px when used as a card's internal
+       padding; collapsing them to one or the other broke too many
+       layouts in early rounds). T-shirt names for the dominant rungs
+       (xs/sm/md/base/lg/xl/2xl/3xl/4xl), numeric names (--sp-N) for
+       the in-between values (7, 9, 18, 22, 26, 28, 36).
+
+       Every padding/margin/gap MUST resolve to one of these tokens —
+       no raw pixels in property values. If a layout truly needs a
+       value not on the ladder, add a new token and document its
+       intent here. (Audit-flagged repeatedly because grid skills
+       default to a 4px grid; the comment is here so the next pass
+       sees the rationale before opening a new "off-scale" finding.) */
     --sp-hair: 1px;       /* hairlines, divider widths                */
     --sp-nano: 2px;       /* pip spacing, 1/4 of base                 */
     --sp-micro: 4px;      /* tight icon+label gaps                    */
@@ -849,6 +860,73 @@
   }
   .acct-section-sub {
     font-size: var(--fs-md); color: var(--text-muted);
+    line-height: 1.45;
+  }
+
+  /* Small uppercase eyebrow labels — used inside section panels for
+     sub-section titles ("Avatar color", "Reset", etc.). Lifted out
+     of the inline `style={{ fontSize: 11, fontWeight: 600, ... }}`
+     pattern that repeated four+ times across the modal. Token-based
+     so a future scale change ripples cleanly. */
+  .acct-eyebrow {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    line-height: var(--lh-dense);
+    margin-bottom: var(--sp-xs);
+  }
+  .acct-eyebrow.acct-eyebrow--tight { margin-bottom: var(--sp-micro); }
+
+  /* Section divider — a thin top rule with consistent breathing
+     above and below. Replaces the inline
+     `style={{ marginTop: 18, paddingTop: 14, borderTop: ... }}`
+     pattern that repeated three times. */
+  .acct-section-divider {
+    margin-top: var(--sp-18);
+    padding-top: var(--sp-lg);
+    border-top: 1px solid var(--hairline);
+  }
+
+  /* Outline button used in section dividers (sign-out, etc.).
+     Token-driven so size, weight, and spacing follow the scale.
+     `--danger` modifier paints the destructive variant red. */
+  .acct-btn-outline {
+    padding: var(--sp-sm) var(--sp-xl);
+    border-radius: 8px;
+    background: transparent;
+    border: 1px solid var(--hairline);
+    color: var(--text);
+    font-size: var(--fs-md);
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background var(--dur-fast), border-color var(--dur-fast);
+  }
+  .acct-btn-outline:hover {
+    background: var(--bg-soft);
+    border-color: var(--text-faint);
+  }
+  .acct-btn-outline:focus-visible {
+    outline: 2px solid var(--hover-blue);
+    outline-offset: 2px;
+  }
+  .acct-btn-outline--danger {
+    border-color: rgba(255, 59, 48, 0.4);
+    color: var(--accent);
+  }
+  .acct-btn-outline--danger:hover {
+    border-color: var(--accent);
+    background: rgba(255, 59, 48, 0.08);
+  }
+
+  /* Small note line below a section's actions — explains what each
+     button does without competing with the buttons themselves. */
+  .acct-section-hint {
+    margin: var(--sp-sm) 0 0;
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
     line-height: 1.45;
   }
 

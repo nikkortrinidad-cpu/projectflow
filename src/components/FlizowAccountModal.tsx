@@ -463,9 +463,7 @@ export default function FlizowAccountModal({ onClose }: Props) {
                 <div className="acct-avatar-block">
                   <div className="acct-avatar-large" style={{ background: avatarHex }}>{initials}</div>
                   <div>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>
-                      Avatar color
-                    </div>
+                    <div className="acct-eyebrow">Avatar color</div>
                     <div className="acct-avatar-colors" role="group" aria-label="Avatar color">
                       {AVATAR_COLORS.map(c => (
                         <button
@@ -553,10 +551,8 @@ export default function FlizowAccountModal({ onClose }: Props) {
                   </Field>
                 </div>
 
-                <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px solid var(--hairline)' }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 8 }}>
-                    Workspace data
-                  </div>
+                <div className="acct-section-divider">
+                  <div className="acct-eyebrow">Workspace data</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
                     <button type="button" className="acct-btn-text" onClick={handleLoadDemo}>
                       Load demo data
@@ -771,38 +767,21 @@ export default function FlizowAccountModal({ onClose }: Props) {
                   </a>
                 </div>
 
-                <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--hairline)' }}>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                <div className="acct-section-divider">
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-sm)' }}>
                     <button
                       type="button"
                       onClick={handleSignOut}
-                      style={{
-                        padding: '8px 16px', borderRadius: 8,
-                        background: 'transparent',
-                        border: '1px solid var(--hairline)',
-                        color: 'var(--text)',
-                        fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                      }}
+                      className="acct-btn-outline"
                     >Sign out of Flizow</button>
                     <button
                       type="button"
                       onClick={handleSignOutEverywhere}
                       title="Other devices sign out within seconds, when their browser tab next reaches Firestore."
-                      style={{
-                        padding: '8px 16px', borderRadius: 8,
-                        background: 'transparent',
-                        border: '1px solid rgba(255, 59, 48, 0.4)',
-                        color: 'var(--accent)',
-                        fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                      }}
+                      className="acct-btn-outline acct-btn-outline--danger"
                     >Sign out everywhere</button>
                   </div>
-                  <p style={{
-                    marginTop: 8,
-                    fontSize: 11,
-                    color: 'var(--text-muted)',
-                    lineHeight: 1.45,
-                  }}>
+                  <p className="acct-section-hint">
                     "Sign out of Flizow" signs out this device only. "Sign out everywhere" revokes
                     every active session — other devices sign out within seconds.
                   </p>
@@ -1446,9 +1425,7 @@ function WorkspaceSection({
               overrides the initials+color tile rendering. Remove
               falls back to initials+color. */}
           <div style={{ marginTop: 14 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>
-              Logo image
-            </div>
+            <div className="acct-eyebrow">Logo image</div>
             <WorkspaceLogoUploader hasLogo={!!meta.logoUrl} />
             <p className="acct-field-hint" style={{ marginTop: 8 }}>
               PNG, JPG, or WebP up to 5 MB. Replaces the {initialsDraft || meta.initials} tile when uploaded; remove to fall back to initials.
@@ -1458,8 +1435,8 @@ function WorkspaceSection({
       )}
 
       {/* About this workspace — read-only stats. */}
-      <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px solid var(--hairline)' }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 10 }}>
+      <div className="acct-section-divider">
+        <div className="acct-eyebrow" style={{ marginBottom: 'var(--sp-md)' }}>
           About this workspace
         </div>
         <dl className="ws-about-grid">
@@ -1492,8 +1469,8 @@ function WorkspaceSection({
           can both export — they already see the data in the UI, so
           gating the download adds friction without protecting
           anything new. */}
-      <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px solid var(--hairline)' }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 10 }}>
+      <div className="acct-section-divider">
+        <div className="acct-eyebrow" style={{ marginBottom: 'var(--sp-md)' }}>
           Workspace data
         </div>
         <ExportWorkspaceButton workspaceName={meta.name} />
