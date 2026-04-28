@@ -855,8 +855,8 @@ function MemberDrillPanel({
       {rows.length === 0 ? (
         <div className="anlx-drill-empty">
           <BriefcaseIcon
-            width={32}
-            height={32}
+            width={24}
+            height={24}
             aria-hidden="true"
             className="anlx-empty-icon"
           />
@@ -1038,8 +1038,8 @@ function UpcomingSection({ tasks, services, members, clients, todayISO }: {
       {rows.length === 0 ? (
         <div className="anlx-up-empty">
           <CalendarDaysIcon
-            width={32}
-            height={32}
+            width={24}
+            height={24}
             aria-hidden="true"
             className="anlx-empty-icon"
           />

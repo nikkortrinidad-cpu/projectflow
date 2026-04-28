@@ -6765,11 +6765,11 @@
   .cell-detail-load {
     font-size: var(--fs-md);
     font-weight: 700;
-    padding: 4px 10px;
+    padding: var(--sp-micro) var(--sp-base);
     border-radius: 980px;
     font-variant-numeric: tabular-nums;
     flex-shrink: 0;
-    line-height: 1.4;
+    line-height: var(--lh-body);
   }
   .cell-detail-load.zone-green {
     background: var(--status-track-soft);
@@ -14112,7 +14112,11 @@
     border-radius: 5px;
     color: var(--text-faint);
     cursor: grab;
-    opacity: 0.4;
+    /* Resting opacity bumped from 0.4 to 0.65 — 0.4 read as
+       "disabled" rather than "persistent affordance." 0.65 keeps
+       the handle quiet while still inviting a grab. Audit
+       templates LOW. */
+    opacity: 0.65;
     transition: opacity 140ms ease, background 0.12s, color 0.12s, border-color 0.12s;
     touch-action: none; /* required by dnd-kit's PointerSensor on mobile */
   }
@@ -14744,7 +14748,10 @@
      copy still leads. Shared between .anlx-up-empty and .anlx-drill-empty. */
   .anlx-empty-icon {
     display: block;
-    margin: 0 auto 10px;
+    /* 24px hero with 12px below — a touch smaller than the prior 32px
+       so it supports the empty-state copy instead of dominating it.
+       Audit analytics LOW. */
+    margin: 0 auto var(--sp-base);
     color: var(--text-faint);
   }
 
