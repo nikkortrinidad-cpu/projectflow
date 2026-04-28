@@ -7386,12 +7386,11 @@
   /* ═══════ OVERVIEW VIEW (merged from 00-overview-refined.html) ═══════ */
 
   /* --- PAGE LAYOUT ---
-     1024px outer = 960px content (after 32px padding × 2) so the
-     Overview blocks (Portfolio Health, My Tasks, My Schedule, My
-     Boards) sit at the same 960px content spine as the Weekly WIP
-     agenda. Page padding stays at var(--sp-4xl) so the blocks have
-     breathing room from the dark page background. */
-  .page { max-width: 1024px; margin: 0 auto; padding: var(--sp-36) var(--sp-4xl) 96px; }
+     960px max-width with NO horizontal padding so the blocks sit
+     flush at the edge of the page wrapper, matching the Agenda
+     tab's behaviour. Vertical padding stays so the page doesn't
+     push hard against the top/bottom of the viewport. */
+  .page { max-width: 960px; margin: 0 auto; padding: var(--sp-36) 0 96px; }
 
   .page-header { margin-bottom: 40px; }
   .page-greeting {
@@ -15847,7 +15846,10 @@
   }
 
   @media (max-width: 600px) {
-    /* Page chrome: shrink horizontal padding so content has room. */
+    /* Page chrome: keep horizontal padding on phones since the
+       960px cap no longer applies (viewport is narrower); the
+       desktop rule has 0 horizontal padding because the blocks
+       sit at the page wrapper edge. */
     .page { padding: var(--sp-2xl) var(--sp-xl) 80px; }
 
     /* Health strip: 3-up doesn't fit. Stack vertically so each
