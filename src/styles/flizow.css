@@ -14507,7 +14507,11 @@
      Entire card is a clickable button that opens the drill-down panel.   */
   .anlx-kpi-grid {
     display: grid; gap: var(--sp-md);
-    grid-template-columns: repeat(5, 1fr);
+    /* 4 columns at desktop — matches the 4 KPIs computeKpis() returns
+       (on-time, blocked, deadlines, clients-flagged). Was repeat(5, 1fr)
+       leaving an empty 5th slot; collapsing to 4 also widens each card
+       so the labels meet readable line lengths (audit analytics HIGH). */
+    grid-template-columns: repeat(4, 1fr);
     margin-bottom: var(--sp-xl);
   }
   .anlx-kpi-card {
@@ -14757,7 +14761,7 @@
      Role pill is neutral so names/numbers dominate.                       */
   .anlx-wl-head {
     display: grid;
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.6fr) 70px 64px 90px 20px;
+    grid-template-columns: minmax(160px, 1.2fr) minmax(220px, 1.6fr) 70px 64px 90px 20px;
     align-items: center; gap: var(--sp-md);
     padding: var(--sp-sm) var(--sp-lg);
     border-bottom: 1px solid var(--hairline);
@@ -14775,7 +14779,7 @@
      visually matches the non-interactive version it replaced.             */
   .anlx-wl-row {
     display: grid;
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.6fr) 70px 64px 90px 20px;
+    grid-template-columns: minmax(160px, 1.2fr) minmax(220px, 1.6fr) 70px 64px 90px 20px;
     align-items: center; gap: var(--sp-md);
     width: 100%;
     padding: var(--sp-md) var(--sp-lg);
