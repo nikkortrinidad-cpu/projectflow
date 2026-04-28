@@ -1,5 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CheckIcon, ChevronDownIcon, EllipsisVerticalIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import {
+  BriefcaseIcon,
+  ChatBubbleLeftRightIcon,
+  CheckIcon,
+  ChevronDownIcon,
+  EllipsisVerticalIcon,
+  IdentificationIcon,
+  LinkIcon,
+  PlusIcon,
+  UserGroupIcon,
+  UserIcon,
+  UsersIcon,
+  WrenchScrewdriverIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import { useRoute, navigate } from '../router';
 import { useFlizow } from '../store/useFlizow';
 import type {
@@ -1354,7 +1368,10 @@ function OnboardingServiceCard({ group, onToggle, onAdd, onDelete, onRename }: {
               to exist even when it's currently empty. Label the group
               regardless so the user knows where their new item will
               land. */}
-          <div className="onboarding-group-label">Needed from client</div>
+          <div className="onboarding-group-label">
+            <UserIcon width={12} height={12} aria-hidden="true" />
+            Needed from client
+          </div>
           {client.map(item => (
             <OnboardingRow key={item.id} item={item} onToggle={onToggle} onDelete={onDelete} onRename={onRename} />
           ))}
@@ -1364,7 +1381,10 @@ function OnboardingServiceCard({ group, onToggle, onAdd, onDelete, onRename }: {
             onAdd={onAdd}
           />
 
-          <div className="onboarding-group-label" style={{ marginTop: 16 }}>We take care of</div>
+          <div className="onboarding-group-label" style={{ marginTop: 16 }}>
+            <WrenchScrewdriverIcon width={12} height={12} aria-hidden="true" />
+            We take care of
+          </div>
           {us.map(item => (
             <OnboardingRow key={item.id} item={item} onToggle={onToggle} onDelete={onDelete} onRename={onRename} />
           ))}
@@ -1638,7 +1658,10 @@ function AboutSection({ client, data }: { client: Client; data: FlizowData }) {
     <>
       <div className="detail-section" data-tab="about">
         <div className="detail-section-header">
-          <div className="detail-section-title">Relationship</div>
+          <div className="detail-section-title">
+            <ChatBubbleLeftRightIcon width={14} height={14} aria-hidden="true" />
+            Relationship
+          </div>
           <div className="detail-section-sub">Who we talk to, and where to find their stuff</div>
         </div>
         <div className="relationship-grid">
@@ -1669,7 +1692,10 @@ function AboutSection({ client, data }: { client: Client; data: FlizowData }) {
         data-edit={teamEditMode ? 'true' : undefined}
       >
         <div className="detail-section-header">
-          <div className="detail-section-title">Team</div>
+          <div className="detail-section-title">
+            <UserGroupIcon width={14} height={14} aria-hidden="true" />
+            Team
+          </div>
           <div className="detail-section-sub">
             {am ? '1 account manager' : 'No account manager'}
             {team.length > 0 && ` · ${team.length} operator${team.length === 1 ? '' : 's'}`}
@@ -1801,7 +1827,10 @@ function ContactsCard({ contacts, onAdd, editing, onToggleEdit, onRemove, onTogg
   return (
     <div className="relationship-card">
       <div className="relationship-card-head">
-        <div className="relationship-card-label">Client contacts</div>
+        <div className="relationship-card-label">
+          <IdentificationIcon width={12} height={12} aria-hidden="true" />
+          Client contacts
+        </div>
         {/* Two-button right side wrapped in a flex group. Edit button hides
             when the list is empty — nothing to edit, and the button would
             just add noise. */}
@@ -1965,7 +1994,10 @@ function QuickLinksCard({ links, onAdd, editing, onToggleEdit, onRemove, onEdit 
   return (
     <div className="relationship-card">
       <div className="relationship-card-head">
-        <div className="relationship-card-label">Quick links</div>
+        <div className="relationship-card-label">
+          <LinkIcon width={12} height={12} aria-hidden="true" />
+          Quick links
+        </div>
         <div className="section-header-actions">
           {links.length > 0 && (
             <button
@@ -2089,7 +2121,10 @@ function TeamGrid({ am, team, onAdd, onRemove }: {
   return (
     <div className="team-section-grid">
       <div className="team-group">
-        <div className="team-group-label">Account manager</div>
+        <div className="team-group-label">
+          <BriefcaseIcon width={12} height={12} aria-hidden="true" />
+          Account manager
+        </div>
         <div className="team-group-row">
           {am ? (
             <MemberCard member={am} solid />
@@ -2104,7 +2139,10 @@ function TeamGrid({ am, team, onAdd, onRemove }: {
       <div className="team-group-divider" />
 
       <div className="team-group">
-        <div className="team-group-label">Project team</div>
+        <div className="team-group-label">
+          <UsersIcon width={12} height={12} aria-hidden="true" />
+          Project team
+        </div>
         <div className="team-group-row">
           {team.length === 0 ? (
             <span className="section-empty-text">

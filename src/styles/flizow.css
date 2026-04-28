@@ -9239,9 +9239,11 @@
   }
   .detail-section-header > *:last-child { margin-left: auto; }
   .detail-section-title {
+    display: inline-flex; align-items: center; gap: 8px;
     font-size: var(--fs-md); font-weight: 600; color: var(--text);
     text-transform: uppercase; letter-spacing: 0.08em;
   }
+  .detail-section-title svg { color: var(--text-soft); flex-shrink: 0; }
   .detail-section-sub {
     font-size: var(--fs-sm); color: var(--text-soft); letter-spacing: -0.005em;
   }
@@ -9468,9 +9470,11 @@
     gap: var(--sp-md);
   }
   .relationship-card-label {
+    display: inline-flex; align-items: center; gap: 6px;
     font-size: var(--fs-xs); font-weight: 600; color: var(--text-muted);
     text-transform: uppercase; letter-spacing: 0.06em;
   }
+  .relationship-card-label svg { color: var(--text-faint); flex-shrink: 0; }
   .relationship-card-aux {
     font-size: var(--fs-xs); color: var(--text-faint); font-feature-settings: "tnum";
   }
@@ -10989,12 +10993,14 @@
   }
   .onboarding-group-label {
     grid-column: 1 / -1;
+    display: flex; align-items: center; gap: 6px;
     font-size: var(--fs-xs); font-weight: 500; color: var(--text-muted);
     text-transform: uppercase; letter-spacing: 0.06em;
     margin-top: 14px; padding-top: 14px;
     border-top: 1px solid var(--hairline-soft);
   }
   .onboarding-group-label:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+  .onboarding-group-label svg { color: var(--text-faint); flex-shrink: 0; }
 
   /* Per-row delete: the × sits on the right edge, well away from the
      checkbox on the left, and only appears on row hover. Keyboard users
@@ -11202,10 +11208,12 @@
   }
   .team-group { display: flex; flex-direction: column; gap: var(--sp-base); }
   .team-group-label {
+    display: inline-flex; align-items: center; gap: 6px;
     font-size: var(--fs-xs); font-weight: 600;
     color: var(--text-muted);
     text-transform: uppercase; letter-spacing: 0.06em;
   }
+  .team-group-label svg { color: var(--text-faint); flex-shrink: 0; }
   .team-group-row {
     display: flex; align-items: center; gap: var(--sp-3xl); flex-wrap: wrap;
   }
