@@ -13754,6 +13754,14 @@
     flex: 1; min-width: 0; min-height: 0;
     overflow-y: auto; background: var(--bg);
   }
+  /* Templates detail pane — single-column reading layout. Max-width
+     720px caps prose at ~75 cpl after horizontal padding (44px),
+     within the 45–70 cpl ceiling for body sub-text. Children
+     (template-hero, template-section-*) stack via the section
+     margin-bottom rhythm rather than a grid; nothing here needs a
+     modular grid because the sections are linear (phases list,
+     onboarding split, brief field pills) and each owns its own
+     internal layout. Audit templates HIGH: documented intent. */
   .template-detail-page {
     padding: var(--sp-36) 44px 80px; max-width: 720px; margin: 0 auto;
   }
@@ -13869,11 +13877,17 @@
     background: var(--text-faint);
     display: inline-block;
   }
-  .template-section { margin-bottom: 36px; }
+  /* Section rhythm — locked to a 36/16 ratio. Outer (section-to-section)
+     gap of 36px reads as a clear break; inner (header-to-content) gap
+     of 16px keeps the section's pieces visually grouped. The old
+     14px header gap was 2px short of the baseline grid and made the
+     external/internal rhythm read closer than the design intended.
+     Audit templates HIGH: section-spacing-inverted. */
+  .template-section { margin-bottom: var(--sp-36); }
   .template-section:last-child { margin-bottom: 0; }
   .template-section-header {
     display: flex; align-items: baseline; gap: var(--sp-md);
-    margin-bottom: 14px; flex-wrap: wrap;
+    margin-bottom: var(--sp-xl); flex-wrap: wrap;
   }
   .template-section-title {
     display: inline-flex; align-items: center; gap: 6px;
