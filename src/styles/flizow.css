@@ -1266,8 +1266,15 @@
       padding: 10px 12px; gap: 4px;
     }
     .acct-nav-item { width: auto; white-space: nowrap; }
-    .acct-content { padding: 20px; }
+    .acct-content { padding: var(--sp-2xl); }
     .acct-form-grid { grid-template-columns: 1fr; }
+  }
+  /* Phone tier — tighter padding so the form fields don't get cropped
+     by the modal's own borders on small screens. Audit account MED:
+     responsive-padding-scale. */
+  @media (max-width: 480px) {
+    .acct-content { padding: var(--sp-xl); }
+    .acct-section-divider { margin-top: var(--sp-lg); padding-top: var(--sp-base); }
   }
   @media (prefers-reduced-motion: reduce) {
     .acct-overlay, .acct-modal, .acct-toggle::after { transition: none; }
@@ -5316,9 +5323,13 @@
        without it; the trailing column collapses to empty space. */
     grid-template-columns: 36px minmax(0, 1fr) auto auto auto;
     align-items: center;
-    gap: 12px;
-    padding: 10px 4px;
+    gap: var(--sp-base);
+    padding: var(--sp-md) var(--sp-micro);
     border-bottom: 1px solid var(--hairline-soft);
+    /* Min-height keeps every row visually equal regardless of which
+       optional cell is present (caps editor, role select, etc.).
+       Audit account MED. */
+    min-height: 52px;
   }
   .mbrs-row:last-child { border-bottom: 0; }
   /* Daily cap editor — two narrow number inputs separated by a "/".
