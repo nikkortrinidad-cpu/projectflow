@@ -6526,6 +6526,11 @@
     grid-template-columns: 200px repeat(10, minmax(56px, 1fr));
     align-items: stretch;
     border-bottom: 1px solid var(--hairline-soft);
+    /* Snap rows to a predictable minimum so all members render at
+       the same row height, regardless of name length / role
+       presence. Matches the avatar (28px) + comfortable padding so
+       the row reads as a band. Audit ops HIGH. */
+    min-height: 52px;
   }
   .cap-row:last-child {
     border-bottom: none;
@@ -12095,14 +12100,14 @@
     margin: 0 0 6px;
   }
   .ops-header-title {
-    font-size: 26px; font-weight: 700;
+    font-size: var(--fs-3xl); font-weight: 700;
     letter-spacing: -0.02em;
     color: var(--text);
     margin: 0 0 6px;
-    line-height: 1.15;
+    line-height: var(--lh-heading);
   }
   .ops-header-sub {
-    font-size: 13px;
+    font-size: var(--fs-md);
     color: var(--text-muted);
     margin: 0;
     letter-spacing: -0.005em;
