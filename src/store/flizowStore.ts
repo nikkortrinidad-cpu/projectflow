@@ -1279,6 +1279,44 @@ class FlizowStore {
     this.save();
   }
 
+  /**
+   * Set or replace the per-day cap override for a (member, date) pair.
+   * Beats the member's standing capSoft/capMax for that single date.
+   * Used today for PTO, workshop-heavy days, and other partial-
+   * availability cases — the user clicks the ⋯ next to a day header
+   * on My Schedule and dials in a smaller cap.
+   *
+   * Idempotent in the array sense: if an override already exists for
+   * the (memberId, date) pair, we replace it rather than append; the
+   * resolver (effectiveCapFor) only reads the first match anyway, but
+   * keeping the array clean makes export/import diffs readable.
+   */
+  setMemberDayCap(memberId: string, date: string, capSoft: number, capMax: number) {
+    const idx = this.data.memberDayOverrides.findIndex(
+      o => o.memberId === memberId && o.date === date,
+    );
+    const next = { memberId, date, capSoft, capMax };
+    if (idx === -1) {
+      this.data.memberDayOverrides = [...this.data.memberDayOverrides, next];
+    } else {
+      const copy = this.data.memberDayOverrides.slice();
+      copy[idx] = next;
+      this.data.memberDayOverrides = copy;
+    }
+    this.save();
+  }
+
+  /** Drop the per-day override for a (member, date) pair, falling back
+   *  to the member's standing caps. No-op when no override exists. */
+  clearMemberDayCap(memberId: string, date: string) {
+    const next = this.data.memberDayOverrides.filter(
+      o => !(o.memberId === memberId && o.date === date),
+    );
+    if (next.length === this.data.memberDayOverrides.length) return;
+    this.data.memberDayOverrides = next;
+    this.save();
+  }
+
   deleteService(id: string) {
     const svc = this.data.services.find(s => s.id === id);
     if (!svc) return;

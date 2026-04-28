@@ -7332,6 +7332,156 @@
     color: var(--text);
   }
 
+  /* Per-day capacity strip — load badge + ⋯ button. Sits below the
+     day name in the column header. The badge reuses .load-badge tokens
+     from the assignee-picker, so dark mode + zone colours come for
+     free; the button is quiet by default and only earns ink on hover.
+     position:relative anchors the popover that pops out of the ⋯
+     button so it floats above the column without re-flowing siblings. */
+  .week-col-cap {
+    margin-top: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    position: relative;
+  }
+  .week-col-cap-edit {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-faint);
+    font-size: 14px;
+    line-height: 1;
+    font-family: inherit;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--dur-fast), color var(--dur-fast), border-color var(--dur-fast);
+  }
+  .week-col-cap-edit:hover {
+    background: var(--bg-soft);
+    color: var(--text);
+    border-color: var(--hairline);
+  }
+  .week-col-cap-edit:focus-visible {
+    outline: 2px solid var(--hover-blue);
+    outline-offset: 1px;
+  }
+  /* Override marker — a dotted underline on the badge to signal "this
+     day's cap is custom, not your standing one." Quieter than a colour
+     swap (which would clash with the zone colour) and survives all
+     three zones. */
+  .load-badge--override {
+    text-decoration: underline dotted;
+    text-underline-offset: 2px;
+  }
+
+  /* Per-day cap override popover. Anchored to .week-col-cap (which is
+     position:relative); floats just below the ⋯ button. Uses the same
+     elevation + fade-in vocabulary as .delegate-pop so popovers across
+     the app feel like a single family. */
+  .day-cap-popover {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    width: 240px;
+    z-index: 50;
+    padding: 14px;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+    text-align: left;
+    animation: dpFadeIn 0.15s ease;
+  }
+  .day-cap-popover-title {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .day-cap-popover-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .day-cap-popover-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .day-cap-popover-field span {
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    color: var(--text-soft);
+  }
+  .day-cap-popover-field input {
+    width: 100%;
+    padding: 6px 10px;
+    font-size: var(--fs-md);
+    font-weight: 500;
+    font-family: inherit;
+    color: var(--text);
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    background: var(--bg-soft);
+    outline: none;
+    transition: border-color var(--dur-fast);
+    box-sizing: border-box;
+    font-variant-numeric: tabular-nums;
+  }
+  .day-cap-popover-field input:focus {
+    border-color: var(--hover-blue);
+  }
+  .day-cap-popover-foot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .day-cap-popover-cancel,
+  .day-cap-popover-save,
+  .day-cap-popover-reset {
+    font-family: inherit;
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    border-radius: 8px;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: background var(--dur-fast), color var(--dur-fast), border-color var(--dur-fast);
+  }
+  .day-cap-popover-cancel {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-soft);
+  }
+  .day-cap-popover-cancel:hover {
+    color: var(--text);
+    background: var(--bg-soft);
+  }
+  .day-cap-popover-save {
+    background: var(--hover-blue);
+    border: 1px solid var(--hover-blue);
+    color: #fff;
+  }
+  .day-cap-popover-save:hover {
+    opacity: 0.9;
+  }
+  .day-cap-popover-reset {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--status-fire);
+    padding-left: 0;
+    padding-right: 8px;
+  }
+  .day-cap-popover-reset:hover {
+    text-decoration: underline;
+  }
+
   /* Task cards inside columns */
   .week-col-body {
     padding: var(--sp-md);

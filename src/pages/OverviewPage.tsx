@@ -13,6 +13,7 @@ import { navigate } from '../router';
 import { flizowStore } from '../store/flizowStore';
 import { useFlizow } from '../store/useFlizow';
 import type { Client, Member, Task, ClientStatus, OnboardingItem, Service } from '../types/flizow';
+import { loadFor, effectiveCapFor, zoneFor } from '../utils/capacity';
 
 /** localStorage key for the one-time first-run welcome banner. Versioned
  *  so a future revision can re-show the banner if we change the
@@ -197,6 +198,20 @@ export function OverviewPage() {
   // this filter every AM would see every other AM's stalled
   // onboarding.
   const currentMemberId = store.getCurrentMemberId();
+
+  // Combined slot-consuming pile for the per-day load badges in My
+  // Schedule. Client tasks + ops tasks both count toward the user's
+  // daily capacity — same rule the card-modal capacity warning uses.
+  // Memoised so the render doesn't re-stitch on unrelated re-renders.
+  const allSlotTasks = useMemo(
+    () => [...data.tasks, ...data.opsTasks],
+    [data.tasks, data.opsTasks],
+  );
+
+  // Which day's cap-override popover is open. ISO date string or null.
+  // One-at-a-time — opening another day's popover replaces the open id.
+  const [capPopoverDate, setCapPopoverDate] = useState<string | null>(null);
+
   const ATTENTION_INITIAL_CAP = 3;
   const allAttention = useMemo(
     () => buildAttentionCards(
@@ -521,7 +536,28 @@ export function OverviewPage() {
             </div>
           </div>
           <div className={`week-board${weekTab === 'next' ? ' show-next' : ''}`}>
-            {weekDays.map((d) => (
+            {weekDays.map((d) => {
+              // Per-day capacity for the signed-in user. Computed only
+              // when there's a member id — pre-auth / dev-bypass shows
+              // an empty grid anyway, so the badge stays absent.
+              const dayLoadInfo = currentMemberId
+                ? (() => {
+                    const load = loadFor(currentMemberId, d.iso, allSlotTasks);
+                    const caps = effectiveCapFor(
+                      currentMemberId, d.iso, data.members, data.memberDayOverrides,
+                    );
+                    const override = data.memberDayOverrides.find(
+                      o => o.memberId === currentMemberId && o.date === d.iso,
+                    );
+                    return {
+                      load,
+                      caps,
+                      zone: zoneFor(load, caps),
+                      hasOverride: !!override,
+                    };
+                  })()
+                : null;
+              return (
               <div
                 key={d.iso}
                 className={`week-col${d.isToday ? ' is-today' : ''}${d.isPast ? ' is-past' : ''}`}
@@ -531,6 +567,40 @@ export function OverviewPage() {
                 <div className="week-col-header">
                   <div className="week-col-date">{d.dateLabel}</div>
                   <div className="week-col-day">{d.dayName}</div>
+                  {dayLoadInfo && (
+                    <div className="week-col-cap">
+                      <span
+                        className={`load-badge load-badge--${dayLoadInfo.zone}${dayLoadInfo.hasOverride ? ' load-badge--override' : ''}`}
+                        title={dayLoadInfo.hasOverride
+                          ? `${dayLoadInfo.load} of ${dayLoadInfo.caps.soft} slots booked · custom cap for this day`
+                          : `${dayLoadInfo.load} of ${dayLoadInfo.caps.soft} slots booked`}
+                      >
+                        {dayLoadInfo.load}/{dayLoadInfo.caps.soft}
+                      </span>
+                      <button
+                        type="button"
+                        className="week-col-cap-edit"
+                        aria-label={`Set cap for ${d.dateLabel}`}
+                        title="Set cap for this day"
+                        onClick={() => setCapPopoverDate(d.iso)}
+                      >
+                        ⋯
+                      </button>
+                      {capPopoverDate === d.iso && currentMemberId && (
+                        <DayCapPopover
+                          memberId={currentMemberId}
+                          dateISO={d.iso}
+                          dateLabel={d.dateLabel}
+                          standingSoft={data.members.find(m => m.id === currentMemberId)?.capSoft ?? 6}
+                          standingMax={data.members.find(m => m.id === currentMemberId)?.capMax ?? 8}
+                          override={data.memberDayOverrides.find(
+                            o => o.memberId === currentMemberId && o.date === d.iso,
+                          )}
+                          onClose={() => setCapPopoverDate(null)}
+                        />
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="week-col-body">
                   {d.items.map((item) => (
@@ -551,7 +621,8 @@ export function OverviewPage() {
                   ))}
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 
@@ -1391,5 +1462,123 @@ function DelegatePopover({
         </div>
       </div>
     </>
+  );
+}
+
+// ── Per-day cap override popover (My Schedule) ────────────────────────────
+//
+// Anchored to the ⋯ button next to each day's load badge in the
+// schedule header. Lets the user dial in a custom soft/max for that
+// single day — used for PTO, workshop-heavy half-days, and other
+// partial-availability cases that the standing cap can't model on
+// its own.
+//
+// Three states:
+//   - No override yet → inputs prefilled with the standing caps;
+//     "Save" creates an override, "Cancel" closes silently.
+//   - Override exists → inputs prefilled with the override values;
+//     "Save" updates the override, "Reset" deletes it (falling back
+//     to standing caps), "Cancel" closes silently.
+//
+// Closes on outside click or Esc. Inputs validate to non-negative
+// integers; soft cap > max is allowed (the math handles it — soft
+// becomes effectively unreachable, but that's the user's choice).
+
+function DayCapPopover({
+  memberId,
+  dateISO,
+  dateLabel,
+  standingSoft,
+  standingMax,
+  override,
+  onClose,
+}: {
+  memberId: string;
+  dateISO: string;
+  dateLabel: string;
+  standingSoft: number;
+  standingMax: number;
+  override?: { capSoft: number; capMax: number };
+  onClose: () => void;
+}) {
+  const [softInput, setSoftInput] = useState(
+    String(override?.capSoft ?? standingSoft),
+  );
+  const [maxInput, setMaxInput] = useState(
+    String(override?.capMax ?? standingMax),
+  );
+  const popRef = useRef<HTMLDivElement | null>(null);
+
+  // Outside-click + Esc dismissal.
+  useEffect(() => {
+    function onPointer(e: PointerEvent) {
+      if (popRef.current && !popRef.current.contains(e.target as Node)) {
+        onClose();
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose();
+    }
+    window.addEventListener('pointerdown', onPointer);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('pointerdown', onPointer);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [onClose]);
+
+  function handleSave() {
+    const soft = Math.max(0, Math.floor(Number(softInput.trim())));
+    const max = Math.max(0, Math.floor(Number(maxInput.trim())));
+    if (!Number.isFinite(soft) || !Number.isFinite(max)) return;
+    flizowStore.setMemberDayCap(memberId, dateISO, soft, max);
+    onClose();
+  }
+
+  function handleReset() {
+    flizowStore.clearMemberDayCap(memberId, dateISO);
+    onClose();
+  }
+
+  return (
+    <div ref={popRef} className="day-cap-popover" role="dialog" aria-label={`Set cap for ${dateLabel}`}>
+      <div className="day-cap-popover-title">{dateLabel}</div>
+      <div className="day-cap-popover-row">
+        <label className="day-cap-popover-field">
+          <span>Soft cap</span>
+          <input
+            type="number"
+            min={0}
+            value={softInput}
+            onChange={(e) => setSoftInput(e.target.value)}
+            autoFocus
+          />
+        </label>
+        <label className="day-cap-popover-field">
+          <span>Max cap</span>
+          <input
+            type="number"
+            min={0}
+            value={maxInput}
+            onChange={(e) => setMaxInput(e.target.value)}
+          />
+        </label>
+      </div>
+      <div className="day-cap-popover-foot">
+        {override && (
+          <button
+            type="button"
+            className="day-cap-popover-reset"
+            onClick={handleReset}
+            title={`Remove the override and use your standing cap (${standingSoft}/${standingMax})`}
+          >
+            Reset to standing
+          </button>
+        )}
+        <span style={{ flex: 1 }} />
+        <button type="button" className="day-cap-popover-cancel" onClick={onClose}>Cancel</button>
+        <button type="button" className="day-cap-popover-save" onClick={handleSave}>Save</button>
+      </div>
+    </div>
   );
 }
