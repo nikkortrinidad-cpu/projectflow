@@ -6785,10 +6785,12 @@
     flex-shrink: 0;
   }
   .share-title {
+    display: inline-flex; align-items: center; gap: 8px;
     font-size: var(--fs-xl); font-weight: 600;
     color: var(--text);
     letter-spacing: -0.015em;
   }
+  .share-title svg { color: var(--text-soft); flex-shrink: 0; }
   .share-close {
     width: 28px; height: 28px;
     border-radius: 8px;
@@ -13239,9 +13241,11 @@
     border-bottom: 1px solid var(--hairline);
   }
   .wip-modal-title {
+    display: inline-flex; align-items: center; gap: 8px;
     font-size: var(--fs-lg); font-weight: 600; color: var(--text);
     letter-spacing: -0.01em;
   }
+  .wip-modal-title svg { color: var(--text-soft); flex-shrink: 0; }
   .wip-modal-close {
     width: 28px; height: 28px; border-radius: 6px;
     background: transparent; border: none; color: var(--text-soft);

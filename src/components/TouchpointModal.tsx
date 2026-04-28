@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { ChatBubbleLeftRightIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import type { Touchpoint, TouchpointKind, Member, Contact, Client } from '../types/flizow';
 import { flizowStore } from '../store/flizowStore';
 import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
@@ -269,7 +269,10 @@ export function TouchpointModal({
     >
       <div ref={modalRef} className="wip-modal" role="document" style={{ maxWidth: 540 }}>
         <header className="wip-modal-head">
-          <h2 className="wip-modal-title" id="touchpoint-modal-title">{title}</h2>
+          <h2 className="wip-modal-title" id="touchpoint-modal-title">
+            <ChatBubbleLeftRightIcon width={18} height={18} aria-hidden="true" />
+            {title}
+          </h2>
           <button type="button" className="wip-modal-close" onClick={onClose} aria-label="Close">
             <XMarkIcon width={14} height={14} aria-hidden="true" />
           </button>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { FolderIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import type { ServiceType, TemplateKey } from '../../types/flizow';
 import { TEMPLATE_OPTIONS } from '../../data/serviceTemplateOptions';
 import { useModalAutofocus } from '../../hooks/useModalAutofocus';
@@ -143,7 +143,10 @@ export function ServiceMetadataForm({
     >
       <div ref={modalRef} className="wip-modal" role="document" style={{ maxWidth: 520 }}>
         <header className="wip-modal-head">
-          <h2 className="wip-modal-title" id={titleId}>{resolvedTitle}</h2>
+          <h2 className="wip-modal-title" id={titleId}>
+            <FolderIcon width={18} height={18} aria-hidden="true" />
+            {resolvedTitle}
+          </h2>
           <button type="button" className="wip-modal-close" onClick={onClose} aria-label="Close">
             <XMarkIcon width={14} height={14} aria-hidden="true" />
           </button>

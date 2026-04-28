@@ -3,7 +3,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { DocumentTextIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
 
 /**
@@ -153,6 +153,7 @@ export function BriefModal({
       >
         <header className="wip-modal-head">
           <h2 className="wip-modal-title" id="brief-modal-title">
+            <DocumentTextIcon width={18} height={18} aria-hidden="true" />
             {title}
             {subtitle && (
               <span style={{

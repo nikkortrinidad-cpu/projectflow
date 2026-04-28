@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { CheckIcon, ChevronDownIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { CheckIcon, ChevronDownIcon, PlusIcon, ShareIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { useFlizow } from '../store/useFlizow';
 import { useAuth } from '../contexts/AuthContext';
 import type { Member } from '../types/flizow';
@@ -601,7 +601,10 @@ export default function FlizowShareModal({ taskId, onClose }: Props) {
 
         {/* ── Header ─────────────────────────────────────────────── */}
         <div className="share-header">
-          <div className="share-title" id="shareTitle">Share card</div>
+          <div className="share-title" id="shareTitle">
+            <ShareIcon width={18} height={18} aria-hidden="true" />
+            Share card
+          </div>
           <button
             type="button"
             className="share-close"
