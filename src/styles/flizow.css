@@ -2469,6 +2469,18 @@
   }
   .tb-btn:hover { background: var(--hover-tint); color: var(--hover-blue); }
   .tb-btn svg { width: 16px; height: 16px; }
+  /* Active "pinned for next WIP" state — orange-tinted shell + filled
+     bookmark color, ties to the same #f15a24 used by the kanban tile
+     pin badge and the WIP agenda's Pinned group. Toggle reads as "on"
+     at a glance without opening the kebab. */
+  .tb-btn.is-pinned {
+    color: #f15a24;
+    background: color-mix(in srgb, #f15a24 14%, transparent);
+  }
+  .tb-btn.is-pinned:hover {
+    color: #f15a24;
+    background: color-mix(in srgb, #f15a24 22%, transparent);
+  }
   .tb-menu {
     display: none;
     position: absolute; top: 38px; right: 0;

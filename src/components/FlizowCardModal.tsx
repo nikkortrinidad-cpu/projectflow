@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  BookmarkIcon,
   ChatBubbleLeftIcon,
   CheckCircleIcon,
   CheckIcon,
   ChevronRightIcon,
   ClockIcon,
   DocumentTextIcon,
-  FlagIcon,
   ScaleIcon,
 } from '@heroicons/react/24/outline';
 import {
@@ -424,6 +424,32 @@ export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDupl
         {/* ── Titlebar ───────────────────────────────────────────── */}
         <div className="card-titlebar">
           <div className="titlebar-actions">
+            {/* Pin to next Weekly WIP. Promoted out of the kebab menu
+                so the user can pin/unpin in one click and see the
+                state without opening a menu. Filled bookmark + orange
+                tint when pinned, outline when not. Client tasks only —
+                ops cards live in their own kanban surface. */}
+            {!isOps && (
+              <button
+                type="button"
+                className={`tb-btn${(task as Task).flaggedForWip ? ' is-pinned' : ''}`}
+                aria-pressed={(task as Task).flaggedForWip ?? false}
+                aria-label={(task as Task).flaggedForWip ? 'Unpin from next WIP' : 'Pin to next WIP'}
+                title={(task as Task).flaggedForWip ? 'Unpin from next WIP' : 'Pin to next WIP'}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMoreOpen(false);
+                  flizowStore.toggleTaskWipFlag(task.id);
+                }}
+              >
+                <BookmarkIcon
+                  width={16}
+                  height={16}
+                  fill={(task as Task).flaggedForWip ? 'currentColor' : 'none'}
+                  aria-hidden="true"
+                />
+              </button>
+            )}
             {/* Share targets a `#board/{svcId}/card/{id}` deep link — ops
                 cards have no service route yet, so hide the button until
                 that lands. */}
@@ -540,37 +566,11 @@ export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDupl
                   {copiedLink ? 'Link copied' : 'Copy link'}
                 </div>
                 )}
-                {/* Pin / unpin to next Weekly WIP. Client tasks only —
-                    the WIP agenda is scoped to client work, ops cards
-                    have their own surface (Ops board). The label flips
-                    based on current state so the user knows what the
-                    click will do. Auto-clears in updateTask when the
-                    card lands in 'done'. */}
-                {!isOps && (
-                <div
-                  className="tb-menu-item"
-                  role="menuitem"
-                  tabIndex={0}
-                  onClick={() => {
-                    flizowStore.toggleTaskWipFlag(task.id);
-                    setMoreOpen(false);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      (e.currentTarget as HTMLElement).click();
-                    }
-                  }}
-                >
-                  <FlagIcon
-                    width={14}
-                    height={14}
-                    aria-hidden="true"
-                    style={{ marginRight: 8, color: (task as Task).flaggedForWip ? 'var(--status-fire)' : 'var(--text-faint)' }}
-                  />
-                  {(task as Task).flaggedForWip ? 'Unpin from next WIP' : 'Pin to next WIP'}
-                </div>
-                )}
+                {/* Pin/unpin to next WIP moved out of the kebab menu
+                    onto the titlebar (next to Share) for one-click
+                    access + visible state. See the BookmarkIcon button
+                    above. The kebab menu is now strictly Duplicate /
+                    Copy link / Archive / Delete. */}
                 {!isOps && <div className="tb-menu-divider" />}
                 <div
                   className="tb-menu-item"
