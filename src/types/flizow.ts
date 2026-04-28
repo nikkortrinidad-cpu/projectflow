@@ -413,6 +413,21 @@ export interface Task {
    *  list newest-first so the most recently hidden cards are easiest to
    *  find again. Cleared on unarchive. */
   archivedAt?: string;
+  /** How many of the assignee's daily cap slots this task consumes.
+   *  Defaults to 1 when absent. Designer / operator can set to 0,
+   *  0.5, 2, 4, or any number — they're the expert on how heavy a
+   *  given piece of work is. AMs creating cards can pre-fill via the
+   *  t-shirt picker (S=1, M=2, L=4, XL=8) but their value is treated
+   *  as a guess until the operator confirms (see weightStatus). */
+  slots?: number;
+  /** Authority signal on the slots value:
+   *    'estimated'  — set by the AM (or the default), not yet confirmed
+   *                   by the assignee. UI renders italic / muted.
+   *    'confirmed'  — set or accepted by the assignee. UI renders solid.
+   *  Defaults to 'estimated' on creation. The capacity math always uses
+   *  the current slots value regardless of status — status is a trust
+   *  cue for humans, not a math input. */
+  weightStatus?: 'estimated' | 'confirmed';
 }
 
 export interface Member {
@@ -453,6 +468,35 @@ export interface Member {
     digest?: boolean;
     urgent?: boolean;
   };
+  /** Daily soft cap — total slot count above which the member's load
+   *  badge tints amber. Universal: every member has a cap, including
+   *  AMs (operations roles also burn out). Defaults to DEFAULT_CAP_SOFT
+   *  (6) when absent. Edited per-member on Account Settings → Members. */
+  capSoft?: number;
+  /** Daily max cap — total slot count above which the booking flow
+   *  fires a soft warning ("Sarah will have 9, max is 8"). Doesn't
+   *  block — agency reality has rush days; the warning is a nudge,
+   *  not a wall. Defaults to DEFAULT_CAP_MAX (8). */
+  capMax?: number;
+}
+
+/**
+ * Per-day override on a member's standing cap. Lets an operator (or
+ * an admin on their behalf) say "Sarah's cap on Wed Apr 30 is 3/4 —
+ * she's in workshops half the day." When present, this row's caps
+ * win over the member's standing capSoft/capMax for that single day.
+ *
+ * Stored flat on FlizowData rather than nested under Member so a
+ * single override edit is a cheap array patch — and so the count of
+ * overrides scales with usage rather than ballooning every member's
+ * record.
+ */
+export interface MemberDayOverride {
+  memberId: string;
+  /** ISO date string (YYYY-MM-DD). Lexicographic sort works correctly. */
+  date: string;
+  capSoft: number;
+  capMax: number;
 }
 
 export interface Integration {
@@ -874,6 +918,12 @@ export interface FlizowData {
    *  on-track) derive from live data at render time and don't live in
    *  the store. */
   manualAgendaItems: ManualAgendaItem[];
+  /** Per-day cap overrides for individual members. Each row says
+   *  "this member's cap on this date is X/Y" and beats the member's
+   *  standing capSoft/capMax for that date. Used for PTO,
+   *  workshop-heavy days, and other partial-availability cases.
+   *  Empty array on a fresh workspace. */
+  memberDayOverrides: MemberDayOverride[];
   /** The "today" reference the mockup uses for all date math. A single
    *  anchor keeps the UI stable across re-renders. */
   today: string;

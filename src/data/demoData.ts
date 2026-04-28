@@ -1083,6 +1083,7 @@ export function generateDemoData(): FlizowData {
     // itself. Keeps the section quiet on first load so the auto-built
     // agenda is what the user sees first.
     manualAgendaItems: [],
+    memberDayOverrides: [],
     // Ops board seed bundled directly here. Used to come from
     // flizowStore.migrate(), but that auto-seed is now gated for
     // brand-new users (so an empty fresh install doesn't get fake

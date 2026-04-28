@@ -67,6 +67,7 @@ function emptyData(): FlizowData {
     taskComments: [],
     taskActivity: [],
     manualAgendaItems: [],
+    memberDayOverrides: [],
     opsTasks: [],
     today: todayISO(),
     scheduleTaskMap: {},
@@ -165,6 +166,10 @@ function migrate(parsed: Partial<FlizowData>): FlizowData {
     taskComments: parsed.taskComments ?? base.taskComments,
     taskActivity: parsed.taskActivity ?? base.taskActivity,
     manualAgendaItems: parsed.manualAgendaItems ?? base.manualAgendaItems,
+    // Capacity model added 2026-04-28; older docs need an empty array.
+    memberDayOverrides: Array.isArray(parsed.memberDayOverrides)
+      ? parsed.memberDayOverrides
+      : base.memberDayOverrides,
     opsTasks,
     // `today` always refreshes on load — we never trust a stale anchor.
     today: todayISO(),
@@ -1066,6 +1071,7 @@ class FlizowStore {
     this.data.taskComments = [];
     this.data.taskActivity = [];
     this.data.manualAgendaItems = [];
+    this.data.memberDayOverrides = [];
     this.data.opsTasks = [];
     this.data.scheduleTaskMap = {};
     this.data.favoriteServiceIds = [];

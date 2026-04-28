@@ -975,7 +975,7 @@ function Toggle({
  *  re-role them. "Invite teammate" generates a one-time link the owner
  *  shares manually (Slack/text/email — not auto-emailed in MVP). */
 function MembersSection() {
-  const { store } = useFlizow();
+  const { data, store } = useFlizow();
   // Subscribe to workspace metadata only (not the full data slice) so
   // a card edit elsewhere doesn't re-render this list.
   const meta = useSyncExternalStore(store.subscribeWorkspace, store.getWorkspaceMeta);
@@ -1224,6 +1224,11 @@ function MembersSection() {
               .toUpperCase();
             const showSelect = isOwner && !isThisOwner;
             const showRemove = isOwner && !isThisOwner;
+            // Resolve the data-side member record for cap editing.
+            // workspace.members carries auth/role; data.members carries
+            // the assignable record (caps, color, type, etc.). The two
+            // are linked by uid === id for any member who has signed in.
+            const dataMember = data.members.find(dm => dm.id === m.uid);
             return (
               <div key={m.uid} className="mbrs-row">
                 <div className="mbrs-avatar" aria-hidden="true">{initials}</div>
@@ -1265,6 +1270,19 @@ function MembersSection() {
                   >
                     Remove
                   </button>
+                )}
+                {/* Daily cap inputs — soft / max. Owner-only edit: every
+                    member has caps, but only the owner manages them
+                    centrally. Empty input commits as `undefined` so the
+                    capacity helpers fall back to the 6/8 defaults.
+                    Placed at the end of the row so non-owner rows
+                    (which don't render this) still flow cleanly through
+                    the grid columns without leaving an empty middle. */}
+                {isOwner && dataMember && (
+                  <CapInputs
+                    member={dataMember}
+                    onChange={(patch) => store.updateMember(m.uid, patch)}
+                  />
                 )}
               </div>
             );
@@ -1787,6 +1805,65 @@ function ExportWorkspaceButton({ workspaceName }: { workspaceName: string }) {
           {error}
         </p>
       )}
+    </div>
+  );
+}
+
+/** Inline cap editor for a Members row. Two number fields rendered
+ *  side-by-side (soft / max), each commits its diff on change.
+ *
+ *  Empty fields commit as `undefined` — the capacity helpers fall back
+ *  to DEFAULT_CAP_SOFT (6) / DEFAULT_CAP_MAX (8) when the value is
+ *  missing, so leaving a field blank is the correct way to say "use
+ *  the workspace default." Number values are parsed and clamped to
+ *  non-negative integers (a negative cap doesn't make sense; fractional
+ *  caps complicate the load-zone math without a clear use case).
+ *
+ *  Owner-only render — gated at the call site (the `isOwner && dataMember`
+ *  check above), so this component itself doesn't repeat the
+ *  authorization logic.
+ */
+function CapInputs({
+  member,
+  onChange,
+}: {
+  member: Member;
+  onChange: (patch: Partial<Member>) => void;
+}) {
+  function commitCap(key: 'capSoft' | 'capMax', raw: string) {
+    const trimmed = raw.trim();
+    if (trimmed === '') {
+      onChange({ [key]: undefined });
+      return;
+    }
+    const n = Math.max(0, Math.floor(Number(trimmed)));
+    if (Number.isNaN(n)) return;
+    onChange({ [key]: n });
+  }
+  return (
+    <div
+      className="mbrs-caps"
+      title="Daily slot caps — soft (target, badge tints amber over) / max (warn, soft warning fires over)"
+    >
+      <input
+        type="number"
+        min={0}
+        className="mbrs-cap-input"
+        placeholder="6"
+        value={member.capSoft ?? ''}
+        onChange={(e) => commitCap('capSoft', e.target.value)}
+        aria-label={`${member.name} daily soft cap`}
+      />
+      <span className="mbrs-cap-sep" aria-hidden="true">/</span>
+      <input
+        type="number"
+        min={0}
+        className="mbrs-cap-input"
+        placeholder="8"
+        value={member.capMax ?? ''}
+        onChange={(e) => commitCap('capMax', e.target.value)}
+        aria-label={`${member.name} daily max cap`}
+      />
     </div>
   );
 }

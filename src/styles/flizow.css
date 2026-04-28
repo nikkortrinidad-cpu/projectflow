@@ -5003,13 +5003,52 @@
      of varying control widths. */
   .mbrs-row {
     display: grid;
-    grid-template-columns: 36px minmax(0, 1fr) auto auto;
+    /* avatar · identity · role · remove · caps. The 5th col is the
+       owner-only daily-cap editor (CapInputs). Non-owner rows render
+       without it; the trailing column collapses to empty space. */
+    grid-template-columns: 36px minmax(0, 1fr) auto auto auto;
     align-items: center;
     gap: 12px;
     padding: 10px 4px;
     border-bottom: 1px solid var(--hairline-soft);
   }
   .mbrs-row:last-child { border-bottom: 0; }
+  /* Daily cap editor — two narrow number inputs separated by a "/".
+     Sized to fit a single digit comfortably (most caps will be 1–9);
+     auto-grows for wider numbers without breaking the row layout. */
+  .mbrs-caps {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .mbrs-cap-input {
+    width: 44px;
+    padding: 4px 6px;
+    font-size: var(--fs-sm);
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+    text-align: center;
+    /* Hide the spin buttons — fewer than 8 valid values means the
+       up/down chevrons add noise without speeding anything up. */
+    -moz-appearance: textfield;
+  }
+  .mbrs-cap-input::-webkit-outer-spin-button,
+  .mbrs-cap-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .mbrs-cap-input:focus {
+    outline: none;
+    border-color: var(--highlight);
+    box-shadow: 0 0 0 3px var(--highlight-soft);
+  }
+  .mbrs-cap-sep {
+    color: var(--text-faint);
+    font-size: var(--fs-sm);
+    line-height: 1;
+  }
 
   .mbrs-avatar {
     width: 36px; height: 36px; border-radius: 50%;
