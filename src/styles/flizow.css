@@ -1924,6 +1924,29 @@
     transform: translateY(-1px);
     box-shadow: 0 4px 14px rgba(241,90,36,0.10);
   }
+  /* Pinned-for-WIP marker — small orange flag in the top-right of
+     the card. Sits above .card content via z-index but pointer-
+     events:none so it doesn't intercept clicks meant for the card.
+     The brand-orange (#f15a24) ties pinning to the user's intent +
+     the Flizow identity — distinct from the red urgency rail. */
+  .card.is-pinned {
+    border-color: color-mix(in srgb, #f15a24 35%, var(--hairline-soft));
+  }
+  .card-wip-pin {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #f15a24;
+    background: color-mix(in srgb, #f15a24 14%, transparent);
+    z-index: 1;
+    pointer-events: none;
+  }
   /* priority = subtle 2px left accent stripe (replaces corner dot) */
   .card::before {
     content: '';
@@ -12737,6 +12760,7 @@
   }
   .wip-agenda-group--new-clients .wip-agenda-group-title svg { color: #22a559; }
   .wip-agenda-group--urgent      .wip-agenda-group-title svg { color: #d93025; }
+  .wip-agenda-group--pinned      .wip-agenda-group-title svg { color: #f15a24; }
   .wip-agenda-group--ontrack     .wip-agenda-group-title svg { color: #0b84ff; }
   .wip-agenda-group--manual      .wip-agenda-group-title svg { color: #8e4ec6; }
   .wip-agenda-group-count {

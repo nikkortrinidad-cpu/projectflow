@@ -74,7 +74,7 @@ type AgendaStatus =
   | 'due-this' | 'due-next' | 'on-track' | 'manual';
 
 interface AgendaGroup {
-  key: 'new-clients' | 'urgent' | 'ontrack' | 'manual';
+  key: 'new-clients' | 'urgent' | 'pinned' | 'ontrack' | 'manual';
   title: string;
   items: AgendaItem[];
   /** Count of items that matched the group's selector but were
@@ -134,9 +134,9 @@ export function WipPage() {
     items: g.items.filter(i => !dismissed.has(i.key)),
   })), [groups, dismissed]);
 
-  // Flat order for the live meeting timeline: new-clients → urgent →
-  // ontrack → manual. The Live Meeting component treats this as the
-  // run-of-show.
+  // Flat order for the live meeting timeline:
+  //   new-clients → urgent → pinned → ontrack → manual
+  // The Live Meeting component treats this as the run-of-show.
   const flatAgenda = useMemo(() => {
     const out: AgendaItem[] = [];
     for (const g of visibleGroups) out.push(...g.items);
@@ -427,6 +427,7 @@ function TabLink({ active, children, onClick, id, controls }: {
 const AGENDA_GROUP_ICONS: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   'new-clients': UsersIcon,
   'urgent': FireIcon,
+  'pinned': FlagIcon,
   'ontrack': CheckCircleIcon,
   'manual': PencilSquareIcon,
 };
@@ -436,7 +437,7 @@ function AgendaGroupBlock({ group, onRemove, onEditManual }: {
   onRemove: (item: AgendaItem) => void;
   onEditManual: (item: AgendaItem) => void;
 }) {
-  const cls = `wip-agenda-group wip-agenda-group--${group.key === 'new-clients' ? 'new-clients' : group.key === 'urgent' ? 'urgent' : group.key === 'ontrack' ? 'ontrack' : 'manual'}`;
+  const cls = `wip-agenda-group wip-agenda-group--${group.key}`;
   const GroupIcon = AGENDA_GROUP_ICONS[group.key] ?? PencilSquareIcon;
 
   return (
@@ -672,8 +673,13 @@ function buildAgenda(
   // Capped at 12 rows so the group stays scannable; the remainder
   // count flows through to the group head so the AM sees there's
   // more urgent work than the meeting will cover. Audit: wip M5.
+  // Pinned cards are skipped here — they get their own dedicated
+  // group (#3 below), so a card that's BOTH urgent and pinned shows
+  // up exactly once in Pinned (the user's explicit voice wins over
+  // automatic categorisation).
   const urgentAll = tasks.filter(t => {
     if (t.columnId === 'done') return false;
+    if (t.flaggedForWip) return false;
     if (t.columnId === 'blocked') return true;
     if (t.severity === 'critical') return true;
     if (t.dueDate && daysBetween(todayISO, t.dueDate) < 0) return true;
@@ -682,12 +688,26 @@ function buildAgenda(
   const urgent = urgentAll.slice(0, 12);
   const urgentHidden = Math.max(0, urgentAll.length - urgent.length);
 
-  // 3. On-track celebratory items: healthy clients with a task due this week
+  // 3. Pinned for discussion: cards the user explicitly flagged for the
+  //    next WIP via the card-modal "Pin to next WIP" toggle. Bypasses
+  //    the auto-classification (urgent/on-track) — if the user asked
+  //    for it, it shows up no matter what. Cleared automatically when
+  //    a pinned card moves to `done` (handled in flizowStore.updateTask).
+  const pinnedAll = tasks.filter(t => {
+    if (t.columnId === 'done') return false;
+    return t.flaggedForWip === true;
+  });
+  const pinned = pinnedAll.slice(0, 12);
+  const pinnedHidden = Math.max(0, pinnedAll.length - pinned.length);
+
+  // 4. On-track celebratory items: healthy clients with a task due this week.
+  //    Same de-dupe rule as urgent — pinned cards skip this group too.
   const onTrackClients = new Set(
     clients.filter(c => c.status === 'track').map(c => c.id),
   );
   const onTrackAll = tasks.filter(t => {
     if (t.columnId === 'done') return false;
+    if (t.flaggedForWip) return false;
     if (!onTrackClients.has(t.clientId)) return false;
     if (!t.dueDate) return false;
     const diff = daysBetween(todayISO, t.dueDate);
@@ -722,6 +742,31 @@ function buildAgenda(
           kind: 'task' as const,
           label: t.title,
           meta: `${client?.name ?? 'Unknown client'} · ${service?.name ?? 'Work'}`,
+          status: urgentStatus(t, todayISO),
+          clientId: t.clientId,
+          serviceId: t.serviceId,
+          taskId: t.id,
+          serviceName: service?.name ?? 'Work',
+        };
+      }),
+    },
+    {
+      key: 'pinned',
+      title: 'Pinned for discussion',
+      hiddenCount: pinnedHidden,
+      items: pinned.map(t => {
+        const client = clients.find(c => c.id === t.clientId);
+        const service = services.find(s => s.id === t.serviceId);
+        return {
+          key: `pin-${t.id}`,
+          kind: 'task' as const,
+          label: t.title,
+          meta: `${client?.name ?? 'Unknown client'} · ${service?.name ?? 'Work'}`,
+          // Pinned items reuse urgentStatus's vocabulary so chips read
+          // consistently with the urgent group when the underlying task
+          // is also overdue/blocked. The category badge ("Pinned") is
+          // already conveyed by the group header — the chip status
+          // just describes the work's actual state.
           status: urgentStatus(t, todayISO),
           clientId: t.clientId,
           serviceId: t.serviceId,

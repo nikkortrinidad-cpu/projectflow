@@ -1539,6 +1539,14 @@ class FlizowStore {
     // card has already changed column. New array ref → memo invalidates
     // → board re-renders.
     const updated: Task = { ...original, ...patch };
+    // Auto-clear the Weekly WIP pin when a card lands in `done`. The
+    // pin is meant to surface active work that needs discussion;
+    // closed cards shouldn't drag the agenda down. Single source of
+    // truth — handled here so every code path (drag-to-done, modal
+    // status change, bulk move, etc.) gets the same cleanup.
+    if (updated.flaggedForWip && updated.columnId === 'done') {
+      updated.flaggedForWip = false;
+    }
     this.data.tasks = [
       ...this.data.tasks.slice(0, idx),
       updated,
@@ -1633,6 +1641,16 @@ class FlizowStore {
 
   setTaskPriority(id: string, priority: Priority) {
     this.updateTask(id, { priority });
+  }
+
+  /** Pin or unpin a card for the next Weekly WIP agenda. Pinned cards
+   *  surface under "Pinned for discussion" in the agenda regardless of
+   *  their auto-classification (urgent / on-track / etc.). Pin clears
+   *  automatically when the card moves to `done`. */
+  toggleTaskWipFlag(id: string) {
+    const task = this.data.tasks.find(t => t.id === id);
+    if (!task) return;
+    this.updateTask(id, { flaggedForWip: !task.flaggedForWip });
   }
 
   /** Resolve an actor/assignee id to a printable name for activity

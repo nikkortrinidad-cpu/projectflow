@@ -7,6 +7,7 @@ import {
   ArchiveBoxIcon,
   CheckIcon as HeroCheckIcon,
   ChevronDownIcon,
+  FlagIcon,
   MagnifyingGlassIcon,
   TrashIcon as HeroTrashIcon,
   XMarkIcon,
@@ -1473,7 +1474,7 @@ function CardTile({
   const isDone = task.columnId === 'done';
   return (
     <div
-      className={`card${isDone ? ' is-done' : ''}`}
+      className={`card${isDone ? ' is-done' : ''}${task.flaggedForWip ? ' is-pinned' : ''}`}
       data-priority={task.priority}
       data-assignees={assignee?.initials?.toLowerCase() ?? ''}
       style={dragging ? { boxShadow: '0 10px 30px rgba(10,132,255,0.25)', transform: 'rotate(-1deg)' } : undefined}
@@ -1486,6 +1487,15 @@ function CardTile({
         if (onOpen) onOpen(task.id);
       }}
     >
+      {/* WIP-pin marker — small flag in the top-right corner when the
+          card is pinned for the next Weekly WIP. Absolute-positioned
+          so the rest of the tile layout stays untouched; tooltip on
+          hover names the action so the marker isn't a mystery. */}
+      {task.flaggedForWip && (
+        <span className="card-wip-pin" title="Pinned for next Weekly WIP">
+          <FlagIcon width={11} height={11} aria-hidden="true" />
+        </span>
+      )}
       <div className="card-top">
         <div className="card-labels">
           {task.labels.slice(0, 2).map(label => (

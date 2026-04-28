@@ -6,6 +6,7 @@ import {
   ChevronRightIcon,
   ClockIcon,
   DocumentTextIcon,
+  FlagIcon,
   ScaleIcon,
 } from '@heroicons/react/24/outline';
 import {
@@ -537,6 +538,37 @@ export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDupl
                   }}
                 >
                   {copiedLink ? 'Link copied' : 'Copy link'}
+                </div>
+                )}
+                {/* Pin / unpin to next Weekly WIP. Client tasks only —
+                    the WIP agenda is scoped to client work, ops cards
+                    have their own surface (Ops board). The label flips
+                    based on current state so the user knows what the
+                    click will do. Auto-clears in updateTask when the
+                    card lands in 'done'. */}
+                {!isOps && (
+                <div
+                  className="tb-menu-item"
+                  role="menuitem"
+                  tabIndex={0}
+                  onClick={() => {
+                    flizowStore.toggleTaskWipFlag(task.id);
+                    setMoreOpen(false);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      (e.currentTarget as HTMLElement).click();
+                    }
+                  }}
+                >
+                  <FlagIcon
+                    width={14}
+                    height={14}
+                    aria-hidden="true"
+                    style={{ marginRight: 8, color: (task as Task).flaggedForWip ? 'var(--status-fire)' : 'var(--text-faint)' }}
+                  />
+                  {(task as Task).flaggedForWip ? 'Unpin from next WIP' : 'Pin to next WIP'}
                 </div>
                 )}
                 {!isOps && <div className="tb-menu-divider" />}

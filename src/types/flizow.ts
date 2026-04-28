@@ -428,6 +428,13 @@ export interface Task {
    *  the current slots value regardless of status — status is a trust
    *  cue for humans, not a math input. */
   weightStatus?: 'estimated' | 'confirmed';
+  /** User-pinned for the next Weekly WIP agenda. When true, the card
+   *  appears under the "Pinned for discussion" group regardless of
+   *  whether it would otherwise qualify (urgent, on-track, new
+   *  client). Auto-clears when the card moves to `done` — pinned-then-
+   *  finished cards drop off the agenda automatically so the WIP
+   *  doesn't fill with closed work nobody needs to discuss. */
+  flaggedForWip?: boolean;
 }
 
 export interface Member {
