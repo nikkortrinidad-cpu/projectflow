@@ -2643,7 +2643,13 @@
   .meta-table {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    column-gap: var(--sp-4xl);
+    /* Row vs column gap balance — column-gap (24px) is now larger
+       than row-gap (18px) so same-row fields hug visually and
+       different-row fields read as separate. The previous 32px
+       column / 18px row inverted Gestalt proximity (wider gap
+       between adjacent fields than between stacked ones). Audit
+       boards MED. */
+    column-gap: var(--sp-3xl);
     row-gap: var(--sp-18);
     padding: 2px 2px 4px;
   }
@@ -3343,7 +3349,10 @@
   .sidebar-content {
     flex: 1;
     overflow-y: auto;
-    padding: var(--sp-18);
+    /* Padding scales with the 13px / 20px-line body inside —
+       16px keeps the prose 1px off the baseline grid in either
+       direction. Audit boards MED: sidebar-padding-anchor. */
+    padding: var(--sp-xl);
     display: none;
   }
   .sidebar-content.active { display: block; }
@@ -14624,7 +14633,10 @@
   .anlx-drill {
     background: var(--bg-elev); border: 1px solid var(--hairline);
     border-radius: 14px;
-    margin-bottom: var(--sp-2xl);
+    /* Match the surrounding section margin (var(--sp-xl) / 16px) so
+       the drill panel's outer rhythm is consistent with the sections
+       above and below it. Audit analytics MED: drill-margin-mismatch. */
+    margin-bottom: var(--sp-xl);
     overflow: hidden;
     opacity: 0; max-height: 0;
     transition: opacity 180ms ease, max-height 220ms ease, margin 180ms ease;
@@ -14672,7 +14684,8 @@
   }
   .anlx-drill-row-client {
     font-size: var(--fs-xs); color: var(--text-soft);
-    margin-top: 2px;
+    margin-top: var(--sp-nano);
+    line-height: var(--lh-dense);
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .anlx-drill-row-owner {
