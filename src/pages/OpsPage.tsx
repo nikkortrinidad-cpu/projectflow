@@ -48,6 +48,8 @@ const COLUMNS: Array<{ id: ColumnId; title: string; dot: string }> = [
 
 // ── Page ─────────────────────────────────────────────────────────────
 
+type OpsTab = 'board' | 'capacity';
+
 export function OpsPage() {
   const { data } = useFlizow();
   const tasks = data.opsTasks;
@@ -61,6 +63,13 @@ export function OpsPage() {
   // client board pages, but the data lives at workspace level
   // (data.opsBrief) because Ops has no per-service scope.
   const [briefOpen, setBriefOpen] = useState(false);
+  // Which sub-view of the Ops page is showing. The Ops Board (kanban)
+  // is the default — that's still where the day-to-day ops work
+  // happens. Team Capacity (workspace-wide load heatmap) is a peer
+  // planning surface, accessible via tab. Local state is fine — no
+  // url routing yet; if direct linking matters later, lift to the
+  // hash router and read params.tab.
+  const [tab, setTab] = useState<OpsTab>('board');
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -156,71 +165,117 @@ export function OpsPage() {
     // and has no CSS consumers in src/ — keeping the minimum shell
     // React needs. Audit: ops M2.
     <div className="view active">
-      <Header stats={stats} />
-      <FiltersBar
-        search={search}
-        onSearch={setSearch}
-        filters={filters}
-        onFiltersChange={setFilters}
-        members={opsAssigneeMembers}
-      />
+      <Header stats={stats} showStats={tab === 'board'} />
 
-      <BriefStrip
-        label="Ops Brief"
-        brief={data.opsBrief}
-        briefUpdatedAt={data.opsBriefUpdatedAt}
-        todayISO={data.today}
-        onOpen={() => setBriefOpen(true)}
-        emptyCta="+ Add Ops brief"
-      />
+      {/* Tabs — peer surfaces, not nested. Board is the default
+          (the kanban is still the day-to-day work surface), Capacity
+          is the planning view. Wrapping them as tabs lets the
+          heatmap stay quiet until the user actively reaches for it,
+          instead of stealing space above the board on every visit. */}
+      <div className="ops-tabs" role="tablist" aria-label="Ops views">
+        <button
+          type="button"
+          id="ops-tab-board"
+          role="tab"
+          aria-selected={tab === 'board'}
+          aria-controls="ops-panel-board"
+          className={`ops-tab${tab === 'board' ? ' on' : ''}`}
+          onClick={() => setTab('board')}
+        >
+          Ops Board
+        </button>
+        <button
+          type="button"
+          id="ops-tab-capacity"
+          role="tab"
+          aria-selected={tab === 'capacity'}
+          aria-controls="ops-panel-capacity"
+          className={`ops-tab${tab === 'capacity' ? ' on' : ''}`}
+          onClick={() => setTab('capacity')}
+        >
+          Team Capacity
+        </button>
+      </div>
 
-      {/* Team Capacity heatmap — workspace-wide load view. Reads from
-          both client tasks and ops tasks (a designer's internal work
-          and their client work share the same finite attention) and
-          uses the same green/amber/red zones the rest of the capacity
-          model uses. Sits above the kanban board so the ops manager
-          sees the planning surface before diving into ops cards. */}
-      <TeamCapacityHeatmap
-        members={data.members}
-        tasks={data.tasks}
-        opsTasks={data.opsTasks}
-        overrides={data.memberDayOverrides}
-        todayISO={data.today}
-        clients={data.clients}
-        services={data.services}
-      />
+      {tab === 'board' && (
+        <section
+          id="ops-panel-board"
+          role="tabpanel"
+          aria-labelledby="ops-tab-board"
+        >
+          <FiltersBar
+            search={search}
+            onSearch={setSearch}
+            filters={filters}
+            onFiltersChange={setFilters}
+            members={opsAssigneeMembers}
+          />
 
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        {/* id="opsBoard" used to ride along here for the legacy static
-            mockup to latch `document.getElementById` onto — no React
-            consumer. Dropped. Audit: ops M2. */}
-        <div className="board">
-          {COLUMNS.map(col => {
-            const colTasks = tasksByColumn.get(col.id) ?? [];
-            return (
-              <Column
-                key={col.id}
-                columnId={col.id}
-                title={col.title}
-                dot={col.dot}
-                tasks={colTasks}
-                members={members}
-                today={data.today}
-                onOpenTask={(id) => setSelectedId(id)}
-              />
-            );
-          })}
-        </div>
+          <BriefStrip
+            label="Ops Brief"
+            brief={data.opsBrief}
+            briefUpdatedAt={data.opsBriefUpdatedAt}
+            todayISO={data.today}
+            onOpen={() => setBriefOpen(true)}
+            emptyCta="+ Add Ops brief"
+          />
 
-        <DragOverlay dropAnimation={null}>
-          {activeTask ? <CardTile task={activeTask} members={members} today={data.today} dragging /> : null}
-        </DragOverlay>
-      </DndContext>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            {/* id="opsBoard" used to ride along here for the legacy static
+                mockup to latch `document.getElementById` onto — no React
+                consumer. Dropped. Audit: ops M2. */}
+            <div className="board">
+              {COLUMNS.map(col => {
+                const colTasks = tasksByColumn.get(col.id) ?? [];
+                return (
+                  <Column
+                    key={col.id}
+                    columnId={col.id}
+                    title={col.title}
+                    dot={col.dot}
+                    tasks={colTasks}
+                    members={members}
+                    today={data.today}
+                    onOpenTask={(id) => setSelectedId(id)}
+                  />
+                );
+              })}
+            </div>
+
+            <DragOverlay dropAnimation={null}>
+              {activeTask ? <CardTile task={activeTask} members={members} today={data.today} dragging /> : null}
+            </DragOverlay>
+          </DndContext>
+        </section>
+      )}
+
+      {tab === 'capacity' && (
+        <section
+          id="ops-panel-capacity"
+          role="tabpanel"
+          aria-labelledby="ops-tab-capacity"
+        >
+          {/* Team Capacity heatmap — workspace-wide load view. Reads
+              from both client tasks and ops tasks (a designer's
+              internal work and their client work share the same
+              finite attention) and uses the same green/amber/red
+              zones the rest of the capacity model uses. */}
+          <TeamCapacityHeatmap
+            members={data.members}
+            tasks={data.tasks}
+            opsTasks={data.opsTasks}
+            overrides={data.memberDayOverrides}
+            todayISO={data.today}
+            clients={data.clients}
+            services={data.services}
+          />
+        </section>
+      )}
 
       {selectedId && (
         <FlizowCardModal
@@ -247,12 +302,21 @@ export function OpsPage() {
 
 // ── Header ───────────────────────────────────────────────────────────
 
-function Header({ stats }: { stats: { total: number; inProgress: number; blocked: number } }) {
+function Header({
+  stats,
+  showStats,
+}: {
+  stats: { total: number; inProgress: number; blocked: number };
+  /** Stats are board-specific (task counts by column). Hide them on
+   *  the Capacity tab where they'd read as stale context — the
+   *  heatmap is about people, not the kanban's column distribution. */
+  showStats: boolean;
+}) {
   return (
     <div className="ops-header-bar">
       <div className="ops-header-text">
         <div className="ops-header-eyebrow">Internal work</div>
-        <h1 className="ops-header-title">Ops board</h1>
+        <h1 className="ops-header-title">Ops</h1>
         {/* Header sub used to run two lines explaining what goes
             here vs. on a client board. Useful on first visit, noise
             on the 300th. Trimmed to the essential-at-a-glance line;
@@ -261,6 +325,7 @@ function Header({ stats }: { stats: { total: number; inProgress: number; blocked
           Hiring, finance, process, tooling — work the team does for itself.
         </p>
       </div>
+      {showStats && (
       <div className="ops-header-stats" role="group" aria-label="Board summary">
         <div className="ops-header-stat"><strong>{stats.total}</strong> tasks</div>
         <div className="ops-header-stat"><strong>{stats.inProgress}</strong> in progress</div>
@@ -270,6 +335,7 @@ function Header({ stats }: { stats: { total: number; inProgress: number; blocked
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }

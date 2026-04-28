@@ -6095,12 +6095,52 @@
     color: #fff;
   }
 
-  /* ───── Team Capacity heatmap (Ops page) ───── */
+  /* ───── Ops page tabs ───── */
+  /* Tabs sit between the Header and the active panel. Same visual
+     pattern as .wip-tabs but kept on its own classes so the two
+     surfaces can drift independently if needed (different tab
+     labels, different content shapes). */
+  .ops-tabs {
+    display: flex;
+    gap: var(--sp-xs);
+    border-bottom: 1px solid var(--hairline);
+    margin: 0 24px;
+    padding: 0 0 var(--sp-micro);
+  }
+  .ops-tab {
+    background: transparent;
+    border: none;
+    padding: var(--sp-sm) var(--sp-lg);
+    font-family: inherit;
+    font-size: var(--fs-md);
+    font-weight: 500;
+    color: var(--text-soft);
+    text-decoration: none;
+    border-radius: 8px;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    transition: color var(--dur-fast), background var(--dur-fast);
+  }
+  .ops-tab:hover {
+    color: var(--text);
+    background: color-mix(in srgb, currentColor 6%, transparent);
+  }
+  .ops-tab.on {
+    color: var(--highlight);
+    background: var(--highlight-soft);
+    font-weight: 600;
+  }
+  .ops-tab:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
+  }
+
+  /* ───── Team Capacity heatmap (Ops page → Capacity tab) ───── */
   /* The "is anyone slammed this week?" surface. Rows = members,
      columns = next 10 weekdays. Each cell shows load/soft tinted by
      zone — same colour vocabulary as the assignee-picker load badge
-     and the My Schedule per-day badge. Lives above the Ops board so
-     the planning view comes before the work view. */
+     and the My Schedule per-day badge. Lives behind the Capacity
+     tab so it stays out of the way until the user reaches for it. */
   .capacity-strip {
     margin: 16px 24px 24px;
     padding: 20px 22px;
