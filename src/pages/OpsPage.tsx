@@ -169,11 +169,15 @@ export function OpsPage() {
 
       {/* Tabs — three peer surfaces.
             Board     = the kanban (day-to-day execution)
-            Brief     = the team's weekly steer (strategic context)
+            Notes     = team-wide notes / weekly steer (rendered via
+                        the Brief vocabulary internally — same
+                        storage key data.opsBrief, same modal — but
+                        labelled "Notes" in the UI for a softer,
+                        more-general framing than "brief")
             Capacity  = workspace-wide load heatmap (planning)
           Board stays default — it's the most-used surface; surprising
           existing users with a different landing tab earns nothing.
-          Brief sits between because it's the "why" between work
+          Notes sits between because it's the "why" between work
           (Board) and resourcing (Capacity). */}
       <div className="ops-tabs" role="tablist" aria-label="Ops views">
         <button
@@ -196,7 +200,7 @@ export function OpsPage() {
           className={`ops-tab${tab === 'brief' ? ' on' : ''}`}
           onClick={() => setTab('brief')}
         >
-          Ops Brief
+          Notes
         </button>
         <button
           type="button"
@@ -315,7 +319,7 @@ export function OpsPage() {
 
       {briefOpen && (
         <BriefModal
-          title="Ops Brief"
+          title="Notes"
           initialBrief={data.opsBrief}
           onSave={(html) => flizowStore.updateOpsBrief(html)}
           onClose={() => setBriefOpen(false)}
@@ -702,19 +706,25 @@ function AttachIcon() {
   );
 }
 
-// ── Ops Brief panel (Brief tab) ──────────────────────────────────────
+// ── Ops Notes panel (Notes tab) ──────────────────────────────────────
 //
-// Reading view for the workspace's Ops Brief. Shows the full brief
-// HTML rendered in-place, the last-updated timestamp, and an Edit
-// button that opens the existing BriefModal. When the brief is empty,
+// Reading view for the workspace's Ops notes. Internally the data
+// still lives under data.opsBrief / updateOpsBrief — same storage
+// key, same edit modal — but the user-facing label is "Notes" for a
+// softer, more-general framing than "brief." Component name kept as
+// OpsBriefPanel so it lines up with the storage-key vocabulary; the
+// "Notes" surface is a label-only rename, not a feature change.
+//
+// Shows the full HTML rendered in-place, the last-updated timestamp,
+// and an Edit button that opens the existing BriefModal. When empty,
 // a short empty state nudges the user to add one.
 //
 // Why a separate component (instead of inlining): keeps the empty /
 // populated branching out of the OpsPage render tree, which is
 // already busy gating three tabpanels. Co-located in OpsPage.tsx
 // (rather than a new file) because it's not generic — it's the Ops
-// Brief specifically. If Project briefs ever land their own tab on
-// per-service boards, generalise then.
+// notes specifically. If per-service notes ever land their own tab,
+// generalise then.
 
 function OpsBriefPanel({
   brief,
@@ -737,18 +747,18 @@ function OpsBriefPanel({
   if (!hasBrief) {
     return (
       <section className="ops-brief-panel ops-brief-panel--empty">
-        <h3 className="ops-brief-empty-title">No Ops brief yet</h3>
+        <h3 className="ops-brief-empty-title">No notes yet</h3>
         <p className="ops-brief-empty-sub">
-          Set the team's weekly steer — what we're focused on, what
-          shifted, what's blocked. Brief surfaces across the workspace
-          so everyone knows what matters this week without asking.
+          Drop the team a note — what we're focused on, what shifted,
+          what's blocked. Anything that helps everyone stay on the
+          same page without needing to ask.
         </p>
         <button
           type="button"
           className="ops-brief-empty-cta"
           onClick={onEdit}
         >
-          + Add Ops brief
+          + Add notes
         </button>
       </section>
     );
