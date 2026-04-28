@@ -6573,8 +6573,13 @@
   .cap-cell--day-head {
     padding: 10px 4px 8px;
   }
+  /* Heatmap day-cell header sizes — bumped both halves to var(--fs-sm)
+     (12px) so name + date sit on the same scale step. The previous
+     11px / 13px split jumped two scale steps inside one cell. The
+     12px doesn't disappear at the cell width and reads as a unit.
+     Audit ops MED: heatmap-day-cell-jump. */
   .cap-cell--day-head .cap-day-name {
-    font-size: var(--fs-xs);
+    font-size: var(--fs-sm);
     font-weight: 600;
     color: var(--text-soft);
     text-transform: uppercase;
@@ -6582,8 +6587,8 @@
     line-height: 1;
   }
   .cap-cell--day-head .cap-day-date {
-    margin-top: 4px;
-    font-size: var(--fs-md);
+    margin-top: var(--sp-micro);
+    font-size: var(--fs-sm);
     font-weight: 600;
     color: var(--text);
     line-height: 1;
@@ -12995,7 +13000,13 @@
     padding-bottom: 2px;
   }
   .wip-agenda-card-row {
-    display: grid; grid-template-columns: 20px 96px 1fr auto;
+    display: grid;
+    /* Status pill column was 96px fixed — narrow when the pill text
+       runs longer (e.g. "Running 4 days behind"), and over-wide
+       when it's short. `auto` lets the pill width follow its
+       content, with `min-content` floor handled by the pill's own
+       padding. Audit wip MED: agenda-card-row-status-width. */
+    grid-template-columns: 20px auto 1fr auto;
     align-items: center; gap: var(--sp-sm);
     padding: var(--sp-xs) var(--sp-sm);
     border-radius: 8px;
@@ -13398,7 +13409,10 @@
     border: 1px solid var(--hairline); border-radius: 10px;
     background: var(--bg);
     min-width: 92px; text-align: center;
-    line-height: 1.2;
+    /* 1.2 leading on 21px font = 25.2px, off the 4px baseline grid.
+       Use --lh-dense (1.3 → 27.3px ≈ 28px) so the timer's visual
+       footprint snaps to the spacing rhythm. Audit wip MED. */
+    line-height: var(--lh-dense);
   }
   .wip-live-stage-timer.is-over {
     color: var(--status-fire);
@@ -13673,7 +13687,10 @@
     padding: var(--sp-2xl);
     display: flex; flex-direction: column; gap: var(--sp-lg);
   }
-  .wip-field { display: flex; flex-direction: column; gap: var(--sp-micro); }
+  /* Field label/input gap — was --sp-micro (4px), too cramped between
+     11px label + 13px input. --sp-xs (6px) gives breathing room
+     without losing the visual grouping. Audit wip MED. */
+  .wip-field { display: flex; flex-direction: column; gap: var(--sp-xs); }
   .wip-field-label {
     font-size: var(--fs-xs); font-weight: 600; color: var(--text-muted);
     letter-spacing: -0.005em;
