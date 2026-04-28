@@ -1,11 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  BellAlertIcon,
+  ChatBubbleLeftIcon,
+  CheckCircleIcon,
   CheckIcon,
   ChevronRightIcon,
   ClipboardIcon,
+  FireIcon,
+  ListBulletIcon,
+  PencilSquareIcon,
+  PlayIcon,
   PlusIcon,
+  QueueListIcon,
+  UsersIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
+import type { ComponentType, SVGProps } from 'react';
 import { navigate } from '../router';
 import { flizowStore } from '../store/flizowStore';
 import { useFlizow } from '../store/useFlizow';
@@ -219,6 +229,7 @@ export function WipPage() {
             id="wip-tab-agenda"
             controls="wip-panel-agenda"
           >
+            <ListBulletIcon width={14} height={14} aria-hidden="true" />
             Agenda
           </TabLink>
           <TabLink
@@ -227,6 +238,7 @@ export function WipPage() {
             id="wip-tab-live"
             controls="wip-panel-live"
           >
+            <PlayIcon width={14} height={14} aria-hidden="true" />
             Live meeting
           </TabLink>
         </nav>
@@ -247,6 +259,12 @@ export function WipPage() {
 
             {itemCount === 0 ? (
               <div className="wip-agenda-empty">
+                <BellAlertIcon
+                  width={36}
+                  height={36}
+                  aria-hidden="true"
+                  className="wip-empty-icon"
+                />
                 <div className="wip-empty-title">Nothing on the agenda</div>
                 <div className="wip-empty-body">
                   No new clients, no urgent cards — quiet week. Use{' '}
@@ -400,18 +418,30 @@ function TabLink({ active, children, onClick, id, controls }: {
 
 // ── Groups ───────────────────────────────────────────────────────────────
 
+/** Per-agenda-group icon. Replaces the old colored dot — same group
+ *  semantic, but the icon adds meaning on top of color (color-blind
+ *  users get a shape signal, not just a hue). Group-class CSS still
+ *  paints the icon in the group's brand colour via currentColor. */
+const AGENDA_GROUP_ICONS: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
+  'new-clients': UsersIcon,
+  'urgent': FireIcon,
+  'ontrack': CheckCircleIcon,
+  'manual': PencilSquareIcon,
+};
+
 function AgendaGroupBlock({ group, onRemove, onEditManual }: {
   group: AgendaGroup;
   onRemove: (item: AgendaItem) => void;
   onEditManual: (item: AgendaItem) => void;
 }) {
   const cls = `wip-agenda-group wip-agenda-group--${group.key === 'new-clients' ? 'new-clients' : group.key === 'urgent' ? 'urgent' : group.key === 'ontrack' ? 'ontrack' : 'manual'}`;
+  const GroupIcon = AGENDA_GROUP_ICONS[group.key] ?? PencilSquareIcon;
 
   return (
     <div className={cls}>
       <div className="wip-agenda-group-head">
         <div className="wip-agenda-group-title">
-          <span className="wip-agenda-dot" />
+          <GroupIcon width={16} height={16} aria-hidden="true" />
           {group.title}
         </div>
         <div className="wip-agenda-group-count">
@@ -1349,7 +1379,10 @@ function LiveMeeting({
 
         <div className="wip-live-grid">
           <aside className="wip-live-timeline" aria-label="Run of show">
-            <div className="wip-live-timeline-head">Run of show</div>
+            <div className="wip-live-timeline-head">
+              <QueueListIcon width={14} height={14} aria-hidden="true" />
+              Run of show
+            </div>
             {flatAgenda.map((it, idx) => {
               const isDone = doneKeys.has(it.key);
               const isCurrent = it.key === currentKey;
@@ -1410,7 +1443,10 @@ function LiveMeeting({
 
                 {current.note && (
                   <div>
-                    <div className="wip-live-section-label">Context</div>
+                    <div className="wip-live-section-label">
+                      <ChatBubbleLeftIcon width={12} height={12} aria-hidden="true" />
+                      Context
+                    </div>
                     <p style={{ margin: 0, color: 'var(--text-soft)', lineHeight: 1.55 }}>
                       {current.note}
                     </p>

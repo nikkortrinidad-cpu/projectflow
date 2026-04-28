@@ -12657,12 +12657,14 @@
     padding-bottom: var(--sp-micro);
   }
   .wip-tab {
+    display: inline-flex; align-items: center; gap: 8px;
     padding: var(--sp-sm) var(--sp-lg);
     font-size: var(--fs-md); font-weight: 500; color: var(--text-soft);
     text-decoration: none; border-radius: 8px;
     letter-spacing: -0.01em;
     transition: color var(--dur-fast), background var(--dur-fast);
   }
+  .wip-tab svg { flex-shrink: 0; }
   .wip-tab:hover { color: var(--text); background: color-mix(in srgb, currentColor 6%, transparent); }
   .wip-tab.on {
     color: var(--highlight);
@@ -12718,15 +12720,18 @@
     letter-spacing: -0.01em;
     display: flex; align-items: center; gap: var(--sp-sm);
   }
-  .wip-agenda-group-title .wip-agenda-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    display: inline-block;
-    background: var(--text-faint);
+  /* Group icon — same role the colored dot used to play, now carries
+     shape signal too so colour-blind users get a meaning channel
+     beyond hue. The colour comes through currentColor; per-group
+     rules below paint each icon in its brand colour. */
+  .wip-agenda-group-title svg {
+    flex-shrink: 0;
+    color: var(--text-faint);
   }
-  .wip-agenda-group--new-clients .wip-agenda-dot { background: #22a559; }
-  .wip-agenda-group--urgent      .wip-agenda-dot { background: #d93025; }
-  .wip-agenda-group--ontrack     .wip-agenda-dot { background: #0b84ff; }
-  .wip-agenda-group--manual      .wip-agenda-dot { background: #8e4ec6; }
+  .wip-agenda-group--new-clients .wip-agenda-group-title svg { color: #22a559; }
+  .wip-agenda-group--urgent      .wip-agenda-group-title svg { color: #d93025; }
+  .wip-agenda-group--ontrack     .wip-agenda-group-title svg { color: #0b84ff; }
+  .wip-agenda-group--manual      .wip-agenda-group-title svg { color: #8e4ec6; }
   .wip-agenda-group-count {
     font-size: var(--fs-xs); color: var(--text-soft);
     font-variant-numeric: tabular-nums;
@@ -12887,6 +12892,11 @@
      the Agenda tab switched to a flat single-column hierarchical
      layout well before this audit. Audit: wip M1. */
 
+  .wip-empty-icon {
+    display: block;
+    margin: 0 auto 12px;
+    color: var(--text-faint);
+  }
   .wip-empty-title {
     font-size: var(--fs-md); font-weight: 600; color: var(--text);
     margin-bottom: 4px;
@@ -13053,11 +13063,13 @@
     overflow-y: auto;
   }
   .wip-live-timeline-head {
+    display: flex; align-items: center; gap: 6px;
     padding: 0 var(--sp-lg) var(--sp-sm);
     font-size: var(--fs-nano); font-weight: 700;
     color: var(--text-faint);
     letter-spacing: 0.08em; text-transform: uppercase;
   }
+  .wip-live-timeline-head svg { flex-shrink: 0; }
   .wip-live-tl-item {
     display: grid;
     grid-template-columns: 22px 1fr auto;
@@ -13160,10 +13172,12 @@
   }
 
   .wip-live-section-label {
+    display: inline-flex; align-items: center; gap: 6px;
     font-size: var(--fs-nano); font-weight: 700;
     color: var(--text-faint);
     letter-spacing: 0.08em; text-transform: uppercase;
   }
+  .wip-live-section-label svg { flex-shrink: 0; }
 
   /* Live-meeting pre-pass rules (~155 lines) used to sit here:
      .wip-live-flag* severity tiles, .wip-live-agenda-card* per-item
