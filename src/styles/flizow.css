@@ -1885,8 +1885,12 @@
   }
 
   .column {
-    min-width: 320px;
-    max-width: 320px;
+    /* Tightened 320 → 290. Card content area becomes 262px (290 −
+       28px card padding); still comfortable for the title + meta
+       rows, but the column rhythm reads more compact and a 4-col
+       board fits in less horizontal space. */
+    min-width: 290px;
+    max-width: 290px;
     background: var(--column-bg);
     border-radius: 16px;
     border: 1px solid var(--hairline-soft);
