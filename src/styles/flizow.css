@@ -983,7 +983,12 @@
   .acct-form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px 14px;
+    /* Single gap value so row + column rhythm match. The previous
+       `gap: 12px 14px` made same-row fields feel slightly farther
+       apart than vertically-stacked ones, inverting Gestalt
+       proximity (related fields in a row should hug). Audit account
+       HIGH: form-grid-gap-mismatch. */
+    gap: var(--sp-base);
   }
   .acct-form-grid .acct-field-full { grid-column: 1 / -1; }
   .acct-form-field { margin: 0; }
@@ -8848,9 +8853,33 @@
     overflow: hidden;
     box-shadow: var(--shadow);
   }
+  /* Clients list grid — 7 columns total. Both .clients-list-header and
+     .client-row share the exact same template so column edges align
+     across header + every row. The 2.2fr / 2fr / 1.2fr / 0.8fr
+     fractional weights were tuned for the visual hierarchy:
+       16px          edge breathing room (left)
+       Identity      2.2fr  — primary; logo + name + industry, deserves
+                              the most visual weight
+       Services      2fr    — pills + overflow count; needs room when a
+                              client has 3+ services
+       Status        1fr    — short pill, can be compact
+       Manager       1.2fr  — avatar + name; slightly wider than status
+                              because two visual tokens vs one
+       Last touched  0.8fr  — narrow timestamp, fine to be tight
+       16px          edge breathing room (right)
+     Audit clients HIGH: documented intent so the next pass doesn't
+     re-flag the fractional weights as arbitrary.
+     ─────────────────────────────────────────────── */
   .clients-list-header {
     display: grid;
-    grid-template-columns: 16px minmax(220px, 2.2fr) minmax(200px, 2fr) minmax(120px, 1fr) minmax(140px, 1.2fr) minmax(80px, 0.8fr) 16px;
+    grid-template-columns:
+      16px
+      minmax(220px, 2.2fr)
+      minmax(200px, 2fr)
+      minmax(120px, 1fr)
+      minmax(140px, 1.2fr)
+      minmax(80px, 0.8fr)
+      16px;
     gap: var(--sp-xl); align-items: center;
     padding: 12px 20px;
     background: var(--bg-soft);
@@ -8861,7 +8890,14 @@
   }
   .client-row {
     display: grid;
-    grid-template-columns: 16px minmax(220px, 2.2fr) minmax(200px, 2fr) minmax(120px, 1fr) minmax(140px, 1.2fr) minmax(80px, 0.8fr) 16px;
+    grid-template-columns:
+      16px
+      minmax(220px, 2.2fr)
+      minmax(200px, 2fr)
+      minmax(120px, 1fr)
+      minmax(140px, 1.2fr)
+      minmax(80px, 0.8fr)
+      16px;
     gap: var(--sp-xl); align-items: center;
     padding: 14px 20px;
     border-bottom: 1px solid var(--hairline-soft);
@@ -13377,18 +13413,18 @@
   .wip-quick-capture {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: var(--sp-md);
   }
   .wip-quick-capture-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: var(--sp-base);
   }
   .wip-quick-capture-keys {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: var(--sp-lg);
     font-size: var(--fs-xs);
     color: var(--text-faint);
     letter-spacing: 0.02em;
@@ -13396,7 +13432,7 @@
   .wip-quick-capture-keys span {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: var(--sp-micro);
   }
   .wip-quick-capture-keys kbd {
     display: inline-flex;
@@ -13419,13 +13455,13 @@
      reads as actionable. */
   .wip-quick-capture-buttons {
     display: flex;
-    gap: 10px;
+    gap: var(--sp-md);
     flex-wrap: wrap;
   }
   .wip-quick-capture-btn {
     flex: 1 1 0;
     min-width: 140px;
-    padding: 10px 14px;
+    padding: var(--sp-md) var(--sp-lg);
     background: var(--bg-elev);
     border: 1px solid var(--highlight);
     border-radius: 10px;
@@ -13450,8 +13486,8 @@
   .wip-quick-capture-composer {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
+    gap: var(--sp-md);
+    padding: var(--sp-md) var(--sp-base);
     background: var(--bg-soft);
     border: 1px solid var(--hairline);
     border-radius: 10px;
@@ -13459,7 +13495,7 @@
   .wip-quick-capture-input {
     flex: 1;
     min-width: 0;
-    padding: 6px 8px;
+    padding: var(--sp-xs) var(--sp-sm);
     border: none;
     background: transparent;
     font-family: inherit;
@@ -13507,14 +13543,14 @@
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--sp-xs);
   }
   .wip-capture-row {
     display: grid;
     grid-template-columns: auto 1fr auto auto;
     align-items: center;
-    gap: 10px;
-    padding: 8px 10px;
+    gap: var(--sp-md);
+    padding: var(--sp-sm) var(--sp-md);
     background: var(--bg-soft);
     border: 1px solid var(--hairline-soft);
     border-radius: 8px;
