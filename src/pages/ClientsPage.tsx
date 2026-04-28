@@ -150,12 +150,7 @@ export function ClientsPage() {
             <div className="page-greeting">{eyebrowText}</div>
             <h1 className="page-title">Clients</h1>
             <p className="page-date">
-              {(() => {
-                const active = data.clients.filter(c => !c.archived).length;
-                if (active === 0) return 'Your portfolio. Start by adding a client.';
-                if (active === 1) return '1 active client in your portfolio.';
-                return `${active} active clients in your portfolio.`;
-              })()}
+              Every client you work with, in one place.
             </p>
           </div>
         </div>
