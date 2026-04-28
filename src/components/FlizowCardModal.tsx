@@ -704,6 +704,43 @@ export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDupl
                   </div>
                 </div>
 
+                {/* Due date moved above Labels 2026-04-28 — when AMs
+                    triage a card, scheduling it on the calendar comes
+                    before classifying it. Start / Due / Labels reads
+                    top-to-bottom in the order the AM actually fills
+                    them in. */}
+                <div className="meta-row">
+                  <div className="meta-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    Due date
+                  </div>
+                  <div className="meta-value">
+                    <input
+                      type="date"
+                      className="meta-date"
+                      aria-label="Due date"
+                      value={task.dueDate ?? ''}
+                      onChange={(e) => patchCard(task.id, { dueDate: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="meta-row">
+                  <div className="meta-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    Start date
+                  </div>
+                  <div className="meta-value">
+                    <input
+                      type="date"
+                      className="meta-date"
+                      aria-label="Start date"
+                      value={task.startDate ?? ''}
+                      onChange={(e) => patchCard(task.id, { startDate: e.target.value || undefined })}
+                    />
+                  </div>
+                </div>
+
                 <div className="meta-row">
                   <div className="meta-label">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
@@ -773,38 +810,6 @@ export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDupl
                         onClose={() => { setLabelPickerOpen(false); setLabelQuery(''); }}
                       />
                     )}
-                  </div>
-                </div>
-
-                <div className="meta-row">
-                  <div className="meta-label">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                    Start date
-                  </div>
-                  <div className="meta-value">
-                    <input
-                      type="date"
-                      className="meta-date"
-                      aria-label="Start date"
-                      value={task.startDate ?? ''}
-                      onChange={(e) => patchCard(task.id, { startDate: e.target.value || undefined })}
-                    />
-                  </div>
-                </div>
-
-                <div className="meta-row">
-                  <div className="meta-label">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                    Due date
-                  </div>
-                  <div className="meta-value">
-                    <input
-                      type="date"
-                      className="meta-date"
-                      aria-label="Due date"
-                      value={task.dueDate ?? ''}
-                      onChange={(e) => patchCard(task.id, { dueDate: e.target.value })}
-                    />
                   </div>
                 </div>
 
