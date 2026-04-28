@@ -11989,7 +11989,6 @@
     justify-content: space-between;
     gap: 24px;
     flex-shrink: 0;
-    background: var(--bg-elev);
   }
   .ops-header-eyebrow {
     /* Bumped from 11px to --fs-xs (12px) to match the house default
