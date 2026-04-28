@@ -13894,19 +13894,32 @@
     background: var(--bg-elev);
     overflow: hidden; min-height: 0;
   }
+  /* Templates list-pane header — eyebrow + title + sub pattern,
+     matching the Clients side-pane header rhythm so the two sister
+     surfaces feel like one family. Sized down from the standalone-
+     page version because the list pane is narrow. */
   .templates-list-header {
-    padding: 20px 20px 12px;
+    padding: var(--sp-2xl) var(--sp-2xl) var(--sp-base);
+    flex-shrink: 0;
   }
-  .templates-list-title {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-size: var(--fs-xl); font-weight: 600; letter-spacing: -0.012em;
-    color: var(--text);
+  .templates-list-header .page-greeting {
+    margin-bottom: var(--sp-xs);
   }
-  .templates-list-title svg { color: var(--text-soft); flex-shrink: 0; }
-  .templates-list-subtitle {
-    font-size: var(--fs-md); color: var(--text-soft); margin-top: 3px;
+  .templates-list-header .page-title {
+    font-size: var(--fs-3xl);
+    line-height: var(--lh-heading);
+    letter-spacing: -0.018em;
+    margin: 0 0 var(--sp-xs);
+  }
+  .templates-list-header .page-date {
+    font-size: var(--fs-sm);
+    color: var(--text-soft);
+    margin: 0;
     line-height: var(--lh-body);
   }
+  /* Legacy classes (.templates-list-title / .templates-list-subtitle)
+     used to render the title here. Removed when the header switched
+     to the page-greeting / page-title / page-date pattern. */
   .templates-list-toolbar {
     display: flex; align-items: center; gap: var(--sp-md);
     /* Horizontal padding 20px to match the .templates-list-header

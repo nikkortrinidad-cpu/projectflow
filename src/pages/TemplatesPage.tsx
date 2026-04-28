@@ -11,7 +11,6 @@ import {
   DocumentTextIcon,
   ListBulletIcon,
   PlusIcon as HeroPlusIcon,
-  RectangleStackIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
 import {
@@ -273,6 +272,7 @@ export function TemplatesPage() {
       <div className="templates-split-wrapper">
         <ListPane
           templates={filtered}
+          totalActive={allWithArchived.filter(t => !t.archived).length}
           selectedId={selectedId ?? ''}
           query={query}
           onQuery={setQuery}
@@ -320,6 +320,7 @@ export function TemplatesPage() {
 
 function ListPane({
   templates,
+  totalActive,
   selectedId,
   query,
   onQuery,
@@ -330,6 +331,10 @@ function ListPane({
   onPurge,
 }: {
   templates: TemplateDef[];
+  /** Unfiltered active template count — drives the eyebrow.
+   *  `templates` is search-filtered, so we can't derive it locally
+   *  without losing the count when the user is typing in the search. */
+  totalActive: number;
   selectedId: string;
   query: string;
   onQuery: (q: string) => void;
@@ -343,14 +348,24 @@ function ListPane({
   // hidden records at the bottom of the list — same pattern Finder
   // uses for the Trash sidebar entry.
   const [showArchived, setShowArchived] = useState(false);
+  // Eyebrow text — count + state breakdown. Falls back to a single
+  // count when there are no archived templates so the line stays
+  // clean for the common case.
+  const eyebrowText = (() => {
+    const a = archived.length;
+    if (a === 0) {
+      return totalActive === 1 ? '1 template' : `${totalActive} templates`;
+    }
+    return `${totalActive} active · ${a} archived`;
+  })();
   return (
     <aside className="templates-list-pane" aria-label="Service templates">
       <div className="templates-list-header">
-        <div className="templates-list-title">
-          <RectangleStackIcon width={16} height={16} aria-hidden="true" />
-          Service Templates
-        </div>
-        <div className="templates-list-subtitle">Reusable blueprints for onboarding and kanban boards</div>
+        <div className="page-greeting">{eyebrowText}</div>
+        <h1 className="page-title">Templates</h1>
+        <p className="page-date">
+          Service shapes you don't have to build twice.
+        </p>
       </div>
 
       <div className="templates-list-toolbar">
