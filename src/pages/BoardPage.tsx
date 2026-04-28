@@ -5,9 +5,9 @@ import { useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode
 // The wrapper now delegates to the Heroicons component.
 import {
   ArchiveBoxIcon,
+  BookmarkIcon,
   CheckIcon as HeroCheckIcon,
   ChevronDownIcon,
-  FlagIcon,
   MagnifyingGlassIcon,
   TrashIcon as HeroTrashIcon,
   XMarkIcon,
@@ -1486,13 +1486,21 @@ function CardTile({
         if (onOpen) onOpen(task.id);
       }}
     >
-      {/* WIP-pin marker — small flag in the top-right corner when the
-          card is pinned for the next Weekly WIP. Absolute-positioned
-          so the rest of the tile layout stays untouched; tooltip on
-          hover names the action so the marker isn't a mystery. */}
+      {/* WIP-pin marker — small bookmark in the top-right corner when
+          the card is pinned for the next Weekly WIP. Same icon used by
+          the card-modal Pin toggle and the WIP agenda's "Pinned for
+          discussion" group, so the visual identity stays consistent
+          across surfaces. Absolute-positioned so the rest of the tile
+          layout stays untouched. Pointer-events:none so the badge
+          doesn't intercept clicks meant for the card. */}
       {task.flaggedForWip && (
         <span className="card-wip-pin" title="Pinned for next Weekly WIP">
-          <FlagIcon width={11} height={11} aria-hidden="true" />
+          <BookmarkIcon
+            width={11}
+            height={11}
+            fill="currentColor"
+            aria-hidden="true"
+          />
         </span>
       )}
       <div className="card-top">

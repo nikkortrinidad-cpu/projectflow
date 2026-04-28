@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   BellAlertIcon,
+  BookmarkIcon,
   ChatBubbleLeftIcon,
   CheckCircleIcon,
   CheckIcon,
@@ -442,7 +443,10 @@ function TabLink({ active, children, onClick, id, controls }: {
 const AGENDA_GROUP_ICONS: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   'new-clients': UsersIcon,
   'urgent': FireIcon,
-  'pinned': FlagIcon,
+  // Bookmark — matches the Pin-to-next-WIP toggle on the card modal
+  // and the kanban-tile pinned badge, so the same visual carries the
+  // user's intent across all three surfaces.
+  'pinned': BookmarkIcon,
   'ontrack': CheckCircleIcon,
   'manual': PencilSquareIcon,
 };
