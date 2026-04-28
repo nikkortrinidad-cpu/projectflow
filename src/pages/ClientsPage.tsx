@@ -297,9 +297,21 @@ function ClientRow({ client, selected }: RowProps) {
 
   // Use an anchor so middle-click / cmd-click still works, but intercept
   // left-click so the router updates without a full hash round-trip.
+  //
+  // Clicking the already-selected row is a no-op for the router (same
+  // hash) but fires a window event that ClientDetail listens for and
+  // uses to reset its sub-state — active tab, edit modes, in-flight
+  // confirm dialogs. The mental model: clicking the highlighted name
+  // means "take me back to this client's home view," same way clicking
+  // an active nav item in many apps resets sub-state. Without it, the
+  // user would have to manually click the Overview tab.
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
     e.preventDefault();
+    if (selected) {
+      window.dispatchEvent(new CustomEvent('flizow:reset-client-tab'));
+      return;
+    }
     navigate(`#clients/${client.id}`);
   };
 

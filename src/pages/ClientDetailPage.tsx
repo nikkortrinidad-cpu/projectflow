@@ -119,6 +119,11 @@ function ClientDetail({ client, data, store }: DetailProps) {
   // first thing they see on a new row isn't whatever tab they peeked at on
   // the previous one. Also drops edit mode + any in-flight confirm dialog
   // so a half-finished delete doesn't bleed onto the next client.
+  //
+  // Same reset also fires when ClientsPage dispatches `flizow:reset-client-tab`
+  // — that event signals "user clicked the already-highlighted client name
+  // on the side panel," which means take them back to Overview without a
+  // route change (router would no-op on identical hashes).
   useEffect(() => {
     setActiveTab('overview');
     setShowAddService(false);
@@ -126,6 +131,18 @@ function ClientDetail({ client, data, store }: DetailProps) {
     setDeleteServiceId(null);
     setShowDeleteClient(false);
   }, [client.id]);
+
+  useEffect(() => {
+    function onReset() {
+      setActiveTab('overview');
+      setShowAddService(false);
+      setServicesEditMode(false);
+      setDeleteServiceId(null);
+      setShowDeleteClient(false);
+    }
+    window.addEventListener('flizow:reset-client-tab', onReset);
+    return () => window.removeEventListener('flizow:reset-client-tab', onReset);
+  }, []);
 
   const am = client.amId ? data.members.find(m => m.id === client.amId) ?? null : null;
   // Client.serviceIds is the documented source of truth for display order.
