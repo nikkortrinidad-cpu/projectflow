@@ -6094,6 +6094,337 @@
     background: var(--status-fire);
     color: #fff;
   }
+
+  /* ───── Team Capacity heatmap (Ops page) ───── */
+  /* The "is anyone slammed this week?" surface. Rows = members,
+     columns = next 10 weekdays. Each cell shows load/soft tinted by
+     zone — same colour vocabulary as the assignee-picker load badge
+     and the My Schedule per-day badge. Lives above the Ops board so
+     the planning view comes before the work view. */
+  .capacity-strip {
+    margin: 16px 24px 24px;
+    padding: 20px 22px;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 16px;
+  }
+  .capacity-strip-head {
+    margin-bottom: 14px;
+  }
+  .capacity-strip-title {
+    margin: 0;
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .capacity-strip-sub {
+    margin: 4px 0 0;
+    font-size: var(--fs-sm);
+    color: var(--text-soft);
+    line-height: var(--lh-body);
+    max-width: 70ch;
+  }
+  .capacity-strip-empty {
+    padding: 24px 0;
+    color: var(--text-soft);
+    text-align: center;
+    font-size: var(--fs-md);
+  }
+
+  .capacity-grid {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--hairline-soft);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .cap-row {
+    display: grid;
+    grid-template-columns: 200px repeat(10, minmax(56px, 1fr));
+    align-items: stretch;
+    border-bottom: 1px solid var(--hairline-soft);
+  }
+  .cap-row:last-child {
+    border-bottom: none;
+  }
+  .cap-row--head {
+    background: var(--bg-soft);
+  }
+  .cap-cell {
+    border-right: 1px solid var(--hairline-soft);
+    padding: 8px 6px;
+    text-align: center;
+    font-size: var(--fs-sm);
+  }
+  .cap-cell:last-child {
+    border-right: none;
+  }
+  .cap-cell--member-head {
+    text-align: left;
+    padding: 10px 14px;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .cap-cell--day-head {
+    padding: 10px 4px 8px;
+  }
+  .cap-cell--day-head .cap-day-name {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    line-height: 1;
+  }
+  .cap-cell--day-head .cap-day-date {
+    margin-top: 4px;
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .cap-cell--day-head.is-today {
+    background: color-mix(in srgb, var(--text) 8%, transparent);
+  }
+  .cap-cell--day-head.is-today .cap-day-date {
+    font-weight: 700;
+  }
+  .cap-cell--day-head.is-past .cap-day-name,
+  .cap-cell--day-head.is-past .cap-day-date {
+    opacity: 0.5;
+  }
+
+  .cap-cell--member {
+    text-align: left;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-soft);
+    min-width: 0;
+  }
+  .cap-member-avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    flex-shrink: 0;
+    background: var(--avatar-bg);
+    color: var(--avatar-fg);
+  }
+  .cap-member-text {
+    min-width: 0;
+    flex: 1;
+  }
+  .cap-member-name {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .cap-member-role {
+    font-size: var(--fs-xs);
+    color: var(--text-soft);
+    margin-top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .cap-cell--data {
+    border: none;
+    border-right: 1px solid var(--hairline-soft);
+    background: transparent;
+    font-family: inherit;
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--text);
+    padding: 14px 4px;
+    cursor: pointer;
+    font-variant-numeric: tabular-nums;
+    transition: filter var(--dur-fast), box-shadow var(--dur-fast);
+    text-align: center;
+  }
+  .cap-cell--data:last-child {
+    border-right: none;
+  }
+  .cap-cell--data:hover {
+    filter: brightness(0.97);
+  }
+  .cap-cell--data:focus-visible {
+    outline: 2px solid var(--hover-blue);
+    outline-offset: -2px;
+    z-index: 2;
+    position: relative;
+  }
+  .cap-cell--data.zone-green {
+    background: color-mix(in srgb, var(--status-track-soft) 70%, transparent);
+    color: var(--status-track);
+  }
+  .cap-cell--data.zone-amber {
+    background: color-mix(in srgb, var(--status-risk-soft) 70%, transparent);
+    color: var(--status-risk);
+  }
+  .cap-cell--data.zone-red {
+    background: color-mix(in srgb, var(--status-fire-soft) 70%, transparent);
+    color: var(--status-fire);
+  }
+  .cap-cell--data.is-empty {
+    color: var(--text-faint);
+    font-weight: 400;
+  }
+  .cap-cell--data.has-override {
+    text-decoration: underline dotted;
+    text-underline-offset: 2px;
+  }
+  .cap-cell--data.is-today {
+    box-shadow: inset 0 2px 0 0 var(--text);
+  }
+  .cap-cell--data.is-past {
+    opacity: 0.55;
+  }
+
+  /* Cell-detail modal — what's stacked on this person, this day. */
+  .cell-detail-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    animation: dpFadeIn 0.15s ease;
+  }
+  .cell-detail-pop {
+    width: 380px;
+    max-width: 100%;
+    max-height: 75vh;
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.08);
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+  .cell-detail-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--hairline-soft);
+  }
+  .cell-detail-eyebrow {
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+  }
+  .cell-detail-title {
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+  .cell-detail-role {
+    font-size: var(--fs-xs);
+    color: var(--text-soft);
+    margin-top: 2px;
+  }
+  .cell-detail-load {
+    font-size: var(--fs-md);
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 980px;
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+    line-height: 1.4;
+  }
+  .cell-detail-load.zone-green {
+    background: var(--status-track-soft);
+    color: var(--status-track);
+  }
+  .cell-detail-load.zone-amber {
+    background: var(--status-risk-soft);
+    color: var(--status-risk);
+  }
+  .cell-detail-load.zone-red {
+    background: var(--status-fire-soft);
+    color: var(--status-fire);
+  }
+  .cell-detail-empty {
+    color: var(--text-soft);
+    text-align: center;
+    padding: 16px 0;
+    font-size: var(--fs-md);
+  }
+  .cell-detail-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .cell-detail-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    background: var(--bg-soft);
+    border-radius: 10px;
+    transition: background var(--dur-fast);
+  }
+  .cell-detail-item:hover {
+    background: var(--bg-faint);
+  }
+  .cell-detail-item-link {
+    text-decoration: none;
+    color: inherit;
+    flex: 1;
+    min-width: 0;
+  }
+  .cell-detail-item-title {
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .cell-detail-item-meta {
+    font-size: var(--fs-xs);
+    color: var(--text-soft);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .cell-detail-item-slots {
+    font-size: var(--fs-xs);
+    color: var(--text-soft);
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+  }
+
   .assignee-option-check {
     width: 14px; height: 14px;
     color: var(--hover-blue);

@@ -11,6 +11,7 @@ import { flizowStore } from '../store/flizowStore';
 import type { OpsTask, Member, ColumnId } from '../types/flizow';
 import FlizowCardModal from '../components/FlizowCardModal';
 import { InlineCardComposer } from '../components/shared/InlineCardComposer';
+import { TeamCapacityHeatmap } from '../components/TeamCapacityHeatmap';
 
 /**
  * Ops board — internal-team kanban for the work the agency does for
@@ -171,6 +172,22 @@ export function OpsPage() {
         todayISO={data.today}
         onOpen={() => setBriefOpen(true)}
         emptyCta="+ Add Ops brief"
+      />
+
+      {/* Team Capacity heatmap — workspace-wide load view. Reads from
+          both client tasks and ops tasks (a designer's internal work
+          and their client work share the same finite attention) and
+          uses the same green/amber/red zones the rest of the capacity
+          model uses. Sits above the kanban board so the ops manager
+          sees the planning surface before diving into ops cards. */}
+      <TeamCapacityHeatmap
+        members={data.members}
+        tasks={data.tasks}
+        opsTasks={data.opsTasks}
+        overrides={data.memberDayOverrides}
+        todayISO={data.today}
+        clients={data.clients}
+        services={data.services}
       />
 
       <DndContext
