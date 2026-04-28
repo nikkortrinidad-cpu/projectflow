@@ -108,6 +108,34 @@ export function ClientsPage() {
     setActiveView('all');
   };
 
+  // Activity pulse for the page-header eyebrow — count of active
+  // clients whose latest task activity (clientLastTouched) lands on
+  // today's date. Falls back to a date label when nothing's stirred,
+  // so the eyebrow always carries info instead of going blank.
+  // Computed once per render against `data.today` so it stays stable
+  // and avoids drifting on tick.
+  const updatedTodayCount = useMemo(() => {
+    let n = 0;
+    for (const c of data.clients) {
+      if (c.archived) continue;
+      const touched = clientLastTouched(c, data.tasks);
+      if (touched.slice(0, 10) === data.today) n++;
+    }
+    return n;
+  }, [data.clients, data.tasks, data.today]);
+
+  const eyebrowText = (() => {
+    if (updatedTodayCount === 0) {
+      // Friendly fallback when no client has stirred yet today.
+      // Reads as "the page is awake but the portfolio's calm" rather
+      // than going silent.
+      return 'All quiet today';
+    }
+    return updatedTodayCount === 1
+      ? '1 updated today'
+      : `${updatedTodayCount} updated today`;
+  })();
+
   return (
     <div className="view view-clients active">
       <main className="clients-page">
@@ -119,7 +147,7 @@ export function ClientsPage() {
             pane), with split-pane overrides handling tighter padding. */}
         <div className="clients-header">
           <div className="clients-heading">
-            <div className="page-greeting">CRM</div>
+            <div className="page-greeting">{eyebrowText}</div>
             <h1 className="page-title">Clients</h1>
             <p className="page-date">
               {(() => {
