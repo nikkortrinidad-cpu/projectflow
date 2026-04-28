@@ -60,7 +60,7 @@ export function ConfirmDangerDialog({ title, body, confirmLabel, onConfirm, onCl
           </button>
         </header>
 
-        <div className="wip-modal-body" style={{ fontSize: 14, color: 'var(--text-soft)', lineHeight: 1.55 }}>
+        <div className="wip-modal-body" style={{ fontSize: 'var(--fs-base)', color: 'var(--text-soft)', lineHeight: 1.55 }}>
           {body}
         </div>
 

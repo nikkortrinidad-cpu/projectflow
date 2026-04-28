@@ -557,7 +557,7 @@ export default function FlizowAccountModal({ onClose }: Props) {
                     <button type="button" className="acct-btn-text" onClick={handleLoadDemo}>
                       Load demo data
                     </button>
-                    <span style={{ color: 'var(--text-faint)', fontSize: 12 }}>· Seeds the mockup's 50 demo clients</span>
+                    <span style={{ color: 'var(--text-faint)', fontSize: 'var(--fs-sm)' }}>· Seeds the mockup's 50 demo clients</span>
                   </div>
 
                   <div style={{ marginTop: 12 }}>
@@ -569,12 +569,12 @@ export default function FlizowAccountModal({ onClose }: Props) {
                           padding: '8px 14px', borderRadius: 8,
                           background: 'transparent',
                           border: '1px solid var(--accent)', color: 'var(--accent)',
-                          fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                          fontSize: 'var(--fs-md)', fontWeight: 600, cursor: 'pointer',
                         }}
                       >Reset workspace…</button>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 420 }}>
-                        <div style={{ fontSize: 13, color: 'var(--text)' }}>
+                        <div style={{ fontSize: 'var(--fs-md)', color: 'var(--text)' }}>
                           This deletes every client, service, and task in your workspace. Type <strong>reset</strong> to confirm.
                         </div>
                         <div style={{ display: 'flex', gap: 8 }}>
@@ -596,7 +596,7 @@ export default function FlizowAccountModal({ onClose }: Props) {
                               background: resetInput.trim().toLowerCase() === 'reset' ? 'var(--accent)' : 'var(--bg-faint)',
                               color: resetInput.trim().toLowerCase() === 'reset' ? '#fff' : 'var(--text-faint)',
                               border: 'none',
-                              fontSize: 13, fontWeight: 600,
+                              fontSize: 'var(--fs-md)', fontWeight: 600,
                               cursor: resetInput.trim().toLowerCase() === 'reset' ? 'pointer' : 'not-allowed',
                             }}
                           >Reset</button>
@@ -1501,7 +1501,7 @@ function DangerZone() {
   return (
     <>
       <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px solid var(--hairline)' }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--status-fire)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 10 }}>
+        <div style={{ fontSize: 'var(--fs-xs)', fontWeight: 600, color: 'var(--status-fire)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 10 }}>
           Danger zone
         </div>
         <button
@@ -1516,7 +1516,7 @@ function DangerZone() {
             borderRadius: 980,
             background: 'transparent',
             color: 'var(--status-fire)',
-            fontSize: 13,
+            fontSize: 'var(--fs-md)',
             fontWeight: 500,
             cursor: 'pointer',
             fontFamily: 'inherit',
@@ -1525,7 +1525,7 @@ function DangerZone() {
         >
           Clear workspace data
         </button>
-        <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 8, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-faint)', marginTop: 8, lineHeight: 1.5 }}>
           Wipes every client, service, task, contact, note, and activity entry.
           Members, templates, and your workspace identity (name, logo) stay.
         </div>
@@ -1649,7 +1649,7 @@ function WorkspaceLogoUploader({ hasLogo }: { hasLogo: boolean }) {
           border: '1px solid var(--hairline)',
           background: 'var(--bg-elev)',
           color: 'var(--text)',
-          fontSize: 13,
+          fontSize: 'var(--fs-md)',
           fontWeight: 500,
           cursor: uploading ? 'not-allowed' : 'pointer',
           display: 'inline-flex',
@@ -1675,7 +1675,7 @@ function WorkspaceLogoUploader({ hasLogo }: { hasLogo: boolean }) {
             border: '1px solid rgba(255, 59, 48, 0.4)',
             background: 'transparent',
             color: 'var(--accent)',
-            fontSize: 13,
+            fontSize: 'var(--fs-md)',
             fontWeight: 500,
             cursor: 'pointer',
           }}
@@ -1689,7 +1689,7 @@ function WorkspaceLogoUploader({ hasLogo }: { hasLogo: boolean }) {
           style={{
             flexBasis: '100%',
             margin: 0,
-            fontSize: 12,
+            fontSize: 'var(--fs-sm)',
             color: 'var(--accent)',
             lineHeight: 1.4,
           }}
@@ -1759,7 +1759,7 @@ function ExportWorkspaceButton({ workspaceName }: { workspaceName: string }) {
           border: '1px solid var(--hairline)',
           background: 'var(--bg-elev)',
           color: 'var(--text)',
-          fontSize: 13,
+          fontSize: 'var(--fs-md)',
           fontWeight: 500,
           cursor: exporting ? 'not-allowed' : 'pointer',
           display: 'inline-flex',
@@ -1774,11 +1774,11 @@ function ExportWorkspaceButton({ workspaceName }: { workspaceName: string }) {
         </svg>
         {exporting ? 'Preparing…' : 'Export workspace as JSON'}
       </button>
-      <p style={{ marginTop: 8, fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.45 }}>
+      <p style={{ marginTop: 8, fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', lineHeight: 1.45 }}>
         Downloads everything in this workspace — clients, services, tasks, notes, members. Excludes pending invite tokens. Use it as a backup or to migrate to a new workspace later.
       </p>
       {error && (
-        <p style={{ marginTop: 6, fontSize: 12, color: 'var(--accent)' }} role="alert">
+        <p style={{ marginTop: 6, fontSize: 'var(--fs-sm)', color: 'var(--accent)' }} role="alert">
           {error}
         </p>
       )}

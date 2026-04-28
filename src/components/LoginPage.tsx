@@ -137,7 +137,7 @@ export function LoginPage() {
                   style={{
                     marginTop: 16,
                     marginBottom: 0,
-                    fontSize: 12,
+                    fontSize: 'var(--fs-sm)',
                     fontWeight: 600,
                     color: '#86868b',
                     letterSpacing: '0.06em',
@@ -163,7 +163,7 @@ export function LoginPage() {
                 <p
                   style={{
                     marginTop: 6,
-                    fontSize: 13,
+                    fontSize: 'var(--fs-md)',
                     color: '#86868b',
                     lineHeight: 1.4,
                   }}
@@ -188,7 +188,7 @@ export function LoginPage() {
                 <p
                   style={{
                     marginTop: 4,
-                    fontSize: 15,
+                    fontSize: 'var(--fs-base)',
                     color: '#86868b',
                     lineHeight: 1.4,
                   }}
@@ -207,7 +207,7 @@ export function LoginPage() {
                 padding: '10px 14px',
                 backgroundColor: 'rgba(255, 59, 48, 0.08)',
                 color: '#c41e14',
-                fontSize: 13,
+                fontSize: 'var(--fs-md)',
                 lineHeight: 1.4,
                 borderRadius: 12,
                 textAlign: 'center',
@@ -234,7 +234,7 @@ export function LoginPage() {
               background: loading ? '#333336' : '#1d1d1f',
               color: 'white',
               borderRadius: 999,
-              fontSize: 15,
+              fontSize: 'var(--fs-base)',
               fontWeight: 500,
               border: 'none',
               cursor: loading ? 'not-allowed' : 'pointer',
@@ -280,7 +280,7 @@ export function LoginPage() {
           <p
             style={{
               marginTop: 20,
-              fontSize: 12,
+              fontSize: 'var(--fs-sm)',
               color: '#86868b',
               textAlign: 'center',
               lineHeight: 1.5,
@@ -295,7 +295,7 @@ export function LoginPage() {
         <p
           style={{
             marginTop: 20,
-            fontSize: 11,
+            fontSize: 'var(--fs-xs)',
             color: '#86868b',
             textAlign: 'center',
             letterSpacing: '0.02em',

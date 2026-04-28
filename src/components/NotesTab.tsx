@@ -387,7 +387,7 @@ function NoteEditor({ note, store, onDelete }: {
         aria-live="polite"
         style={{
           padding: '8px 16px',
-          fontSize: 12,
+          fontSize: 'var(--fs-sm)',
           color: 'var(--text-faint)',
           borderTop: '1px solid var(--hairline-soft)',
         }}

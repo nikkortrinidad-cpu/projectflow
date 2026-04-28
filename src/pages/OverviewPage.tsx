@@ -447,7 +447,7 @@ export function OverviewPage() {
           </div>
           <div className="attention-list" id="attention-list">
             {allAttention.length === 0 ? (
-              <div className="attn-empty" style={{ padding: 24, color: 'var(--text-soft)', fontSize: 14 }}>
+              <div className="attn-empty" style={{ padding: 24, color: 'var(--text-soft)', fontSize: 'var(--fs-base)' }}>
                 Nothing urgent right now. Enjoy the quiet.
               </div>
             ) : (

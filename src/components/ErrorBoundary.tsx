@@ -166,7 +166,7 @@ function StaleChunkFallback() {
           borderRadius: 12,
           boxShadow: 'var(--shadow)',
           color: 'var(--text)',
-          fontSize: 14,
+          fontSize: 'var(--fs-base)',
         }}
       >
         <span
@@ -256,7 +256,7 @@ function DefaultFallback({
       <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.01em' }}>
         {title}
       </h2>
-      <p style={{ margin: '0 0 18px', fontSize: 14, color: 'var(--text-soft)', lineHeight: 1.5 }}>
+      <p style={{ margin: '0 0 18px', fontSize: 'var(--fs-base)', color: 'var(--text-soft)', lineHeight: 1.5 }}>
         {sub}
       </p>
       {/* Surface the underlying message in a quiet code-styled box.
@@ -269,7 +269,7 @@ function DefaultFallback({
           border: '1px solid var(--hairline-soft)',
           borderRadius: 8,
           fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-          fontSize: 12,
+          fontSize: 'var(--fs-sm)',
           color: 'var(--text-muted)',
           textAlign: 'left',
           maxHeight: 80,
@@ -288,7 +288,7 @@ function DefaultFallback({
             background: '#F15A24',
             color: '#fff',
             border: 'none',
-            fontSize: 13, fontWeight: 600,
+            fontSize: 'var(--fs-md)', fontWeight: 600,
             cursor: 'pointer',
           }}
         >
@@ -304,7 +304,7 @@ function DefaultFallback({
               background: 'transparent',
               color: 'var(--text)',
               border: '1px solid var(--hairline)',
-              fontSize: 13, fontWeight: 600,
+              fontSize: 'var(--fs-md)', fontWeight: 600,
               cursor: 'pointer',
             }}
           >
@@ -319,7 +319,7 @@ function DefaultFallback({
             background: 'transparent',
             color: 'var(--text-soft)',
             border: '1px solid var(--hairline)',
-            fontSize: 13, fontWeight: 600,
+            fontSize: 'var(--fs-md)', fontWeight: 600,
             textDecoration: 'none',
             display: 'inline-flex', alignItems: 'center',
           }}

@@ -130,7 +130,7 @@ export function TouchpointsTab({
         {clientTps.length === 0 ? (
           <div
             className="meetings-list"
-            style={{ padding: 20, color: 'var(--text-soft)', fontSize: 14 }}
+            style={{ padding: 20, color: 'var(--text-soft)', fontSize: 'var(--fs-base)' }}
           >
             No touchpoints yet. Log your first meeting to start the paper trail.
           </div>

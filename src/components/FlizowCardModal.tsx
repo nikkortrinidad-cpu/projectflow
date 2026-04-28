@@ -649,11 +649,11 @@ export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDupl
                   "Ops board" for internal tasks. Either way it's a
                   quick anchor for which board the card lives on. */}
               {isOps ? (
-                <div style={{ fontSize: 12, color: 'var(--text-faint)', letterSpacing: '0.02em', textTransform: 'uppercase', fontWeight: 600 }}>
+                <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-faint)', letterSpacing: '0.02em', textTransform: 'uppercase', fontWeight: 600 }}>
                   Internal · Ops board
                 </div>
               ) : (client || service) && (
-                <div style={{ fontSize: 12, color: 'var(--text-faint)', letterSpacing: '0.02em', textTransform: 'uppercase', fontWeight: 600 }}>
+                <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-faint)', letterSpacing: '0.02em', textTransform: 'uppercase', fontWeight: 600 }}>
                   {client?.name}{service ? ` · ${service.name}` : ''}
                 </div>
               )}
@@ -888,7 +888,7 @@ export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDupl
                   </div>
                   <div className="meta-value" style={{ position: 'relative', display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
                     {task.labels.length === 0 && (
-                      <span style={{ color: 'var(--text-faint)', fontSize: 13 }}>No labels</span>
+                      <span style={{ color: 'var(--text-faint)', fontSize: 'var(--fs-md)' }}>No labels</span>
                     )}
                     {task.labels.map(id => {
                       const lbl = labelById(id);
@@ -1568,7 +1568,7 @@ function CommentsPanel({
             padding: '24px 8px',
             textAlign: 'center',
             color: 'var(--text-faint)',
-            fontSize: 13,
+            fontSize: 'var(--fs-md)',
             lineHeight: 1.5,
           }}>
             No comments yet. Start the conversation below.
@@ -1973,7 +1973,7 @@ function ActivityPanel({
         padding: '24px 8px',
         textAlign: 'center',
         color: 'var(--text-faint)',
-        fontSize: 13,
+        fontSize: 'var(--fs-md)',
         lineHeight: 1.5,
       }}>
         No activity yet. Changes to this card will show up here.
@@ -1989,7 +1989,7 @@ function ActivityPanel({
           <div key={row.id} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
             <Avatar member={actor} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.45 }}>
+              <div style={{ fontSize: 'var(--fs-md)', color: 'var(--text)', lineHeight: 1.45 }}>
                 <strong style={{ fontWeight: 600 }}>{actor?.name ?? 'Deleted user'}</strong>
                 {' '}
                 <span style={{ color: 'var(--text-soft)' }}>{row.text}</span>

@@ -699,7 +699,7 @@ function AttentionSection({ tasks, services }: {
         </div>
         <div
           className="attention-panel"
-          style={{ padding: 20, color: 'var(--text-soft)', fontSize: 14 }}
+          style={{ padding: 20, color: 'var(--text-soft)', fontSize: 'var(--fs-base)' }}
         >
           Nothing's on fire right now. You're good.
         </div>
@@ -847,7 +847,7 @@ function ServicesSection({ services, tasks, todayIso, onAdd, editing, onToggleEd
         </div>
         <div
           className="services-list"
-          style={{ padding: 20, color: 'var(--text-soft)', fontSize: 14 }}
+          style={{ padding: 20, color: 'var(--text-soft)', fontSize: 'var(--fs-base)' }}
         >
           Nothing is running for this client yet.{' '}
           <button
@@ -1142,7 +1142,7 @@ function ActivitySection({ client, tasks, todayISO }: {
         <div className="detail-section-header">
           <div className="detail-section-title">Latest tasks</div>
         </div>
-        <div style={{ padding: 20, color: 'var(--text-soft)', fontSize: 14 }}>
+        <div style={{ padding: 20, color: 'var(--text-soft)', fontSize: 'var(--fs-base)' }}>
           No cards on this client yet. New tasks land here as work kicks off.
         </div>
       </div>
@@ -1264,7 +1264,7 @@ function OnboardingSection({ services, items, onToggle, onAdd, onDelete, onRenam
         </div>
         <div
           className="onboarding-service-stack"
-          style={{ padding: 20, color: 'var(--text-soft)', fontSize: 14 }}
+          style={{ padding: 20, color: 'var(--text-soft)', fontSize: 'var(--fs-base)' }}
         >
           Spin up a service to see its onboarding checklist here.
         </div>
@@ -1283,7 +1283,7 @@ function OnboardingSection({ services, items, onToggle, onAdd, onDelete, onRenam
         </div>
         <div
           className="onboarding-service-stack"
-          style={{ padding: 20, color: 'var(--text-soft)', fontSize: 14 }}
+          style={{ padding: 20, color: 'var(--text-soft)', fontSize: 'var(--fs-base)' }}
         >
           Setup checklists attach to services through templates. Swap in a
           template to see yours here.
@@ -2049,7 +2049,7 @@ function QuickLinksCard({ links, onAdd, editing, onToggleEdit, onRemove, onEdit 
       </div>
 
       {links.length === 0 ? (
-        <div style={{ padding: '12px 0', color: 'var(--text-soft)', fontSize: 14 }}>
+        <div style={{ padding: '12px 0', color: 'var(--text-soft)', fontSize: 'var(--fs-base)' }}>
           No saved links yet.{' '}
           <button
             type="button"
@@ -2162,7 +2162,7 @@ function TeamGrid({ am, team, onAdd, onRemove }: {
           {am ? (
             <MemberCard member={am} solid />
           ) : (
-            <span style={{ color: 'var(--text-soft)', fontSize: 14 }}>
+            <span style={{ color: 'var(--text-soft)', fontSize: 'var(--fs-base)' }}>
               None assigned yet.
             </span>
           )}
@@ -2988,7 +2988,7 @@ function AddOperatorModal({ clientId, allMembers, currentTeamIds, onClose }: {
 
         <div className="wip-modal-body">
           {available.length === 0 ? (
-            <div style={{ padding: 12, color: 'var(--text-soft)', fontSize: 14 }}>
+            <div style={{ padding: 12, color: 'var(--text-soft)', fontSize: 'var(--fs-base)' }}>
               Every operator is already on this team. Add a new team member in
               Settings, then come back.
             </div>
@@ -3027,7 +3027,7 @@ function AddOperatorModal({ clientId, allMembers, currentTeamIds, onClose }: {
                         display: 'inline-flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: 12,
+                        fontSize: 'var(--fs-sm)',
                         fontWeight: 600,
                         background: m.bg ?? 'var(--bg-soft)',
                         color: m.color,

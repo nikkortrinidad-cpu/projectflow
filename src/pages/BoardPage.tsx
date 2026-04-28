@@ -232,7 +232,7 @@ function computeLanes(
             style={{
               width: 20, height: 20, borderRadius: '50%',
               background: 'var(--bg-faint)', color: 'var(--text-faint)',
-              fontSize: 12, display: 'inline-flex',
+              fontSize: 'var(--fs-sm)', display: 'inline-flex',
               alignItems: 'center', justifyContent: 'center',
               border: '1px dashed var(--hairline)',
             }}
@@ -1882,7 +1882,7 @@ function ArchivedCardsModal({
           <p
             style={{
               margin: '0 0 14px',
-              fontSize: 13,
+              fontSize: 'var(--fs-md)',
               color: 'var(--text-soft)',
               lineHeight: 1.5,
             }}
@@ -1898,7 +1898,7 @@ function ArchivedCardsModal({
                 padding: '32px 16px',
                 textAlign: 'center',
                 color: 'var(--text-faint)',
-                fontSize: 14,
+                fontSize: 'var(--fs-base)',
                 lineHeight: 1.6,
                 background: 'var(--bg-faint)',
                 borderRadius: 10,

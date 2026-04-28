@@ -1159,7 +1159,7 @@ function PreReadModal({ groups, todayISO, nextMeeting, itemCount, estMinutes, on
         </header>
 
         <div className="wip-modal-body">
-          <div style={{ fontSize: 12, color: 'var(--text-soft)', marginBottom: 8 }}>
+          <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-soft)', marginBottom: 8 }}>
             Copy this into Slack/email or open in your mail client. We don't
             send from here — the team's addresses live elsewhere.
           </div>
@@ -1181,7 +1181,7 @@ function PreReadModal({ groups, todayISO, nextMeeting, itemCount, estMinutes, on
               className="wip-field-input wip-field-textarea"
               value={body}
               rows={14}
-              style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 12, lineHeight: 1.55 }}
+              style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 'var(--fs-sm)', lineHeight: 1.55 }}
               onFocus={(e) => e.currentTarget.select()}
             />
           </label>
