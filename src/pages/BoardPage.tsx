@@ -893,6 +893,21 @@ function Breadcrumb({
         </ol>
       </nav>
       <div className="board-actions">
+        {/* Pin-to-My-Boards toggle, promoted out of the Board Settings
+            dropdown to its own star button alongside the gear. One
+            click instead of two; visible state (filled amber star =
+            pinned) instead of buried in a menu. Same flizowStore
+            mutator as before, so the data round-trip is unchanged. */}
+        <button
+          type="button"
+          className="board-favorite-btn"
+          aria-pressed={isFavorite}
+          aria-label={isFavorite ? `Unpin ${service.name} from My Boards` : `Pin ${service.name} to My Boards`}
+          title={isFavorite ? 'Unpin from My Boards' : 'Pin to My Boards'}
+          onClick={() => flizowStore.toggleServiceFavorite(service.id)}
+        >
+          <StarIcon filled={isFavorite} />
+        </button>
         <div ref={settingsWrapRef} className="board-settings-wrap">
           <button
             type="button"
@@ -905,25 +920,9 @@ function Breadcrumb({
             Board Settings
           </button>
           <div className={`tb-menu${settingsOpen ? ' open' : ''}`} role="menu" style={{ minWidth: 220 }}>
-            <div
-              role="menuitem"
-              tabIndex={0}
-              className="tb-menu-item"
-              onClick={() => {
-                flizowStore.toggleServiceFavorite(service.id);
-                setSettingsOpen(false);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  flizowStore.toggleServiceFavorite(service.id);
-                  setSettingsOpen(false);
-                }
-              }}
-            >
-              <StarIcon filled={isFavorite} />
-              {isFavorite ? 'Unpin from My Boards' : 'Pin to My Boards'}
-            </div>
+            {/* Pin-to-My-Boards moved to its own star button above —
+                see board-favorite-btn. The dropdown is now Settings-
+                shaped only (edit, archived, delete). */}
             <div
               role="menuitem"
               tabIndex={0}

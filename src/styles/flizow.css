@@ -1353,6 +1353,52 @@
   .btn-sm:hover { background: var(--hover-tint); border-color: var(--hover-blue); color: var(--hover-blue); }
   .btn-sm svg { width: 14px; height: 14px; }
 
+  /* Board-page favorite (Pin to My Boards) toggle — icon-only
+     companion to .btn-sm, sized to match its height so the two
+     buttons sit on the same baseline. Active state lights the
+     star amber so the pinned/un-pinned state is visible without
+     opening a menu. Uses aria-pressed for screen-reader semantics
+     (toggle button, not a menu trigger). */
+  .board-favorite-btn {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    background: var(--btn-bg);
+    border: 1px solid var(--hairline);
+    border-radius: 980px;
+    color: var(--text);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .board-favorite-btn:hover {
+    background: var(--hover-tint);
+    border-color: var(--hover-blue);
+    color: var(--hover-blue);
+  }
+  .board-favorite-btn svg { width: 16px; height: 16px; }
+  /* Pinned state — amber-filled star with a tinted shell so the
+     toggle reads as "on" at a glance. Reuses the same #f59e0b the
+     filled StarIcon uses internally; the shell tint lifts it just
+     enough off the resting state to read as active. */
+  .board-favorite-btn[aria-pressed="true"] {
+    color: #f59e0b;
+    border-color: color-mix(in srgb, #f59e0b 55%, var(--hairline));
+    background: color-mix(in srgb, #f59e0b 12%, var(--btn-bg));
+  }
+  .board-favorite-btn[aria-pressed="true"]:hover {
+    color: #f59e0b;
+    border-color: #f59e0b;
+    background: color-mix(in srgb, #f59e0b 20%, var(--btn-bg));
+  }
+  .board-favorite-btn:focus-visible {
+    outline: 2px solid var(--hover-blue);
+    outline-offset: 2px;
+  }
+
   /* Member-count pill that rides next to the "Members" button label to
      telegraph headcount at a glance. Uses the bg-soft + text-muted
      recipe from other meta-count chips elsewhere in the app. */
