@@ -12,7 +12,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { navigate } from '../router';
 import { flizowStore } from '../store/flizowStore';
 import { useFlizow } from '../store/useFlizow';
-import type { Client, Member, Task, ClientStatus, OnboardingItem, Service } from '../types/flizow';
+import type { Client, Member, Task, OpsTask, ClientStatus, OnboardingItem, Service } from '../types/flizow';
 import { loadFor, effectiveCapFor, zoneFor } from '../utils/capacity';
 
 /** localStorage key for the one-time first-run welcome banner. Versioned
@@ -217,11 +217,12 @@ export function OverviewPage() {
     () => buildAttentionCards(
       data.clients,
       liveTasks,
+      data.opsTasks,
       data.onboardingItems,
       data.services,
       currentMemberId,
     ),
-    [data.clients, liveTasks, data.onboardingItems, data.services, currentMemberId],
+    [data.clients, liveTasks, data.opsTasks, data.onboardingItems, data.services, currentMemberId],
   );
   const [attentionExpanded, setAttentionExpanded] = useState(false);
 
@@ -423,10 +424,15 @@ export function OverviewPage() {
           </div>
         </section>
 
-        {/* BLOCK 2 — My Priorities (renamed 2026-04-27 from "Needs
-            Your Attention" — the section's job is to surface what's
-            most urgent, and "Priorities" names that purpose more
-            tightly than the older content-describing label). */}
+        {/* BLOCK 2 — My Tasks (renamed twice: "Needs Your Attention"
+            → "My Priorities" → "My Tasks". The block now surfaces
+            *every* open task assigned to the user, not just the
+            urgency roll-up — so the label switched from "Priorities"
+            (which implied a small high-stakes shortlist) to "Tasks"
+            (which honestly names the full personal work feed). The
+            urgency-tiered fire/risk/onboarding cards still pin to the
+            top of the list; the rest is the user's task pile, sorted
+            by overdue → blocked → today → upcoming. */}
         <section
           className="block"
           data-block-id="attention"
@@ -436,7 +442,7 @@ export function OverviewPage() {
           <div className="block-header">
             <div className="block-title" id="block-attention-title">
               <BellAlertIcon width={14} height={14} aria-hidden="true" />
-              My Priorities
+              My Tasks
             </div>
           </div>
           <div className="attention-list" id="attention-list">
@@ -488,7 +494,7 @@ export function OverviewPage() {
         </section>
 
         {/* BLOCK 4 — My Schedule (renamed 2026-04-27 from "Schedule"
-            for parallelism with My Priorities + My Boards on either
+            for parallelism with My Tasks + My Boards on either
             side of it). */}
         <section
           className="block"
@@ -952,15 +958,28 @@ function ScheduleTagIcon({ tag }: { tag: ScheduleTag }) {
 // ── Needs-your-attention (Block 2) ─────────────────────────────────────────
 
 type AttentionCard = {
+  /** React key. Has to be unique per row, which `clientId` no longer
+   *  is — one client can have several "My Tasks" cards on top of its
+   *  rolled-up fire/risk card. Use `client-<clientId>` for client
+   *  rollups, `onboard-<clientId>` for onboarding, and `task-<taskId>`
+   *  for per-task rows. */
+  id: string;
   clientId: string;
   clientName: string;
-  /** critical = client status fire (drop everything).
-   *  warning  = client status risk (drifting).
+  /** critical = client on fire OR a task that's overdue / blocked.
+   *  warning  = client at risk OR a task due today.
    *  onboarding = unfinished onboarding for one of the user's clients
    *               (preventive — easy to skip, causes mid-project
-   *                delays per the AM workflow rationale). */
-  severity: 'critical' | 'warning' | 'onboarding';
-  severityLabel: 'On Fire' | 'At Risk' | 'Onboarding';
+   *                delays per the AM workflow rationale).
+   *  task     = a non-urgent task in the user's queue (upcoming or
+   *             undated). Renders in a quieter neutral tier so the
+   *             list scans urgency-down without losing the long-tail. */
+  severity: 'critical' | 'warning' | 'onboarding' | 'task';
+  /** Free-form label inside the severity pill. Originally a closed
+   *  union of three values (the three client-rollup states); widened
+   *  to plain string so per-task rows can carry their own state copy
+   *  ("Overdue", "Due today", "Blocked", "Upcoming", "No due date"). */
+  severityLabel: string;
   title: string;
   ageLabel: string;
   desc?: string;
@@ -979,6 +998,10 @@ type AttentionCard = {
    *  attention card's description can hint which specific card the
    *  click will open. Reads better than just "3 overdue cards →". */
   primaryTaskTitle?: string;
+  /** Override the auto-derived click target. Used by ops-task cards,
+   *  which point at `#ops` instead of `#board/...` — there's no
+   *  per-card deep link into the Ops page yet. */
+  targetHref?: string;
 };
 
 /** Render one attention card. Pulled out of the inline map() so the
@@ -994,20 +1017,28 @@ function renderAttentionCard(
   onDelegate: (taskId: string, anchor: HTMLButtonElement) => void,
 ) {
   // Card variant + severity-pill class share the same tier name.
-  // Three tiers: critical (fire) → warn (risk) → onboard (preventive).
+  // Four tiers: critical (fire / overdue / blocked) → warn (risk / due
+  // today) → onboard (preventive nudge) → task (the long-tail of my
+  // upcoming/undated work, rendered quieter so the urgent rows still
+  // out-shout the pile).
   const cardTier =
     card.severity === 'critical' ? 'critical'
     : card.severity === 'warning' ? 'warn'
-    : 'onboard';
+    : card.severity === 'onboarding' ? 'onboard'
+    : 'task';
   const sevTier =
     card.severity === 'critical' ? 'critical'
     : card.severity === 'warning' ? 'warning'
-    : 'onboarding';
-  // Deep-link target. When the attention card is backed by a specific
-  // kanban task, open that card's modal directly. Otherwise fall back
-  // to the client detail page.
+    : card.severity === 'onboarding' ? 'onboarding'
+    : 'task';
+  // Deep-link target. Priority order:
+  //   1. explicit targetHref (ops cards point at #ops),
+  //   2. board-card deep link if both ids present,
+  //   3. client detail fallback.
   const target =
-    card.primaryTaskId && card.primaryServiceId
+    card.targetHref
+      ? card.targetHref
+      : card.primaryTaskId && card.primaryServiceId
       ? `#board/${card.primaryServiceId}/card/${card.primaryTaskId}`
       : `#clients/${card.clientId}`;
   const ariaLabel = card.primaryTaskTitle
@@ -1015,7 +1046,7 @@ function renderAttentionCard(
     : `Open ${card.clientName}`;
   return (
     <div
-      key={card.clientId}
+      key={card.id}
       className={`attn-card ${cardTier}`}
       role="button"
       tabIndex={0}
@@ -1099,6 +1130,7 @@ function renderAttentionCard(
 function buildAttentionCards(
   clients: Client[],
   tasks: Task[],
+  opsTasks: OpsTask[],
   onboardingItems: OnboardingItem[],
   services: Service[],
   currentMemberId: string | null,
@@ -1106,6 +1138,13 @@ function buildAttentionCards(
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const todayMs = today.getTime();
+  const todayKey = isoOfLocalDate(today);
+
+  // id-keyed lookups for the task-card phase. Building them here once
+  // keeps the per-task loop O(N) rather than O(N²) on the client+service
+  // resolution. Cheap; defensive against larger workspaces.
+  const clientById = new Map(clients.map(c => [c.id, c]));
+  const serviceById = new Map(services.map(s => [s.id, s]));
 
   // Enrich each at-risk/on-fire client with the urgency metrics we'll
   // need for sorting AND for card copy. Computing overdue/blocked once
@@ -1205,6 +1244,7 @@ function buildAttentionCards(
       }
 
       return {
+        id: `client-${c.id}`,
         clientId: c.id,
         clientName: c.name,
         severity: isCritical ? 'critical' : 'warning',
@@ -1279,6 +1319,7 @@ function buildAttentionCards(
       }
 
       onboardingCards.push({
+        id: `onboard-${c.id}`,
         clientId: c.id,
         clientName: c.name,
         severity: 'onboarding',
@@ -1299,10 +1340,175 @@ function buildAttentionCards(
     });
   }
 
-  // Final order: critical (fire) → warning (risk) → onboarding.
-  // Fires + risks are reactive and drop-everything; onboarding is
-  // preventive. Don't bury an active fire behind preventive nudges.
-  return [...fireRiskCards, ...onboardingCards];
+  // ── Per-task cards (every open task assigned to me) ──────────────
+  //
+  // After fire/risk/onboarding rolls up the client-level urgency, the
+  // user wanted the rest of their personal pile in the same surface —
+  // not just the worst-case roll-up. Each open task becomes its own
+  // row. Multi-owner tasks count too: I'm "on" the task if I'm the
+  // primary `assigneeId` OR I'm in `assigneeIds[]`. Done tasks are
+  // excluded; archived tasks are pre-filtered by the caller (liveTasks).
+  // Undated tasks still appear ("No due date") — they're real
+  // assignments, just unscheduled, and burying them would defeat the
+  // "all my tasks" promise.
+  //
+  // De-dupe: if a task is already deep-linked from a fire/risk client
+  // card (the worst-case task that card opens to), skip its individual
+  // row. Two cards pointing at the same item is noise; the urgent
+  // client card already pulls the eye to it.
+  //
+  // Ops tasks join the same feed. They don't have a clientId/serviceId,
+  // so they render with "Internal Ops" as the client name and route to
+  // `#ops` (no per-card deep link into the Ops page yet — that's a
+  // separate piece of work).
+  const taskCards: AttentionCard[] = [];
+  if (currentMemberId) {
+    const dedupeIds = new Set(
+      fireRiskCards.map(c => c.primaryTaskId).filter(Boolean) as string[],
+    );
+
+    type TaskRow = {
+      id: string;
+      title: string;
+      dueDate?: string;
+      columnId: string;
+      isOps: boolean;
+      serviceId?: string;
+      clientId?: string;
+    };
+    const myTaskRows: TaskRow[] = [];
+
+    for (const t of tasks) {
+      if (t.columnId === 'done') continue;
+      if (dedupeIds.has(t.id)) continue;
+      const mine = t.assigneeId === currentMemberId
+                || (Array.isArray(t.assigneeIds) && t.assigneeIds.includes(currentMemberId));
+      if (!mine) continue;
+      myTaskRows.push({
+        id: t.id,
+        title: t.title,
+        dueDate: t.dueDate || undefined,
+        columnId: t.columnId,
+        isOps: false,
+        serviceId: t.serviceId,
+        clientId: t.clientId,
+      });
+    }
+    for (const t of opsTasks) {
+      if (t.columnId === 'done') continue;
+      if (t.archived) continue;
+      const mine = t.assigneeId === currentMemberId
+                || (Array.isArray(t.assigneeIds) && t.assigneeIds.includes(currentMemberId));
+      if (!mine) continue;
+      myTaskRows.push({
+        id: t.id,
+        title: t.title,
+        dueDate: t.dueDate || undefined,
+        columnId: t.columnId,
+        isOps: true,
+      });
+    }
+
+    // Rank groups so the list scans urgency-down. Inside each group,
+    // sort by date asc so the oldest-overdue / soonest-upcoming floats
+    // to the top of its bucket.
+    function rank(row: TaskRow): number {
+      const isBlocked = row.columnId === 'blocked';
+      if (!row.dueDate) return 4;          // undated (last)
+      const cmp = row.dueDate.localeCompare(todayKey);
+      if (cmp < 0) return 0;               // overdue (first)
+      if (isBlocked) return 1;             // blocked (next)
+      if (cmp === 0) return 2;             // due today
+      return 3;                            // upcoming
+    }
+    myTaskRows.sort((a, b) => {
+      const ra = rank(a), rb = rank(b);
+      if (ra !== rb) return ra - rb;
+      if (a.dueDate && b.dueDate) return a.dueDate.localeCompare(b.dueDate);
+      if (a.dueDate) return -1;
+      if (b.dueDate) return 1;
+      return a.title.localeCompare(b.title);
+    });
+
+    for (const row of myTaskRows) {
+      const isBlocked = row.columnId === 'blocked';
+      const overdueDays = row.dueDate
+        ? isoDaysBetween(todayKey, row.dueDate)
+        : 0;
+
+      let severity: AttentionCard['severity'];
+      let severityLabel: string;
+      let ageLabel: string;
+
+      if (isBlocked) {
+        severity = 'critical';
+        severityLabel = 'Blocked';
+        ageLabel = overdueDays > 0
+          ? (overdueDays === 1 ? 'Blocked · 1 day overdue' : `Blocked · ${overdueDays} days overdue`)
+          : 'Blocked';
+      } else if (row.dueDate && overdueDays > 0) {
+        severity = 'critical';
+        severityLabel = 'Overdue';
+        ageLabel = overdueDays === 1 ? '1 day overdue' : `${overdueDays} days overdue`;
+      } else if (row.dueDate && overdueDays === 0) {
+        severity = 'warning';
+        severityLabel = 'Due today';
+        ageLabel = 'Due today';
+      } else if (row.dueDate) {
+        severity = 'task';
+        severityLabel = 'Upcoming';
+        const daysUntil = -overdueDays;
+        if (daysUntil === 1) {
+          ageLabel = 'Tomorrow';
+        } else if (daysUntil <= 7) {
+          ageLabel = `In ${daysUntil} days`;
+        } else {
+          const [yy, mm, dd] = row.dueDate.split('-').map(Number);
+          const due = new Date(yy, mm - 1, dd);
+          ageLabel = `${MONTHS_SHORT[due.getMonth()]} ${due.getDate()}`;
+        }
+      } else {
+        severity = 'task';
+        severityLabel = 'No due date';
+        ageLabel = 'No due date';
+      }
+
+      let clientName = 'Internal Ops';
+      let desc: string | undefined;
+      let targetHref: string | undefined;
+      if (!row.isOps) {
+        const client = row.clientId ? clientById.get(row.clientId) : undefined;
+        const service = row.serviceId ? serviceById.get(row.serviceId) : undefined;
+        clientName = client?.name ?? '';
+        desc = service?.name;
+      } else {
+        // No per-card deep link into Ops yet; navigate to the Ops page
+        // and the user can find the card. Followup if needed.
+        targetHref = '#ops';
+      }
+
+      taskCards.push({
+        id: `task-${row.id}`,
+        clientId: row.isOps ? 'ops' : (row.clientId ?? ''),
+        clientName,
+        severity,
+        severityLabel,
+        title: row.title,
+        ageLabel,
+        desc,
+        primaryTaskId: row.id,
+        primaryServiceId: row.serviceId,
+        primaryTaskTitle: row.title,
+        targetHref,
+      });
+    }
+  }
+
+  // Final order: critical (fire) → warning (risk) → onboarding → my tasks.
+  // Client-level rollups stay on top because they're the "drop everything"
+  // signal; the per-task feed is the long tail of personal work that
+  // shouldn't bury the rollups but earns its place once they're scanned.
+  return [...fireRiskCards, ...onboardingCards, ...taskCards];
 }
 
 function HealthCell({ label, value, sub, Icon, onClick, ariaLabel, valueClass, iconClass }: HealthCellProps) {

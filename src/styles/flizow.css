@@ -6878,6 +6878,11 @@
      reads as "you should look at this" without competing with the
      reactive red/amber tiers. Audit: needs-attention onboarding. */
   .attn-card.onboard::before { background: var(--status-onboard); opacity: 0.85; }
+  /* Task tier — the long-tail of personal work that surfaces under
+     the rolled-up urgency cards (fire / risk / onboarding). The rail
+     stays at default faint so the eye scans urgency-tier rows first;
+     the row itself reads as "yours, not on fire." */
+  .attn-card.task::before { background: var(--text-faint); opacity: 0.5; }
   .attn-card:hover {
     box-shadow: var(--shadow-hover);
     transform: translateY(-1px);
@@ -6911,6 +6916,11 @@
      can scan the feed and know which row is preventive. */
   .attn-severity.onboarding { color: var(--status-onboard); }
   .attn-severity.onboarding .dot { background: var(--status-onboard); }
+  /* Task pill — quietest tier. Carries copy like "Overdue" / "Due
+     today" / "Upcoming" / "No due date" / "Blocked" — the label does
+     the work; the colour stays muted so the row doesn't shout. */
+  .attn-severity.task { color: var(--text-faint); }
+  .attn-severity.task .dot { background: var(--text-faint); }
 
   .attn-client {
     font-size: var(--fs-sm); font-weight: 600; color: var(--text-muted);
