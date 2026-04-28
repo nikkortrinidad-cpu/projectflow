@@ -4,8 +4,15 @@ import { forwardRef, useLayoutEffect, useMemo, useState } from 'react';
 // and call sites unchanged. The wrappers' bodies now delegate to the
 // Heroicons components.
 import {
+  ArchiveBoxIcon,
+  ArrowUturnLeftIcon,
   ChevronDownIcon as HeroChevronDownIcon,
+  ClipboardDocumentIcon,
+  DocumentTextIcon,
+  ListBulletIcon,
   PlusIcon as HeroPlusIcon,
+  RectangleStackIcon,
+  TrashIcon,
 } from '@heroicons/react/24/outline';
 import {
   DndContext,
@@ -339,7 +346,10 @@ function ListPane({
   return (
     <aside className="templates-list-pane" aria-label="Service templates">
       <div className="templates-list-header">
-        <div className="templates-list-title">Service Templates</div>
+        <div className="templates-list-title">
+          <RectangleStackIcon width={16} height={16} aria-hidden="true" />
+          Service Templates
+        </div>
         <div className="templates-list-subtitle">Reusable blueprints for onboarding and kanban boards</div>
       </div>
 
@@ -428,6 +438,7 @@ function ListPane({
             <ChevronDown
               className={`templates-archive-chevron${showArchived ? ' is-open' : ''}`}
             />
+            <ArchiveBoxIcon width={14} height={14} aria-hidden="true" />
             Archived
             <span className="templates-archive-count">{archived.length}</span>
           </button>
@@ -443,6 +454,7 @@ function ListPane({
                       onClick={() => onRestore(t)}
                       aria-label={`Restore ${t.name}`}
                     >
+                      <ArrowUturnLeftIcon width={12} height={12} aria-hidden="true" />
                       Restore
                     </button>
                     {/* Hard-purge only on user-created rows. Built-in
@@ -456,6 +468,7 @@ function ListPane({
                         onClick={() => onPurge(t)}
                         aria-label={`Delete ${t.name} permanently`}
                       >
+                        <TrashIcon width={12} height={12} aria-hidden="true" />
                         Delete
                       </button>
                     )}
@@ -696,6 +709,7 @@ function DetailPane({
                   onClick={() => onArchive(template)}
                   title="Hide this template from the picker"
                 >
+                  <ArchiveBoxIcon width={14} height={14} aria-hidden="true" />
                   Archive
                 </button>
               )}
@@ -706,7 +720,10 @@ function DetailPane({
         {/* Phases */}
         <div className="template-section">
           <div className="template-section-header">
-            <div className="template-section-title">Phases</div>
+            <div className="template-section-title">
+              <ListBulletIcon width={14} height={14} aria-hidden="true" />
+              Phases
+            </div>
             <div className="template-section-sub">
               <InlineText
                 value={template.phasesSub}
@@ -736,7 +753,10 @@ function DetailPane({
         {/* Onboarding */}
         <div className="template-section">
           <div className="template-section-header">
-            <div className="template-section-title">Onboarding checklist</div>
+            <div className="template-section-title">
+              <ClipboardDocumentIcon width={14} height={14} aria-hidden="true" />
+              Onboarding checklist
+            </div>
             <div className="template-section-sub">Added to client detail when this service is selected</div>
           </div>
           <div className="template-checklist-group">
@@ -822,7 +842,10 @@ function DetailPane({
         {/* Brief fields */}
         <div className="template-section">
           <div className="template-section-header">
-            <div className="template-section-title">Project brief fields</div>
+            <div className="template-section-title">
+              <DocumentTextIcon width={14} height={14} aria-hidden="true" />
+              Project brief fields
+            </div>
             <div className="template-section-sub">Prompts shown in the brief panel on the kanban board</div>
           </div>
           <div className="template-brief-fields">

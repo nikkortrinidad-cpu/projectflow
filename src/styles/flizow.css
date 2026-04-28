@@ -13312,9 +13312,11 @@
     padding: 20px 20px 12px;
   }
   .templates-list-title {
+    display: inline-flex; align-items: center; gap: 8px;
     font-size: var(--fs-xl); font-weight: 600; letter-spacing: -0.012em;
     color: var(--text);
   }
+  .templates-list-title svg { color: var(--text-soft); flex-shrink: 0; }
   .templates-list-subtitle {
     font-size: var(--fs-md); color: var(--text-soft); margin-top: 3px;
     line-height: var(--lh-body);
@@ -13438,6 +13440,7 @@
      enough to need confirmation? No: the user can re-edit
      immediately. Just a one-click rewind. */
   .template-reset-btn {
+    display: inline-flex; align-items: center; gap: 6px;
     margin-left: 8px;
     background: transparent;
     border: none;
@@ -13452,6 +13455,7 @@
     letter-spacing: 0.04em;
     transition: background 0.12s, color 0.12s;
   }
+  .template-reset-btn svg { flex-shrink: 0; }
   .template-reset-btn:hover:not(:disabled) {
     background: var(--bg-faint);
     color: var(--text);
@@ -13473,12 +13477,10 @@
      hides the whole template. Same Tier-4 muted resting state, but
      the hover lands in a different color family. Audit: post-
      Wave-7 LOW #2 (Reset/Archive looked identical). */
-  .template-archive-btn::before {
-    content: '⌫';
-    margin-right: 5px;
-    font-size: 0.95em;
-    opacity: 0.7;
-  }
+  /* The old ⌫ pseudo-glyph was removed once a real ArchiveBoxIcon
+     started rendering inside the button (Heroicon, line 696 in
+     TemplatesPage.tsx). Real SVG aligns better with the rest of
+     Flizow's icon vocabulary; the glyph was a stopgap. */
   .template-archive-btn:hover:not(:disabled) {
     background: color-mix(in srgb, var(--status-risk) 12%, transparent);
     color: var(--status-risk);
@@ -13495,10 +13497,12 @@
     margin-bottom: 14px; flex-wrap: wrap;
   }
   .template-section-title {
+    display: inline-flex; align-items: center; gap: 6px;
     font-size: var(--fs-xs); font-weight: 600; letter-spacing: 0.08em;
     color: var(--text-muted);
     text-transform: uppercase;
   }
+  .template-section-title svg { color: var(--text-faint); flex-shrink: 0; }
   .template-section-sub {
     font-size: var(--fs-md); color: var(--text-faint);
     font-weight: 400; line-height: var(--lh-body);
@@ -13817,6 +13821,7 @@
   .templates-archive-row:hover .templates-archive-actions,
   .templates-archive-row:focus-within .templates-archive-actions { opacity: 1; }
   .templates-archive-action {
+    display: inline-flex; align-items: center; gap: 4px;
     background: transparent; border: 1px solid var(--hairline);
     border-radius: 6px;
     padding: 3px 8px;
@@ -13825,6 +13830,7 @@
     cursor: pointer;
     transition: background 0.12s, border-color 0.12s, color 0.12s;
   }
+  .templates-archive-action svg { flex-shrink: 0; }
   .templates-archive-action:hover {
     background: var(--bg-elev);
     border-color: var(--hover-blue);
