@@ -6345,13 +6345,8 @@
     display: flex;
     gap: var(--sp-xs);
     border-bottom: 1px solid var(--hairline);
-    /* Same 1200px spine as the rest of the Ops surface. Padding
-       handles horizontal breathing room from the page edge so the
-       tabs don't sit flush. */
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 24px var(--sp-micro);
+    margin: 0 24px;
+    padding: 0 0 var(--sp-micro);
   }
   .ops-tab {
     display: inline-flex; align-items: center; gap: 8px;
@@ -6391,11 +6386,7 @@
      vocabulary ("Last updated · X ago") so the user has the same
      trust signals here as on the old strip. */
   .ops-brief-panel {
-    /* 1200px spine, centered. Inner padding stays generous because
-       this panel hosts long-form prose. */
-    width: calc(100% - 48px);
-    max-width: calc(1200px - 48px);
-    margin: 16px auto 24px;
+    margin: 16px 24px 24px;
     padding: 24px 28px;
     background: var(--bg-elev);
     border: 1px solid var(--hairline-soft);
@@ -6552,12 +6543,7 @@
      and the My Schedule per-day badge. Lives behind the Capacity
      tab so it stays out of the way until the user reaches for it. */
   .capacity-strip {
-    /* 1200px spine, centered. Heatmap inside (.capacity-grid)
-       fits comfortably at 200px member col + 10×56 day cols ≈
-       760px, with room to flex up to the cap. */
-    width: calc(100% - 48px);
-    max-width: calc(1200px - 48px);
-    margin: 16px auto 24px;
+    margin: 16px 24px 24px;
     padding: 20px 22px;
     background: var(--bg-elev);
     border: 1px solid var(--hairline-soft);
@@ -12210,17 +12196,7 @@
    * OPS VIEW — internal team kanban. Reuses .board/.column/.card
    * styling; adds only a top header-bar unique to this view.
    * ═══════════════════════════════════════════════════════════════ */
-  /* 1200px cap on the Ops surface — meaningful narrowing from the
-     full viewport (was 1360–1392px effective) without crowding the
-     Team Capacity heatmap or making the Notes prose feel cramped.
-     The kanban Board tab stays uncapped (it already exceeds 1200
-     and scrolls horizontally, so a cap there would just steal
-     visible columns). Header / tabs / brief / capacity all share
-     this 1200 spine + center via margin: 0 auto. */
   .ops-header-bar {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
     padding: 28px 40px 20px;
     border-bottom: 1px solid var(--hairline-soft);
     display: flex;
