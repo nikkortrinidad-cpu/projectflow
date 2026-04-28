@@ -11983,7 +11983,6 @@
    * ═══════════════════════════════════════════════════════════════ */
   .ops-header-bar {
     padding: 28px 40px 20px;
-    border-bottom: 1px solid var(--hairline-soft);
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
