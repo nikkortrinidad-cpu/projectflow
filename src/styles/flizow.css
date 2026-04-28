@@ -147,6 +147,18 @@
     --z-cmdk: 2000;            /* command palette (top of functional) */
     --z-debug: 999999;         /* debug overlays only — not for prod  */
 
+    /* Letter-spacing tracks — five named tiers. The codebase had ~20
+       unique letter-spacing values without a system; new code should
+       resolve to one of these so the typographic rhythm stays
+       legible. Migrate older selectors as touched (don't bulk-rewrite
+       — display headings can want tighter custom values for specific
+       compositions). */
+    --tracking-tight:   -0.02em;   /* display headings, hero numbers   */
+    --tracking-snug:    -0.01em;   /* UI labels, body emphasis         */
+    --tracking-normal:   0;        /* body default                     */
+    --tracking-wide:     0.04em;   /* small uppercase eyebrows         */
+    --tracking-widest:   0.08em;   /* uppercase meta + section labels  */
+
     /* Motion tokens — Apple HIG #8 "motion explains, it doesn't decorate".
        Duration default floor 100ms (micro-feedback) → ceiling 400ms (page).
        Easing default is ease-out for motion (start fast, settle), spring
@@ -13506,6 +13518,10 @@
     gap: var(--sp-md);
     flex-wrap: wrap;
   }
+  /* Resting state — outline so the row doesn't visually compete with
+     the agenda card above. Hover crosses into a filled-tint state
+     for clearer figure/ground separation when the user is actively
+     considering the action. Audit wip LOW: capture-buttons-figure-ground. */
   .wip-quick-capture-btn {
     flex: 1 1 0;
     min-width: 140px;
@@ -13518,10 +13534,20 @@
     font-size: var(--fs-md);
     font-weight: 600;
     cursor: pointer;
-    transition: background var(--dur-fast), border-color var(--dur-fast);
+    transition: background var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast);
   }
   .wip-quick-capture-btn:hover {
-    background: color-mix(in srgb, var(--highlight) 10%, var(--bg-elev));
+    background: color-mix(in srgb, var(--highlight) 18%, var(--bg-elev));
+    border-color: var(--highlight);
+  }
+  /* Quick-capture buttons share an extra responsive rule on phones —
+     drop the 140px floor so three buttons fit on narrow viewports.
+     Audit wip MED: capture-buttons-narrow-viewport. */
+  @media (max-width: 640px) {
+    .wip-quick-capture-btn {
+      min-width: 0;
+      padding: var(--sp-sm) var(--sp-md);
+    }
   }
   .wip-quick-capture-btn:focus-visible {
     outline: 2px solid var(--highlight);
