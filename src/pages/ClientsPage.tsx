@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronRightIcon, MagnifyingGlassIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { BuildingOffice2Icon, ChevronRightIcon, MagnifyingGlassIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useRoute, navigate } from '../router';
 import { flizowStore } from '../store/flizowStore';
 import { useFlizow } from '../store/useFlizow';
@@ -783,7 +783,10 @@ function AddClientModal({ clients, members, todayISO, onClose }: {
     >
       <div className="wip-modal" role="document" style={{ maxWidth: 560 }}>
         <header className="wip-modal-head">
-          <h2 className="wip-modal-title" id="add-client-title">Add client</h2>
+          <h2 className="wip-modal-title" id="add-client-title">
+            <BuildingOffice2Icon width={18} height={18} aria-hidden="true" />
+            Add client
+          </h2>
           <button type="button" className="wip-modal-close" onClick={onClose} aria-label="Close">
             <XMarkIcon width={14} height={14} aria-hidden="true" />
           </button>

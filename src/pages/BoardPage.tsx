@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode
 // for callsite-stability — many JSX uses still write <TrashIcon />).
 // The wrapper now delegates to the Heroicons component.
 import {
+  ArchiveBoxIcon,
   CheckIcon as HeroCheckIcon,
   ChevronDownIcon,
   MagnifyingGlassIcon,
@@ -1849,6 +1850,7 @@ function ArchivedCardsModal({
       <div className="wip-modal" role="document" style={{ maxWidth: 640 }}>
         <header className="wip-modal-head">
           <h2 className="wip-modal-title" id="archived-cards-title">
+            <ArchiveBoxIcon width={18} height={18} aria-hidden="true" />
             Archived cards
           </h2>
           <button type="button" className="wip-modal-close" onClick={onClose} aria-label="Close">

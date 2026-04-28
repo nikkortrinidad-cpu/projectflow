@@ -6,7 +6,9 @@ import {
   CheckIcon,
   ChevronRightIcon,
   ClipboardIcon,
+  EnvelopeIcon,
   FireIcon,
+  FlagIcon,
   ListBulletIcon,
   PencilSquareIcon,
   PlayIcon,
@@ -915,6 +917,7 @@ function AddAgendaItemModal({ clients, existing, hasManualItems, onClose }: {
       <div className="wip-modal" role="document">
         <header className="wip-modal-head">
           <h2 className="wip-modal-title" id="wip-flag-modal-title">
+            <FlagIcon width={18} height={18} aria-hidden="true" />
             {isEdit ? 'Edit agenda item' : 'Add agenda item'}
           </h2>
           <button
@@ -1082,7 +1085,10 @@ function PreReadModal({ groups, todayISO, nextMeeting, itemCount, estMinutes, on
     >
       <div className="wip-modal" role="document" style={{ maxWidth: 640 }}>
         <header className="wip-modal-head">
-          <h2 className="wip-modal-title" id="wip-preread-title">Pre-read preview</h2>
+          <h2 className="wip-modal-title" id="wip-preread-title">
+            <EnvelopeIcon width={18} height={18} aria-hidden="true" />
+            Pre-read preview
+          </h2>
           <button type="button" className="wip-modal-close" onClick={onClose} aria-label="Close">
             <XMarkIcon width={14} height={14} aria-hidden="true" />
           </button>

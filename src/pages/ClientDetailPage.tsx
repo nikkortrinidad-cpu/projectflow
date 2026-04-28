@@ -10,6 +10,7 @@ import {
   PlusIcon,
   UserGroupIcon,
   UserIcon,
+  UserPlusIcon,
   UsersIcon,
   WrenchScrewdriverIcon,
   XMarkIcon,
@@ -2493,6 +2494,7 @@ function AddContactModal({ clientId, existingPrimary, contact, onClose }: {
       <div ref={modalRef} className="wip-modal" role="document" style={{ maxWidth: 480 }}>
         <header className="wip-modal-head">
           <h2 className="wip-modal-title" id="add-contact-title">
+            <UserPlusIcon width={18} height={18} aria-hidden="true" />
             {isEdit ? 'Edit contact' : 'Add contact'}
           </h2>
           <button type="button" className="wip-modal-close" onClick={onClose} aria-label="Close">
@@ -2809,6 +2811,7 @@ function AddQuickLinkModal({ clientId, link, onClose }: {
       <div ref={modalRootRef} className="wip-modal" role="document" style={{ maxWidth: 460 }}>
         <header className="wip-modal-head">
           <h2 className="wip-modal-title" id="add-link-title">
+            <LinkIcon width={18} height={18} aria-hidden="true" />
             {isEdit ? 'Edit quick link' : 'Add quick link'}
           </h2>
           <button type="button" className="wip-modal-close" onClick={onClose} aria-label="Close">
@@ -2942,7 +2945,10 @@ function AddOperatorModal({ clientId, allMembers, currentTeamIds, onClose }: {
     >
       <div className="wip-modal" role="document" style={{ maxWidth: 460 }}>
         <header className="wip-modal-head">
-          <h2 className="wip-modal-title" id="add-operator-title">Add operators</h2>
+          <h2 className="wip-modal-title" id="add-operator-title">
+            <UserGroupIcon width={18} height={18} aria-hidden="true" />
+            Add operators
+          </h2>
           <button type="button" className="wip-modal-close" onClick={onClose} aria-label="Close">
             <XMarkIcon width={14} height={14} aria-hidden="true" />
           </button>
