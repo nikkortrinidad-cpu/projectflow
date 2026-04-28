@@ -6108,6 +6108,7 @@
     padding: 0 0 var(--sp-micro);
   }
   .ops-tab {
+    display: inline-flex; align-items: center; gap: 8px;
     background: transparent;
     border: none;
     padding: var(--sp-sm) var(--sp-lg);
@@ -6121,6 +6122,7 @@
     cursor: pointer;
     transition: color var(--dur-fast), background var(--dur-fast);
   }
+  .ops-tab svg { flex-shrink: 0; }
   .ops-tab:hover {
     color: var(--text);
     background: color-mix(in srgb, currentColor 6%, transparent);
@@ -6164,6 +6166,7 @@
     letter-spacing: 0.02em;
   }
   .ops-brief-panel-edit {
+    display: inline-flex; align-items: center; gap: 6px;
     padding: 6px 14px;
     border-radius: 8px;
     border: 1px solid var(--hairline);
@@ -6175,6 +6178,7 @@
     cursor: pointer;
     transition: background var(--dur-fast), border-color var(--dur-fast);
   }
+  .ops-brief-panel-edit svg { flex-shrink: 0; color: var(--text-soft); }
   .ops-brief-panel-edit:hover {
     background: var(--bg-faint);
     border-color: var(--text-faint);
@@ -6251,6 +6255,11 @@
   .ops-brief-panel--empty {
     text-align: center;
     padding: 60px 28px;
+  }
+  .ops-brief-empty-icon {
+    display: block;
+    margin: 0 auto 14px;
+    color: var(--text-faint);
   }
   .ops-brief-empty-title {
     margin: 0 0 8px;

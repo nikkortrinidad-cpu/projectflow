@@ -1,5 +1,11 @@
 import { useMemo, useState, type ReactElement } from 'react';
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import {
+  ChartBarIcon,
+  DocumentTextIcon,
+  MagnifyingGlassIcon,
+  PencilSquareIcon,
+  ViewColumnsIcon,
+} from '@heroicons/react/24/outline';
 import { DndContext, DragOverlay, PointerSensor, KeyboardSensor, useSensor, useSensors, closestCenter, useDraggable, useDroppable } from '@dnd-kit/core';
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { daysBetween, formatMonthDay } from '../utils/dateFormat';
@@ -189,6 +195,7 @@ export function OpsPage() {
           className={`ops-tab${tab === 'board' ? ' on' : ''}`}
           onClick={() => setTab('board')}
         >
+          <ViewColumnsIcon width={14} height={14} aria-hidden="true" />
           Ops Board
         </button>
         <button
@@ -200,6 +207,7 @@ export function OpsPage() {
           className={`ops-tab${tab === 'brief' ? ' on' : ''}`}
           onClick={() => setTab('brief')}
         >
+          <DocumentTextIcon width={14} height={14} aria-hidden="true" />
           Notes
         </button>
         <button
@@ -211,6 +219,7 @@ export function OpsPage() {
           className={`ops-tab${tab === 'capacity' ? ' on' : ''}`}
           onClick={() => setTab('capacity')}
         >
+          <ChartBarIcon width={14} height={14} aria-hidden="true" />
           Team Capacity
         </button>
       </div>
@@ -747,6 +756,12 @@ function OpsBriefPanel({
   if (!hasBrief) {
     return (
       <section className="ops-brief-panel ops-brief-panel--empty">
+        <DocumentTextIcon
+          width={40}
+          height={40}
+          aria-hidden="true"
+          className="ops-brief-empty-icon"
+        />
         <h3 className="ops-brief-empty-title">No notes yet</h3>
         <p className="ops-brief-empty-sub">
           Drop the team a note — what we're focused on, what shifted,
@@ -777,6 +792,7 @@ function OpsBriefPanel({
           className="ops-brief-panel-edit"
           onClick={onEdit}
         >
+          <PencilSquareIcon width={14} height={14} aria-hidden="true" />
           Edit
         </button>
       </header>
