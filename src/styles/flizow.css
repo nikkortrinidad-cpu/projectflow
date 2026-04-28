@@ -6018,6 +6018,82 @@
     color: var(--text);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
+
+  /* Load badge — the per-member capacity indicator that renders next
+     to the name in the assignee picker. Three zones reuse the existing
+     status-* tokens so dark mode + accessibility colours come for free.
+     Sized small so the row's hierarchy stays member > role > load. */
+  .load-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 980px;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .load-badge--green {
+    background: var(--status-track-soft);
+    color: var(--status-track);
+  }
+  .load-badge--amber {
+    background: var(--status-risk-soft);
+    color: var(--status-risk);
+  }
+  .load-badge--red {
+    background: var(--status-fire-soft);
+    color: var(--status-fire);
+  }
+
+  /* Capacity warning banner — sits above the meta-table inside the
+     card detail modal when the primary assignee is in the red zone
+     for the task's due date. Inline action on the right ("Switch to
+     Mon Apr 30") rebooks the card to the suggested next-available
+     weekday in one click. */
+  .capacity-warning {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-md);
+    padding: 10px 14px;
+    margin-bottom: var(--sp-base);
+    border: 1px solid color-mix(in srgb, var(--status-fire) 35%, transparent);
+    border-radius: 10px;
+    background: var(--status-fire-soft);
+    color: var(--text);
+    font-size: var(--fs-md);
+    line-height: var(--lh-body);
+  }
+  .capacity-warning-icon {
+    color: var(--status-fire);
+    font-size: var(--fs-lg);
+    flex-shrink: 0;
+  }
+  .capacity-warning-text {
+    flex: 1;
+    color: var(--text);
+  }
+  .capacity-warning-text strong {
+    font-weight: 600;
+  }
+  .capacity-warning-action {
+    flex-shrink: 0;
+    padding: 4px 12px;
+    border-radius: 980px;
+    border: 1px solid var(--status-fire);
+    background: var(--bg-elev);
+    color: var(--status-fire);
+    font-family: inherit;
+    font-size: var(--fs-md);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--dur-fast), color var(--dur-fast);
+  }
+  .capacity-warning-action:hover {
+    background: var(--status-fire);
+    color: #fff;
+  }
   .assignee-option-check {
     width: 14px; height: 14px;
     color: var(--hover-blue);

@@ -14,6 +14,7 @@ import {
   loadFor,
   effectiveCapFor,
   zoneFor,
+  nextAvailableDate,
   DEFAULT_CAP_SOFT,
   DEFAULT_CAP_MAX,
 } from '../utils/capacity';
@@ -221,5 +222,75 @@ describe('zoneFor', () => {
     expect(zoneFor(6.5, caps)).toBe('amber');
     expect(zoneFor(7.99, caps)).toBe('amber');
     expect(zoneFor(8.01, caps)).toBe('red');
+  });
+});
+
+// ── nextAvailableDate ────────────────────────────────────────────────
+
+describe('nextAvailableDate', () => {
+  const m = member();
+
+  it('returns the next weekday when caps allow', () => {
+    // 2026-04-29 is a Wednesday — next weekday is Thu the 30th.
+    const result = nextAvailableDate('m1', '2026-04-29', 1, [m], [], []);
+    expect(result).toBe('2026-04-30');
+  });
+
+  it('skips weekends', () => {
+    // 2026-05-01 is a Friday — next weekday is Mon 2026-05-04.
+    const result = nextAvailableDate('m1', '2026-05-01', 1, [m], [], []);
+    expect(result).toBe('2026-05-04');
+  });
+
+  it('finds the first date where load + slots fits under soft cap', () => {
+    // Member has cap 6/8. Mon already has 5 slots, Tue has 2 slots, Wed has 0.
+    // Looking to add a 4-slot task starting from Sun 2026-05-03:
+    //   Mon 2026-05-04: 5 + 4 = 9 > 6 (skip)
+    //   Tue 2026-05-05: 2 + 4 = 6 <= 6 (✓)
+    const tasks: Task[] = [
+      task({ id: 't1', dueDate: '2026-05-04', slots: 5 }),
+      task({ id: 't2', dueDate: '2026-05-05', slots: 2 }),
+    ];
+    const result = nextAvailableDate('m1', '2026-05-03', 4, [m], [], tasks);
+    expect(result).toBe('2026-05-05');
+  });
+
+  it('excludeTaskId removes that task from the candidate-date load count', () => {
+    // The 5-slot task on Mon is the one being moved. Without the exclude
+    // option, Mon shows as full (5/6 baseline). With it, Mon's baseline
+    // drops to 0 and (0 + 4) <= 6 — so Mon becomes the answer.
+    const tasks: Task[] = [
+      task({ id: 't1', dueDate: '2026-05-04', slots: 5 }),
+    ];
+    const result = nextAvailableDate(
+      'm1', '2026-05-03', 4, [m], [], tasks,
+      { excludeTaskId: 't1' },
+    );
+    expect(result).toBe('2026-05-04');
+  });
+
+  it('returns null when no slot fits in the search window', () => {
+    // Every weekday for 14 days has 6 slots already; adding 1 more would
+    // cross soft cap on every candidate.
+    const tasks: Task[] = [];
+    for (let i = 1; i <= 14; i++) {
+      tasks.push(task({
+        id: `t${i}`,
+        slots: 6,
+        dueDate: new Date(2026, 4, 3 + i).toISOString().slice(0, 10),
+      }));
+    }
+    const result = nextAvailableDate('m1', '2026-05-03', 1, [m], [], tasks);
+    expect(result).toBeNull();
+  });
+
+  it('respects per-day overrides when picking the candidate date', () => {
+    // Mon's standing cap is 6/8; override drops it to 0/0 (unavailable
+    // — say it's a PTO day). Tue should be the answer.
+    const overrides = [
+      { memberId: 'm1', date: '2026-05-04', capSoft: 0, capMax: 0 },
+    ];
+    const result = nextAvailableDate('m1', '2026-05-03', 1, [m], overrides, []);
+    expect(result).toBe('2026-05-05');
   });
 });

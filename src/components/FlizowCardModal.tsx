@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { CheckIcon, ChevronRightIcon, ScaleIcon } from '@heroicons/react/24/outline';
+import {
+  loadFor,
+  effectiveCapFor,
+  zoneFor,
+  nextAvailableDate,
+} from '../utils/capacity';
 import { createPortal } from 'react-dom';
 import { useFlizow } from '../store/useFlizow';
 import type { ColumnId, Priority, Member, TaskComment, TaskActivity, Task, OpsTask } from '../types/flizow';
@@ -284,6 +290,72 @@ export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDupl
   const doneCount = checklist.filter(i => i.done).length;
   const pct = checklist.length > 0 ? Math.round((doneCount / checklist.length) * 100) : 0;
 
+  // ── Capacity awareness ────────────────────────────────────────────
+  // The full pile of slot-consuming work for any member: client tasks
+  // PLUS ops tasks. A designer's internal ops work counts toward their
+  // daily cap just like their client work. Memoised so the picker
+  // renders don't re-stitch the array on every keystroke in search.
+  const allSlotTasks = useMemo(
+    () => [...data.tasks, ...data.opsTasks],
+    [data.tasks, data.opsTasks],
+  );
+
+  // Per-member load info for the assignee picker, computed against the
+  // task's CURRENT due date. Closes over the full task pile + override
+  // list + member list so the picker stays dumb. Returns null when the
+  // task has no due date — a date-less task can't have a "load on a
+  // specific day."
+  const getLoadInfo = useMemo(() => {
+    return (memberId: string) => {
+      if (!task?.dueDate) return null;
+      const load = loadFor(memberId, task.dueDate, allSlotTasks);
+      const caps = effectiveCapFor(
+        memberId, task.dueDate, data.members, data.memberDayOverrides,
+      );
+      const zone = zoneFor(load, caps);
+      return { load, soft: caps.soft, zone };
+    };
+  }, [task?.dueDate, allSlotTasks, data.members, data.memberDayOverrides]);
+
+  // Derived warning state for the banner above the meta-table. Fires
+  // only when the *primary* assignee is in the red zone on the task's
+  // due date. Multi-owner tasks count only the primary (matches the
+  // capacity-helper's contract — co-owners participate without
+  // absorbing slots).
+  const capacityWarning = useMemo(() => {
+    if (!task?.dueDate) return null;
+    const primaryId = task.assigneeId
+      ?? (task.assigneeIds && task.assigneeIds[0])
+      ?? null;
+    if (!primaryId) return null;
+    const member = data.members.find(m => m.id === primaryId);
+    if (!member) return null;
+    const load = loadFor(primaryId, task.dueDate, allSlotTasks);
+    const caps = effectiveCapFor(
+      primaryId, task.dueDate, data.members, data.memberDayOverrides,
+    );
+    const zone = zoneFor(load, caps);
+    if (zone !== 'red') return null;
+    // Find the next weekday where this task could land cleanly.
+    const taskSlots = task.slots ?? 1;
+    const suggestion = nextAvailableDate(
+      primaryId, task.dueDate, taskSlots,
+      data.members, data.memberDayOverrides, allSlotTasks,
+      { excludeTaskId: task.id, searchDays: 14 },
+    );
+    return {
+      memberName: member.name,
+      load,
+      max: caps.max,
+      suggestion,
+    };
+  }, [task, allSlotTasks, data.members, data.memberDayOverrides]);
+
+  function applyDateSuggestion(dateISO: string) {
+    if (!task) return;
+    patchCard(task.id, { dueDate: dateISO });
+  }
+
   // ── Mutators for assignees + labels ───────────────────────────────
   // Both fields live on the Task as arrays and are flipped via
   // updateTask. We keep the legacy single-assignee fallback intact by
@@ -560,6 +632,33 @@ export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDupl
                 }}
               />
 
+              {/* Capacity warning banner — appears only when the
+                  primary assignee's load on the task's due date
+                  exceeds their max cap (red zone). Suggests the next
+                  weekday with room and lets the AM jump to it in one
+                  click. Soft only — the banner doesn't block any
+                  edits. Disappears the moment the assignee, due
+                  date, or slot weight gets the load back under max. */}
+              {capacityWarning && (
+                <div className="capacity-warning" role="status" aria-live="polite">
+                  <span className="capacity-warning-icon" aria-hidden="true">⚠</span>
+                  <span className="capacity-warning-text">
+                    <strong>{capacityWarning.memberName}</strong> will have{' '}
+                    <strong>{capacityWarning.load}</strong> slots on this date —
+                    over their max of <strong>{capacityWarning.max}</strong>.
+                  </span>
+                  {capacityWarning.suggestion && (
+                    <button
+                      type="button"
+                      className="capacity-warning-action"
+                      onClick={() => applyDateSuggestion(capacityWarning.suggestion!)}
+                    >
+                      Switch to {formatSuggestionDate(capacityWarning.suggestion)}
+                    </button>
+                  )}
+                </div>
+              )}
+
               {/* ── Meta table ──────────────────────────────────── */}
               <div className="meta-table">
 
@@ -683,6 +782,7 @@ export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDupl
                           onQueryChange={setAssigneeQuery}
                           onToggle={toggleAssignee}
                           onClose={() => { setAssigneePickerOpen(false); setAssigneeQuery(''); }}
+                          getLoadInfo={getLoadInfo}
                         />
                       )}
                     </div>
@@ -1098,6 +1198,19 @@ function SlotsEditor({
   );
 }
 
+/** Format an ISO date string (YYYY-MM-DD) as "Mon Apr 30" — short
+ *  enough to fit on the capacity warning banner's "Switch to" button
+ *  without wrapping. Built locally rather than reused from the date
+ *  utils because we want a specific weekday-prefix shape that no
+ *  existing helper produces. */
+function formatSuggestionDate(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+  const weekday = date.toLocaleDateString(undefined, { weekday: 'short' });
+  const month = date.toLocaleDateString(undefined, { month: 'short' });
+  return `${weekday} ${month} ${date.getDate()}`;
+}
+
 /** Dropdown menu that closes on outside click. Renders its children
  *  inside a `.tb-menu.open` shell so it picks up the mockup styling. */
 function PickerMenu({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
@@ -1202,7 +1315,7 @@ function TaskMissingAutoClose({ onClose }: { onClose: () => void }) {
  *  autofocus/outside-click/Esc/filter boilerplate now lives once in
  *  components/shared. Audit: card-modal M1. */
 function AssigneePicker({
-  members, selectedIds, query, onQueryChange, onToggle, onClose,
+  members, selectedIds, query, onQueryChange, onToggle, onClose, getLoadInfo,
 }: {
   members: Member[];
   selectedIds: string[];
@@ -1210,6 +1323,17 @@ function AssigneePicker({
   onQueryChange: (q: string) => void;
   onToggle: (id: string) => void;
   onClose: () => void;
+  /** Capacity-aware row metadata. Renders a green/amber/red load badge
+   *  next to each member's name when present. The caller (FlizowCardModal)
+   *  builds the function once with `(tasks, opsTasks, overrides, members,
+   *  task.dueDate)` baked in; the picker just pulls per-member numbers
+   *  from it. Optional — when omitted the rows render without badges,
+   *  same as the pre-capacity surface. */
+  getLoadInfo?: (memberId: string) => {
+    load: number;
+    soft: number;
+    zone: 'green' | 'amber' | 'red';
+  } | null;
 }) {
   return (
     <SearchablePicker
@@ -1232,26 +1356,37 @@ function AssigneePicker({
       getKey={(m) => m.id}
       isSelected={(m) => selectedIds.includes(m.id)}
       onToggle={onToggle}
-      renderItem={(m) => (
-        <>
-          <span
-            className="assignee-option-avatar"
-            style={m.type === 'operator'
-              ? { background: m.bg, color: m.color }
-              : { background: m.color, color: '#fff' }}
-          >
-            {m.initials}
-          </span>
-          <span className="assignee-option-name">
-            {m.name}
-            {m.role && (
-              <span style={{ color: 'var(--text-soft)', fontSize: 'var(--fs-xs)', marginLeft: 6 }}>
-                · {m.role}
+      renderItem={(m) => {
+        const info = getLoadInfo?.(m.id);
+        return (
+          <>
+            <span
+              className="assignee-option-avatar"
+              style={m.type === 'operator'
+                ? { background: m.bg, color: m.color }
+                : { background: m.color, color: '#fff' }}
+            >
+              {m.initials}
+            </span>
+            <span className="assignee-option-name">
+              {m.name}
+              {m.role && (
+                <span style={{ color: 'var(--text-soft)', fontSize: 'var(--fs-xs)', marginLeft: 6 }}>
+                  · {m.role}
+                </span>
+              )}
+            </span>
+            {info && (
+              <span
+                className={`load-badge load-badge--${info.zone}`}
+                title={`${info.load} of ${info.soft} slots booked${info.zone === 'red' ? ' — over max' : info.zone === 'amber' ? ' — over target' : ''}`}
+              >
+                {info.load}/{info.soft}
               </span>
             )}
-          </span>
-        </>
-      )}
+          </>
+        );
+      }}
       checkClassName="assignee-option-check"
       emptyLabel="No matches"
       onClose={onClose}

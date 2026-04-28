@@ -1,4 +1,14 @@
-import type { Member, MemberDayOverride, Task } from '../types/flizow';
+import type { Member, MemberDayOverride, OpsTask, Task } from '../types/flizow';
+
+/**
+ * Anything that consumes capacity. Tasks (per-service) and OpsTasks
+ * (workspace-level) both count toward an assignee's daily load —
+ * a designer's internal ops work and their client work share the
+ * same finite attention. The fields loadFor reads (assigneeId,
+ * dueDate, archived, columnId, slots) all exist on both types, so
+ * the helper is genuinely union-safe.
+ */
+export type CapacityTask = Task | OpsTask;
 
 /**
  * Capacity / load math — the single source of truth for "how booked is
@@ -48,7 +58,7 @@ export type LoadZone = 'green' | 'amber' | 'red';
 export function loadFor(
   memberId: string,
   dateISO: string,
-  tasks: Task[],
+  tasks: CapacityTask[],
 ): number {
   let sum = 0;
   for (const t of tasks) {
@@ -112,4 +122,75 @@ export function zoneFor(
   if (load <= caps.soft) return 'green';
   if (load <= caps.max) return 'amber';
   return 'red';
+}
+
+/**
+ * Find the next available weekday where moving a task of `slots`
+ * weight onto `memberId`'s queue would keep the load at-or-below the
+ * soft cap.
+ *
+ * Used by the booking-flow soft warning to suggest "Sarah's full Fri
+ * — Mon (3/6) has room. Switch?" without making the AM hunt for a
+ * clean day manually.
+ *
+ * Logic:
+ *   - Start one day after `fromISO`.
+ *   - Skip Sat/Sun (configurable later).
+ *   - For each candidate date, compute:
+ *       baseLoad   = load on that date excluding the task's existing
+ *                    contribution if it currently sits there
+ *       predicted  = baseLoad + slots
+ *     If `predicted <= softCap`, return that date.
+ *   - Cap the search at `searchDays` (default 14) to bound the work.
+ *
+ * Returns null when nothing fits in the search window — the caller
+ * should fall back to "no suggestion" rather than guessing.
+ *
+ * `excludeTaskId` lets the call site say "ignore this card's
+ * existing slots when computing each candidate's base load." Without
+ * it, the predicted load would double-count the card on its current
+ * date and we'd think every other date is the candidate's only escape.
+ */
+export function nextAvailableDate(
+  memberId: string,
+  fromISO: string,
+  slots: number,
+  members: Member[],
+  overrides: MemberDayOverride[],
+  tasks: CapacityTask[],
+  options: { excludeTaskId?: string; searchDays?: number } = {},
+): string | null {
+  const searchDays = options.searchDays ?? 14;
+  const excludeId = options.excludeTaskId;
+
+  // Parse fromISO as a local date and walk forward day by day.
+  // Format candidates from local components rather than .toISOString()
+  // — the latter shifts to UTC and rolls back a day in any timezone
+  // east of Greenwich, which would cause the helper to return the
+  // input date itself for callers in Asia/Australia.
+  const [y, m, d] = fromISO.split('-').map(Number);
+  const cursor = new Date(y, m - 1, d);
+
+  for (let i = 1; i <= searchDays; i++) {
+    cursor.setDate(cursor.getDate() + 1);
+    const dow = cursor.getDay();
+    if (dow === 0 || dow === 6) continue; // weekend skip
+    const yy = cursor.getFullYear();
+    const mm = String(cursor.getMonth() + 1).padStart(2, '0');
+    const dd = String(cursor.getDate()).padStart(2, '0');
+    const candidateISO = `${yy}-${mm}-${dd}`;
+
+    // Filter out this task's contribution from the candidate's load
+    // count so we can ask "if I move it here, what's the predicted
+    // load?" rather than "is this candidate already clean?"
+    const filtered = excludeId
+      ? tasks.filter(t => t.id !== excludeId)
+      : tasks;
+    const baseLoad = loadFor(memberId, candidateISO, filtered);
+    const predicted = baseLoad + slots;
+    const caps = effectiveCapFor(memberId, candidateISO, members, overrides);
+    if (predicted <= caps.soft) return candidateISO;
+  }
+
+  return null;
 }
