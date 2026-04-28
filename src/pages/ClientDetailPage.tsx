@@ -504,6 +504,16 @@ function Hero({ client, am, onArchive, onUnarchive, onRequestDelete }: {
             <>
               <span className="meta-dot" />
               <span className="hero-meta-item">
+                {/* Person icon — same stroke vocabulary as the
+                    industry (home) + Client-since (calendar) icons
+                    above and below, so the meta row reads as one
+                    visual family. Without it the Manager item was
+                    the only label-only entry, which made the row
+                    scan unevenly. */}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
                 <span className="hero-meta-label">Manager:</span>
                 <span className="hero-am-avatar" style={{ background: am.color }}>{am.initials}</span>
                 <span>{am.name}</span>
