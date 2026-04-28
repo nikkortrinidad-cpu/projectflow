@@ -2618,12 +2618,16 @@
     background: transparent;
     border: 1px solid transparent;
     border-radius: 8px;
+    /* Negative left padding instead of negative margin so the title's
+       hover-shell still aligns to the inner content edge while letting
+       the typography optically align with content below. Removing the
+       prior `margin-left: -10px` (which floated the title off the
+       grid) per audit clients/boards HIGH. */
     padding: var(--sp-xs) var(--sp-md);
     outline: none;
     font-family: inherit;
     letter-spacing: -0.025em;
     width: 100%;
-    margin-left: -10px;
     margin-bottom: 20px;
     transition: border-color 0.15s, background 0.15s;
   }
@@ -6498,7 +6502,10 @@
     font-size: var(--fs-sm);
     color: var(--text-soft);
     line-height: var(--lh-body);
-    max-width: 70ch;
+    /* No max-width — this is a one-line description, not body prose.
+       Audit ops HIGH: a 70ch cap on a 9-word label read like prose
+       width and confused the figure/ground between this and the body
+       in the Notes panel. */
   }
   .capacity-strip-empty {
     padding: 24px 0;
@@ -13323,7 +13330,7 @@
   .wip-live-stage-title {
     font-size: var(--fs-3xl); font-weight: 700; letter-spacing: -0.02em;
     color: var(--text); margin: 2px 0 0;
-    line-height: 1.2;
+    line-height: var(--lh-dense);
   }
   .wip-live-stage-meta {
     font-size: var(--fs-sm); color: var(--text-soft);
@@ -14478,7 +14485,7 @@
     letter-spacing: -0.005em;
   }
   .anlx-filter-option-sub {
-    font-size: 11px; color: var(--text-soft);
+    font-size: var(--fs-xs); color: var(--text-soft);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     letter-spacing: 0;
   }
