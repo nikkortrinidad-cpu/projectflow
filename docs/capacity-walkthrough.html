@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Flizow — Capacity & Booking Walkthrough</title>
+<style>
+  @page {
+    size: Letter;
+    margin: 0.75in 0.75in 1in 0.75in;
+    @bottom-center {
+      content: "Flizow · Capacity walkthrough · page " counter(page) " of " counter(pages);
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 9pt;
+      color: #777;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    color: #1d1d1f;
+    line-height: 1.55;
+    font-size: 11pt;
+  }
+  body {
+    max-width: 6.5in;
+    margin: 0 auto;
+  }
+  /* ── Cover ─────────────────────────────────────────── */
+  .cover {
+    page-break-after: always;
+    padding: 1.5in 0 0;
+  }
+  .cover-eyebrow {
+    text-transform: uppercase;
+    font-size: 9pt;
+    letter-spacing: 0.18em;
+    color: #f15a24;
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+  .cover-title {
+    font-size: 32pt;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+    color: #1d1d1f;
+  }
+  .cover-subtitle {
+    font-size: 14pt;
+    font-weight: 400;
+    color: #515154;
+    line-height: 1.4;
+    margin: 0 0 36px;
+    max-width: 90%;
+  }
+  .cover-meta {
+    margin-top: 0.9in;
+    padding-top: 18px;
+    border-top: 1px solid #d2d2d7;
+    font-size: 10pt;
+    color: #6e6e73;
+    line-height: 1.6;
+  }
+  .cover-meta strong { color: #1d1d1f; font-weight: 600; }
+
+  /* ── Headings ──────────────────────────────────────── */
+  h1 {
+    font-size: 22pt;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 38pt 0 14pt;
+    color: #1d1d1f;
+    page-break-after: avoid;
+  }
+  h2 {
+    font-size: 14pt;
+    font-weight: 700;
+    color: #1d1d1f;
+    margin: 24pt 0 8pt;
+    letter-spacing: -0.005em;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 12pt;
+    font-weight: 600;
+    color: #1d1d1f;
+    margin: 18pt 0 6pt;
+    page-break-after: avoid;
+  }
+  h1 + p, h2 + p, h3 + p { margin-top: 4pt; }
+
+  /* ── Body ──────────────────────────────────────────── */
+  p { margin: 0 0 10pt; }
+  ul, ol { margin: 0 0 10pt; padding-left: 22pt; }
+  li { margin-bottom: 5pt; }
+  strong { font-weight: 600; }
+  em { font-style: italic; color: #515154; }
+  code {
+    font-family: ui-monospace, "SF Mono", Monaco, monospace;
+    font-size: 0.9em;
+    background: #f5f5f7;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #1d1d1f;
+  }
+
+  /* ── Callout boxes ─────────────────────────────────── */
+  .callout {
+    background: #fff7f3;
+    border-left: 3px solid #f15a24;
+    padding: 12pt 14pt;
+    margin: 14pt 0;
+    border-radius: 0 6pt 6pt 0;
+    font-size: 10.5pt;
+  }
+  .callout-title {
+    font-weight: 700;
+    color: #f15a24;
+    text-transform: uppercase;
+    font-size: 9pt;
+    letter-spacing: 0.06em;
+    margin-bottom: 4pt;
+  }
+
+  .note {
+    background: #f5f5f7;
+    border-left: 3px solid #86868b;
+    padding: 10pt 14pt;
+    margin: 12pt 0;
+    border-radius: 0 6pt 6pt 0;
+    font-size: 10pt;
+    color: #515154;
+  }
+
+  /* ── Tables ────────────────────────────────────────── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12pt 0;
+    font-size: 10pt;
+  }
+  th, td {
+    text-align: left;
+    padding: 8pt 10pt;
+    border-bottom: 1px solid #e5e5ea;
+    vertical-align: top;
+  }
+  th {
+    background: #f5f5f7;
+    font-weight: 600;
+    color: #1d1d1f;
+    border-bottom: 2px solid #d2d2d7;
+  }
+  tr:last-child td { border-bottom: none; }
+  td.tight { font-family: ui-monospace, "SF Mono", Monaco, monospace; font-size: 9.5pt; }
+
+  /* ── Zone pills ────────────────────────────────────── */
+  .zone {
+    display: inline-block;
+    padding: 1px 9px;
+    border-radius: 99px;
+    font-size: 9pt;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .zone-green { background: #e3f5e8; color: #1d8341; }
+  .zone-amber { background: #fff3d9; color: #a06200; }
+  .zone-red { background: #fde5e0; color: #b3271a; }
+
+  /* ── Persona section ──────────────────────────────── */
+  .persona {
+    background: #fafafd;
+    border: 1px solid #e5e5ea;
+    border-radius: 8pt;
+    padding: 14pt 18pt;
+    margin: 14pt 0;
+  }
+  .persona-tag {
+    display: inline-block;
+    background: #1d1d1f;
+    color: #fff;
+    font-size: 8.5pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 2px 9px;
+    border-radius: 99px;
+    margin-bottom: 8pt;
+  }
+  .persona h3 { margin-top: 0; }
+
+  /* Page break helpers */
+  .page-break { page-break-before: always; }
+  .avoid-break { page-break-inside: avoid; }
+</style>
+</head>
+<body>
+
+<!-- ───────────── COVER ───────────── -->
+<section class="cover">
+  <div class="cover-eyebrow">Flizow · Internal team handbook</div>
+  <h1 class="cover-title" style="margin: 0 0 8px; font-size: 32pt;">Capacity &amp; Booking Walkthrough</h1>
+  <p class="cover-subtitle">
+    How Flizow keeps designers from getting double-booked across calendars,
+    HubStaff, and AM-led assignments &mdash; and how to use it day-to-day.
+  </p>
+  <div class="cover-meta">
+    <strong>Audience.</strong> Account managers. You're the ones running the
+    booking flow day-to-day &mdash; this walks through what you do, what
+    happens on the designer's side after you assign, and what the ops
+    manager sees when they rebalance.<br>
+    <strong>Read time.</strong> ~10 minutes.<br>
+    <strong>Reference scope.</strong> The full capacity story end-to-end &mdash;
+    from member caps to per-card slot weights to the team-wide heatmap.
+  </div>
+</section>
+
+<!-- ───────────── INTRO ───────────── -->
+<h1>Why this exists</h1>
+<p>
+  Before this system, two account managers could each schedule Sarah for
+  full-day work on the same day. One was looking at Google Calendar, the
+  other at HubStaff. Neither saw the other's bookings until Sarah pushed back.
+  The double-booking problem was structural: there was no shared source of
+  truth for "how booked is this person right now."
+</p>
+<p>
+  Flizow's capacity model fixes that. Every team member gets a daily cap.
+  Every kanban card carries a slot weight that counts against the assignee's
+  cap on its due date. Anyone scheduling work sees, before they confirm, who
+  has room and who doesn't.
+</p>
+
+<div class="callout">
+  <div class="callout-title">The one rule</div>
+  When a card lands on a member's queue with a due date, its slot weight gets
+  added to that member's load on that day. If load goes past the soft cap,
+  the system warns. Past the max cap, the system pushes back harder. Same
+  math everywhere &mdash; the card modal, My Schedule, the Team Capacity
+  heatmap all read from one source.
+</div>
+
+<!-- ───────────── VOCAB ───────────── -->
+<h1>The vocabulary</h1>
+
+<h3>Slot</h3>
+<p>
+  A unit of work weight. One slot &asymp; one chunk of focused effort. A
+  short copy review is 1 slot; a full page design might be 4 slots. The
+  designer is the expert here &mdash; AMs can guess, but the assignee
+  confirms.
+</p>
+
+<h3>Soft cap</h3>
+<p>
+  The target daily load. Default <strong>6 slots</strong>. Below this, the
+  member is comfortable. At or below the soft cap, the cell renders
+  <span class="zone zone-green">green</span>.
+</p>
+
+<h3>Max cap</h3>
+<p>
+  The ceiling. Default <strong>8 slots</strong>. Between soft and max
+  is the "stretch zone" &mdash; visible nudge, no pop-up. Past max is over-
+  capacity territory.
+</p>
+
+<h3>Zones</h3>
+<table>
+  <thead>
+    <tr><th>Zone</th><th>Range</th><th>Meaning</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><span class="zone zone-green">Green</span></td>
+      <td class="tight">load &le; soft cap</td>
+      <td>Under target. Quiet state.</td>
+    </tr>
+    <tr>
+      <td><span class="zone zone-amber">Amber</span></td>
+      <td class="tight">soft &lt; load &le; max</td>
+      <td>Stretch zone. The eye picks it up; the system doesn't speak up.</td>
+    </tr>
+    <tr>
+      <td><span class="zone zone-red">Red</span></td>
+      <td class="tight">load &gt; max</td>
+      <td>Over the max. Booking flow surfaces a warning.</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ───────────── SETUP ───────────── -->
+<h1>Setting up &mdash; caps per member</h1>
+<p>
+  The ops manager (or any owner-tier account) sets each team member's caps
+  once. After that, defaults apply unless explicitly overridden.
+</p>
+<ol>
+  <li>Open <strong>Account &amp; Settings</strong> &rarr; <strong>Members</strong> tab.</li>
+  <li>For any member, fill the <strong>Soft</strong> and <strong>Max</strong> fields
+    next to their name.</li>
+  <li>Leave them blank to use the defaults (6 / 8). The system reads defaults at
+    runtime &mdash; you won't see "6 / 8" stamped into the field, the math
+    just falls back to it.</li>
+</ol>
+
+<div class="note">
+  Caps are <strong>per-day</strong>, not per-week. A member can take on more
+  total load across a week than their cap times five &mdash; they just can't
+  pile it all into one day.
+</div>
+
+<!-- ───────────── PERSONA: AM ───────────── -->
+<h1 class="page-break">The booking flow &mdash; three perspectives</h1>
+<p>
+  Booking a piece of work touches three roles. Each one sees a different
+  slice of the same data.
+</p>
+
+<div class="persona">
+  <div class="persona-tag">Account manager</div>
+  <h3>Creating the work</h3>
+  <p>
+    You're an AM. A client just signed off on a new asset. You go to their
+    service board and add a card.
+  </p>
+  <ol>
+    <li>
+      <strong>Open the card modal</strong> after creating the card. You'll
+      see a meta-table with Status, Priority, Assignees, Effort, Due date,
+      Start date, and Labels.
+    </li>
+    <li>
+      <strong>Pick the assignee.</strong> The picker shows every team member
+      with a small <strong>load badge</strong> next to their name &mdash; e.g.
+      <code>3/6</code> means three slots already booked on the due date you
+      selected, against a soft cap of six. Green means room, red means full.
+    </li>
+    <li>
+      <strong>Set effort (slots).</strong> The Effort row has a number input
+      and a status pill. As an AM, you can guess via the t-shirt picker
+      (S = 1, M = 2, L = 4, XL = 8). The slot value defaults to "Estimated"
+      until the assignee confirms it.
+    </li>
+    <li>
+      <strong>Pick the due date.</strong> If your selection would push the
+      assignee past their max cap, a banner appears above the meta-table.
+      It names the conflict and offers a one-click <strong>"Switch to
+      &lt;next available date&gt;"</strong> action that finds the next
+      weekday where the load + your card's slots is at or below the soft
+      cap.
+    </li>
+  </ol>
+  <p>
+    You don't have to take the suggestion. The warning is a soft block, not
+    a hard one. If the work genuinely has to land on Friday even though
+    Sarah is at 9/8, you can save it that way and walk over to Sarah.
+  </p>
+</div>
+
+<div class="persona">
+  <div class="persona-tag">What the designer sees</div>
+  <h3>Their week, after you assign</h3>
+  <p>
+    The card you just assigned lands on the designer's <strong>Overview</strong>
+    page. Two surfaces there matter:
+  </p>
+  <h3 style="margin-top: 14pt;">My Tasks</h3>
+  <p>
+    Every open task assigned to them, urgency-down: overdue first, then
+    blocked, then due today, then upcoming, then undated. Not just urgent
+    items &mdash; the whole pile. So when you assign something three
+    weeks out, it's still visible to them at the bottom of the list.
+  </p>
+  <h3 style="margin-top: 14pt;">My Schedule</h3>
+  <p>
+    A 10-weekday strip (Mon&ndash;Fri this week + Mon&ndash;Fri next week)
+    showing their cards bucketed by due date. Each day has a load badge
+    in the column header (e.g. <code>4/6</code>) tinted by zone. They
+    can see at a glance which day you just dropped onto.
+  </p>
+  <p>
+    Next to each load badge is a <strong>&hellip; button</strong>. They
+    can click it to set a custom cap for one day &mdash; for PTO,
+    training half-days, or any one-off where the standing 6/8 doesn't
+    fit. Days with custom caps get a dotted underline. If a designer
+    sets cap = 0 for a day, your booking flow on that day will read
+    them as full.
+  </p>
+  <h3 style="margin-top: 14pt;">Confirming your effort guess</h3>
+  <p>
+    The Effort row on the card shows the slot value you set, with a
+    status pill that says <em>Estimated</em>. The designer can change
+    the number if your guess is off, then click the pill to flip it
+    to <em>Confirmed</em>. Their number is now the authoritative
+    weight; your guess was a starting point. Important to know, because
+    a card you booked at 2 slots might quietly become 4 once they
+    confirm &mdash; their day's load math updates accordingly.
+  </p>
+</div>
+
+<div class="persona">
+  <div class="persona-tag">What the ops manager sees</div>
+  <h3>The team-wide rebalancing view</h3>
+  <p>
+    On Monday morning, the ops manager opens
+    <strong>Ops</strong> &rarr; <strong>Team Capacity</strong>. They see
+    the workspace-wide grid: rows are team members, columns are the next
+    10 weekdays. Each cell shows <code>load/soft</code> tinted by zone.
+    A typical scan tells them, for example:
+  </p>
+  <ul>
+    <li>Sarah is buried Tuesday and Wednesday (both red).</li>
+    <li>Marcus has a quiet Thursday (1/6 green).</li>
+    <li>Aaliyah is consistently amber &mdash; stretching but not over.</li>
+  </ul>
+  <p>
+    They click a red cell. A modal opens listing the tasks stacked on
+    Sarah on that day &mdash; <em>including the one you just assigned</em>.
+    Each row deep-links into the card modal so the ops manager can open
+    it and act on it.
+  </p>
+  <p>
+    To rebalance, they'll typically:
+  </p>
+  <ul>
+    <li>Change the assignee to someone with room (shift Sarah's overflow
+      to Marcus). The assignee picker's load badges show who's free.</li>
+    <li>Move the due date to a later day. Same capacity warning fires
+      if their new date isn't actually open either.</li>
+    <li>Lower the slot weight if the task is genuinely smaller than
+      whoever booked it estimated.</li>
+  </ul>
+  <p>
+    What this means for you as an AM: <strong>the ops manager can move
+    your bookings without asking</strong>. The capacity model treats
+    rebalancing as an explicit operation, not a permissions question.
+    If you've assigned someone a card and you find it on a different
+    day or different person two hours later, the heatmap probably
+    flagged it as over-capacity. The card itself is unchanged in scope
+    &mdash; just the schedule.
+  </p>
+</div>
+
+<!-- ───────────── EDGE CASES ───────────── -->
+<h1>Edge cases &amp; rules</h1>
+
+<h3>Multi-owner cards</h3>
+<p>
+  A card can have a primary assignee plus secondary owners. Only the
+  primary's capacity is touched &mdash; secondaries are participants, not
+  capacity holders. The mental model: one person owns each task. If two
+  designers are sharing a job, the AM splits it into two cards.
+</p>
+
+<h3>Done cards</h3>
+<p>
+  Tasks in the <strong>Done</strong> column don't count toward anyone's
+  load anymore. Finishing work creates breathing room automatically.
+</p>
+
+<h3>Archived cards</h3>
+<p>
+  Same: archived tasks drop out of every load count. Archive is a soft
+  hide; the data isn't destroyed, but the math ignores it.
+</p>
+
+<h3>Per-day cap overrides</h3>
+<p>
+  Override a member's cap for a specific day from My Schedule &rarr;
+  &hellip; button. The override only applies to that day; the next day
+  goes back to the standing cap. Overrides survive across page reloads
+  and Firestore syncs.
+</p>
+
+<h3>Suggestion search window</h3>
+<p>
+  The "Switch to next available date" finder walks forward up to 14
+  weekdays, skipping weekends. If nothing in that window has room, the
+  system stops suggesting rather than guessing.
+</p>
+
+<!-- ───────────── REFERENCE ───────────── -->
+<h1>Quick reference</h1>
+
+<h3>Defaults</h3>
+<table>
+  <thead>
+    <tr><th>Setting</th><th>Default</th><th>Where to change</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Soft cap (per member)</td>
+      <td class="tight">6 slots</td>
+      <td>Account settings &rarr; Members tab</td>
+    </tr>
+    <tr>
+      <td>Max cap (per member)</td>
+      <td class="tight">8 slots</td>
+      <td>Account settings &rarr; Members tab</td>
+    </tr>
+    <tr>
+      <td>Slot weight (per task)</td>
+      <td class="tight">1 slot</td>
+      <td>Card modal &rarr; Effort row</td>
+    </tr>
+    <tr>
+      <td>Slot status</td>
+      <td class="tight">Estimated</td>
+      <td>Card modal &rarr; Effort pill</td>
+    </tr>
+    <tr>
+      <td>Per-day cap override</td>
+      <td class="tight">none</td>
+      <td>Overview &rarr; My Schedule &rarr; &hellip; button on a day</td>
+    </tr>
+    <tr>
+      <td>Search window for suggestions</td>
+      <td class="tight">14 weekdays</td>
+      <td>Hard-coded; not user-facing</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Where each surface lives</h3>
+<table>
+  <thead>
+    <tr><th>Surface</th><th>Page</th><th>What it shows</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Per-card slot editor</td>
+      <td>Card modal &mdash; Effort row</td>
+      <td>This card's weight + status</td>
+    </tr>
+    <tr>
+      <td>Assignee picker with load</td>
+      <td>Card modal &mdash; Assignees row</td>
+      <td>Each member's load on the due date</td>
+    </tr>
+    <tr>
+      <td>Capacity warning banner</td>
+      <td>Card modal &mdash; above meta-table</td>
+      <td>Fires when assignment goes red</td>
+    </tr>
+    <tr>
+      <td>My Schedule</td>
+      <td>Overview &mdash; Block 4</td>
+      <td>Your 10 weekdays + per-day load</td>
+    </tr>
+    <tr>
+      <td>Per-day cap override popover</td>
+      <td>Overview &mdash; My Schedule day header</td>
+      <td>Custom soft/max for one day</td>
+    </tr>
+    <tr>
+      <td>Team Capacity heatmap</td>
+      <td>Ops &mdash; Team Capacity tab</td>
+      <td>All members &times; 10 weekdays</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>The math</h3>
+<div class="callout">
+  <div class="callout-title">Three pure functions</div>
+  <p style="margin: 0 0 6pt;">All capacity decisions read from these three helpers. If the math
+    looks wrong somewhere, fix it here, not at the call site.</p>
+  <ul style="margin: 0;">
+    <li><strong>loadFor</strong>(member, date) &mdash; sums slot weights of every
+      open card where the member is the primary assignee and dueDate matches.</li>
+    <li><strong>effectiveCapFor</strong>(member, date) &mdash; resolves the cap
+      pair via per-day override &rarr; standing cap &rarr; defaults.</li>
+    <li><strong>zoneFor</strong>(load, caps) &mdash; returns
+      <span class="zone zone-green">green</span> /
+      <span class="zone zone-amber">amber</span> /
+      <span class="zone zone-red">red</span>.</li>
+  </ul>
+</div>
+
+<h1>If something's off</h1>
+<p>
+  If a card's slot weight feels wrong &mdash; that's the assignee's call.
+  AMs can guess, but the designer/operator owns the number. Click the
+  Effort pill on the card; it flips between Estimated and Confirmed.
+</p>
+<p>
+  If a member's standing cap feels wrong &mdash; that's a one-off
+  conversation with the ops manager. Caps live in Account settings &rarr;
+  Members. If someone's load is consistently over despite reasonable
+  effort estimates, the cap might genuinely need to go up; if they're
+  perpetually under, it might need to come down.
+</p>
+<p>
+  If a specific day is wrong &mdash; that's a per-day override. From My
+  Schedule, click the &hellip; on that day's column header and dial in a
+  custom cap. Reset the override to fall back to your standing cap.
+</p>
+
+<p style="margin-top: 28pt; padding-top: 14pt; border-top: 1px solid #e5e5ea; font-size: 9.5pt; color: #6e6e73;">
+  Document version 1 &mdash; first draft. Update as the capacity model evolves.
+</p>
+
+</body>
+</html>
