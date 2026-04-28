@@ -23,7 +23,7 @@
     --btn-bg: #ffffff;
     /* Brand interactive accent — Flizow orange. The variable names
        still read `--hover-blue` etc. for back-compat; the value
-       behind them is the brand color, currently #F15A24. Keep this
+       behind them is the brand color, currently var(--highlight). Keep this
        block in sync with the dark-mode counterparts below — they
        use the same RGB with higher alphas for visibility on dark. */
     --btn-bg-hover: rgba(241,90,36,0.08);
@@ -163,7 +163,7 @@
     --nav-bg: rgba(0,0,0,0.72);
     --btn-bg: #1c1c1e;
     /* Dark-mode counterparts of the brand interactive accent. Same
-       hex as light mode (#F15A24) — orange holds up on black without
+       hex as light mode (var(--highlight)) — orange holds up on black without
        needing the brightness bump Apple's blue gets. Higher alphas
        on the soft tints for visibility against the darker bg. */
     --btn-bg-hover: rgba(241,90,36,0.18);
@@ -252,7 +252,7 @@
   }
   .header-logo:hover { background: var(--hover-tint, rgba(10, 132, 255, 0.08)); }
   .header-logo:focus-visible {
-    outline: 2px solid var(--highlight, #F15A24);
+    outline: 2px solid var(--highlight);
     outline-offset: 2px;
     background: var(--hover-tint, rgba(10, 132, 255, 0.08));
   }
@@ -445,7 +445,7 @@
   }
   .access-pill--admin {
     background: rgba(10, 132, 255, 0.14);
-    color: #F15A24;
+    color: var(--highlight);
   }
   .access-pill--editor {
     background: rgba(48, 209, 88, 0.14);
@@ -828,9 +828,9 @@
   }
   .acct-nav-item:hover { background: var(--bg-soft); color: var(--text); }
   .acct-nav-item[aria-selected="true"] {
-    background: var(--hover-tint); color: #F15A24;
+    background: var(--hover-tint); color: var(--highlight);
   }
-  .acct-nav-item[aria-selected="true"] svg { color: #F15A24; }
+  .acct-nav-item[aria-selected="true"] svg { color: var(--highlight); }
 
   .acct-content {
     flex: 1; min-width: 0;
@@ -920,7 +920,7 @@
   }
   .acct-form-field .acct-input:focus {
     outline: none;
-    border-color: #F15A24;
+    border-color: var(--highlight);
     background: var(--bg);
   }
   .acct-form-field .acct-input[readonly] {
@@ -992,7 +992,7 @@
   .acct-toggle[aria-checked="true"] { background: #34c759; }
   .acct-toggle[aria-checked="true"]::after { transform: translateX(16px); }
   .acct-toggle:focus-visible {
-    outline: 2px solid #F15A24; outline-offset: 2px;
+    outline: 2px solid var(--highlight); outline-offset: 2px;
   }
 
   /* Sign-in section */
@@ -1020,7 +1020,7 @@
     font-size: 12px; color: var(--text-muted); margin-top: 2px;
   }
   .acct-external-link {
-    font-size: var(--fs-md); color: #F15A24;
+    font-size: var(--fs-md); color: var(--highlight);
     text-decoration: none; font-weight: 500;
     display: inline-flex; align-items: center; gap: 4px;
     flex-shrink: 0;
@@ -1033,7 +1033,7 @@
     display: inline-flex; align-items: center; justify-content: center;
     padding: 8px 16px; border-radius: 980px;
     background: transparent;
-    border: 1px solid #F15A24; color: #F15A24;
+    border: 1px solid var(--highlight); color: var(--highlight);
     font-size: var(--fs-md); font-weight: 500;
     cursor: pointer;
     transition: background 0.12s;
@@ -1093,7 +1093,7 @@
      transactional Save/Cancel. */
   .acct-btn-save {
     padding: 8px 18px; border-radius: 980px;
-    background: #F15A24; border: 0;
+    background: var(--highlight); border: 0;
     color: #fff; font-size: var(--fs-md); font-weight: 600;
     cursor: pointer;
     transition: background 0.12s, opacity 0.12s;
@@ -1106,7 +1106,7 @@
     color: var(--text-muted);
   }
   .acct-btn-save:focus-visible {
-    outline: 2px solid #F15A24;
+    outline: 2px solid var(--highlight);
     outline-offset: 2px;
   }
   .acct-btn-text:focus-visible {
@@ -1115,7 +1115,7 @@
   }
   .acct-btn-solid {
     padding: 8px 18px; border-radius: 980px;
-    background: #F15A24; border: 0;
+    background: var(--highlight); border: 0;
     color: #fff; font-size: var(--fs-md); font-weight: 500;
     cursor: pointer;
     transition: background 0.12s, opacity 0.12s;
@@ -1773,7 +1773,7 @@
     flex-shrink: 0;
     background: var(--text-faint);
   }
-  .column[data-dot="todo"]     .column-dot { background: #F15A24; }
+  .column[data-dot="todo"]     .column-dot { background: var(--highlight); }
   .column[data-dot="progress"] .column-dot { background: #ff9f0a; }
   .column[data-dot="blocked"]  .column-dot { background: #ff453a; }
   .column[data-dot="review"]   .column-dot { background: #bf5af2; }
@@ -1973,10 +1973,10 @@
   /* Pinned-for-WIP marker — small orange flag in the top-right of
      the card. Sits above .card content via z-index but pointer-
      events:none so it doesn't intercept clicks meant for the card.
-     The brand-orange (#f15a24) ties pinning to the user's intent +
+     The brand-orange (var(--highlight)) ties pinning to the user's intent +
      the Flizow identity — distinct from the red urgency rail. */
   .card.is-pinned {
-    border-color: color-mix(in srgb, #f15a24 35%, var(--hairline-soft));
+    border-color: color-mix(in srgb, var(--highlight) 35%, var(--hairline-soft));
   }
   .card-wip-pin {
     position: absolute;
@@ -1988,8 +1988,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: #f15a24;
-    background: color-mix(in srgb, #f15a24 14%, transparent);
+    color: var(--highlight);
+    background: color-mix(in srgb, var(--highlight) 14%, transparent);
     z-index: 1;
     pointer-events: none;
   }
@@ -2470,16 +2470,16 @@
   .tb-btn:hover { background: var(--hover-tint); color: var(--hover-blue); }
   .tb-btn svg { width: 16px; height: 16px; }
   /* Active "pinned for next WIP" state — orange-tinted shell + filled
-     bookmark color, ties to the same #f15a24 used by the kanban tile
+     bookmark color, ties to the same var(--highlight) used by the kanban tile
      pin badge and the WIP agenda's Pinned group. Toggle reads as "on"
      at a glance without opening the kebab. */
   .tb-btn.is-pinned {
-    color: #f15a24;
-    background: color-mix(in srgb, #f15a24 14%, transparent);
+    color: var(--highlight);
+    background: color-mix(in srgb, var(--highlight) 14%, transparent);
   }
   .tb-btn.is-pinned:hover {
-    color: #f15a24;
-    background: color-mix(in srgb, #f15a24 22%, transparent);
+    color: var(--highlight);
+    background: color-mix(in srgb, var(--highlight) 22%, transparent);
   }
   .tb-menu {
     display: none;
@@ -2651,7 +2651,7 @@
     width: 8px; height: 8px; border-radius: 50%;
     display: inline-block; flex-shrink: 0;
   }
-  .dot-todo { background: #F15A24; }
+  .dot-todo { background: var(--highlight); }
   .dot-progress { background: #ff9f0a; }
   .dot-review { background: #bf5af2; }
   .dot-done { background: #30d158; }
@@ -3304,7 +3304,7 @@
   .comment-text .mention,
   .comment-input .mention {
     background: rgba(10, 132, 255, 0.18);
-    color: #F15A24;
+    color: var(--highlight);
     padding: 1px 5px;
     border-radius: 4px;
     font-weight: 600;
@@ -3354,7 +3354,7 @@
   .reaction-pill:active { transform: scale(0.92); }
   .reaction-pill.you {
     background: rgba(10, 132, 255, 0.15);
-    color: #F15A24;
+    color: var(--highlight);
     border-color: rgba(10, 132, 255, 0.25);
   }
   .reaction-pill.popping { animation: reaction-pop var(--dur-slow) var(--ease-snap); }
@@ -4437,7 +4437,7 @@
     display: inline-flex;
     border-radius: 980px;
     overflow: hidden;
-    background: #F15A24;
+    background: var(--highlight);
     transition: opacity 0.15s, background 0.15s;
   }
   .send-group.disabled { opacity: 0.4; cursor: not-allowed; background: var(--bg-soft); }
@@ -4632,7 +4632,7 @@
   .settings-input:focus,
   .settings-textarea:focus {
     outline: none;
-    border-color: #F15A24;
+    border-color: var(--highlight);
     background: var(--bg);
   }
 
@@ -4774,7 +4774,7 @@
     border-radius: 50%;
     flex-shrink: 0;
   }
-  .settings-list-row[data-dot="todo"]     .settings-list-dot { background: #F15A24; }
+  .settings-list-row[data-dot="todo"]     .settings-list-dot { background: var(--highlight); }
   .settings-list-row[data-dot="progress"] .settings-list-dot { background: #ff9f0a; }
   .settings-list-row[data-dot="blocked"]  .settings-list-dot { background: #ff453a; }
   .settings-list-row[data-dot="review"]   .settings-list-dot { background: #bf5af2; }
@@ -4795,7 +4795,7 @@
   .settings-list-row .settings-row-input:hover { background: var(--bg); }
   .settings-list-row .settings-row-input:focus {
     background: var(--bg);
-    border-color: #F15A24;
+    border-color: var(--highlight);
     outline: none;
   }
   .settings-wip {
@@ -4826,7 +4826,7 @@
   }
   .settings-wip-input:focus {
     outline: none;
-    border-color: #F15A24;
+    border-color: var(--highlight);
   }
   .settings-row-action {
     width: 28px; height: 28px;
@@ -4954,7 +4954,7 @@
   .members-invite-input::placeholder { color: var(--text-faint); }
   .members-invite-input:focus {
     outline: none;
-    border-color: #F15A24;
+    border-color: var(--highlight);
     background: var(--bg);
   }
   .members-invite-role {
@@ -4969,7 +4969,7 @@
   }
   .members-invite-btn {
     padding: var(--sp-9) var(--sp-xl);
-    background: #F15A24;
+    background: var(--highlight);
     border: none;
     border-radius: 8px;
     color: #fff;
@@ -5069,7 +5069,7 @@
   .mbrs-invite-btn {
     padding: 8px 16px;
     border-radius: 8px;
-    background: #F15A24;
+    background: var(--highlight);
     color: #fff;
     border: none;
     font-size: 13px; font-weight: 600;
@@ -5080,7 +5080,7 @@
   .mbrs-invite-btn:hover { background: #0066d6; }
   .mbrs-invite-btn:disabled { opacity: 0.55; cursor: not-allowed; }
   .mbrs-invite-btn:focus-visible {
-    outline: 2px solid #F15A24;
+    outline: 2px solid var(--highlight);
     outline-offset: 2px;
   }
 
@@ -5112,7 +5112,7 @@
   }
   .mbrs-link-input:focus {
     outline: none;
-    border-color: #F15A24;
+    border-color: var(--highlight);
   }
   .mbrs-link-copy {
     padding: 7px 14px;
@@ -5131,7 +5131,7 @@
   }
   .mbrs-link-copy[data-copied="true"] {
     background: var(--bg-soft);
-    color: #F15A24;
+    color: var(--highlight);
     border-color: rgba(10, 132, 255, 0.4);
   }
   .mbrs-link-hint {
@@ -5266,7 +5266,7 @@
   }
   .mbrs-tag--owner {
     background: rgba(10, 132, 255, 0.10);
-    color: #F15A24;
+    color: var(--highlight);
   }
 
   /* Inline role select on a member row — narrower than the invite
@@ -5378,11 +5378,11 @@
     letter-spacing: 0.02em;
   }
   .avatar-color-1 { background: linear-gradient(135deg, #ff6b9d, #ff3366); }
-  .avatar-color-2 { background: linear-gradient(135deg, #F15A24, #0a6fcc); }
+  .avatar-color-2 { background: linear-gradient(135deg, var(--highlight), #0a6fcc); }
   .avatar-color-3 { background: linear-gradient(135deg, #30d158, #0aaf41); }
   .avatar-color-4 { background: linear-gradient(135deg, #ff9f0a, #cc7000); }
   .avatar-color-5 { background: linear-gradient(135deg, #bf5af2, #8e3ecc); }
-  .avatar-color-6 { background: linear-gradient(135deg, #64d2ff, #F15A24); }
+  .avatar-color-6 { background: linear-gradient(135deg, #64d2ff, var(--highlight)); }
 
   .members-identity {
     flex: 1;
@@ -5511,7 +5511,7 @@
     transition: transform 0.15s;
     box-shadow: 0 1px 3px rgba(0,0,0,0.3);
   }
-  .members-toggle.on { background: #F15A24; }
+  .members-toggle.on { background: var(--highlight); }
   .members-toggle.on::after { transform: translateX(16px); }
 
   /* ============================================================
@@ -5630,7 +5630,7 @@
     width: 28px; height: 28px;
     flex-shrink: 0;
     background: rgba(241,90,36,0.14);
-    color: #F15A24;
+    color: var(--highlight);
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -5720,7 +5720,7 @@
   .analytics-blocked-banner-link {
     font-size: var(--fs-sm);
     font-weight: 500;
-    color: #F15A24;
+    color: var(--highlight);
     text-decoration: none;
     cursor: pointer;
   }
@@ -8922,7 +8922,7 @@
   /* Avatar palette gradients — literal blues here are intentional
      (not the brand interactive accent). Uppercase hex protects them
      from any future case-sensitive sweep that flips lowercase
-     #F15A24 / #F15A24 to brand color. */
+     var(--highlight) / var(--highlight) to brand color. */
   .logo-sky    { background: linear-gradient(135deg, #64d2ff, #0A84FF); }
   .logo-teal   { background: linear-gradient(135deg, #5ac8fa, #007AFF); }
   .logo-green  { background: linear-gradient(135deg, #30d158, #0aaf41); }
@@ -10261,7 +10261,7 @@
     color: var(--text-muted);
   }
   .meeting-type-icon svg { width: 13px; height: 13px; }
-  .meeting-type-icon[data-type="meeting"]  { background: color-mix(in srgb, #F15A24 14%, transparent); color: #F15A24; }
+  .meeting-type-icon[data-type="meeting"]  { background: color-mix(in srgb, var(--highlight) 14%, transparent); color: var(--highlight); }
   .meeting-type-icon[data-type="call"]     { background: color-mix(in srgb, #30d158 14%, transparent); color: #30d158; }
   .meeting-type-icon[data-type="email"]    { background: color-mix(in srgb, #bf5af2 14%, transparent); color: #bf5af2; }
   .meeting-type-icon[data-type="in-person"]{ background: color-mix(in srgb, #ff9f0a 14%, transparent); color: #ff9f0a; }
@@ -12817,7 +12817,7 @@
   }
   .wip-agenda-group--new-clients .wip-agenda-group-title svg { color: #22a559; }
   .wip-agenda-group--urgent      .wip-agenda-group-title svg { color: #d93025; }
-  .wip-agenda-group--pinned      .wip-agenda-group-title svg { color: #f15a24; }
+  .wip-agenda-group--pinned      .wip-agenda-group-title svg { color: var(--highlight); }
   .wip-agenda-group--ontrack     .wip-agenda-group-title svg { color: #0b84ff; }
   .wip-agenda-group--manual      .wip-agenda-group-title svg { color: #8e4ec6; }
   .wip-agenda-group-count {
@@ -12863,12 +12863,12 @@
     opacity: 0.4;
   }
   .wip-agenda-card-row.is-drop-target {
-    background: color-mix(in srgb, var(--highlight, #F15A24) 8%, transparent);
-    box-shadow: inset 0 2px 0 0 var(--highlight, #F15A24);
+    background: color-mix(in srgb, var(--highlight) 8%, transparent);
+    box-shadow: inset 0 2px 0 0 var(--highlight);
   }
   .wip-agenda-card-row.is-drop-target-bottom {
-    background: color-mix(in srgb, var(--highlight, #F15A24) 8%, transparent);
-    box-shadow: inset 0 -2px 0 0 var(--highlight, #F15A24);
+    background: color-mix(in srgb, var(--highlight) 8%, transparent);
+    box-shadow: inset 0 -2px 0 0 var(--highlight);
   }
   .wip-agenda-drag {
     display: inline-flex; align-items: center; justify-content: center;
@@ -12956,12 +12956,12 @@
     opacity: 0.4;
   }
   .wip-agenda-flat-row.is-drop-target {
-    background: color-mix(in srgb, var(--highlight, #F15A24) 8%, transparent);
-    box-shadow: inset 0 2px 0 0 var(--highlight, #F15A24);
+    background: color-mix(in srgb, var(--highlight) 8%, transparent);
+    box-shadow: inset 0 2px 0 0 var(--highlight);
   }
   .wip-agenda-flat-row.is-drop-target-bottom {
-    background: color-mix(in srgb, var(--highlight, #F15A24) 8%, transparent);
-    box-shadow: inset 0 -2px 0 0 var(--highlight, #F15A24);
+    background: color-mix(in srgb, var(--highlight) 8%, transparent);
+    box-shadow: inset 0 -2px 0 0 var(--highlight);
   }
   /* .wip-agenda-flat-note and .wip-agenda-group--custom overrides
      deleted — no React renders either class. Audit: wip M1. */
@@ -13393,8 +13393,8 @@
     color: #8e4ec6;
   }
   .wip-capture-type-tag--action {
-    background: color-mix(in srgb, #f15a24 14%, transparent);
-    color: #f15a24;
+    background: color-mix(in srgb, var(--highlight) 14%, transparent);
+    color: var(--highlight);
   }
 
   /* Running log of captures from this meeting. Each row carries the
@@ -15295,7 +15295,7 @@
   .welcome-banner-cta-primary {
     padding: 8px 14px;
     border-radius: 8px;
-    background: #F15A24;
+    background: var(--highlight);
     color: #fff;
     border: none;
     font-size: 13px; font-weight: 600;
@@ -15307,7 +15307,7 @@
     padding: 8px 14px;
     border-radius: 8px;
     background: transparent;
-    color: #F15A24;
+    color: var(--highlight);
     border: 1px solid rgba(0, 122, 255, 0.4);
     font-size: 13px; font-weight: 600;
     cursor: pointer;
@@ -15315,7 +15315,7 @@
   }
   .welcome-banner-cta-secondary:hover {
     background: rgba(0, 122, 255, 0.08);
-    border-color: #F15A24;
+    border-color: var(--highlight);
   }
   .welcome-banner-dismiss {
     width: 28px; height: 28px;
@@ -15349,7 +15349,7 @@
      page. Audit: login HIGH (invisible focus on the only action). */
   .login-cta { outline: none; }
   .login-cta:focus-visible {
-    outline: 2px solid #F15A24;
+    outline: 2px solid var(--highlight);
     outline-offset: 3px;
     box-shadow: inset 0 0 0 2px rgba(255,255,255,0.9);
   }
@@ -15502,7 +15502,7 @@
     top: 0;
     z-index: 9999;
     padding: 10px 16px;
-    background: #F15A24;
+    background: var(--highlight);
     color: #fff;
     font-size: 14px;
     font-weight: 600;
@@ -15523,7 +15523,7 @@
   .welcome-banner-cta-primary:focus-visible,
   .welcome-banner-cta-secondary:focus-visible,
   .welcome-banner-dismiss:focus-visible {
-    outline: 2px solid #F15A24;
+    outline: 2px solid var(--highlight);
     outline-offset: 2px;
   }
 
