@@ -21,7 +21,7 @@ import type { ComponentType, SVGProps } from 'react';
 import { navigate } from '../router';
 import { flizowStore } from '../store/flizowStore';
 import { useFlizow } from '../store/useFlizow';
-import type { Client, ManualAgendaItem, Service, Task } from '../types/flizow';
+import type { Client, ManualAgendaItem, MeetingCapture, MeetingCaptureType, Service, Task } from '../types/flizow';
 import { daysBetween } from '../utils/dateFormat';
 import { categoryLabel } from '../utils/clientDerived';
 import { useActivatableRow } from '../hooks/useActivatableRow';
@@ -104,7 +104,18 @@ type ModalState =
  */
 type LiveMeetingState =
   | { phase: 'idle' }
-  | { phase: 'active'; currentKey: string; doneKeys: Set<string>; itemStartedAt: number };
+  | {
+      phase: 'active';
+      currentKey: string;
+      doneKeys: Set<string>;
+      itemStartedAt: number;
+      /** Wall-clock time the meeting kicked off. The Quick Capture log
+       *  filters captures to those created at-or-after this timestamp,
+       *  so previous meetings' captures don't bleed into this session.
+       *  Captures themselves still persist in the store across meetings;
+       *  only the *visible* list in the live stage is scoped. */
+      meetingStartedAt: number;
+    };
 
 export function WipPage() {
   const { data } = useFlizow();
@@ -167,11 +178,13 @@ export function WipPage() {
 
   function startMeeting() {
     if (flatAgenda.length === 0) return;
+    const now = Date.now();
     setMeeting({
       phase: 'active',
       currentKey: flatAgenda[0].key,
       doneKeys: new Set(),
-      itemStartedAt: Date.now(),
+      itemStartedAt: now,
+      meetingStartedAt: now,
     });
     setTab('live');
   }
@@ -296,6 +309,8 @@ export function WipPage() {
                 currentKey={meeting.currentKey}
                 doneKeys={meeting.doneKeys}
                 itemStartedAt={meeting.itemStartedAt}
+                meetingStartedAt={meeting.meetingStartedAt}
+                meetingCaptures={data.meetingCaptures}
                 estMinutes={estMinutes}
                 onJump={jumpTo}
                 onToggleDone={toggleDone}
@@ -1319,13 +1334,21 @@ function LiveMeetingPrestart({ itemCount, estMinutes, nextMeeting, onStart }: {
  * the UI.
  */
 function LiveMeeting({
-  flatAgenda, currentKey, doneKeys, itemStartedAt, estMinutes,
+  flatAgenda, currentKey, doneKeys, itemStartedAt, meetingStartedAt,
+  meetingCaptures, estMinutes,
   onJump, onToggleDone, onPrev, onNext, onEnd,
 }: {
   flatAgenda: AgendaItem[];
   currentKey: string;
   doneKeys: Set<string>;
   itemStartedAt: number;
+  /** Wall-clock time the meeting kicked off — used to filter captures
+   *  to those raised during this session. Earlier captures stay in the
+   *  store but don't pollute the live log. */
+  meetingStartedAt: number;
+  /** Full Quick-Capture log from the store. Filtered locally to
+   *  captures with createdAt &gt;= meetingStartedAt before rendering. */
+  meetingCaptures: MeetingCapture[];
   estMinutes: number;
   onJump: (key: string) => void;
   onToggleDone: (key: string) => void;
@@ -1334,6 +1357,11 @@ function LiveMeeting({
   onEnd: () => void;
 }) {
   const [now, setNow] = useState(() => Date.now());
+  // Active Quick-Capture composer. `null` = no composer open;
+  // anything else means we're typing a note/decision/action and the
+  // input is focused. Esc/Enter close it.
+  const [composer, setComposer] = useState<{ type: MeetingCaptureType; text: string } | null>(null);
+  const composerRef = useRef<HTMLInputElement | null>(null);
 
   // One-second tick for the wall clock and per-item elapsed timer. A
   // single interval powers both — no need for two.
@@ -1342,9 +1370,19 @@ function LiveMeeting({
     return () => window.clearInterval(id);
   }, []);
 
+  // Auto-focus the composer input when it opens. Doing this in an effect
+  // (instead of autoFocus on the input) keeps the focus jump scoped to
+  // composer toggles, not every re-render.
+  useEffect(() => {
+    if (composer && composerRef.current) {
+      composerRef.current.focus();
+      composerRef.current.select();
+    }
+  }, [composer?.type]);
+
   // Keyboard shortcuts. Ignore when the focused element is an input or
-  // textarea so we never steal keystrokes from a Send pre-read composer
-  // (not yet built) or a future notes field.
+  // textarea so we never steal keystrokes from the Quick Capture
+  // composer or any other field that lands here later.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       const target = e.target as HTMLElement | null;
@@ -1353,6 +1391,11 @@ function LiveMeeting({
       if (e.key === 'ArrowLeft' || e.key === 'k')  { e.preventDefault(); onPrev(); return; }
       if (e.key === ' ') { e.preventDefault(); onToggleDone(currentKey); return; }
       if (e.key === 'Escape') { e.preventDefault(); onEnd(); return; }
+      // Quick Capture shortcuts. Lower-case match only — uppercase is
+      // typically Shift+letter and could clash with browser shortcuts.
+      if (e.key === 'n' || e.key === 'N') { e.preventDefault(); setComposer({ type: 'note', text: '' }); return; }
+      if (e.key === 'd' || e.key === 'D') { e.preventDefault(); setComposer({ type: 'decision', text: '' }); return; }
+      if (e.key === 'a' || e.key === 'A') { e.preventDefault(); setComposer({ type: 'action', text: '' }); return; }
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -1504,10 +1547,144 @@ function LiveMeeting({
                   </div>
                 )}
 
+                {/* Quick Capture — lifted from the original mockup. Three
+                    primary actions (note / decision / action) raise to
+                    the meeting log; each has a one-key shortcut so the
+                    AM running the meeting never has to take their
+                    hands off the keyboard. Captures persist via the
+                    store, so a refresh mid-meeting doesn't lose them.
+                    Filter to this session only; older captures still
+                    sit in data.meetingCaptures for future export. */}
+                <div className="wip-quick-capture">
+                  <div className="wip-quick-capture-head">
+                    <div className="wip-live-section-label">Quick capture</div>
+                    <div className="wip-quick-capture-keys" aria-hidden="true">
+                      <span><kbd>N</kbd>ote</span>
+                      <span><kbd>D</kbd>ecision</span>
+                      <span><kbd>A</kbd>ction</span>
+                    </div>
+                  </div>
+
+                  {composer ? (
+                    <form
+                      className="wip-quick-capture-composer"
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (!composer.text.trim() || !current) return;
+                        flizowStore.addMeetingCapture({
+                          type: composer.type,
+                          text: composer.text,
+                          agendaItemKey: current.key,
+                          agendaItemLabel: current.label,
+                        });
+                        setComposer(null);
+                      }}
+                    >
+                      <span className={`wip-capture-type-tag wip-capture-type-tag--${composer.type}`}>
+                        {composer.type === 'note' ? 'Note' : composer.type === 'decision' ? 'Decision' : 'Action'}
+                      </span>
+                      <input
+                        ref={composerRef}
+                        type="text"
+                        className="wip-quick-capture-input"
+                        value={composer.text}
+                        onChange={(e) => setComposer({ ...composer, text: e.target.value })}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Escape') {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setComposer(null);
+                          }
+                        }}
+                        placeholder={
+                          composer.type === 'note'
+                            ? 'What was said worth remembering?'
+                            : composer.type === 'decision'
+                            ? 'What did we decide?'
+                            : 'What needs to happen, and (briefly) by whom?'
+                        }
+                        aria-label={`${composer.type} text`}
+                      />
+                      <button
+                        type="button"
+                        className="wip-btn wip-btn-ghost"
+                        onClick={() => setComposer(null)}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="wip-btn wip-btn-primary"
+                        disabled={!composer.text.trim()}
+                      >
+                        Save
+                      </button>
+                    </form>
+                  ) : (
+                    <div className="wip-quick-capture-buttons">
+                      <button
+                        type="button"
+                        className="wip-quick-capture-btn"
+                        onClick={() => setComposer({ type: 'note', text: '' })}
+                      >
+                        + Add note
+                      </button>
+                      <button
+                        type="button"
+                        className="wip-quick-capture-btn"
+                        onClick={() => setComposer({ type: 'decision', text: '' })}
+                      >
+                        + Log decision
+                      </button>
+                      <button
+                        type="button"
+                        className="wip-quick-capture-btn"
+                        onClick={() => setComposer({ type: 'action', text: '' })}
+                      >
+                        + Assign action
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Running log of this meeting's captures. Filter on
+                      meetingStartedAt so prior meetings' entries sit
+                      quietly in the store without bleeding in. Newest
+                      first so the most recent capture is always at the
+                      top of the eyeline. */}
+                  {(() => {
+                    const sessionCaptures = meetingCaptures
+                      .filter(c => new Date(c.createdAt).getTime() >= meetingStartedAt)
+                      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+                    if (sessionCaptures.length === 0) return null;
+                    return (
+                      <ul className="wip-quick-capture-log" aria-label="Captured this meeting">
+                        {sessionCaptures.map(c => (
+                          <li key={c.id} className={`wip-capture-row wip-capture-row--${c.type}`}>
+                            <span className={`wip-capture-type-tag wip-capture-type-tag--${c.type}`}>
+                              {c.type === 'note' ? 'Note' : c.type === 'decision' ? 'Decision' : 'Action'}
+                            </span>
+                            <span className="wip-capture-text">{c.text}</span>
+                            <span className="wip-capture-context">{c.agendaItemLabel}</span>
+                            <button
+                              type="button"
+                              className="wip-capture-remove"
+                              aria-label={`Remove ${c.type}`}
+                              title="Remove"
+                              onClick={() => flizowStore.deleteMeetingCapture(c.id)}
+                            >
+                              ×
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    );
+                  })()}
+                </div>
+
                 <div>
                   <div className="wip-live-section-label">Keyboard</div>
                   <p style={{ margin: 0, color: 'var(--text-faint)', fontSize: 'var(--fs-sm)' }}>
-                    <kbd>←</kbd> prev · <kbd>→</kbd> next · <kbd>Space</kbd> toggle done · <kbd>Esc</kbd> end meeting
+                    <kbd>←</kbd> prev · <kbd>→</kbd> next · <kbd>Space</kbd> toggle done · <kbd>N</kbd>/<kbd>D</kbd>/<kbd>A</kbd> capture · <kbd>Esc</kbd> end meeting
                   </p>
                 </div>
               </>

@@ -1083,6 +1083,10 @@ export function generateDemoData(): FlizowData {
     // itself. Keeps the section quiet on first load so the auto-built
     // agenda is what the user sees first.
     manualAgendaItems: [],
+    // Empty Quick-Capture log — captures only get raised during a
+    // Live Meeting via the N/D/A keys, so demo users see a clean log
+    // until they actually run a meeting in the Live tab.
+    meetingCaptures: [],
     memberDayOverrides: [],
     // Ops board seed bundled directly here. Used to come from
     // flizowStore.migrate(), but that auto-seed is now gated for

@@ -13268,6 +13268,194 @@
   }
   .wip-live-section-label svg { flex-shrink: 0; }
 
+  /* ── Quick Capture (Live Meeting) ──
+     Three-button row that lets the AM running the meeting raise a
+     note / decision / action without taking hands off the keyboard.
+     N / D / A trigger the matching composer; Enter saves; Esc cancels.
+     Captures persist via the store and render as a running log below
+     the buttons, scoped to the current meeting session. */
+  .wip-quick-capture {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .wip-quick-capture-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .wip-quick-capture-keys {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: var(--fs-xs);
+    color: var(--text-faint);
+    letter-spacing: 0.02em;
+  }
+  .wip-quick-capture-keys span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .wip-quick-capture-keys kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    background: var(--kbd-bg);
+    border: 1px solid var(--kbd-border);
+    border-radius: 5px;
+    font-family: ui-monospace, "SF Mono", Monaco, monospace;
+    font-size: var(--fs-nano);
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  /* Buttons row — three primary actions, equal width on wide screens,
+     tighten on narrow. Hover lifts the brand-blue accent so the row
+     reads as actionable. */
+  .wip-quick-capture-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .wip-quick-capture-btn {
+    flex: 1 1 0;
+    min-width: 140px;
+    padding: 10px 14px;
+    background: var(--bg-elev);
+    border: 1px solid var(--highlight);
+    border-radius: 10px;
+    color: var(--highlight);
+    font-family: inherit;
+    font-size: var(--fs-md);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--dur-fast), border-color var(--dur-fast);
+  }
+  .wip-quick-capture-btn:hover {
+    background: color-mix(in srgb, var(--highlight) 10%, var(--bg-elev));
+  }
+  .wip-quick-capture-btn:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
+  }
+
+  /* Composer — appears in place of the buttons while the user is
+     typing. Type tag on the left names what's being captured so the
+     user always knows which mode they're in. */
+  .wip-quick-capture-composer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+  }
+  .wip-quick-capture-input {
+    flex: 1;
+    min-width: 0;
+    padding: 6px 8px;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: var(--fs-md);
+    color: var(--text);
+    outline: none;
+  }
+  .wip-quick-capture-input::placeholder {
+    color: var(--text-faint);
+  }
+
+  /* Type tag — small color-coded pill that names the capture
+     category. Same colors used in the running log below for visual
+     continuity. */
+  .wip-capture-type-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 9px;
+    border-radius: 99px;
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .wip-capture-type-tag--note {
+    background: color-mix(in srgb, #0b84ff 14%, transparent);
+    color: #0b84ff;
+  }
+  .wip-capture-type-tag--decision {
+    background: color-mix(in srgb, #8e4ec6 14%, transparent);
+    color: #8e4ec6;
+  }
+  .wip-capture-type-tag--action {
+    background: color-mix(in srgb, #f15a24 14%, transparent);
+    color: #f15a24;
+  }
+
+  /* Running log of captures from this meeting. Each row carries the
+     type tag, the captured text, the agenda-item context, and a
+     remove × that's quiet until hover. */
+  .wip-quick-capture-log {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .wip-capture-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 8px;
+    font-size: var(--fs-sm);
+  }
+  .wip-capture-text {
+    color: var(--text);
+    line-height: var(--lh-body);
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .wip-capture-context {
+    color: var(--text-faint);
+    font-size: var(--fs-xs);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 18ch;
+  }
+  .wip-capture-remove {
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: transparent;
+    color: var(--text-faint);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: var(--fs-md);
+    line-height: 1;
+    opacity: 0.6;
+    transition: opacity var(--dur-fast), background var(--dur-fast), color var(--dur-fast);
+  }
+  .wip-capture-row:hover .wip-capture-remove,
+  .wip-capture-row:focus-within .wip-capture-remove {
+    opacity: 1;
+  }
+  .wip-capture-remove:hover {
+    background: color-mix(in srgb, var(--status-fire) 14%, transparent);
+    color: var(--status-fire);
+  }
+
   /* Live-meeting pre-pass rules (~155 lines) used to sit here:
      .wip-live-flag* severity tiles, .wip-live-agenda-card* per-item
      cards, .wip-live-items sub-list, .wip-live-capture* decision/

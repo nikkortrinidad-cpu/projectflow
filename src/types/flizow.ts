@@ -900,6 +900,36 @@ export interface ManualAgendaItem {
   createdAt: string;
 }
 
+// ── Live meeting captures ────────────────────────────────────────────────
+
+/**
+ * A note, decision, or action captured during a Live Meeting via the
+ * Quick Capture row. Each entry is tied to the agenda item that was
+ * focused when it was captured, so the meeting log reads as a
+ * timeline of what was discussed. Action-type captures are the
+ * lightest possible TODO — for a full assigned task with due date,
+ * the AM still creates a real card on the kanban board.
+ */
+export type MeetingCaptureType = 'note' | 'decision' | 'action';
+
+export interface MeetingCapture {
+  id: string;
+  type: MeetingCaptureType;
+  /** Free-text body. */
+  text: string;
+  /** Key of the agenda item the user was on when they captured this.
+   *  Lets the meeting log group captures by topic. */
+  agendaItemKey: string;
+  /** Snapshot of the agenda item's label at capture time. Stored
+   *  rather than resolved later because the underlying item (a
+   *  client, task, or manual entry) might be deleted by the next
+   *  time someone reads the log. */
+  agendaItemLabel: string;
+  /** ISO timestamp. Used to filter captures to the current meeting
+   *  session and to sort the running log newest-last. */
+  createdAt: string;
+}
+
 // ── Aggregate ────────────────────────────────────────────────────────────
 
 /**
@@ -931,6 +961,13 @@ export interface FlizowData {
    *  on-track) derive from live data at render time and don't live in
    *  the store. */
   manualAgendaItems: ManualAgendaItem[];
+  /** Live-meeting Quick Capture log. Notes, decisions, and actions
+   *  captured during the WIP meeting via the N/D/A keys (or the
+   *  matching buttons on the Live tab). Persists past meeting end so
+   *  the log can be reviewed later or exported into the pre-read for
+   *  next week. Each entry remembers which agenda item was focused at
+   *  capture time so the log groups by topic. */
+  meetingCaptures: MeetingCapture[];
   /** Per-day cap overrides for individual members. Each row says
    *  "this member's cap on this date is X/Y" and beats the member's
    *  standing capSoft/capMax for that date. Used for PTO,

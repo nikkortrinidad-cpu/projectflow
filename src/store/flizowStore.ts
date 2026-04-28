@@ -67,6 +67,7 @@ function emptyData(): FlizowData {
     taskComments: [],
     taskActivity: [],
     manualAgendaItems: [],
+    meetingCaptures: [],
     memberDayOverrides: [],
     opsTasks: [],
     today: todayISO(),
@@ -166,6 +167,9 @@ function migrate(parsed: Partial<FlizowData>): FlizowData {
     taskComments: parsed.taskComments ?? base.taskComments,
     taskActivity: parsed.taskActivity ?? base.taskActivity,
     manualAgendaItems: parsed.manualAgendaItems ?? base.manualAgendaItems,
+    meetingCaptures: Array.isArray(parsed.meetingCaptures)
+      ? parsed.meetingCaptures
+      : base.meetingCaptures,
     // Capacity model added 2026-04-28; older docs need an empty array.
     memberDayOverrides: Array.isArray(parsed.memberDayOverrides)
       ? parsed.memberDayOverrides
@@ -1071,6 +1075,7 @@ class FlizowStore {
     this.data.taskComments = [];
     this.data.taskActivity = [];
     this.data.manualAgendaItems = [];
+    this.data.meetingCaptures = [];
     this.data.memberDayOverrides = [];
     this.data.opsTasks = [];
     this.data.scheduleTaskMap = {};
@@ -2246,6 +2251,39 @@ class FlizowStore {
     const before = this.data.manualAgendaItems.length;
     this.data.manualAgendaItems = this.data.manualAgendaItems.filter(m => m.id !== id);
     if (this.data.manualAgendaItems.length !== before) this.save();
+  }
+
+  // ── Live-meeting Quick Capture ───────────────────────────────────────
+
+  /**
+   * Append a Quick-Capture entry — note, decision, or action raised
+   * during a Live Meeting. Bound to the agenda item that was focused at
+   * the moment of capture so the log groups by topic.
+   */
+  addMeetingCapture(input: {
+    type: 'note' | 'decision' | 'action';
+    text: string;
+    agendaItemKey: string;
+    agendaItemLabel: string;
+  }): void {
+    const trimmed = input.text.trim();
+    if (!trimmed) return;
+    const item = {
+      id: `cap-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+      type: input.type,
+      text: trimmed,
+      agendaItemKey: input.agendaItemKey,
+      agendaItemLabel: input.agendaItemLabel,
+      createdAt: new Date().toISOString(),
+    };
+    this.data.meetingCaptures = [...this.data.meetingCaptures, item];
+    this.save();
+  }
+
+  deleteMeetingCapture(id: string): void {
+    const before = this.data.meetingCaptures.length;
+    this.data.meetingCaptures = this.data.meetingCaptures.filter(c => c.id !== id);
+    if (this.data.meetingCaptures.length !== before) this.save();
   }
 
   // ── Members ──────────────────────────────────────────────────────────
