@@ -7389,8 +7389,20 @@
      960px max-width with NO horizontal padding so the blocks sit
      flush at the edge of the page wrapper, matching the Agenda
      tab's behaviour. Vertical padding stays so the page doesn't
-     push hard against the top/bottom of the viewport. */
-  .page { max-width: 960px; margin: 0 auto; padding: var(--sp-36) 0 96px; }
+     push hard against the top/bottom of the viewport.
+
+     `width: 100%` is critical: .view-overview is a flex column
+     parent, and a child with `margin: 0 auto` + `max-width` shrinks
+     to content width unless it's told to fill first. Without this,
+     .page rendered at ~32px on every viewport (padding-only) — which
+     is why the Overview elements looked tiny while the Agenda's
+     .wip-agenda (which already had width:100%) filled correctly. */
+  .page {
+    width: 100%;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: var(--sp-36) 0 96px;
+  }
 
   .page-header { margin-bottom: 40px; }
   .page-greeting {
