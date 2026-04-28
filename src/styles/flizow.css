@@ -7385,8 +7385,13 @@
 
   /* ═══════ OVERVIEW VIEW (merged from 00-overview-refined.html) ═══════ */
 
-  /* --- PAGE LAYOUT --- */
-  .page { max-width: 1200px; margin: 0 auto; padding: var(--sp-36) var(--sp-4xl) 96px; }
+  /* --- PAGE LAYOUT ---
+     960px cap matches the Weekly WIP agenda spine, keeps the Overview
+     blocks (Portfolio Health, My Tasks, My Schedule, My Boards) at a
+     comfortable scan width across the whole app. Was 1200px — narrowing
+     pulls the metric cards closer to readable line lengths and aligns
+     with the rest of the Flizow surfaces. */
+  .page { max-width: 960px; margin: 0 auto; padding: var(--sp-36) var(--sp-4xl) 96px; }
 
   .page-header { margin-bottom: 40px; }
   .page-greeting {
