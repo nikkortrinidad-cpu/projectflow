@@ -12340,7 +12340,35 @@
   }
 
   /* Hide the original big header (title + segmented tabs + New Client) in split mode */
-  .clients-split-wrapper .clients-header { display: none; }
+  /* Page header in split mode — sits at the top of the list pane.
+     Tighter padding than the standalone-page version (which has the
+     full 1024 column to breathe in). Eyebrow + title + sub stack
+     matches the Overview/WIP/Ops vocabulary. */
+  .clients-split-wrapper .clients-header {
+    display: block;
+    padding: var(--sp-2xl) var(--sp-2xl) var(--sp-base);
+    margin-bottom: 0;
+    border-bottom: 0;
+    flex-shrink: 0;
+  }
+  .clients-split-wrapper .clients-heading {
+    display: block;
+  }
+  .clients-split-wrapper .clients-header .page-greeting {
+    margin-bottom: var(--sp-xs);
+  }
+  .clients-split-wrapper .clients-header .page-title {
+    font-size: var(--fs-3xl);
+    line-height: var(--lh-heading);
+    letter-spacing: -0.018em;
+    margin: 0 0 var(--sp-xs);
+  }
+  .clients-split-wrapper .clients-header .page-date {
+    font-size: var(--fs-sm);
+    color: var(--text-soft);
+    margin: 0;
+    line-height: var(--lh-body);
+  }
 
   /* Hide the original 2-card pinned grid in split mode */
   .clients-split-wrapper .clients-pinned { display: none; }
@@ -12744,14 +12772,20 @@
   }
   .clients-split-wrapper .clients-list-header { display: none; }
 
-  /* Compact row for 380px pane */
+  /* Roomier row for the 480px pane. Was very tight (3px row gap +
+     10px column gap + 10/14 padding) which made the list feel
+     cramped. New rhythm:
+       - 6px between identity row and services row (was 3px)
+       - 12px column gap (was 10px)
+       - 14px vertical padding × 18px horizontal (was 10/14)
+     Identity stays single-row so the row reads as a unit. */
   .clients-split-wrapper .client-row {
     grid-template-columns: 8px 1fr auto;
     grid-template-areas:
       "status ident time"
       ". services .";
-    gap: 3px 10px;
-    padding: var(--sp-md) var(--sp-lg);
+    gap: var(--sp-xs) var(--sp-base);
+    padding: var(--sp-lg) var(--sp-18);
     border-bottom: 1px solid var(--hairline-soft);
     align-items: center;
     position: relative;
@@ -12781,11 +12815,13 @@
   .clients-split-wrapper .client-row > .client-chevron { display: none; }
 
   .clients-split-wrapper .client-identity {
-    display: flex; align-items: center; gap: var(--sp-9);
+    display: flex; align-items: center; gap: var(--sp-base);
   }
+  /* Logo bumped 28→32 so it has more presence next to the name +
+     industry stack. Gives the row a clear primary subject. */
   .clients-split-wrapper .client-logo {
-    width: 28px; height: 28px; border-radius: 7px;
-    font-size: var(--fs-xs); flex-shrink: 0;
+    width: 32px; height: 32px; border-radius: 8px;
+    font-size: var(--fs-sm); flex-shrink: 0;
   }
   .clients-split-wrapper .client-identity-body { min-width: 0; }
   .clients-split-wrapper .client-name {
@@ -12797,13 +12833,18 @@
     font-size: var(--fs-sm); line-height: var(--lh-body);
     color: var(--text-soft);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    margin-top: 2px;
+    /* Bumped 2px → 3px (var(--sp-nano)) so the industry text has a
+       hair more breathing room from the name above. */
+    margin-top: var(--sp-nano);
   }
 
-  /* Services in compact row — smaller pills */
+  /* Services in compact row — smaller pills, hanging-indent under
+     the identity body so they line up with the name/industry stack
+     instead of the row's left edge. Indent updated to 44px to match
+     the new logo (32px) + gap (var(--sp-base) = 12px). */
   .clients-split-wrapper .client-services {
     display: flex; gap: var(--sp-micro); flex-wrap: nowrap;
-    overflow: hidden; padding-left: 37px;
+    overflow: hidden; padding-left: 44px;
   }
   .clients-split-wrapper .client-services .service-pill {
     font-size: var(--fs-xs); line-height: var(--lh-dense);

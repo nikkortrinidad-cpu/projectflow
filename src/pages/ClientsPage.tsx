@@ -111,15 +111,24 @@ export function ClientsPage() {
   return (
     <div className="view view-clients active">
       <main className="clients-page">
-        {/* Full-width header — CSS hides it inside .clients-split-wrapper,
-            but we keep it so the same component still renders correctly
-            if/when the page gets used outside the split. */}
+        {/* Page header — same eyebrow + title + sub vocabulary the
+            Overview / WIP / Ops pages use, so the Clients pane has a
+            real identity instead of just a list. Renders in BOTH the
+            full-page mode (when this component lives outside the
+            split-wrapper) and the split-pane mode (top of the list
+            pane), with split-pane overrides handling tighter padding. */}
         <div className="clients-header">
           <div className="clients-heading">
-            <div className="clients-title">Clients</div>
-            <div className="clients-count">
-              {data.clients.filter(c => !c.archived).length} active
-            </div>
+            <div className="page-greeting">CRM</div>
+            <h1 className="page-title">Clients</h1>
+            <p className="page-date">
+              {(() => {
+                const active = data.clients.filter(c => !c.archived).length;
+                if (active === 0) return 'Your portfolio. Start by adding a client.';
+                if (active === 1) return '1 active client in your portfolio.';
+                return `${active} active clients in your portfolio.`;
+              })()}
+            </p>
           </div>
         </div>
 
