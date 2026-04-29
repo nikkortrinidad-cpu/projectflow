@@ -468,6 +468,13 @@ function ListPane({
                       className="templates-archive-action"
                       onClick={() => onRestore(t)}
                       aria-label={`Restore ${t.name}`}
+                      // Mirror the screen-reader name as a hover hint so
+                      // mouse users see the template name when the row's
+                      // visible label is truncated. Without it, the
+                      // disambiguator only existed for SR users — sighted
+                      // mouse users hovering "Restore" got nothing back.
+                      // Audit: templates MED.
+                      title={`Restore ${t.name}`}
                     >
                       <ArrowUturnLeftIcon width={12} height={12} aria-hidden="true" />
                       Restore
@@ -482,6 +489,7 @@ function ListPane({
                         className="templates-archive-action is-danger"
                         onClick={() => onPurge(t)}
                         aria-label={`Delete ${t.name} permanently`}
+                        title={`Delete ${t.name} permanently`}
                       >
                         <TrashIcon width={12} height={12} aria-hidden="true" />
                         Delete
