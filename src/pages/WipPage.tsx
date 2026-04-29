@@ -1396,6 +1396,17 @@ function LiveMeeting({
     window.open(`${base}#clients/${clientId}`, '_blank', 'noopener');
   }
 
+  // Open the focused agenda item's specific kanban with the card modal
+  // pre-opened. Same new-tab approach as openClientProfile so the
+  // live meeting state survives. Falls back to the bare board URL when
+  // there's no taskId — both routes resolve cleanly.
+  function openKanbanCard(serviceId: string, taskId: string) {
+    if (!serviceId) return;
+    const base = window.location.href.split('#')[0];
+    const path = taskId ? `#board/${serviceId}/card/${taskId}` : `#board/${serviceId}`;
+    window.open(`${base}${path}`, '_blank', 'noopener');
+  }
+
   // Keyboard shortcuts. Ignore when the focused element is an input or
   // textarea so we never steal keystrokes from the Quick Capture
   // composer or any other field that lands here later.
@@ -1419,6 +1430,17 @@ function LiveMeeting({
         if (!cur?.clientId) return;
         e.preventDefault();
         openClientProfile(cur.clientId);
+        return;
+      }
+      // C = open the focused task's kanban card in a new tab. K is
+      // already bound to "previous item," so C ("card") is the next
+      // closest letter for "open card." No-op for client-only or
+      // manual items where there's no specific service to open.
+      if (e.key === 'c' || e.key === 'C') {
+        const cur = flatAgenda.find(it => it.key === currentKey);
+        if (!cur?.serviceId) return;
+        e.preventDefault();
+        openKanbanCard(cur.serviceId, cur.taskId ?? '');
       }
     }
     window.addEventListener('keydown', onKey);
@@ -1559,25 +1581,45 @@ function LiveMeeting({
                   </div>
                 </div>
 
-                {/* Side trip — open the focused item's client profile
-                    in a new tab so the live meeting timer + state stay
-                    running here. Hidden for manual agenda items not
-                    linked to a client. */}
-                {current.clientId && (
+                {/* Side trips — open the focused item's profile or
+                    its specific kanban card in a new tab. Live meeting
+                    timer + state stay running here in the original
+                    window. Buttons only render when the underlying ids
+                    exist (manual agenda items without a client get no
+                    buttons; client-only items get just "Open profile";
+                    task items get both). */}
+                {(current.clientId || current.serviceId) && (
                   <div className="wip-live-stage-actions">
-                    <button
-                      type="button"
-                      className="wip-stage-context-btn"
-                      onClick={() => openClientProfile(current.clientId)}
-                      title={`Open ${current.label} profile in a new tab (O)`}
-                    >
-                      Open profile
-                      <ArrowTopRightOnSquareIcon
-                        width={12}
-                        height={12}
-                        aria-hidden="true"
-                      />
-                    </button>
+                    {current.clientId && (
+                      <button
+                        type="button"
+                        className="wip-stage-context-btn"
+                        onClick={() => openClientProfile(current.clientId)}
+                        title={`Open ${current.label} profile in a new tab (O)`}
+                      >
+                        Open profile
+                        <ArrowTopRightOnSquareIcon
+                          width={12}
+                          height={12}
+                          aria-hidden="true"
+                        />
+                      </button>
+                    )}
+                    {current.serviceId && (
+                      <button
+                        type="button"
+                        className="wip-stage-context-btn"
+                        onClick={() => openKanbanCard(current.serviceId!, current.taskId ?? '')}
+                        title="Open this card on its kanban board in a new tab (C)"
+                      >
+                        Open card
+                        <ArrowTopRightOnSquareIcon
+                          width={12}
+                          height={12}
+                          aria-hidden="true"
+                        />
+                      </button>
+                    )}
                   </div>
                 )}
 
@@ -1730,7 +1772,7 @@ function LiveMeeting({
                 <div>
                   <div className="wip-live-section-label">Keyboard</div>
                   <p style={{ margin: 0, color: 'var(--text-faint)', fontSize: 'var(--fs-sm)' }}>
-                    <kbd>←</kbd> prev · <kbd>→</kbd> next · <kbd>Space</kbd> toggle done · <kbd>N</kbd>/<kbd>D</kbd>/<kbd>A</kbd> capture · <kbd>O</kbd> open profile · <kbd>Esc</kbd> end meeting
+                    <kbd>←</kbd> prev · <kbd>→</kbd> next · <kbd>Space</kbd> toggle done · <kbd>N</kbd>/<kbd>D</kbd>/<kbd>A</kbd> capture · <kbd>O</kbd> open profile · <kbd>C</kbd> open card · <kbd>Esc</kbd> end meeting
                   </p>
                 </div>
               </>
