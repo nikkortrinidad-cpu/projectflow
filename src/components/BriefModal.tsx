@@ -56,6 +56,17 @@ export function BriefModal({
   // ConfirmDangerDialog on top.
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
 
+  // Dirty flag tracked in React state, updated via TipTap's onUpdate.
+  // Lives in state (not derived inline from editor.getHTML()) because
+  // TipTap v3 stopped auto-rerendering the React component on every
+  // transaction — `shouldRerenderOnTransaction` defaults to false now.
+  // If we read editor.getHTML() during render, the value is frozen at
+  // the value it had on the first render and never updates as the user
+  // types, so the Save button stays permanently disabled and the user
+  // can't save. Driving isDirty through onUpdate fires on every
+  // keystroke and forces the Save button to refresh correctly.
+  const [isDirty, setIsDirty] = useState(false);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -70,6 +81,13 @@ export function BriefModal({
       }),
     ],
     content: initialBrief || '',
+    onUpdate: ({ editor }) => {
+      // Compare current HTML to the snapshot we opened with. TipTap
+      // serialises an empty doc as <p></p>, so we coerce undefined to
+      // that for the comparison — otherwise an empty initial brief
+      // would read as "different" from an empty editor.
+      setIsDirty(editor.getHTML() !== (initialBrief || '<p></p>'));
+    },
     editorProps: {
       attributes: {
         // Reuses .notes-body-editor styling (h1/h2/p/li typography +
@@ -85,13 +103,6 @@ export function BriefModal({
       },
     },
   });
-
-  // Dirty check — compare the editor's current HTML against the
-  // snapshot we opened with. TipTap's getHTML() is the same string the
-  // store would persist, so equality on it is the right signal.
-  const isDirty = editor
-    ? editor.getHTML() !== (initialBrief || '<p></p>')
-    : false;
 
   function handleSave() {
     if (!editor) return;
