@@ -3,21 +3,35 @@ import {
   ChartBarIcon,
   DocumentTextIcon,
   MagnifyingGlassIcon,
-  PencilSquareIcon,
   ViewColumnsIcon,
 } from '@heroicons/react/24/outline';
 import { DndContext, DragOverlay, PointerSensor, KeyboardSensor, useSensor, useSensors, closestCenter, useDraggable, useDroppable } from '@dnd-kit/core';
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { daysBetween, formatMonthDay } from '../utils/dateFormat';
 import { BoardFilters, applyFilters, EMPTY_FILTERS, type BoardFilterState } from '../components/BoardFilters';
-import { BriefModal } from '../components/BriefModal';
 import { useFlizow } from '../store/useFlizow';
 import { flizowStore } from '../store/flizowStore';
 import type { OpsTask, Member, ColumnId } from '../types/flizow';
 import FlizowCardModal from '../components/FlizowCardModal';
 import { InlineCardComposer } from '../components/shared/InlineCardComposer';
 import { TeamCapacityHeatmap } from '../components/TeamCapacityHeatmap';
-import { relativeTimeAgo } from '../utils/clientDerived';
+import { NotesTab } from '../components/NotesTab';
+
+/**
+ * Workspace-scope marker used as the `clientId` field on Ops notes.
+ *
+ * The Note type already requires a clientId (it was designed for client-
+ * detail notes), and re-typing the field for one consumer would ripple
+ * through the store, the demo seed, and every existing note. Using a
+ * reserved string instead lets the same store methods serve both
+ * surfaces without a schema change. Real client ids look like
+ * 'cli-acme-rebrand' / random nanoid-style — '__ops__' won't ever
+ * collide. ClientDetailPage's note filter (n.clientId === client.id)
+ * silently excludes these from any client view, and the cascade-
+ * delete on client removal compares by exact id so workspace notes
+ * survive client deletions cleanly.
+ */
+const OPS_NOTES_CLIENT_ID = '__ops__';
 
 /**
  * Ops board — internal-team kanban for the work the agency does for
@@ -65,10 +79,6 @@ export function OpsPage() {
   const [filters, setFilters] = useState<BoardFilterState>(EMPTY_FILTERS);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  // Ops Brief modal — same surface as the per-service brief on the
-  // client board pages, but the data lives at workspace level
-  // (data.opsBrief) because Ops has no per-service scope.
-  const [briefOpen, setBriefOpen] = useState(false);
   // Which sub-view of the Ops page is showing. The Ops Board (kanban)
   // is the default — that's still where the day-to-day ops work
   // happens. Team Capacity (workspace-wide load heatmap) is a peer
@@ -283,12 +293,21 @@ export function OpsPage() {
           role="tabpanel"
           aria-labelledby="ops-tab-brief"
         >
-          <OpsBriefPanel
-            brief={data.opsBrief}
-            briefUpdatedAt={data.opsBriefUpdatedAt}
-            todayISO={data.today}
-            onEdit={() => setBriefOpen(true)}
-          />
+          {/* Ops Notes — Apple-Notes-style two-pane surface (sidebar
+              list + active editor) reusing the same NotesTab component
+              the client detail page uses. Workspace-scope notes are
+              tagged with the OPS_NOTES_CLIENT_ID marker so they don't
+              show up under any actual client. We replaced the old
+              single-blob "Ops Brief" modal with this so users can keep
+              multiple running notes (week kickoff, sprint retro, hiring
+              notes) instead of one ever-growing document. */}
+          <div className="ops-notes-surface">
+            <NotesTab
+              clientId={OPS_NOTES_CLIENT_ID}
+              notes={data.notes}
+              store={flizowStore}
+            />
+          </div>
         </section>
       )}
 
@@ -323,15 +342,6 @@ export function OpsPage() {
           // Duplicate swaps the open modal over to the new card so the
           // user can rename it without a close/reopen flicker.
           onDuplicated={(newId) => setSelectedId(newId)}
-        />
-      )}
-
-      {briefOpen && (
-        <BriefModal
-          title="Notes"
-          initialBrief={data.opsBrief}
-          onSave={(html) => flizowStore.updateOpsBrief(html)}
-          onClose={() => setBriefOpen(false)}
         />
       )}
     </div>
@@ -715,96 +725,10 @@ function AttachIcon() {
   );
 }
 
-// ── Ops Notes panel (Notes tab) ──────────────────────────────────────
-//
-// Reading view for the workspace's Ops notes. Internally the data
-// still lives under data.opsBrief / updateOpsBrief — same storage
-// key, same edit modal — but the user-facing label is "Notes" for a
-// softer, more-general framing than "brief." Component name kept as
-// OpsBriefPanel so it lines up with the storage-key vocabulary; the
-// "Notes" surface is a label-only rename, not a feature change.
-//
-// Shows the full HTML rendered in-place, the last-updated timestamp,
-// and an Edit button that opens the existing BriefModal. When empty,
-// a short empty state nudges the user to add one.
-//
-// Why a separate component (instead of inlining): keeps the empty /
-// populated branching out of the OpsPage render tree, which is
-// already busy gating three tabpanels. Co-located in OpsPage.tsx
-// (rather than a new file) because it's not generic — it's the Ops
-// notes specifically. If per-service notes ever land their own tab,
-// generalise then.
-
-function OpsBriefPanel({
-  brief,
-  briefUpdatedAt,
-  todayISO,
-  onEdit,
-}: {
-  brief?: string;
-  briefUpdatedAt?: string;
-  todayISO: string;
-  onEdit: () => void;
-}) {
-  // TipTap auto-seeds an empty paragraph (<p></p>) into a "blank"
-  // editor; treat that as empty too. Same trick as in BriefStrip.
-  const hasBrief = !!brief && brief.trim() !== '' && brief !== '<p></p>';
-  const lastUpdated = briefUpdatedAt
-    ? relativeTimeAgo(briefUpdatedAt, todayISO)
-    : null;
-
-  if (!hasBrief) {
-    return (
-      <section className="ops-brief-panel ops-brief-panel--empty">
-        <DocumentTextIcon
-          width={40}
-          height={40}
-          aria-hidden="true"
-          className="ops-brief-empty-icon"
-        />
-        <h3 className="ops-brief-empty-title">No notes yet</h3>
-        <p className="ops-brief-empty-sub">
-          Drop the team a note — what we're focused on, what shifted,
-          what's blocked. Anything that helps everyone stay on the
-          same page without needing to ask.
-        </p>
-        <button
-          type="button"
-          className="ops-brief-empty-cta"
-          onClick={onEdit}
-        >
-          + Add notes
-        </button>
-      </section>
-    );
-  }
-
-  return (
-    <section className="ops-brief-panel">
-      <header className="ops-brief-panel-head">
-        {lastUpdated && (
-          <span className="ops-brief-panel-time">
-            Last updated · {lastUpdated}
-          </span>
-        )}
-        <button
-          type="button"
-          className="ops-brief-panel-edit"
-          onClick={onEdit}
-        >
-          <PencilSquareIcon width={14} height={14} aria-hidden="true" />
-          Edit
-        </button>
-      </header>
-      {/* Brief HTML is authored by workspace owners via the TipTap
-          modal (StarterKit + Link). Single-tenant data, owner-only
-          writes — same trust posture as every other rich-text surface
-          in the app. The modal sanitises on save; rendering trusted
-          input here matches the pattern. */}
-      <div
-        className="ops-brief-panel-body"
-        dangerouslySetInnerHTML={{ __html: brief! }}
-      />
-    </section>
-  );
-}
+// Ops Notes is now driven by the shared NotesTab component (multi-note
+// Apple-Notes layout, autosave, search, pin/lock). The previous single-
+// blob OpsBriefPanel — which read from data.opsBrief and opened a modal
+// for edits — was removed in favour of that pattern. The legacy data
+// (data.opsBrief / updateOpsBrief) still exists on the store; it isn't
+// surfaced anywhere now and can be cleaned up in a separate pass once
+// we're sure no one needs to recover content from it.

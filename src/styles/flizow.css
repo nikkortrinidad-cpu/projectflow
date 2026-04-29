@@ -6572,6 +6572,37 @@
     outline-offset: 2px;
   }
 
+  /* ───── Ops Notes surface (Ops page → Notes tab) ─────
+     Centers the Apple-Notes panel on the wide 1600px Ops spine and
+     keeps the writing surface at a comfortable width. The shared
+     NotesTab component does the heavy lifting (sidebar, list, editor,
+     autosave) — this wrapper just provides the right container.
+
+     max-width caps the panel at 1180px even though the parent extends
+     to 1600px: 260px sidebar + ~920px editor = ~70cpl prose at body
+     size, the readability sweet spot. Stretching to the full Ops
+     width gave a 1300+px editor which read like a wall of text rather
+     than a notes surface.
+
+     The .detail-section override drops the bottom margin NotesTab
+     ships with — that margin was designed for stacking sections in
+     the client detail pane and reads as awkward whitespace here
+     where Notes is the only thing on the tab.
+
+     The .notes-app height bump (560 → 640) takes advantage of the
+     extra vertical room on a dedicated tab vs. a scrolling client
+     detail pane. */
+  .ops-notes-surface {
+    width: 100%;
+    max-width: 1180px;
+    margin: 16px auto 24px;
+    padding: 0 24px;
+  }
+  .ops-notes-surface .detail-section { margin-bottom: 0; }
+  .ops-notes-surface .notes-app {
+    height: clamp(520px, calc(100vh - 280px), 720px);
+  }
+
   /* ───── Team Capacity heatmap (Ops page → Capacity tab) ───── */
   /* The "is anyone slammed this week?" surface. Rows = members,
      columns = next 10 weekdays. Each cell shows load/soft tinted by
