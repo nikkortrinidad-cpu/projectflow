@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Flizow — Client Access Health · Tech brief</title>
+<style>
+  @page {
+    size: Letter;
+    margin: 0.75in 0.75in 1in 0.75in;
+    @bottom-center {
+      content: "Flizow · Client Access Health · page " counter(page) " of " counter(pages);
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 9pt;
+      color: #777;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    color: #1d1d1f;
+    line-height: 1.55;
+    font-size: 11pt;
+  }
+  body {
+    max-width: 6.5in;
+    margin: 0 auto;
+  }
+
+  /* ── Cover ─────────────────────────────────────────── */
+  .cover {
+    page-break-after: always;
+    padding: 1.5in 0 0;
+  }
+  .cover-eyebrow {
+    text-transform: uppercase;
+    font-size: 9pt;
+    letter-spacing: 0.18em;
+    color: #f15a24;
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+  .cover-title {
+    font-size: 32pt;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+    color: #1d1d1f;
+  }
+  .cover-subtitle {
+    font-size: 14pt;
+    font-weight: 400;
+    color: #515154;
+    line-height: 1.4;
+    margin: 0 0 36px;
+    max-width: 90%;
+  }
+  .cover-meta {
+    margin-top: 0.9in;
+    padding-top: 18px;
+    border-top: 1px solid #d2d2d7;
+    font-size: 10pt;
+    color: #6e6e73;
+    line-height: 1.6;
+  }
+  .cover-meta strong { color: #1d1d1f; font-weight: 600; }
+
+  /* ── Headings ──────────────────────────────────────── */
+  h1 {
+    font-size: 22pt;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 38pt 0 14pt;
+    color: #1d1d1f;
+    page-break-after: avoid;
+  }
+  h2 {
+    font-size: 14pt;
+    font-weight: 700;
+    color: #1d1d1f;
+    margin: 24pt 0 8pt;
+    letter-spacing: -0.005em;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 12pt;
+    font-weight: 600;
+    color: #1d1d1f;
+    margin: 18pt 0 6pt;
+    page-break-after: avoid;
+  }
+  h1 + p, h2 + p, h3 + p { margin-top: 4pt; }
+
+  p { margin: 0 0 10pt; }
+  ul, ol { margin: 0 0 10pt; padding-left: 22pt; }
+  li { margin-bottom: 5pt; }
+  strong { font-weight: 600; }
+  em { font-style: italic; color: #515154; }
+  code {
+    font-family: ui-monospace, "SF Mono", Monaco, monospace;
+    font-size: 0.9em;
+    background: #f5f5f7;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #1d1d1f;
+  }
+
+  /* ── Callouts ──────────────────────────────────────── */
+  .callout {
+    background: #fff7f3;
+    border-left: 3px solid #f15a24;
+    padding: 12pt 14pt;
+    margin: 14pt 0;
+    border-radius: 0 6pt 6pt 0;
+    font-size: 10.5pt;
+  }
+  .callout-title {
+    font-weight: 700;
+    color: #f15a24;
+    text-transform: uppercase;
+    font-size: 9pt;
+    letter-spacing: 0.06em;
+    margin-bottom: 4pt;
+  }
+  .note {
+    background: #f5f5f7;
+    border-left: 3px solid #86868b;
+    padding: 10pt 14pt;
+    margin: 12pt 0;
+    border-radius: 0 6pt 6pt 0;
+    font-size: 10pt;
+    color: #515154;
+  }
+  .warn {
+    background: #fff7e6;
+    border-left: 3px solid #d97706;
+    padding: 10pt 14pt;
+    margin: 12pt 0;
+    border-radius: 0 6pt 6pt 0;
+    font-size: 10pt;
+    color: #515154;
+  }
+
+  /* ── Tables ────────────────────────────────────────── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12pt 0;
+    font-size: 10pt;
+  }
+  th, td {
+    text-align: left;
+    padding: 8pt 10pt;
+    border-bottom: 1px solid #e5e5ea;
+    vertical-align: top;
+  }
+  th {
+    background: #f5f5f7;
+    font-weight: 600;
+    color: #1d1d1f;
+    border-bottom: 2px solid #d2d2d7;
+  }
+  tr:last-child td { border-bottom: none; }
+  td.tight { font-family: ui-monospace, "SF Mono", Monaco, monospace; font-size: 9.5pt; }
+
+  /* ── Status dots (replicates the spec's visual) ──── */
+  .dot-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8pt;
+    margin: 10pt 0 16pt;
+  }
+  .dot-row .dot-item {
+    display: flex;
+    align-items: center;
+    gap: 12pt;
+  }
+  .dot {
+    width: 16pt;
+    height: 16pt;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 1pt rgba(0,0,0,0.06);
+  }
+  .dot-live { background: #22a559; }
+  .dot-lost { background: #d93025; }
+  .dot-pending {
+    background: #ffffff;
+    box-shadow: inset 0 0 0 1.5pt #c8c8cc;
+  }
+  .dot-label {
+    font-size: 10.5pt;
+    color: #1d1d1f;
+  }
+  .dot-label strong { font-weight: 700; }
+  .dot-label em { color: #6e6e73; font-style: normal; }
+
+  /* ── Path cards ──────────────────────────────────── */
+  .path {
+    background: #fafafd;
+    border: 1px solid #e5e5ea;
+    border-radius: 8pt;
+    padding: 14pt 18pt;
+    margin: 12pt 0;
+  }
+  .path-tag {
+    display: inline-block;
+    background: #1d1d1f;
+    color: #fff;
+    font-size: 8.5pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 2px 9px;
+    border-radius: 99px;
+    margin-bottom: 8pt;
+  }
+  .path-tag.recommended { background: #f15a24; }
+  .path h3 { margin-top: 0; }
+  .path-cost {
+    margin: 6pt 0;
+    font-size: 10pt;
+    color: #6e6e73;
+  }
+  .path-cost strong { color: #1d1d1f; }
+
+  /* Page break helpers */
+  .page-break { page-break-before: always; }
+  .avoid-break { page-break-inside: avoid; }
+</style>
+</head>
+<body>
+
+<!-- ───────────── COVER ───────────── -->
+<section class="cover">
+  <div class="cover-eyebrow">Flizow · Tech brief for senior web dev</div>
+  <h1 class="cover-title" style="margin: 0 0 8px;">Client Access Health</h1>
+  <p class="cover-subtitle">
+    A live integration-access dashboard for the client profile —
+    surfaced as colored dots beside Quick Links. This document
+    captures the design intent, the build paths we considered, and
+    the open decisions that need senior input before we commit.
+  </p>
+  <div class="cover-meta">
+    <strong>Audience.</strong> Senior web developer scoping the
+    backend + integration work.<br>
+    <strong>Read time.</strong> ~10 minutes.<br>
+    <strong>Status.</strong> Pre-build. Decision points flagged at
+    the end of each section.
+  </div>
+</section>
+
+<!-- ───────────── PROBLEM ───────────── -->
+<h1>What we're solving</h1>
+<p>
+  An agency loses access to a client's Google Ads, Meta Business,
+  GA4, Klaviyo, etc. all the time — the client revokes a manager
+  invite, an OAuth token rots, the client's CTO leaves and their
+  account gets cleaned out. The agency usually finds out three days
+  later when a campaign needs editing and they can't get in.
+</p>
+<p>
+  We want a single place on each client's profile where the team
+  can see, at a glance, whether the agency has live access to every
+  platform we manage for that client.
+</p>
+
+<div class="callout">
+  <div class="callout-title">The visible feature</div>
+  Inside the Quick Links card on the client profile's About tab,
+  add an "Access health" sub-section. Each row = one platform,
+  with a colored status dot.
+</div>
+
+<!-- ───────────── DOTS ───────────── -->
+<h1>The visual — three dot states</h1>
+<p>Pinned to a small set so the row reads at a glance:</p>
+
+<div class="dot-row">
+  <div class="dot-item">
+    <span class="dot dot-live"></span>
+    <span class="dot-label"><strong>Live</strong> — the agency currently has access. Green.</span>
+  </div>
+  <div class="dot-item">
+    <span class="dot dot-lost"></span>
+    <span class="dot-label"><strong>Lost</strong> — access has been revoked or the token no longer authorizes. Red.</span>
+  </div>
+  <div class="dot-item">
+    <span class="dot dot-pending"></span>
+    <span class="dot-label"><strong>Pending request</strong> — the agency has asked the client for access; waiting on them to grant it. White (outlined).</span>
+  </div>
+</div>
+
+<p>
+  No "expiring soon," no "stale check," no fourth color — keep it
+  binary plus a request-in-flight state. Anything more nuanced
+  belongs in row metadata (last checked, who has it on the agency
+  side), not in the dot itself.
+</p>
+
+<!-- ───────────── PLACEMENT ───────────── -->
+<h1>Placement</h1>
+<p>
+  Inside the existing <strong>Quick Links</strong> card on the About tab.
+  Quick Links is currently a flat list of URLs (link to GA dashboard,
+  Klaviyo admin, etc.). The Access Health rows live as a sub-section
+  inside the same card — same logical grouping, since each platform
+  has both a URL <em>and</em> an access state.
+</p>
+<p>
+  Layout intention: Quick Links section header, then the existing
+  link list, then a divider, then "Access health" with one row per
+  integration. The row's status dot is the leading visual; the
+  platform name is the row label; secondary metadata (last checked,
+  who's authorized) hangs to the right.
+</p>
+
+<!-- ───────────── PATHS ───────────── -->
+<h1 class="page-break">Three build paths</h1>
+<p>
+  We discussed three implementation strategies, ranging from "ship
+  the UI now, prove the value, then automate" to "build full
+  end-to-end automation per platform up front." The honest split:
+</p>
+
+<div class="path">
+  <div class="path-tag">Path A · Full automatic</div>
+  <h3>OAuth + scheduled API checks per platform</h3>
+  <p>
+    For each platform (Google Ads first, then Meta, GA4, Klaviyo, etc.):
+  </p>
+  <ol>
+    <li>OAuth flow — the agency signs in once from Flizow, the
+      platform issues a refresh token.</li>
+    <li>Token storage — secure backend (Cloud Functions + secret
+      manager, or equivalent). Cannot live in Firestore in plaintext.</li>
+    <li>Scheduled job — every N hours, walk every (client × platform)
+      pair, ask the platform: <em>"do we still have access to this
+      account?"</em> Flip dot to red on failure.</li>
+    <li>Per-client mapping — each client record needs the platform
+      account ID (Google Ads MCC, Meta Business ID, etc.).</li>
+    <li>Error handling — token refresh, scope changes, rate limits,
+      Google revoking apps under suspicious traffic, etc.</li>
+  </ol>
+  <p class="path-cost"><strong>Estimated cost:</strong> ~2–3 weeks per
+  platform for a senior dev, plus ongoing maintenance.</p>
+  <p class="path-cost"><strong>Worth it if:</strong> losing access is
+  a recurring, expensive pain in the team's daily work AND the agency
+  wants this as a competitive differentiator.</p>
+</div>
+
+<div class="path">
+  <div class="path-tag recommended">Path B · UI now, automation later (RECOMMENDED)</div>
+  <h3>Manual marking as the v1, swap to API in v2</h3>
+  <p>
+    Build the data model + UI now, with the AM marking the dot
+    manually. Show "last checked" timestamp + a freshness indicator
+    when the check is older than ~30 days. When automation is
+    eventually added, the data shape doesn't change — the dot's
+    setter just flips from "human" to "scheduled API call."
+  </p>
+  <p class="path-cost"><strong>Estimated cost:</strong> ~1–2 days for
+  the UI, data model, and edit flow.</p>
+  <p class="path-cost"><strong>Worth it because:</strong> proves the
+  feature earns its weight in the daily flow before we invest
+  multi-week infrastructure. The visual signal is in the app
+  immediately. No backend needed yet.</p>
+</div>
+
+<div class="path">
+  <div class="path-tag">Path C · Half-automatic</div>
+  <h3>"Check now" button per row</h3>
+  <p>
+    Each row has a button that opens the platform in a new tab at a
+    known URL. The AM verifies access there, comes back, and the
+    row's last-checked time auto-updates. Status still set by the
+    AM, but verification is real and the friction is minimal.
+  </p>
+  <p class="path-cost"><strong>Estimated cost:</strong> ~1 day on top
+  of Path B's UI.</p>
+  <p class="path-cost"><strong>Worth it because:</strong> feels
+  semi-real without backend work. Good middle ground if Path B feels
+  too theatrical and Path A is too expensive.</p>
+</div>
+
+<!-- ───────────── REALITIES ───────────── -->
+<h1>Two realities about "live"</h1>
+
+<h3>1. "Live" is never instant</h3>
+<p>
+  Even with Path A, there's a polling delay. If the client revokes
+  access at 9:00 AM and the system polls every 6 hours, the dot
+  doesn't go red until ~3:00 PM. The product copy should reflect
+  this — "Last verified 2 hours ago" is more honest than "Live."
+</p>
+<p>
+  Polling cadence is a tunable trade-off: 1-hour polling × 5 platforms
+  × 50 clients = 12,000 API calls/day per platform. Most platforms
+  have rate limits that handle this fine, but it does eat quota.
+  Webhook-based notifications (where supported) are the better long-
+  term pattern.
+</p>
+
+<h3>2. "Pending request" is always manual</h3>
+<p>
+  No platform exposes a "we asked the client to add us" state. That
+  signal lives only in the agency's head ("we emailed Sarah on
+  Tuesday asking her to add us as a manager"). Even Path A has at
+  least one human-set state.
+</p>
+<p>
+  Implication: the data model needs to support an explicit
+  <code>status: 'pending'</code> with a manual setter. The auto-detect
+  layer only writes <code>'live'</code> or <code>'lost'</code>; it
+  never overwrites <code>'pending'</code> until the platform itself
+  reports active access (which would naturally clear the pending
+  state to live).
+</p>
+
+<!-- ───────────── DATA MODEL ───────────── -->
+<h1 class="page-break">Suggested data model</h1>
+<p>Roughly:</p>
+<table>
+  <thead>
+    <tr><th>Field</th><th>Type</th><th>Notes</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>id</code></td>
+      <td class="tight">string</td>
+      <td>Stable id for the row.</td>
+    </tr>
+    <tr>
+      <td><code>clientId</code></td>
+      <td class="tight">string</td>
+      <td>FK to <code>Client.id</code>.</td>
+    </tr>
+    <tr>
+      <td><code>platform</code></td>
+      <td class="tight">string</td>
+      <td>Platform key — e.g. <code>'google-ads'</code>, <code>'meta'</code>, <code>'ga4'</code>, <code>'klaviyo'</code>.</td>
+    </tr>
+    <tr>
+      <td><code>platformLabel</code></td>
+      <td class="tight">string</td>
+      <td>Display name. May be a workspace-level lookup so editing the label is one-touch.</td>
+    </tr>
+    <tr>
+      <td><code>accountId</code></td>
+      <td class="tight">string?</td>
+      <td>Platform-specific account id (Google Ads MCC, Meta Business ID, etc.). Required for Path A; optional for Paths B/C.</td>
+    </tr>
+    <tr>
+      <td><code>status</code></td>
+      <td class="tight">'live' | 'lost' | 'pending'</td>
+      <td>The dot.</td>
+    </tr>
+    <tr>
+      <td><code>lastCheckedAt</code></td>
+      <td class="tight">ISO timestamp</td>
+      <td>When the status was last set / verified. Drives "checked X ago" display.</td>
+    </tr>
+    <tr>
+      <td><code>setBy</code></td>
+      <td class="tight">'system' | memberId</td>
+      <td>Who flipped it. Lets the UI show a small "auto" badge vs. the AM's avatar.</td>
+    </tr>
+    <tr>
+      <td><code>notes</code></td>
+      <td class="tight">string?</td>
+      <td>Optional. e.g. <em>"Lost when their CTO left in March."</em></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  Suggested store location: top-level <code>data.clientIntegrations</code>
+  array on <code>FlizowData</code>, parallel to <code>contacts</code> /
+  <code>quickLinks</code> / <code>notes</code>. Same patterns: flat
+  rows, clientId lookup at render time.
+</p>
+
+<!-- ───────────── DECISIONS ───────────── -->
+<h1>Decision points for senior dev review</h1>
+
+<h3>D1 — Which path?</h3>
+<p>
+  Reviewer call: Path A, Path B, or Path C. Recommendation in this
+  brief is Path B with Path A as a follow-up scoped to one platform
+  (Google Ads first).
+</p>
+
+<h3>D2 — If Path A, where does the OAuth + scheduler live?</h3>
+<p>
+  Flizow today is frontend-only (Vite/React + Firestore via the
+  client SDK). Token storage and scheduled jobs need a backend.
+  Options:
+</p>
+<ul>
+  <li><strong>Firebase Cloud Functions</strong> — already in the
+    Firebase project; lowest infrastructure cost; cron jobs via
+    scheduled functions; secret manager via Firebase config.</li>
+  <li><strong>Standalone Node service</strong> (Cloudflare Workers,
+    Fly.io, Render, etc.) — more flexibility, more ops work.</li>
+  <li><strong>Third-party integration platform</strong> (Nango,
+    Pipedream, Cobalt) — fastest to ship; recurring per-connection
+    cost; less control over the connection flow's UX.</li>
+</ul>
+
+<h3>D3 — Which platforms first, and in what priority?</h3>
+<p>
+  Each platform is its own multi-week build. Cap the v1 scope at 1–2
+  platforms and iterate. Suggested ordering by frequency-of-pain:
+</p>
+<ol>
+  <li><strong>Google Ads</strong> — manager (MCC) invites get
+    revoked often when the client has multiple agencies churning
+    through.</li>
+  <li><strong>Meta Business Manager</strong> — same churn pattern
+    plus role-based weirdness.</li>
+  <li><strong>GA4</strong> — third because lost GA4 access is rarer
+    but harder to recover.</li>
+  <li><strong>Klaviyo / Mailchimp / etc.</strong> — niche tools per
+    client; treat as v3.</li>
+</ol>
+
+<h3>D4 — Polling cadence + webhook strategy</h3>
+<p>
+  Hourly polling × 50 clients × 5 platforms = 240,000 API calls/month.
+  Most platforms tolerate this; some have stricter quotas. Where
+  webhook notifications exist (Google does for some Ads events,
+  Meta has webhooks for Business changes), prefer those over polling
+  to drop quota use to near-zero. Pure polling is fine as a v1.
+</p>
+
+<h3>D5 — Per-client account ID entry UX</h3>
+<p>
+  Path A requires each client to have its platform account IDs in
+  Flizow. We need a UX for entering and editing those IDs (likely a
+  small "Add platform" modal in the same Quick Links card area).
+  Light data-entry burden once per client per platform, but real.
+</p>
+
+<!-- ───────────── ASKS ───────────── -->
+<h1 class="page-break">What we'd like from senior</h1>
+<ol>
+  <li>
+    <strong>Sanity-check on path.</strong> Is Path B → A staged the
+    right call? Or does the team have appetite to commit to Path A
+    for Google Ads up front?
+  </li>
+  <li>
+    <strong>Backend decision.</strong> If we're going down the Path
+    A route eventually: are we comfortable with Firebase Cloud
+    Functions, or does the architecture warrant a separate Node
+    service?
+  </li>
+  <li>
+    <strong>OAuth integration model.</strong> One agency-wide OAuth
+    grant per platform (the agency authorizes Flizow once; Flizow
+    re-uses that grant across all clients), or per-client OAuth
+    grants (every client connects independently)? The first scales
+    better; the second is more secure / easier to revoke selectively.
+  </li>
+  <li>
+    <strong>Time estimate.</strong> Realistic engineering days for
+    Path A on Google Ads alone, end-to-end (OAuth + storage +
+    scheduler + UI hookup + error handling)?
+  </li>
+  <li>
+    <strong>Maintenance posture.</strong> Once shipped, who owns
+    keeping the integrations alive when platforms change their APIs?
+    The agency, an external dev, ongoing retainer with you?
+  </li>
+</ol>
+
+<p style="margin-top: 28pt; padding-top: 14pt; border-top: 1px solid #e5e5ea; font-size: 9.5pt; color: #6e6e73;">
+  Document version 1 — pre-build brief. Update after senior review
+  with the path call and timeline.
+</p>
+
+</body>
+</html>
