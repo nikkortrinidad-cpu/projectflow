@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ArrowTopRightOnSquareIcon,
   BellAlertIcon,
   BookmarkIcon,
   ChatBubbleLeftIcon,
@@ -1384,6 +1385,17 @@ function LiveMeeting({
     }
   }, [composer?.type]);
 
+  // Open the focused agenda item's client profile in a new tab so the
+  // live meeting timer + state stay running in the original window.
+  // Hash-based deep link via the existing #clients/<id> route — assemble
+  // the full URL so window.open lands on the same origin instead of
+  // navigating the current tab.
+  function openClientProfile(clientId: string) {
+    if (!clientId) return;
+    const base = window.location.href.split('#')[0];
+    window.open(`${base}#clients/${clientId}`, '_blank', 'noopener');
+  }
+
   // Keyboard shortcuts. Ignore when the focused element is an input or
   // textarea so we never steal keystrokes from the Quick Capture
   // composer or any other field that lands here later.
@@ -1400,10 +1412,18 @@ function LiveMeeting({
       if (e.key === 'n' || e.key === 'N') { e.preventDefault(); setComposer({ type: 'note', text: '' }); return; }
       if (e.key === 'd' || e.key === 'D') { e.preventDefault(); setComposer({ type: 'decision', text: '' }); return; }
       if (e.key === 'a' || e.key === 'A') { e.preventDefault(); setComposer({ type: 'action', text: '' }); return; }
+      // O = open the focused item's client profile in a new tab.
+      // No-op for manual items not tied to a client.
+      if (e.key === 'o' || e.key === 'O') {
+        const cur = flatAgenda.find(it => it.key === currentKey);
+        if (!cur?.clientId) return;
+        e.preventDefault();
+        openClientProfile(cur.clientId);
+      }
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [currentKey, onNext, onPrev, onToggleDone, onEnd]);
+  }, [currentKey, flatAgenda, onNext, onPrev, onToggleDone, onEnd]);
 
   const current = flatAgenda.find(it => it.key === currentKey);
   const currentIndex = Math.max(0, flatAgenda.findIndex(it => it.key === currentKey));
@@ -1538,6 +1558,28 @@ function LiveMeeting({
                     {formatElapsed(elapsedSec)}
                   </div>
                 </div>
+
+                {/* Side trip — open the focused item's client profile
+                    in a new tab so the live meeting timer + state stay
+                    running here. Hidden for manual agenda items not
+                    linked to a client. */}
+                {current.clientId && (
+                  <div className="wip-live-stage-actions">
+                    <button
+                      type="button"
+                      className="wip-stage-context-btn"
+                      onClick={() => openClientProfile(current.clientId)}
+                      title={`Open ${current.label} profile in a new tab (O)`}
+                    >
+                      Open profile
+                      <ArrowTopRightOnSquareIcon
+                        width={12}
+                        height={12}
+                        aria-hidden="true"
+                      />
+                    </button>
+                  </div>
+                )}
 
                 {current.note && (
                   <div>
@@ -1688,7 +1730,7 @@ function LiveMeeting({
                 <div>
                   <div className="wip-live-section-label">Keyboard</div>
                   <p style={{ margin: 0, color: 'var(--text-faint)', fontSize: 'var(--fs-sm)' }}>
-                    <kbd>←</kbd> prev · <kbd>→</kbd> next · <kbd>Space</kbd> toggle done · <kbd>N</kbd>/<kbd>D</kbd>/<kbd>A</kbd> capture · <kbd>Esc</kbd> end meeting
+                    <kbd>←</kbd> prev · <kbd>→</kbd> next · <kbd>Space</kbd> toggle done · <kbd>N</kbd>/<kbd>D</kbd>/<kbd>A</kbd> capture · <kbd>O</kbd> open profile · <kbd>Esc</kbd> end meeting
                   </p>
                 </div>
               </>

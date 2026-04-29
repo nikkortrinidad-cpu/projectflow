@@ -12423,6 +12423,51 @@
     }
   }
 
+  /* Side-trip "Open profile" button on the live meeting stage.
+     Sits below the agenda-item meta line, above the Quick Capture
+     row. Outline style so it doesn't compete with the QC primary
+     buttons; small trailing arrow signals "opens elsewhere." */
+  .wip-live-stage-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-sm);
+  }
+  .wip-stage-context-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-xs);
+    padding: var(--sp-xs) var(--sp-base);
+    background: transparent;
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+      background var(--dur-fast),
+      border-color var(--dur-fast),
+      color var(--dur-fast);
+  }
+  .wip-stage-context-btn:hover {
+    background: var(--bg-soft);
+    border-color: var(--text-faint);
+    color: var(--highlight);
+  }
+  .wip-stage-context-btn:focus-visible {
+    outline: 2px solid var(--hover-blue);
+    outline-offset: 2px;
+  }
+  .wip-stage-context-btn svg {
+    color: var(--text-faint);
+    flex-shrink: 0;
+    transition: color var(--dur-fast);
+  }
+  .wip-stage-context-btn:hover svg {
+    color: var(--highlight);
+  }
+
   /* Search input inside the Add Operator modal — filters the
      available operator list. Same visual recipe as the templates
      list-pane search so the two surfaces feel like one family. */
