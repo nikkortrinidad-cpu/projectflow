@@ -1884,8 +1884,18 @@
   .filter-reset:hover:not(:disabled) { color: var(--text); background: var(--hover-tint); }
   .filter-reset:disabled { opacity: 0.4; cursor: default; }
 
+  /* Kanban container — capped at 1600px and centered so the columns
+     sit on the same horizontal spine as the filter bar above. The
+     columns inside (290px × 5 + 20px gaps × 4 = 1530) plus container
+     padding (32 × 2 = 64) total 1594px ≈ 1600, so they fit without
+     forcing scroll on a wide viewport. Beyond 5 columns or under
+     1600px viewport, overflow-x: auto kicks in and the user scrolls
+     horizontally inside the 1600 column. */
   .board {
     flex: 1;
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
     display: flex;
     gap: var(--sp-2xl);
     padding: var(--sp-4xl);
