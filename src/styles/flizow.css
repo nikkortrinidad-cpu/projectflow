@@ -12410,6 +12410,47 @@
       transition: none;
     }
   }
+
+  /* Search input inside the Add Operator modal — filters the
+     available operator list. Same visual recipe as the templates
+     list-pane search so the two surfaces feel like one family. */
+  .add-operator-search {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-sm);
+    padding: var(--sp-sm) var(--sp-base);
+    margin-bottom: var(--sp-base);
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    transition: border-color var(--dur-fast);
+  }
+  .add-operator-search:focus-within {
+    border-color: var(--hover-blue);
+  }
+  .add-operator-search svg {
+    color: var(--text-faint);
+    flex-shrink: 0;
+  }
+  .add-operator-search input {
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: var(--fs-md);
+    color: var(--text);
+    outline: none;
+  }
+  .add-operator-search input::placeholder {
+    color: var(--text-faint);
+  }
+  /* Hide the native search-clear "x" Safari/Chrome injects — we have
+     a quieter UX via deletion key + the empty-state copy below. */
+  .add-operator-search input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+  }
   .clients-split-wrapper .view-client-detail { position: relative; }
 
   /* Cross-fade detail pane on client swap */

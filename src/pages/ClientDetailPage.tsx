@@ -7,6 +7,7 @@ import {
   EllipsisVerticalIcon,
   IdentificationIcon,
   LinkIcon,
+  MagnifyingGlassIcon,
   PlusIcon,
   UserGroupIcon,
   UserIcon,
@@ -2925,6 +2926,19 @@ function AddOperatorModal({ clientId, allMembers, currentTeamIds, onClose }: {
   );
 
   const [picked, setPicked] = useState<Set<string>>(new Set());
+  // Filter the available list as the user types. Match against name,
+  // role, and initials so a quick "JD" or "design" lands the right
+  // operator without typing the full name.
+  const [query, setQuery] = useState('');
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return available;
+    return available.filter(m =>
+      m.name.toLowerCase().includes(q)
+      || (m.role ?? '').toLowerCase().includes(q)
+      || m.initials.toLowerCase().includes(q),
+    );
+  }, [available, query]);
 
   function toggle(id: string) {
     setPicked(prev => {
@@ -2993,8 +3007,28 @@ function AddOperatorModal({ clientId, allMembers, currentTeamIds, onClose }: {
               Settings, then come back.
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2, maxHeight: 360, overflowY: 'auto' }}>
-              {available.map(m => {
+            <>
+              {/* Search input — filters by name, role, or initials so a
+                  quick "design" or "JD" lands the right operator without
+                  typing the full name. Auto-focused on open. */}
+              <label className="add-operator-search">
+                <MagnifyingGlassIcon width={14} height={14} aria-hidden="true" />
+                <input
+                  type="search"
+                  placeholder="Search by name or role…"
+                  aria-label="Search operators"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  autoFocus
+                />
+              </label>
+              {filtered.length === 0 ? (
+                <div style={{ padding: 12, color: 'var(--text-soft)', fontSize: 'var(--fs-base)' }}>
+                  No operators match "{query.trim()}".
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2, maxHeight: 360, overflowY: 'auto' }}>
+                  {filtered.map(m => {
                 const checked = picked.has(m.id);
                 return (
                   <label
@@ -3049,7 +3083,9 @@ function AddOperatorModal({ clientId, allMembers, currentTeamIds, onClose }: {
                   </label>
                 );
               })}
-            </div>
+                </div>
+              )}
+            </>
           )}
         </div>
 
