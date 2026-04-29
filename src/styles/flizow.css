@@ -12322,11 +12322,19 @@
   body[data-active-view="clients"] .clients-split-wrapper .view-clients,
   body[data-active-view="client-detail"] .clients-split-wrapper .view-clients {
     display: flex; flex-direction: column;
-    flex: 0 0 480px;
+    /* Use individual flex properties so the transition can animate
+       flex-basis cleanly when the panel collapses. The shorthand
+       form (`flex: 0 0 480px`) animates oddly because all three
+       sub-values are interpolated together. */
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: 480px;
     border-right: 1px solid var(--hairline);
     background: var(--bg-elev);
     overflow: hidden;
     min-height: 0;
+    transition: flex-basis 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                border-right-width 0.2s ease;
   }
   body[data-active-view="clients"] .clients-split-wrapper .view-client-detail,
   body[data-active-view="client-detail"] .clients-split-wrapper .view-client-detail {
@@ -12343,17 +12351,25 @@
     flex: 1; min-height: 0;
   }
 
-  /* Split-view collapse: list pane hides, a slim rail with an expand button stays */
+  /* Collapsed list pane: shrink the basis to 0. No `!important` —
+     the transition rule above wins via cascade order, and the
+     animation runs cleanly. */
   body[data-list-collapsed="true"] .clients-split-wrapper .view-clients {
-    flex: 0 0 0 !important;
-    min-width: 0;
-    overflow: hidden;
-    border-right: 0;
+    flex-basis: 0;
+    border-right-width: 0;
   }
+
+  /* Single sliding toggle button. Positioned absolute against the
+     `.clients-split-wrapper`. Its `left` value lands the button at
+     the boundary between the list pane and the detail pane when
+     expanded; when collapsed it slides to the left edge of the
+     detail pane (which is now the viewport edge). The `left`
+     transition matches the pane's flex-basis transition so the
+     button feels glued to the pane edge as it moves. */
   .list-pane-toggle {
     position: absolute;
     top: 18px;
-    left: 14px;
+    left: calc(480px + 14px);
     width: 28px; height: 28px;
     display: inline-flex;
     align-items: center; justify-content: center;
@@ -12364,14 +12380,36 @@
     cursor: pointer;
     padding: 0;
     z-index: 5;
-    transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+    transition:
+      left 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+      background 0.12s ease,
+      color 0.12s ease,
+      border-color 0.12s ease;
+  }
+  body[data-list-collapsed="true"] .list-pane-toggle {
+    left: 14px;
   }
   .list-pane-toggle:hover {
     background: color-mix(in srgb, var(--highlight) 9%, transparent);
     color: var(--highlight);
     border-color: color-mix(in srgb, var(--highlight) 35%, var(--hairline));
   }
+  .list-pane-toggle:focus-visible {
+    outline: 2px solid var(--hover-blue);
+    outline-offset: 2px;
+  }
   .list-pane-toggle svg { width: 14px; height: 14px; stroke-width: 2.3; }
+
+  /* Honor reduced-motion: skip the slide on the toggle + the pane
+     basis. The collapse still works, it just snaps instead of
+     animating. Apple HIG #8 — motion teaches, but stops when asked. */
+  @media (prefers-reduced-motion: reduce) {
+    body[data-active-view="clients"] .clients-split-wrapper .view-clients,
+    body[data-active-view="client-detail"] .clients-split-wrapper .view-clients,
+    .list-pane-toggle {
+      transition: none;
+    }
+  }
   .clients-split-wrapper .view-client-detail { position: relative; }
 
   /* Cross-fade detail pane on client swap */
