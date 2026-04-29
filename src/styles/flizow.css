@@ -1746,7 +1746,15 @@
   }
 
   /* ───── Filters bar (search / filter / sort) ───── */
+  /* Filter bar — capped at 1600px to roughly match the natural
+     5-column kanban content width (5 × 290 + 4 × 20 + 32 × 2
+     padding = 1594, rounded to 1600). Centered so the bar hangs
+     off the same vertical spine the kanban's content area uses
+     when columns fit without scrolling. */
   .filters-bar {
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
     padding: 10px 32px;
     background: var(--bg);
     border-bottom: 1px solid var(--hairline-soft);
