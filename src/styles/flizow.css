@@ -12314,6 +12314,11 @@
     display: none; flex: 1; min-height: 0; flex-direction: row;
     background: var(--bg);
     overflow: hidden;
+    /* position: relative so the absolute-positioned .list-pane-toggle
+       anchors to this wrapper instead of escaping up to <html>. Without
+       it the toggle button sits at top-left of the viewport — hidden
+       behind the TopNav. */
+    position: relative;
   }
   body[data-active-view="clients"] .clients-split-wrapper,
   body[data-active-view="client-detail"] .clients-split-wrapper {
