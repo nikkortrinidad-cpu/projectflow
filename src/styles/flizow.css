@@ -12364,17 +12364,24 @@
     border-right-width: 0;
   }
 
-  /* Single sliding toggle button. Positioned absolute against the
-     `.clients-split-wrapper`. Its `left` value lands the button at
-     the boundary between the list pane and the detail pane when
-     expanded; when collapsed it slides to the left edge of the
-     detail pane (which is now the viewport edge). The `left`
-     transition matches the pane's flex-basis transition so the
-     button feels glued to the pane edge as it moves. */
+  /* Single sliding toggle button. Vertically centered on the
+     divider so it sits clear of any top-of-pane chrome (the list
+     pane's "Clients" page-header, the detail pane's hero) and
+     reads as a "drag handle" for the divider it sits on. Notion /
+     Slack / Linear pattern.
+
+     Expanded: button straddles the 480px boundary between list
+     and detail panes (half on each side, since 480 - 14 = 466
+     centers a 28px button on the divider line).
+     Collapsed: button slides to left:0 — flush with the now-
+     viewport-left edge of the detail pane. The `left` transition
+     matches the pane's flex-basis transition so the button feels
+     glued to the pane edge as it moves. */
   .list-pane-toggle {
     position: absolute;
-    top: 18px;
-    left: calc(480px + 14px);
+    top: 50%;
+    transform: translateY(-50%);
+    left: 466px;
     width: 28px; height: 28px;
     display: inline-flex;
     align-items: center; justify-content: center;
@@ -12392,7 +12399,7 @@
       border-color 0.12s ease;
   }
   body[data-list-collapsed="true"] .list-pane-toggle {
-    left: 14px;
+    left: 0;
   }
   .list-pane-toggle:hover {
     background: color-mix(in srgb, var(--highlight) 9%, transparent);
