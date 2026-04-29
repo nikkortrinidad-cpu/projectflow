@@ -29,6 +29,7 @@ import { categoryLabel } from '../utils/clientDerived';
 import { useActivatableRow } from '../hooks/useActivatableRow';
 import { useModalAutofocus } from '../hooks/useModalAutofocus';
 import { useModalKeyboard } from '../hooks/useModalKeyboard';
+import { ConfirmDangerDialog } from '../components/ConfirmDangerDialog';
 
 /**
  * Weekly WIP — the standing-meeting agenda page.
@@ -126,6 +127,17 @@ export function WipPage() {
   const [modal, setModal] = useState<ModalState>({ kind: 'closed' });
   const [meeting, setMeeting] = useState<LiveMeetingState>({ phase: 'idle' });
   const [showPreRead, setShowPreRead] = useState(false);
+  // Confirm gate before ending a running meeting. The meeting captures
+  // (notes/decisions/actions the user typed) persist in the store either
+  // way, but ending wipes the in-flight UI state — current item, per-item
+  // timer, marked-done flags. Esc is bound to "end meeting" inside
+  // LiveMeeting's keyboard handler, and Esc is muscle memory for "close
+  // this thing," so an accidental press during a meeting silently
+  // erases the "you are here" anchor. The confirm gives the AM one
+  // chance to back out. Only the in-flight state is lost — captures
+  // and the agenda survive — but losing your cursor mid-meeting is the
+  // friction we're absorbing. Audit: wip MED (forgiveness gap).
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
 
   // Archived cards are hidden work — they shouldn't show up in the
   // Weekly WIP agenda, even if their status would otherwise mark them
@@ -191,9 +203,21 @@ export function WipPage() {
     setTab('live');
   }
 
+  // Actually wipe the in-flight meeting state. Only called after the
+  // confirm dialog — never directly from the End-meeting button or the
+  // Esc keybind. Drops the user back to the Agenda tab so the "what's
+  // next?" view replaces the no-longer-running stage.
   function endMeeting() {
     setMeeting({ phase: 'idle' });
     setTab('agenda');
+    setShowEndConfirm(false);
+  }
+
+  // What the End-meeting button + Esc keybind actually call. Pops the
+  // confirm; the user clicks "End meeting" in the dialog to fall through
+  // to endMeeting() above.
+  function requestEndMeeting() {
+    setShowEndConfirm(true);
   }
 
   function jumpTo(key: string) {
@@ -318,7 +342,9 @@ export function WipPage() {
                 onToggleDone={toggleDone}
                 onPrev={() => advance(-1)}
                 onNext={() => advance(1)}
-                onEnd={endMeeting}
+                // onEnd now requests-the-end (pops confirm); endMeeting
+                // is the actual wipe and runs only on confirm.
+                onEnd={requestEndMeeting}
               />
             )
             : (
@@ -349,6 +375,23 @@ export function WipPage() {
           itemCount={itemCount}
           estMinutes={estMinutes}
           onClose={() => setShowPreRead(false)}
+        />
+      )}
+
+      {showEndConfirm && (
+        <ConfirmDangerDialog
+          title="End the meeting?"
+          body={
+            <>
+              Your captures (notes, decisions, actions) stay saved. The
+              per-item timer, current item, and which items you've marked
+              done will reset — you won't be able to pick up where you
+              left off.
+            </>
+          }
+          confirmLabel="End meeting"
+          onConfirm={endMeeting}
+          onClose={() => setShowEndConfirm(false)}
         />
       )}
     </div>
