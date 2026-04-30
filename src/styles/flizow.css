@@ -7085,7 +7085,9 @@
     align-items: center;
     padding: 3px 10px;
     border-radius: 999px;
-    color: #fff;
+    /* color comes from inline style — JS picks white-or-black via
+       utils/avatar.bestTextColor() so contrast meets WCAG AA against
+       any user-picked background. Audit: design sweep 2026-04-30. */
     font-weight: 600;
     letter-spacing: 0;
     align-self: flex-start;
@@ -9117,9 +9119,14 @@
     background: rgba(48, 209, 88, 0.18);
     color: #30d158;
   }
+  /* Spent — neutral, not amber. Audit: design sweep 2026-04-30.
+     Amber reads as "warning"; spending an earned credit is a
+     normal completed transaction, not a problem. Soft grey tint
+     keeps the +1 / −1 visual contrast (green vs neutral) without
+     breaking semantic color. */
   .timeoff-credits-delta--spent {
-    background: rgba(255, 159, 10, 0.18);
-    color: #ff9f0a;
+    background: var(--bg-soft);
+    color: var(--text-muted);
   }
   .timeoff-credits-text {
     flex: 1;

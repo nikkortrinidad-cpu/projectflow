@@ -22,7 +22,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useFlizow } from '../store/useFlizow';
 import { flizowStore } from '../store/flizowStore';
 import type { AccessRole, CreditExpiryPolicy, Holiday, HolidayCountry, HolidayObservationDefault, JobTitle, JobTitleKind, Member, TimeOffRequest, TrashEntry, TrashKind, WorkspaceMembership } from '../types/flizow';
-import { initialsOf } from '../utils/avatar';
+import { initialsOf, bestTextColor } from '../utils/avatar';
 import { ConfirmDangerDialog } from './ConfirmDangerDialog';
 import { useMemberProfile } from '../contexts/MemberProfileContext';
 import { currentVacationPeriod } from '../utils/memberProfile';
@@ -1461,7 +1461,10 @@ function MembersSection() {
                           {jt && (
                             <span
                               className="mbrs-tag mbrs-tag--jt"
-                              style={{ background: jt.color || 'var(--bg-soft)', color: '#fff' }}
+                              style={{
+                                background: jt.color || 'var(--bg-soft)',
+                                color: jt.color ? bestTextColor(jt.color) : 'var(--text)',
+                              }}
                               title={`Job title: ${jt.label}`}
                             >
                               {jt.label}

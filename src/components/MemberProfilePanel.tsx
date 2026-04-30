@@ -16,6 +16,7 @@ import { useMemberProfile } from '../contexts/MemberProfileContext';
 import { useFlizow } from '../store/useFlizow';
 import { flizowStore } from '../store/flizowStore';
 import { loadFor, effectiveCapFor, zoneFor, type CapacityTask } from '../utils/capacity';
+import { bestTextColor } from '../utils/avatar';
 import { can } from '../utils/access';
 import {
   currentVacationPeriod,
@@ -378,7 +379,10 @@ function ProfileBody({ member, onClose }: { member: Member; onClose: () => void 
               return (
                 <div
                   className="member-profile-role member-profile-role--pill"
-                  style={{ background: jt.color || 'var(--bg-soft)' }}
+                  style={{
+                    background: jt.color || 'var(--bg-soft)',
+                    color: jt.color ? bestTextColor(jt.color) : 'var(--text)',
+                  }}
                   title={jt.kind === 'account-manager' ? 'Account manager' : 'Operator'}
                 >
                   {jt.label}
