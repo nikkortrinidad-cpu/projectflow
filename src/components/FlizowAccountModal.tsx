@@ -24,6 +24,7 @@ import { flizowStore } from '../store/flizowStore';
 import type { AccessLevel, Member, TrashEntry, TrashKind } from '../types/flizow';
 import { initialsOf } from '../utils/avatar';
 import { ConfirmDangerDialog } from './ConfirmDangerDialog';
+import { useMemberProfile } from '../contexts/MemberProfileContext';
 
 /**
  * FlizowAccountModal — the Account Settings overlay reachable from the
@@ -998,6 +999,10 @@ function MembersSection() {
   // a card edit elsewhere doesn't re-render this list.
   const meta = useSyncExternalStore(store.subscribeWorkspace, store.getWorkspaceMeta);
   const ownUid = store.getCurrentMemberId();
+  // Profile-panel hook — clicking a member avatar opens their profile
+  // sheet (the Account modal stays open behind, so the user can hop
+  // between profiles without losing their place in settings).
+  const profile = useMemberProfile();
 
   const [inviting, setInviting] = useState(false);
   const [inviteRole, setInviteRole] = useState<AccessLevel>('editor');
@@ -1247,9 +1252,26 @@ function MembersSection() {
             // the assignable record (caps, color, type, etc.). The two
             // are linked by uid === id for any member who has signed in.
             const dataMember = data.members.find(dm => dm.id === m.uid);
+            // Hide the profile-open click on members who have no
+            // data.member record yet (invitees who haven't signed in).
+            // The panel reads from data.members and would render a
+            // blank shell otherwise — better to leave the avatar as a
+            // plain visual until they have a profile to view.
+            const canOpenProfile = !!dataMember;
             return (
               <div key={m.uid} className="mbrs-row">
-                <div className="mbrs-avatar" aria-hidden="true">{initials}</div>
+                {canOpenProfile ? (
+                  <button
+                    type="button"
+                    className="mbrs-avatar mbrs-avatar--clickable"
+                    onClick={() => profile.open(m.uid)}
+                    aria-label={`Open profile for ${m.displayName || m.email || 'this member'}`}
+                  >
+                    {initials}
+                  </button>
+                ) : (
+                  <div className="mbrs-avatar" aria-hidden="true">{initials}</div>
+                )}
                 <div className="mbrs-identity">
                   <div className="mbrs-name">
                     <span className="mbrs-name-text">{m.displayName || m.email || 'Unnamed'}</span>

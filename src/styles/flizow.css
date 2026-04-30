@@ -5726,6 +5726,26 @@
     background: #5e5ce6; color: #fff;
     letter-spacing: -0.01em;
   }
+  /* Clickable variant — used when the row has a real data.member
+     record and clicking the avatar opens the profile panel. The
+     base .mbrs-avatar styles still apply; this layers in the
+     interactive cues (cursor + hover lift + focus ring) and resets
+     the button-element defaults so the visual stays a plain circle. */
+  button.mbrs-avatar--clickable {
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+    transition: transform var(--dur-fast, 120ms) ease, box-shadow var(--dur-fast, 120ms) ease;
+  }
+  button.mbrs-avatar--clickable:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 3px var(--highlight-soft);
+  }
+  button.mbrs-avatar--clickable:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
+  }
   .mbrs-avatar--pending {
     background: var(--bg-soft);
     border: 1px dashed var(--hairline);
