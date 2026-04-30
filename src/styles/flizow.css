@@ -6514,6 +6514,336 @@
     }
   }
 
+  /* ───── Member profile side-panel ─────
+     Slides in from the right when any member avatar is clicked.
+     Owns identity, contact, bio, skills, and "working with" sections.
+     Read-only in Phase 2; Phase 3 adds the edit affordance + photo
+     upload. The panel reads from the live store (useFlizow) so a
+     peer's edit lands without a refetch.
+
+     Layout: fixed-position sheet, 420px wide on desktop, full-screen
+     on mobile. Backdrop dims the page beneath at 30% opacity to
+     focus attention without making the rest of the app look broken. */
+
+  .member-profile-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    z-index: 1480;
+    animation: member-profile-fade-in var(--dur-med, 200ms) ease-out;
+  }
+
+  .member-profile-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(420px, 100vw);
+    z-index: 1490;
+    background: var(--bg-elev);
+    border-left: 1px solid var(--hairline);
+    box-shadow: -16px 0 40px rgba(0, 0, 0, 0.18);
+    display: flex;
+    flex-direction: column;
+    animation: member-profile-slide-in var(--dur-med, 200ms) ease-out;
+    overflow: hidden;
+  }
+
+  @keyframes member-profile-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes member-profile-slide-in {
+    from { transform: translateX(100%); }
+    to   { transform: translateX(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .member-profile-backdrop,
+    .member-profile-panel { animation: none; }
+  }
+
+  /* Header — avatar + name + role + close. The X close button sits
+     in the top-right and never overlaps the avatar, even on the
+     narrowest panels, because the identity column flexes between. */
+  .member-profile-head {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: flex-start;
+    gap: var(--sp-base);
+    padding: var(--sp-3xl) var(--sp-3xl) var(--sp-xl);
+    border-bottom: 1px solid var(--hairline-soft);
+  }
+  .member-profile-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--fs-xl);
+    font-weight: 600;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .member-profile-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .member-profile-avatar-initials {
+    letter-spacing: -0.01em;
+  }
+  .member-profile-identity {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-micro);
+  }
+  .member-profile-name {
+    margin: 0;
+    font-size: var(--fs-xl);
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.015em;
+    line-height: var(--lh-heading, 1.15);
+    overflow-wrap: break-word;
+  }
+  .member-profile-role {
+    font-size: var(--fs-md);
+    color: var(--text-soft);
+    letter-spacing: -0.005em;
+  }
+  /* Vacation pill — sits under the role line. Warm orange tint so
+     it's clearly a status callout, not chrome. The 🌴 emoji is the
+     one place we use emoji per the design language exception ("only
+     when the user explicitly requests it" — the user did, in spec). */
+  .member-profile-vacation {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-xs);
+    padding: var(--sp-micro) var(--sp-md);
+    border-radius: 999px;
+    background: var(--highlight-soft);
+    color: var(--highlight);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    width: fit-content;
+    margin-top: var(--sp-xs);
+  }
+  .member-profile-vacation-icon {
+    font-size: var(--fs-md);
+  }
+  .member-profile-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: transparent;
+    border: 0;
+    color: var(--text-soft);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background var(--dur-fast, 120ms) ease, color var(--dur-fast, 120ms) ease;
+  }
+  .member-profile-close svg {
+    width: 18px;
+    height: 18px;
+  }
+  .member-profile-close:hover {
+    background: var(--bg-soft);
+    color: var(--text);
+  }
+  .member-profile-close:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
+  }
+
+  /* Body — scrollable column of sections. */
+  .member-profile-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: var(--sp-xl) var(--sp-3xl) var(--sp-3xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3xl);
+  }
+
+  .member-profile-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-md);
+  }
+  .member-profile-section-label {
+    margin: 0;
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    color: var(--text-soft);
+  }
+
+  /* Contact rows — leading icon + label + value. Compact and
+     scannable. The label is intentionally muted so the value (which
+     is what the user wants) stands out. */
+  .member-profile-contact {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-sm);
+  }
+  .member-profile-contact-row {
+    display: grid;
+    grid-template-columns: 16px auto 1fr;
+    align-items: center;
+    gap: var(--sp-base);
+    font-size: var(--fs-md);
+  }
+  .member-profile-contact-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--text-faint);
+  }
+  .member-profile-contact-label {
+    color: var(--text-faint);
+    font-size: var(--fs-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 500;
+  }
+  .member-profile-contact-value {
+    color: var(--text);
+    text-decoration: none;
+    word-break: break-word;
+  }
+  a.member-profile-contact-value:hover {
+    color: var(--highlight);
+    text-decoration: underline;
+  }
+
+  /* Bio — readable paragraph treatment. Caps at 60ch so long bios
+     don't sprawl across the panel width. */
+  .member-profile-bio {
+    margin: 0;
+    font-size: var(--fs-md);
+    line-height: var(--lh-relaxed, 1.6);
+    color: var(--text);
+    max-width: 60ch;
+    white-space: pre-wrap;
+  }
+
+  /* Skills chip list — small soft pills. Wraps freely; long lists
+     just push down the section. */
+  .member-profile-skills {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-xs);
+  }
+  .member-profile-skill {
+    padding: var(--sp-micro) var(--sp-md);
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 999px;
+    color: var(--text);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    letter-spacing: -0.005em;
+  }
+
+  /* "Working with" section — list of clients per role + today's
+     load metric line. Each role row stacks the icon+label header
+     above the comma-separated client list. */
+  .member-profile-working {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-md);
+  }
+  .member-profile-working-row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-micro);
+  }
+  .member-profile-working-head {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-xs);
+  }
+  .member-profile-working-icon {
+    width: 14px;
+    height: 14px;
+    color: var(--text-faint);
+  }
+  .member-profile-working-label {
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+    color: var(--text-soft);
+  }
+  .member-profile-working-values {
+    font-size: var(--fs-md);
+    color: var(--text);
+    line-height: var(--lh-relaxed, 1.6);
+    padding-left: 22px;
+  }
+  .member-profile-empty {
+    margin: 0;
+    font-size: var(--fs-md);
+    color: var(--text-soft);
+    line-height: var(--lh-relaxed, 1.6);
+  }
+
+  /* Today's load — quiet metric. Zone modifier classes use the same
+     green/amber/red vocabulary the capacity heatmap uses, so users
+     who recognise the colour from one surface read it immediately
+     on the other. */
+  .member-profile-load {
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-xs);
+    margin-top: var(--sp-sm);
+    padding-top: var(--sp-md);
+    border-top: 1px solid var(--hairline-soft);
+    font-size: var(--fs-sm);
+    color: var(--text-soft);
+  }
+  .member-profile-load-value {
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.005em;
+  }
+  .member-profile-load--green .member-profile-load-value { color: var(--status-ok, var(--text)); }
+  .member-profile-load--amber .member-profile-load-value { color: var(--status-warn, #d97706); }
+  .member-profile-load--red   .member-profile-load-value { color: var(--status-fire); }
+  .member-profile-load-label  { color: var(--text-soft); }
+  .member-profile-load-note   { color: var(--text-faint); font-style: italic; }
+
+  /* Mobile — full-screen panel below 600px so the panel doesn't
+     squeeze the underlying page on phones. */
+  @media (max-width: 600px) {
+    .member-profile-panel {
+      width: 100vw;
+      border-left: 0;
+    }
+    .member-profile-head {
+      padding: var(--sp-xl) var(--sp-xl) var(--sp-base);
+    }
+    .member-profile-body {
+      padding: var(--sp-base) var(--sp-xl) var(--sp-xl);
+      gap: var(--sp-xl);
+    }
+  }
+
   /* ───── Reply composer ───── */
   .reply-composer {
     display: flex;

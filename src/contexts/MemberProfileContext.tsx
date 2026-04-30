@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useState, type ReactNode } from 'react';
+import { createContext, lazy, Suspense, useCallback, useContext, useState, type ReactNode } from 'react';
+
+// Lazy-import the panel so its bundle (Heroicons set, format helpers,
+// capacity utils) only loads when a profile is actually opened. The
+// provider itself is in the main chunk because it has to be at the
+// app root for the hook to work everywhere.
+const MemberProfilePanel = lazy(() =>
+  import('../components/MemberProfilePanel').then(m => ({ default: m.MemberProfilePanel })),
+);
 
 /**
  * MemberProfileContext — owns the "currently open profile" state for
@@ -46,6 +54,15 @@ export function MemberProfileProvider({ children }: { children: ReactNode }) {
   return (
     <MemberProfileContext.Provider value={{ activeId, open, close }}>
       {children}
+      {/* Panel renders lazily once a profile is opened. Suspense
+          fallback is null — the slide-in animation absorbs the
+          one-frame load delay so users don't see a flicker.
+          Gated on activeId so the chunk doesn't load until needed. */}
+      {activeId && (
+        <Suspense fallback={null}>
+          <MemberProfilePanel />
+        </Suspense>
+      )}
     </MemberProfileContext.Provider>
   );
 }
