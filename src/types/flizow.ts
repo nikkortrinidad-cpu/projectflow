@@ -1018,4 +1018,124 @@ export interface FlizowData {
   /** ISO timestamp the ops brief was last saved. Drives the
    *  "Last updated · X ago" indicator on the Ops board's brief strip. */
   opsBriefUpdatedAt?: string;
+  /** Workspace-wide Trash bin. Soft-deleted items live here for 90
+   *  days before auto-empty. Holds notes, contacts, quick links,
+   *  comments, touchpoints, action items, onboarding items, manual
+   *  agenda items, tasks, ops tasks, services, clients, and
+   *  user-created templates. Cascading deletes (client/service)
+   *  bundle every child into a single TrashEntry so restore is
+   *  atomic — restoring a deleted client brings every cascade
+   *  child back with it.
+   *
+   *  Three things are deliberately excluded from Trash and stay
+   *  hard-delete: checklist items (chatty), meeting captures
+   *  (live-meeting scratch), and notification dismissals (system
+   *  noise). The undo toast catches accidental clicks on those.
+   *
+   *  Empty array on a fresh workspace; backfilled by migrate() on
+   *  legacy data. */
+  trash: TrashEntry[];
+}
+
+// ── Trash bin ────────────────────────────────────────────────────────────
+
+/**
+ * Discriminator for Trash entries. Maps 1:1 to which `data.<array>` the
+ * payload came from — drives both the icon shown in the Trash UI and
+ * which restore branch fires when the user clicks Restore.
+ *
+ * Three categories of soft-deletable thing skip Trash and remain
+ * hard-delete (handled via the undo toast instead): checklist items
+ * inside cards, meeting captures, and notification dismissals.
+ */
+export type TrashKind =
+  | 'note'
+  | 'contact'
+  | 'quickLink'
+  | 'comment'
+  | 'touchpoint'
+  | 'actionItem'
+  | 'onboardingItem'
+  | 'manualAgendaItem'
+  | 'task'
+  | 'opsTask'
+  | 'service'
+  | 'client'
+  | 'template';
+
+/**
+ * Cascade payload for a deleted client. Restoring a client TrashEntry
+ * walks every field here and re-pushes them into their respective
+ * top-level FlizowData arrays in one atomic save() — same shape that
+ * existed before the delete, minus any fields that were already missing
+ * (e.g. no `actionItems` for a client that never had any).
+ *
+ * Lives in its own type rather than inline because the client cascade is
+ * the largest in the system and reads more clearly as a named block.
+ */
+export interface ClientCascadePayload {
+  services: Service[];
+  tasks: Task[];
+  comments: TaskComment[];
+  activity: TaskActivity[];
+  contacts: Contact[];
+  quickLinks: QuickLink[];
+  notes: Note[];
+  touchpoints: Touchpoint[];
+  actionItems: ActionItem[];
+  onboardingItems: OnboardingItem[];
+  integrations: Integration[];
+}
+
+/**
+ * Discriminated union — every TrashKind has a shape that matches what
+ * needs to be restored. Tasks bundle their comments + activity. Services
+ * bundle their tasks + comments + activity + onboarding. Clients bundle
+ * the whole subtree.
+ *
+ * The top-level `kind` on TrashEntry duplicates this `kind` so a UI can
+ * filter the trash list without unwrapping every payload — small dup,
+ * worth the ergonomics.
+ */
+export type TrashPayload =
+  | { kind: 'note'; data: Note }
+  | { kind: 'contact'; data: Contact }
+  | { kind: 'quickLink'; data: QuickLink }
+  | { kind: 'comment'; data: TaskComment }
+  | { kind: 'touchpoint'; data: Touchpoint; actionItems: ActionItem[] }
+  | { kind: 'actionItem'; data: ActionItem }
+  | { kind: 'onboardingItem'; data: OnboardingItem }
+  | { kind: 'manualAgendaItem'; data: ManualAgendaItem }
+  | { kind: 'task'; data: Task; comments: TaskComment[]; activity: TaskActivity[] }
+  | { kind: 'opsTask'; data: OpsTask; activity: TaskActivity[] }
+  | { kind: 'service'; data: Service; tasks: Task[]; comments: TaskComment[]; activity: TaskActivity[]; onboardingItems: OnboardingItem[] }
+  | { kind: 'client'; data: Client; cascade: ClientCascadePayload }
+  | { kind: 'template'; data: TemplateRecord };
+
+/**
+ * One row in `data.trash`. Created by `flizowStore.sendToTrash()` when
+ * a soft-deletable thing is deleted; consumed by `restoreFromTrash()`,
+ * `purgeFromTrash()`, or the 90-day auto-empty path.
+ *
+ * Field choices:
+ *   - `id` is distinct from the original record's id so you can re-trash
+ *     an item that was previously trashed + restored without colliding
+ *   - `kind` duplicates the payload's kind so list filtering is cheap
+ *   - `deletedBy` is `null` when no member context exists (rare — only
+ *     happens before the first sign-in or in some demo paths). Real
+ *     deletes always carry the actor's member id for the audit trail
+ *   - `preview` is a short string for the row label; the UI may
+ *     truncate further but we always store something non-empty
+ *   - `parentLabel` is optional human context ("in Acme Corp") shown
+ *     under the row. Resolved at delete time so a later parent rename
+ *     doesn't drift the trash row out of sync
+ */
+export interface TrashEntry {
+  id: string;
+  kind: TrashKind;
+  deletedAt: string;
+  deletedBy: string | null;
+  preview: string;
+  parentLabel?: string;
+  payload: TrashPayload;
 }

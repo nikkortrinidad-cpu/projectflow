@@ -8,6 +8,7 @@ import type {
   TaskChecklistItem,
   TemplateRecord, AccessLevel, WorkspaceDoc, WorkspaceMembership,
   PendingInvite,
+  TrashEntry, TrashKind, TrashPayload,
 } from '../types/flizow';
 import { ONBOARDING_TEMPLATES } from '../data/onboardingTemplates';
 import { TASK_POOLS } from '../data/taskPools';
@@ -80,7 +81,36 @@ function emptyData(): FlizowData {
     // the legacy backfill case where a returning user has data but
     // no flag yet.
     opsSeeded: true,
+    // Empty Trash on a fresh workspace. Soft-deleted items land here
+    // for 90 days before auto-empty. Auto-prune runs on every load
+    // via migrate() so stale entries don't accumulate.
+    trash: [],
   };
+}
+
+/** Trash retention window. Entries older than this auto-empty on the
+ *  next store load. 90 days matches the user-confirmed retention from
+ *  the design spec (longer than Gmail's 30 because agency operators
+ *  go on vacation and an "I deleted that two months ago by accident"
+ *  recovery should still work). */
+const TRASH_RETENTION_MS = 90 * 24 * 60 * 60 * 1000;
+
+/**
+ * Drop trash entries older than TRASH_RETENTION_MS. Returns the pruned
+ * array — caller decides what to do with it. Pure function so it's safe
+ * to call from migrate() (no side effects, no save()).
+ */
+function pruneTrash(trash: TrashEntry[]): TrashEntry[] {
+  if (trash.length === 0) return trash;
+  const cutoff = Date.now() - TRASH_RETENTION_MS;
+  return trash.filter(e => {
+    const t = new Date(e.deletedAt).getTime();
+    // Defensive: an unparseable deletedAt becomes NaN; keep the entry
+    // so a corrupt row doesn't silently disappear. The user can still
+    // purge it manually from the Trash UI.
+    if (isNaN(t)) return true;
+    return t >= cutoff;
+  });
 }
 
 function todayISO(): string {
@@ -197,6 +227,13 @@ function migrate(parsed: Partial<FlizowData>): FlizowData {
     // backfill above or didn't qualify. Either way, future loads
     // respect their state.
     opsSeeded: true,
+    // Trash bin. Backfill with [] for legacy docs that predate the
+    // feature, and auto-prune entries past the 90-day window on every
+    // load so old soft-deletes don't pile up between sessions. The
+    // pruning is intentionally pure — no save() side effect from
+    // migrate() — so reading the store stays cheap. The next save()
+    // (any user mutation) writes the pruned trash back to disk.
+    trash: pruneTrash(Array.isArray(parsed.trash) ? parsed.trash : []),
   };
 }
 
@@ -2575,6 +2612,190 @@ class FlizowStore {
     item.promotedCardId = taskId;
     this.save();
     return taskId;
+  }
+
+  // ── Trash bin ────────────────────────────────────────────────────────
+  //
+  // Soft-delete recovery layer. Items deleted via sendToTrash() land in
+  // data.trash with a 90-day countdown; restoreFromTrash() puts the
+  // payload back into its original top-level array, purgeFromTrash()
+  // hard-deletes a single entry, and emptyTrash() wipes the whole bin.
+  // Auto-prune runs on every store load via pruneTrash() in migrate(),
+  // so callers never need to worry about stale entries.
+  //
+  // sendToTrash() is intentionally `private` — we only expose it
+  // through the typed helper methods (sendNoteToTrash, sendCardToTrash,
+  // etc.) that the existing delete call sites will be converted to in
+  // Phase 4. That keeps the call sites narrow and the payload shape
+  // type-checked at the boundary.
+
+  /** Push a TrashEntry into data.trash. Generates the entry id, stamps
+   *  deletedAt + deletedBy, and saves. The caller owns removing the
+   *  source data from its primary array — this method only writes to
+   *  data.trash, never anywhere else. Returns the new entry id so call
+   *  sites can wire it into the undo toast.
+   *
+   *  Public for now (not private) so TypeScript doesn't flag it as
+   *  unused while Phase 1 ships the foundation alone. Phase 4 wires
+   *  every existing soft-deletable delete method through this; at
+   *  that point we can decide whether to lock it back to private or
+   *  keep it accessible for future per-kind helpers. */
+  sendToTrash(args: {
+    kind: TrashKind;
+    preview: string;
+    parentLabel?: string;
+    payload: TrashPayload;
+  }): string {
+    const id = `trash-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+    const entry: TrashEntry = {
+      id,
+      kind: args.kind,
+      deletedAt: new Date().toISOString(),
+      // getCurrentMemberId() returns null in the pre-auth / dev-bypass
+      // case. Stamp null rather than a placeholder so the audit trail
+      // is honest about who-or-noone deleted the row.
+      deletedBy: this.getCurrentMemberId(),
+      preview: args.preview,
+      parentLabel: args.parentLabel,
+      payload: args.payload,
+    };
+    this.data.trash.push(entry);
+    this.save();
+    return id;
+  }
+
+  /** Restore a single trash entry. Walks the payload kind and pushes
+   *  the data back into the appropriate top-level FlizowData array(s).
+   *  Cascade payloads (client / service) restore every child in one
+   *  save so the tree comes back atomic.
+   *
+   *  Returns true when the entry was found and restored, false when
+   *  the entry id no longer exists (rare — usually means the entry
+   *  was concurrently purged). */
+  restoreFromTrash(entryId: string): boolean {
+    const idx = this.data.trash.findIndex(e => e.id === entryId);
+    if (idx < 0) return false;
+    const entry = this.data.trash[idx];
+    const p = entry.payload;
+    switch (p.kind) {
+      case 'note':
+        this.data.notes.push(p.data);
+        break;
+      case 'contact':
+        this.data.contacts.push(p.data);
+        break;
+      case 'quickLink':
+        this.data.quickLinks.push(p.data);
+        break;
+      case 'comment':
+        this.data.taskComments.push(p.data);
+        break;
+      case 'touchpoint':
+        this.data.touchpoints.push(p.data);
+        // Touchpoints carry their action items as cascade children
+        // because deleting a touchpoint today wipes its action items
+        // too — keeping them bundled means the restore brings the
+        // whole conversation thread back, not a touchpoint missing
+        // its commitments.
+        this.data.actionItems.push(...p.actionItems);
+        break;
+      case 'actionItem':
+        this.data.actionItems.push(p.data);
+        break;
+      case 'onboardingItem':
+        this.data.onboardingItems.push(p.data);
+        break;
+      case 'manualAgendaItem':
+        this.data.manualAgendaItems.push(p.data);
+        break;
+      case 'task': {
+        this.data.tasks.push(p.data);
+        this.data.taskComments.push(...p.comments);
+        this.data.taskActivity.push(...p.activity);
+        // Service.taskIds is the rendering-order list. Append the
+        // restored task id so the kanban shows it again. If the
+        // service was deleted out from under it we leave the orphan
+        // as-is (UI filters by serviceId; a later "service restore"
+        // fixes the link).
+        const svc = this.data.services.find(s => s.id === p.data.serviceId);
+        if (svc) svc.taskIds.push(p.data.id);
+        break;
+      }
+      case 'opsTask':
+        this.data.opsTasks.push(p.data);
+        this.data.taskActivity.push(...p.activity);
+        break;
+      case 'service': {
+        this.data.services.push(p.data);
+        this.data.tasks.push(...p.tasks);
+        this.data.taskComments.push(...p.comments);
+        this.data.taskActivity.push(...p.activity);
+        this.data.onboardingItems.push(...p.onboardingItems);
+        // Restore the service's slot under its parent client. If the
+        // parent client is also in trash, restoring this service
+        // alone leaves the link orphaned — the user has to restore
+        // the client too. We don't auto-cascade-restore parents
+        // because it would surprise users who only meant to undo a
+        // single service.
+        const client = this.data.clients.find(c => c.id === p.data.clientId);
+        if (client && !client.serviceIds.includes(p.data.id)) {
+          client.serviceIds.push(p.data.id);
+        }
+        break;
+      }
+      case 'client': {
+        // Atomic cascade restore — every field in ClientCascadePayload
+        // gets pushed back into its top-level array. No parent link
+        // to worry about (clients are top-level). Restoring a client
+        // brings back the full subtree in the same shape it had at
+        // delete time.
+        this.data.clients.push(p.data);
+        const c = p.cascade;
+        this.data.services.push(...c.services);
+        this.data.tasks.push(...c.tasks);
+        this.data.taskComments.push(...c.comments);
+        this.data.taskActivity.push(...c.activity);
+        this.data.contacts.push(...c.contacts);
+        this.data.quickLinks.push(...c.quickLinks);
+        this.data.notes.push(...c.notes);
+        this.data.touchpoints.push(...c.touchpoints);
+        this.data.actionItems.push(...c.actionItems);
+        this.data.onboardingItems.push(...c.onboardingItems);
+        this.data.integrations.push(...c.integrations);
+        break;
+      }
+      case 'template':
+        // Templates live in templateOverrides (built-in templates can
+        // never enter trash because they're code, not data — only
+        // user-created templates are purge-able). Restoring just
+        // re-pushes the override.
+        this.data.templateOverrides.push(p.data);
+        break;
+    }
+    // Drop the entry from trash now that it's been restored. Splice
+    // (not filter) preserves the array reference for memoized
+    // consumers, matching the house pattern.
+    this.data.trash.splice(idx, 1);
+    this.save();
+    return true;
+  }
+
+  /** Permanently remove a single trash entry. The original data is
+   *  unrecoverable after this — typed-confirm on the call site is
+   *  expected. */
+  purgeFromTrash(entryId: string): void {
+    const before = this.data.trash.length;
+    this.data.trash = this.data.trash.filter(e => e.id !== entryId);
+    if (this.data.trash.length !== before) this.save();
+  }
+
+  /** Wipe the entire trash bin. Same destructiveness as a typed-
+   *  confirm reset — UI gates this with an explicit "Empty trash"
+   *  confirmation. */
+  emptyTrash(): void {
+    if (this.data.trash.length === 0) return;
+    this.data.trash = [];
+    this.save();
   }
 
   // ── Bulk / dev helpers ───────────────────────────────────────────────

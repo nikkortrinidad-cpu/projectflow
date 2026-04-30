@@ -1115,5 +1115,9 @@ export function generateDemoData(): FlizowData {
     // migrate() never tries to re-seed on top of the data we
     // bundle above.
     opsSeeded: true,
+    // Demo workspace ships with an empty Trash. Soft-deletes the
+    // user makes while exploring will populate this; on a fresh
+    // demo load nothing is in there yet.
+    trash: [],
   };
 }
