@@ -25,6 +25,7 @@ import type { AccessLevel, Member, TrashEntry, TrashKind } from '../types/flizow
 import { initialsOf } from '../utils/avatar';
 import { ConfirmDangerDialog } from './ConfirmDangerDialog';
 import { useMemberProfile } from '../contexts/MemberProfileContext';
+import { currentVacationPeriod } from '../utils/memberProfile';
 
 /**
  * FlizowAccountModal — the Account Settings overlay reachable from the
@@ -52,7 +53,7 @@ import { useMemberProfile } from '../contexts/MemberProfileContext';
  *   • Timezone-driven date formatting — future pass
  */
 
-type Section = 'profile' | 'workspace' | 'preferences' | 'notifications' | 'members' | 'trash' | 'signin';
+type Section = 'profile' | 'workspace' | 'preferences' | 'notifications' | 'timeoff' | 'members' | 'trash' | 'signin';
 
 const AVATAR_COLORS = [
   { id: 'indigo', hex: '#5e5ce6', label: 'Indigo' },
@@ -449,6 +450,22 @@ export default function FlizowAccountModal({ onClose }: Props) {
             <NavItem section="notifications" label="Notifications" active={section === 'notifications'} onClick={() => setSection('notifications')}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
             </NavItem>
+            {/* Time off — personal vacation / out-of-office config.
+                Sits next to Notifications because both are personal
+                preferences ("how I operate"); Members + Trash that
+                follow are workspace-level. The profile panel reads
+                each member's timeOff to render the "🌴 On vacation"
+                pill, but the editing surface for YOUR own time off
+                lives here so it doesn't collide with the panel's
+                identity-only edit form. */}
+            <NavItem section="timeoff" label="Time off" active={section === 'timeoff'} onClick={() => setSection('timeoff')}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 22a8 8 0 0 1 16 0" />
+                <path d="M5 12c5-3 11-3 16 0" />
+                <path d="M2 12c1.5-4.5 5.5-7 10-7" />
+                <circle cx="12" cy="5" r="2" />
+              </svg>
+            </NavItem>
             <NavItem section="members" label="Members" active={section === 'members'} onClick={() => setSection('members')}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -757,6 +774,11 @@ export default function FlizowAccountModal({ onClose }: Props) {
                   Email digests, mention alerts, and per-channel controls land when email delivery wires up.
                 </p>
               </section>
+            )}
+
+            {/* ── Time off ────────────────────────────────────────── */}
+            {section === 'timeoff' && (
+              <TimeOffSection />
             )}
 
             {/* ── Members ────────────────────────────────────────── */}
@@ -1342,6 +1364,451 @@ function MembersSection() {
  *  fields as read-only. Image-upload logo deferred (needs Firebase
  *  Storage + uploader); initials + color tile carries 90% of the
  *  value for now. */
+
+// ── Time off section ────────────────────────────────────────────────────
+//
+// Self-service-only configuration of the signed-in user's vacation
+// periods. Reads + writes data.members[me].timeOff. The toggle reflects
+// whether ANY currently-active period covers today; clicking it pops a
+// date-picker modal to schedule a new period (when off) or asks to end
+// the current one (when on).
+//
+// The list below the toggle shows every period — current/upcoming first,
+// then past — with Edit + Remove actions per row.
+//
+// Profile panel (MemberProfilePanel) reads each member's timeOff to
+// render the "🌴 On vacation" pill; this surface is the only place
+// you edit your own.
+
+function TimeOffSection() {
+  const { data, store } = useFlizow();
+  const currentId = store.getCurrentMemberId();
+  const me = currentId ? data.members.find(m => m.id === currentId) ?? null : null;
+
+  // Modal state — null when closed; an `editIndex` of -1 means "adding
+  // a new period," any other index means "editing the existing one."
+  // Drafts live on the modal itself, not here, so cancel doesn't need
+  // a manual reset.
+  const [modalOpen, setModalOpen] = useState<{ editIndex: number } | null>(null);
+
+  if (!currentId || !me) {
+    return (
+      <section
+        className="acct-section"
+        role="tabpanel"
+        id="acct-panel-timeoff"
+        aria-labelledby="acct-tab-timeoff"
+        tabIndex={0}
+        data-active="true"
+      >
+        <div className="acct-section-header">
+          <h3 className="acct-section-title">Time off</h3>
+          <p className="acct-section-sub">Sign in to manage your time off.</p>
+        </div>
+      </section>
+    );
+  }
+
+  const periods = me.timeOff ?? [];
+  const today = data.today;
+
+  // Bucket periods into past vs current/upcoming for the two-list
+  // display. A period counts as past when its end date is strictly
+  // before today; a current period (today inside) counts as upcoming
+  // for grouping purposes so the user sees their active vacation
+  // alongside what's coming next.
+  const upcoming: Array<{ period: { start: string; end: string }; index: number }> = [];
+  const past:     Array<{ period: { start: string; end: string }; index: number }> = [];
+  periods.forEach((period, index) => {
+    if (period.end < today) past.push({ period, index });
+    else upcoming.push({ period, index });
+  });
+  upcoming.sort((a, b) => a.period.start.localeCompare(b.period.start));
+  past.sort((a, b) => b.period.end.localeCompare(a.period.end));
+
+  // Active = today inside any period. Drives the toggle's checked
+  // state and the "End time off" path.
+  const activePeriod = currentVacationPeriod(me, today);
+  const isCurrentlyAway = !!activePeriod;
+
+  function setPeriods(next: Array<{ start: string; end: string }>) {
+    store.updateMember(currentId!, { timeOff: next });
+  }
+
+  function handleToggle(checked: boolean) {
+    if (checked) {
+      // OFF → ON: open the modal for a new period. Default range
+      // starts today and ends tomorrow — most users want a quick
+      // "I'm out today + tomorrow" entry, with the option to extend.
+      setModalOpen({ editIndex: -1 });
+    } else {
+      // ON → OFF: end the active period now by clipping its end
+      // date to yesterday. This preserves the period's history
+      // (admins can still see "Sarah was out May 13–14") rather
+      // than deleting the row, while flipping the live status off.
+      if (!activePeriod) return;
+      const yesterday = isoOffsetDays(today, -1);
+      const idx = periods.findIndex(p => p.start === activePeriod.start && p.end === activePeriod.end);
+      if (idx === -1) return;
+      const next = periods.map((p, i) =>
+        i === idx ? { ...p, end: yesterday < p.start ? p.start : yesterday } : p,
+      );
+      setPeriods(next);
+    }
+  }
+
+  function handleAdd() {
+    setModalOpen({ editIndex: -1 });
+  }
+  function handleEdit(index: number) {
+    setModalOpen({ editIndex: index });
+  }
+  function handleRemove(index: number) {
+    const next = periods.filter((_, i) => i !== index);
+    setPeriods(next);
+  }
+  function handleSave(period: { start: string; end: string }) {
+    if (!modalOpen) return;
+    if (modalOpen.editIndex === -1) {
+      setPeriods([...periods, period]);
+    } else {
+      const next = periods.map((p, i) => i === modalOpen.editIndex ? period : p);
+      setPeriods(next);
+    }
+    setModalOpen(null);
+  }
+
+  return (
+    <section
+      className="acct-section"
+      role="tabpanel"
+      id="acct-panel-timeoff"
+      aria-labelledby="acct-tab-timeoff"
+      tabIndex={0}
+      data-active="true"
+    >
+      <div className="acct-section-header">
+        <h3 className="acct-section-title">Time off</h3>
+        <p className="acct-section-sub">
+          Tell your team you'll be away. Active time off shows a "🌴 On vacation" pill
+          on your profile and dims your row in the capacity heatmap.
+        </p>
+      </div>
+
+      <Row
+        title="Currently away"
+        sub={
+          isCurrentlyAway
+            ? `Active through ${formatDateLong(activePeriod!.end)}`
+            : 'Toggle on to schedule time off — pick a from + to date.'
+        }
+      >
+        <Toggle
+          checked={isCurrentlyAway}
+          onChange={handleToggle}
+          label="Currently away"
+        />
+      </Row>
+
+      <div className="acct-section-divider">
+        <div className="acct-eyebrow">Scheduled time off</div>
+        {upcoming.length === 0 ? (
+          <div className="timeoff-empty">No upcoming time off.</div>
+        ) : (
+          <ul className="timeoff-list">
+            {upcoming.map(({ period, index }) => (
+              <TimeOffRow
+                key={`up-${index}`}
+                period={period}
+                isActive={!!activePeriod && period.start === activePeriod.start && period.end === activePeriod.end}
+                onEdit={() => handleEdit(index)}
+                onRemove={() => handleRemove(index)}
+              />
+            ))}
+          </ul>
+        )}
+        <button
+          type="button"
+          className="acct-btn-text"
+          onClick={handleAdd}
+          style={{ marginTop: 'var(--sp-base)' }}
+        >
+          + Schedule time off
+        </button>
+      </div>
+
+      {past.length > 0 && (
+        <div className="acct-section-divider">
+          <div className="acct-eyebrow">Past time off</div>
+          <ul className="timeoff-list">
+            {past.map(({ period, index }) => (
+              <TimeOffRow
+                key={`past-${index}`}
+                period={period}
+                isActive={false}
+                onEdit={() => handleEdit(index)}
+                onRemove={() => handleRemove(index)}
+                muted
+              />
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {modalOpen && (
+        <TimeOffPeriodModal
+          initialStart={
+            modalOpen.editIndex >= 0
+              ? periods[modalOpen.editIndex].start
+              : today
+          }
+          initialEnd={
+            modalOpen.editIndex >= 0
+              ? periods[modalOpen.editIndex].end
+              : isoOffsetDays(today, 1)
+          }
+          isEditing={modalOpen.editIndex >= 0}
+          onSave={handleSave}
+          onClose={() => setModalOpen(null)}
+        />
+      )}
+    </section>
+  );
+}
+
+function TimeOffRow({
+  period,
+  isActive,
+  onEdit,
+  onRemove,
+  muted,
+}: {
+  period: { start: string; end: string };
+  isActive: boolean;
+  onEdit: () => void;
+  onRemove: () => void;
+  muted?: boolean;
+}) {
+  return (
+    <li className={`timeoff-row${muted ? ' timeoff-row--muted' : ''}`}>
+      <div className="timeoff-row-main">
+        <span className="timeoff-row-dates">
+          {formatPeriodLabel(period.start, period.end)}
+        </span>
+        {isActive && (
+          <span className="timeoff-row-active-pill">Currently away</span>
+        )}
+      </div>
+      <div className="timeoff-row-actions">
+        <button
+          type="button"
+          className="acct-btn-text"
+          onClick={onEdit}
+        >
+          Edit
+        </button>
+        <button
+          type="button"
+          className="acct-btn-text timeoff-row-remove"
+          onClick={onRemove}
+          aria-label={`Remove ${formatPeriodLabel(period.start, period.end)}`}
+        >
+          Remove
+        </button>
+      </div>
+    </li>
+  );
+}
+
+/** Modal for adding or editing a single time-off period. Uses native
+ *  `<input type="date">` for the calendar pickers — every modern
+ *  browser pops a date grid on click without us shipping a third-
+ *  party library. */
+function TimeOffPeriodModal({
+  initialStart,
+  initialEnd,
+  isEditing,
+  onSave,
+  onClose,
+}: {
+  initialStart: string;
+  initialEnd: string;
+  isEditing: boolean;
+  onSave: (period: { start: string; end: string }) => void;
+  onClose: () => void;
+}) {
+  const [start, setStart] = useState(initialStart);
+  const [end, setEnd] = useState(initialEnd);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  // Esc closes; same convention as the other modals in the app.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const valid = start && end && start <= end;
+
+  function handleSave() {
+    if (!valid) return;
+    onSave({ start, end });
+  }
+
+  function handleBackdropClick(e: React.MouseEvent<HTMLDivElement>) {
+    if (e.target === e.currentTarget) onClose();
+  }
+
+  return (
+    <div
+      className="wip-modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="timeoff-modal-title"
+      onClick={handleBackdropClick}
+    >
+      <div ref={dialogRef} className="wip-modal" role="document" style={{ maxWidth: 480 }}>
+        <header className="wip-modal-head">
+          <h2 className="wip-modal-title" id="timeoff-modal-title">
+            {isEditing ? 'Edit time off' : 'Schedule time off'}
+          </h2>
+          <button
+            type="button"
+            className="wip-modal-close"
+            onClick={onClose}
+            aria-label="Close"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </header>
+        <div className="wip-modal-body">
+          <p className="acct-section-sub" style={{ marginBottom: 'var(--sp-base)' }}>
+            Pick the first and last day you'll be away. Both dates are inclusive —
+            "May 13 to May 15" means you're out all three days.
+          </p>
+          <div className="timeoff-modal-grid">
+            <label className="member-profile-field">
+              <span className="member-profile-field-label">From</span>
+              <input
+                type="date"
+                className="acct-input"
+                value={start}
+                onChange={(e) => {
+                  setStart(e.target.value);
+                  // Auto-bump end if the user picks a start date that's
+                  // after the current end. Keeps the form consistent
+                  // without needing a separate validation toast.
+                  if (end < e.target.value) setEnd(e.target.value);
+                }}
+              />
+            </label>
+            <label className="member-profile-field">
+              <span className="member-profile-field-label">To</span>
+              <input
+                type="date"
+                className="acct-input"
+                value={end}
+                min={start}
+                onChange={(e) => setEnd(e.target.value)}
+              />
+            </label>
+          </div>
+          {!valid && (
+            <p className="acct-section-sub" style={{
+              color: 'var(--accent)',
+              marginTop: 'var(--sp-md)',
+              fontSize: 'var(--fs-sm)',
+            }}>
+              The "to" date must be the same as or after the "from" date.
+            </p>
+          )}
+        </div>
+        <footer className="wip-modal-foot">
+          <button
+            type="button"
+            className="wip-btn wip-btn-ghost"
+            onClick={onClose}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="wip-btn wip-btn-primary"
+            onClick={handleSave}
+            disabled={!valid}
+          >
+            {isEditing ? 'Save changes' : 'Schedule'}
+          </button>
+        </footer>
+      </div>
+    </div>
+  );
+}
+
+/** ISO date "2026-05-15" → "Wed, May 15". Used for the toggle's
+ *  "Active through Wed, May 15" sub line. */
+function formatDateLong(iso: string): string {
+  const d = parseLocalISO(iso);
+  if (!d) return iso;
+  return d.toLocaleDateString(undefined, {
+    weekday: 'short', month: 'short', day: 'numeric',
+  });
+}
+
+/** Format a from/to pair for the row label.
+ *    Same day → "May 15"
+ *    Same month → "May 13 – 15"
+ *    Different month → "May 30 – Jun 2"
+ *    Different year → falls back to the long form for clarity. */
+function formatPeriodLabel(start: string, end: string): string {
+  const a = parseLocalISO(start);
+  const b = parseLocalISO(end);
+  if (!a || !b) return `${start} – ${end}`;
+  if (start === end) {
+    return a.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  }
+  const sameYear = a.getFullYear() === b.getFullYear();
+  const sameMonth = sameYear && a.getMonth() === b.getMonth();
+  if (sameMonth) {
+    return `${a.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} – ${b.getDate()}`;
+  }
+  if (sameYear) {
+    return `${a.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} – ${b.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`;
+  }
+  return `${a.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} – ${b.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}`;
+}
+
+/** Parse a YYYY-MM-DD ISO date as a local-time Date so toLocaleDateString
+ *  doesn't slip a day under UTC. Returns null on bad input. */
+function parseLocalISO(iso: string): Date | null {
+  const parts = iso.split('-').map(Number);
+  if (parts.length !== 3) return null;
+  const [y, m, d] = parts;
+  if (!y || !m || !d) return null;
+  return new Date(y, m - 1, d);
+}
+
+/** Add (or subtract) days from a YYYY-MM-DD ISO date, returning a new
+ *  ISO string in the same format. Used for "tomorrow" / "yesterday"
+ *  defaulting in the toggle + modal flows. */
+function isoOffsetDays(iso: string, deltaDays: number): string {
+  const base = parseLocalISO(iso);
+  if (!base) return iso;
+  base.setDate(base.getDate() + deltaDays);
+  const y = base.getFullYear();
+  const m = String(base.getMonth() + 1).padStart(2, '0');
+  const d = String(base.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 function WorkspaceSection({
   nameDraft,
   setNameDraft,

@@ -1276,6 +1276,93 @@
     opacity: 1;
   }
 
+  /* ───── Time off rows (Account modal → Time off section) ─────
+     Configuration surface for the signed-in user's vacation periods.
+     Reads + writes data.members[me].timeOff. Each row shows a date
+     range + Edit/Remove actions; the "Currently away" pill highlights
+     the active period when today falls inside one. */
+
+  .timeoff-empty {
+    padding: var(--sp-md) 0;
+    color: var(--text-soft);
+    font-size: var(--fs-md);
+  }
+  .timeoff-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-xs);
+  }
+  .timeoff-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-base);
+    padding: var(--sp-md) var(--sp-base);
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 8px;
+  }
+  .timeoff-row--muted {
+    background: transparent;
+    color: var(--text-soft);
+  }
+  .timeoff-row-main {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-md);
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+  .timeoff-row-dates {
+    font-size: var(--fs-md);
+    font-weight: 500;
+    color: var(--text);
+  }
+  .timeoff-row--muted .timeoff-row-dates {
+    color: var(--text-soft);
+    font-weight: 400;
+  }
+  /* Active-period pill — soft orange tint matching the profile
+     panel's vacation pill so the visual signal is consistent
+     across both surfaces. */
+  .timeoff-row-active-pill {
+    padding: 2px var(--sp-sm);
+    border-radius: 999px;
+    background: var(--highlight-soft);
+    color: var(--highlight);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .timeoff-row-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-xs);
+    flex-shrink: 0;
+  }
+  /* Remove button leans destructive so accidental clicks read
+     as serious — uses the accent color on hover same as the
+     Templates archive's purge variant. */
+  .timeoff-row-remove:hover {
+    color: var(--accent);
+  }
+
+  /* Modal grid — From / To date pickers side-by-side, collapses
+     to single-column on narrow screens. */
+  .timeoff-modal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-base);
+  }
+  @media (max-width: 480px) {
+    .timeoff-modal-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
   /* Reset workspace row — wraps the trigger and the typed-confirm
      inline UI. Lifted out of inline styles in FlizowAccountModal so
      the layout primitives sit alongside the rest of the .acct- system
