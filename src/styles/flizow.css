@@ -6384,6 +6384,136 @@
     .toast.leaving { animation: none; opacity: 0; }
   }
 
+  /* ───── Undo toast ─────
+     The 5-second "Item deleted [Undo]" affordance. Distinct from
+     .toast above — this one is bottom-right, vertically stacked
+     with a centered Undo button (per the locked Trash spec). The
+     two systems coexist because their UX is different: .toast is
+     for status messages with an inline action; .undo-toast is for
+     a deliberate recovery prompt that needs a clear, single
+     primary action.
+
+     Layout matches the locked design:
+         ╭──────────────╮
+         │ Note deleted │
+         │    [Undo]    │
+         ╰──────────────╯
+     */
+  .undo-toast {
+    position: fixed;
+    bottom: var(--sp-3xl);
+    right: var(--sp-3xl);
+    z-index: var(--z-toast, 1500);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--sp-sm);
+    min-width: 220px;
+    max-width: 320px;
+    padding: var(--sp-base) var(--sp-xl);
+    background: var(--bg-elev);
+    color: var(--text);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+    animation: undo-toast-in var(--dur-med, 200ms) var(--ease-out, ease-out);
+    /* Slight orange-tinted left border so the eye lands on the
+       message before reading. Keeps the toast feeling like a
+       deliberate "you did something — here's the undo" moment
+       rather than generic chrome. */
+    border-left: 3px solid var(--highlight);
+  }
+  .undo-toast-message {
+    font-size: var(--fs-md);
+    font-weight: 500;
+    color: var(--text);
+    text-align: center;
+    line-height: var(--lh-hug, 1.3);
+  }
+  .undo-toast-actions {
+    display: flex;
+    justify-content: center;
+  }
+  .undo-toast-undo {
+    /* Solid orange CTA — tier 1 in the blue/orange highlight
+       hierarchy. The whole purpose of the toast is the Undo
+       action, so it gets the loudest treatment. */
+    padding: var(--sp-xs) var(--sp-lg);
+    background: var(--highlight);
+    color: #fff;
+    border: 0;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: var(--fs-md);
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    cursor: pointer;
+    transition: filter var(--dur-fast, 120ms) ease;
+  }
+  .undo-toast-undo:hover {
+    filter: brightness(1.08);
+  }
+  .undo-toast-undo:active {
+    transform: scale(0.98);
+  }
+  .undo-toast-undo:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
+  }
+  /* Tiny close X in the top-right corner. Quiet so it doesn't
+     compete with the centered Undo button — most users won't use
+     it, but it's there for the case where the user reads "Note
+     deleted" and wants the toast gone faster than the 5-second
+     auto-dismiss. */
+  .undo-toast-close {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+    color: var(--text-soft);
+    cursor: pointer;
+    transition: background var(--dur-fast, 120ms) ease, color var(--dur-fast, 120ms) ease;
+  }
+  .undo-toast-close svg {
+    width: 12px;
+    height: 12px;
+  }
+  .undo-toast-close:hover {
+    background: var(--bg-soft);
+    color: var(--text);
+  }
+  .undo-toast-close:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 1px;
+  }
+
+  @keyframes undo-toast-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .undo-toast { animation: none; }
+  }
+
+  /* Mobile — anchor to the bottom and stretch full width with a
+     small gutter so the toast doesn't feel marooned in the corner
+     on narrow screens. */
+  @media (max-width: 600px) {
+    .undo-toast {
+      left: var(--sp-base);
+      right: var(--sp-base);
+      bottom: var(--sp-base);
+      max-width: none;
+    }
+  }
+
   /* ───── Reply composer ───── */
   .reply-composer {
     display: flex;
