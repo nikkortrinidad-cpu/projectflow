@@ -30,6 +30,7 @@ import { useActivatableRow } from '../hooks/useActivatableRow';
 import { useModalAutofocus } from '../hooks/useModalAutofocus';
 import { useModalKeyboard } from '../hooks/useModalKeyboard';
 import { ConfirmDangerDialog } from '../components/ConfirmDangerDialog';
+import { useUndoToast } from '../contexts/UndoToastContext';
 
 /**
  * Weekly WIP — the standing-meeting agenda page.
@@ -122,6 +123,7 @@ type LiveMeetingState =
 
 export function WipPage() {
   const { data } = useFlizow();
+  const toast = useUndoToast();
   const [tab, setTab] = useState<Tab>('agenda');
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [modal, setModal] = useState<ModalState>({ kind: 'closed' });
@@ -173,7 +175,10 @@ export function WipPage() {
 
   function handleRemove(item: AgendaItem) {
     if (item.kind === 'manual' && item.manualId) {
-      flizowStore.deleteManualAgendaItem(item.manualId);
+      const undo = flizowStore.deleteManualAgendaItem(item.manualId);
+      if (undo) {
+        toast.show({ message: 'Agenda item deleted', onUndo: undo });
+      }
       return;
     }
     setDismissed(prev => {
@@ -1410,6 +1415,7 @@ function LiveMeeting({
   // input is focused. Esc/Enter close it.
   const [composer, setComposer] = useState<{ type: MeetingCaptureType; text: string } | null>(null);
   const composerRef = useRef<HTMLInputElement | null>(null);
+  const toast = useUndoToast();
 
   // One-second tick for the wall clock and per-item elapsed timer. A
   // single interval powers both — no need for two.
@@ -1801,7 +1807,16 @@ function LiveMeeting({
                               className="wip-capture-remove"
                               aria-label={`Remove ${c.type}`}
                               title="Remove"
-                              onClick={() => flizowStore.deleteMeetingCapture(c.id)}
+                              onClick={() => {
+                                const undo = flizowStore.deleteMeetingCapture(c.id);
+                                if (undo) {
+                                  const label = c.type === 'note' ? 'Note' : c.type === 'decision' ? 'Decision' : 'Action';
+                                  toast.show({
+                                    message: `${label} deleted`,
+                                    onUndo: undo,
+                                  });
+                                }
+                              }}
                             >
                               ×
                             </button>

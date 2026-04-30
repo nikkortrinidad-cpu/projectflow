@@ -36,6 +36,7 @@ import { defaultNextDeliverableAt } from '../data/serviceTemplateOptions';
 import { ServiceMetadataForm } from '../components/shared/ServiceMetadataForm';
 import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
 import { useModalAutofocus } from '../hooks/useModalAutofocus';
+import { useUndoToast } from '../contexts/UndoToastContext';
 
 /**
  * Right-hand pane of the Clients split view. Ports the Acme detail layout
@@ -110,6 +111,7 @@ interface DetailProps {
 }
 
 function ClientDetail({ client, data, store }: DetailProps) {
+  const toast = useUndoToast();
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
   const [showAddService, setShowAddService] = useState(false);
   const [servicesEditMode, setServicesEditMode] = useState(false);
@@ -227,7 +229,10 @@ function ClientDetail({ client, data, store }: DetailProps) {
             const id = `onb-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
             store.addOnboardingItem({ id, serviceId, group, label, done: false });
           }}
-          onDelete={(id) => store.deleteOnboardingItem(id)}
+          onDelete={(id) => {
+            const undo = store.deleteOnboardingItem(id);
+            if (undo) toast.show({ message: 'Onboarding item deleted', onUndo: undo });
+          }}
           onRename={(id, label) => store.updateOnboardingItem(id, label)}
         />
       )}
@@ -308,11 +313,17 @@ function ClientDetail({ client, data, store }: DetailProps) {
             }
             confirmLabel="Delete client"
             onConfirm={() => {
-              flizowStore.deleteClient(client.id);
+              const undo = flizowStore.deleteClient(client.id);
               setShowDeleteClient(false);
               // Land on the clients list. The detail pane unmounts as the
               // row disappears; navigate explicitly so state resets cleanly.
               navigate('#clients');
+              if (undo) {
+                toast.show({
+                  message: `${client.name} deleted`,
+                  onUndo: undo,
+                });
+              }
             }}
             onClose={() => setShowDeleteClient(false)}
           />
@@ -341,11 +352,17 @@ function ClientDetail({ client, data, store }: DetailProps) {
             }
             confirmLabel="Delete service"
             onConfirm={() => {
-              flizowStore.deleteService(svc.id);
+              const undo = flizowStore.deleteService(svc.id);
               setDeleteServiceId(null);
               // If this was the last service and we were in edit mode, drop
               // the edit state so the empty-state CTA reads naturally.
               setServicesEditMode(false);
+              if (undo) {
+                toast.show({
+                  message: `${svc.name} deleted`,
+                  onUndo: undo,
+                });
+              }
             }}
             onClose={() => setDeleteServiceId(null)}
           />
@@ -1653,6 +1670,7 @@ function OnboardingAddItem({ serviceId, group, onAdd }: {
  * immediately rather than hidden behind a WIP flag.
  */
 function AboutSection({ client, data }: { client: Client; data: FlizowData }) {
+  const toast = useUndoToast();
   const [showAddContact, setShowAddContact] = useState(false);
   const [showAddQuickLink, setShowAddQuickLink] = useState(false);
   const [showAddOperator, setShowAddOperator] = useState(false);
@@ -1713,7 +1731,10 @@ function AboutSection({ client, data }: { client: Client; data: FlizowData }) {
             onAdd={() => setShowAddQuickLink(true)}
             editing={linksEditMode}
             onToggleEdit={() => setLinksEditMode(v => !v)}
-            onRemove={(id) => flizowStore.deleteQuickLink(id)}
+            onRemove={(id) => {
+              const undo = flizowStore.deleteQuickLink(id);
+              if (undo) toast.show({ message: 'Quick link deleted', onUndo: undo });
+            }}
             onEdit={(id) => setEditLinkId(id)}
           />
         </div>
@@ -1836,8 +1857,14 @@ function AboutSection({ client, data }: { client: Client; data: FlizowData }) {
             }
             confirmLabel="Remove contact"
             onConfirm={() => {
-              flizowStore.deleteContact(c.id);
+              const undo = flizowStore.deleteContact(c.id);
               setDeleteContactId(null);
+              if (undo) {
+                toast.show({
+                  message: `${c.name || 'Contact'} deleted`,
+                  onUndo: undo,
+                });
+              }
             }}
             onClose={() => setDeleteContactId(null)}
           />

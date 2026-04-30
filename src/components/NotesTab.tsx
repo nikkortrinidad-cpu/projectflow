@@ -8,6 +8,7 @@ import type { Note } from '../types/flizow';
 import type { FlizowStore } from '../store/flizowStore';
 import { ConfirmDangerDialog } from './ConfirmDangerDialog';
 import { InsertLinkDialog } from './InsertLinkDialog';
+import { useUndoToast } from '../contexts/UndoToastContext';
 
 /**
  * Notes tab for Client Detail. Two-pane Apple-Notes layout: searchable
@@ -42,6 +43,7 @@ interface Props {
 }
 
 export function NotesTab({ clientId, notes, store, hideSectionTitle = false }: Props) {
+  const toast = useUndoToast();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
 
@@ -80,8 +82,11 @@ export function NotesTab({ clientId, notes, store, hideSectionTitle = false }: P
   };
 
   const handleDelete = (id: string) => {
-    store.deleteNote(id);
+    const undo = store.deleteNote(id);
     if (selectedId === id) setSelectedId(null);
+    if (undo) {
+      toast.show({ message: 'Note deleted', onUndo: undo });
+    }
   };
 
   return (

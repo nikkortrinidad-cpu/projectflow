@@ -39,6 +39,7 @@ import { InlineText } from '../components/shared/InlineText';
 import { ConfirmDangerDialog } from '../components/ConfirmDangerDialog';
 import { flizowStore } from '../store/flizowStore';
 import type { TemplateRecord, TemplateIcon, TemplatePhase } from '../types/flizow';
+import { useUndoToast } from '../contexts/UndoToastContext';
 
 /**
  * Service Templates — reusable blueprints that hydrate a new service on a
@@ -161,6 +162,7 @@ function DragHandleIcon() {
 export function TemplatesPage() {
   const route = useRoute();
   const { data } = useFlizow();
+  const toast = useUndoToast();
   // Live template list: built-ins overlaid with any user edits +
   // user-created records. Archived ones drop out of the picker.
   // Memoised on `templateOverrides` so a typed character in the
@@ -289,25 +291,32 @@ export function TemplatesPage() {
           reach this dialog. */}
       {purgeTarget && (
         <ConfirmDangerDialog
-          title={`Delete "${purgeTarget.name}" permanently?`}
+          title={`Delete "${purgeTarget.name}"?`}
           body={
             <>
               <p style={{ margin: 0 }}>
-                This template will be removed from the store. Existing
-                services that were created from it keep their
-                onboarding and phases — those snapshots aren't tied to
-                the template at runtime.
+                This template moves to Trash for 90 days before it's
+                permanently removed. Existing services created from it
+                keep their onboarding and phases — those snapshots
+                aren't tied to the template at runtime.
               </p>
               <p style={{ margin: 'var(--sp-md) 0 0' }}>
-                You can't undo this. To bring it back, you'll need to
-                rebuild it from scratch.
+                You can restore it from Account → Trash anytime in the
+                next 90 days.
               </p>
             </>
           }
-          confirmLabel="Delete permanently"
+          confirmLabel="Delete template"
           onConfirm={() => {
-            flizowStore.purgeTemplate(purgeTarget.id);
+            const undo = flizowStore.purgeTemplate(purgeTarget.id);
+            const targetName = purgeTarget.name;
             setPurgeTarget(null);
+            if (undo) {
+              toast.show({
+                message: `${targetName} deleted`,
+                onUndo: undo,
+              });
+            }
           }}
           onClose={() => setPurgeTarget(null)}
         />

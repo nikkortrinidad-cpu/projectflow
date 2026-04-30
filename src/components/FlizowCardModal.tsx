@@ -24,6 +24,7 @@ import { ConfirmDangerDialog } from './ConfirmDangerDialog';
 import FlizowShareModal from './FlizowShareModal';
 import { useActivatableRow } from '../hooks/useActivatableRow';
 import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
+import { useUndoToast } from '../contexts/UndoToastContext';
 import { navigateForceReparse } from '../router';
 import { SearchablePicker } from './shared/SearchablePicker';
 
@@ -105,6 +106,7 @@ interface Props {
 
 export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDuplicated }: Props) {
   const { data, store } = useFlizow();
+  const toast = useUndoToast();
   const isOps = kind === 'opsTask';
   const task = isOps
     ? (data.opsTasks.find(t => t.id === taskId) as AnyCard | undefined)
@@ -141,12 +143,21 @@ export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDupl
     else store.updateChecklistItemText(id, itemId, text);
   }
   function deleteChecklist(id: string, itemId: string) {
-    if (isOps) store.deleteOpsChecklistItem(id, itemId);
-    else store.deleteChecklistItem(id, itemId);
+    const undo = isOps
+      ? store.deleteOpsChecklistItem(id, itemId)
+      : store.deleteChecklistItem(id, itemId);
+    if (undo) {
+      toast.show({ message: 'Checklist item deleted', onUndo: undo });
+    }
   }
   function deleteCard(id: string) {
-    if (isOps) store.deleteOpsTask(id);
-    else store.deleteTask(id);
+    const undo = isOps ? store.deleteOpsTask(id) : store.deleteTask(id);
+    if (undo) {
+      toast.show({
+        message: isOps ? 'Ops card deleted' : 'Card deleted',
+        onUndo: undo,
+      });
+    }
   }
   function archiveCard(id: string) {
     if (isOps) store.archiveOpsTask(id);
@@ -1502,6 +1513,7 @@ function CommentsPanel({
   comments: TaskComment[];
 }) {
   const selfId = flizowStore.getCurrentMemberId();
+  const toast = useUndoToast();
 
   // Bucket into top-level + per-parent replies in one pass. We keep the
   // same chronological order the array already has so re-renders don't
@@ -1641,8 +1653,15 @@ function CommentsPanel({
             body={body}
             confirmLabel={confirmLabel}
             onConfirm={() => {
-              flizowStore.deleteComment(deleteTarget.id);
+              const undo = flizowStore.deleteComment(deleteTarget.id);
               setDeleteTarget(null);
+              if (undo) {
+                const isReply = !!deleteTarget.parentId;
+                toast.show({
+                  message: isReply ? 'Reply deleted' : 'Comment deleted',
+                  onUndo: undo,
+                });
+              }
             }}
             onClose={() => setDeleteTarget(null)}
           />,

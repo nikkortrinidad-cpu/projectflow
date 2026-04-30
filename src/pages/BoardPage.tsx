@@ -28,6 +28,7 @@ import { ConfirmDangerDialog } from '../components/ConfirmDangerDialog';
 import { labelById } from '../constants/labels';
 import { useDismissable } from '../hooks/useDismissable';
 import { InlineCardComposer } from '../components/shared/InlineCardComposer';
+import { useUndoToast } from '../contexts/UndoToastContext';
 
 /**
  * Service Kanban board — per-client workspace for a single service. Shows
@@ -748,6 +749,7 @@ function Breadcrumb({
   // rename-in-place here beats a separate "Edit service" modal for the
   // name field. The "⋯" menu next to it handles the rest of the metadata
   // (type, template, progress, next deliverable) via EditServiceModal.
+  const toast = useUndoToast();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(service.name);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -1044,12 +1046,19 @@ function Breadcrumb({
           confirmLabel="Delete service"
           onConfirm={() => {
             const clientId = client.id;
-            flizowStore.deleteService(service.id);
+            const svcName = service.name;
+            const undo = flizowStore.deleteService(service.id);
             setConfirmDelete(false);
             // After the service is gone, the current board URL is a dead
             // link — route back to the client so the user lands somewhere
             // meaningful instead of the empty state.
             navigate(`#clients/${clientId}`);
+            if (undo) {
+              toast.show({
+                message: `${svcName} deleted`,
+                onUndo: undo,
+              });
+            }
           }}
           onClose={() => setConfirmDelete(false)}
         />
@@ -1820,6 +1829,7 @@ function ArchivedCardsModal({
   onOpenCard: (taskId: string) => void;
 }) {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const toast = useUndoToast();
 
   // Esc always closes. We attach at mount so the modal keyboard pattern
   // matches EditServiceModal and FlizowCardModal.
@@ -1934,18 +1944,25 @@ function ArchivedCardsModal({
 
       {pendingDelete && (
         <ConfirmDangerDialog
-          title={`Delete "${pendingDelete.title}" permanently?`}
+          title={`Delete "${pendingDelete.title}"?`}
           body={
             <>
-              This removes the card and everything attached to it — comments,
-              checklist, activity history. Restore from archive instead if you
-              just want to hide it for now.
+              This sends the card and everything attached to it (comments,
+              checklist, activity) to Trash. You can restore it from
+              Account → Trash for the next 90 days.
             </>
           }
           confirmLabel="Delete card"
           onConfirm={() => {
-            flizowStore.deleteTask(pendingDelete.id);
+            const cardTitle = pendingDelete.title;
+            const undo = flizowStore.deleteTask(pendingDelete.id);
             setConfirmDeleteId(null);
+            if (undo) {
+              toast.show({
+                message: `${cardTitle || 'Card'} deleted`,
+                onUndo: undo,
+              });
+            }
           }}
           onClose={() => setConfirmDeleteId(null)}
         />

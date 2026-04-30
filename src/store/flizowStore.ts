@@ -95,6 +95,28 @@ function emptyData(): FlizowData {
  *  recovery should still work). */
 const TRASH_RETENTION_MS = 90 * 24 * 60 * 60 * 1000;
 
+/** Strip tags from HTML and return the first non-empty line, capped.
+ *  Used to derive the "preview" string for trash entries holding
+ *  HTML-bodied data (notes, briefs, comments with rich text).
+ *  Defensive — falls back to '' on any input it can't process so a
+ *  garbled body never throws inside a delete path. */
+function derivePreviewFromHTML(html: string | undefined | null, cap = 80): string {
+  if (!html) return '';
+  // Browser-only — we don't SSR. innerText respects <br>, <p>, <div>
+  // line breaks the way a user reads them, which is what we want for
+  // a one-line preview.
+  try {
+    const el = document.createElement('div');
+    el.innerHTML = html;
+    const text = (el.innerText || '').trim();
+    if (!text) return '';
+    const firstLine = text.split(/\n|\r/).find(l => l.trim().length > 0) ?? '';
+    return firstLine.slice(0, cap);
+  } catch {
+    return '';
+  }
+}
+
 /**
  * Drop trash entries older than TRASH_RETENTION_MS. Returns the pruned
  * array — caller decides what to do with it. Pure function so it's safe
@@ -1131,16 +1153,42 @@ class FlizowStore {
     this.save();
   }
 
-  deleteClient(id: string) {
-    // Cascade: remove the client's services and tasks too so the data
-    // stays consistent. No soft-delete yet — add when the UI does.
-    const services = this.data.services.filter(s => s.clientId === id);
-    const serviceIds = new Set(services.map(s => s.id));
-    // Snapshot task ids BEFORE we filter the task list — we need them to
-    // cascade the comments.
-    const taskIds = new Set(
-      this.data.tasks.filter(t => serviceIds.has(t.serviceId)).map(t => t.id),
+  /** Soft-delete a client. The biggest cascade in the system —
+   *  services, tasks, comments, activity, contacts, quick links,
+   *  notes, touchpoints, action items, onboarding items, and
+   *  integrations all get bundled into a single trash entry so a
+   *  restore brings the entire client subtree back atomically.
+   *
+   *  Account-manager link (client.amId), favorite-pin link
+   *  (data.favoriteServiceIds), and Firestore-side workspace
+   *  member rosters are NOT bundled — those are per-user state
+   *  that re-attach naturally on the next render after restore.
+   *  The favoriteServiceIds list is cleaned up here to avoid 404
+   *  links on the Overview while the client is in trash; if the
+   *  user restores within the 90-day window they'll need to
+   *  re-pin any favorites they cared about. */
+  deleteClient(id: string): (() => void) | null {
+    const client = this.data.clients.find(c => c.id === id);
+    if (!client) return null;
+    // Snapshot every cascade child first — we need the captured
+    // arrays for the trash payload before we filter them out.
+    const cascadeServices = this.data.services.filter(s => s.clientId === id);
+    const serviceIds = new Set(cascadeServices.map(s => s.id));
+    const cascadeTasks = this.data.tasks.filter(t => serviceIds.has(t.serviceId));
+    const taskIds = new Set(cascadeTasks.map(t => t.id));
+    const cascadeComments = this.data.taskComments.filter(c => taskIds.has(c.taskId));
+    const cascadeActivity = this.data.taskActivity.filter(a => taskIds.has(a.taskId));
+    const cascadeContacts = this.data.contacts.filter(c => c.clientId === id);
+    const cascadeQuickLinks = this.data.quickLinks.filter(q => q.clientId === id);
+    const cascadeNotes = this.data.notes.filter(n => n.clientId === id);
+    const cascadeTouchpoints = this.data.touchpoints.filter(t => t.clientId === id);
+    const cascadeActionItems = this.data.actionItems.filter(a => a.clientId === id);
+    const cascadeOnboarding = this.data.onboardingItems.filter(
+      o => serviceIds.has(o.serviceId),
     );
+    const cascadeIntegrations = this.data.integrations.filter(i => i.clientId === id);
+
+    // Now filter the live data.
     this.data.clients = this.data.clients.filter(c => c.id !== id);
     this.data.services = this.data.services.filter(s => !serviceIds.has(s.id));
     this.data.tasks = this.data.tasks.filter(t => !serviceIds.has(t.serviceId));
@@ -1155,7 +1203,34 @@ class FlizowStore {
     this.data.actionItems = this.data.actionItems.filter(a => a.clientId !== id);
     this.data.taskComments = this.data.taskComments.filter(c => !taskIds.has(c.taskId));
     this.data.taskActivity = this.data.taskActivity.filter(a => !taskIds.has(a.taskId));
-    this.save();
+    // Drop favorite-pin links that pointed at this client's services.
+    // Per-user UI state — not bundled in the trash payload.
+    this.data.favoriteServiceIds = this.data.favoriteServiceIds.filter(
+      sid => !serviceIds.has(sid),
+    );
+
+    const trashId = this.sendToTrash({
+      kind: 'client',
+      preview: client.name || 'Untitled client',
+      payload: {
+        kind: 'client',
+        data: client,
+        cascade: {
+          services: cascadeServices,
+          tasks: cascadeTasks,
+          comments: cascadeComments,
+          activity: cascadeActivity,
+          contacts: cascadeContacts,
+          quickLinks: cascadeQuickLinks,
+          notes: cascadeNotes,
+          touchpoints: cascadeTouchpoints,
+          actionItems: cascadeActionItems,
+          onboardingItems: cascadeOnboarding,
+          integrations: cascadeIntegrations,
+        },
+      },
+    });
+    return () => { this.restoreFromTrash(trashId); };
   }
 
   // ── Services ─────────────────────────────────────────────────────────
@@ -1359,12 +1434,23 @@ class FlizowStore {
     this.save();
   }
 
-  deleteService(id: string) {
+  /** Soft-delete a service. Bundles every cascade child (tasks,
+   *  comments, activity, onboarding) into a single trash entry so
+   *  a restore brings the entire service back atomically.
+   *
+   *  Favorite-pin link is cleared on delete and NOT restored on
+   *  undo — pinning is a per-user preference that re-attaches via
+   *  the favorite star, not part of the service's own state. */
+  deleteService(id: string): (() => void) | null {
     const svc = this.data.services.find(s => s.id === id);
-    if (!svc) return;
+    if (!svc) return null;
     const taskIds = new Set(
       this.data.tasks.filter(t => t.serviceId === id).map(t => t.id),
     );
+    const cascadeTasks = this.data.tasks.filter(t => t.serviceId === id);
+    const cascadeComments = this.data.taskComments.filter(c => taskIds.has(c.taskId));
+    const cascadeActivity = this.data.taskActivity.filter(a => taskIds.has(a.taskId));
+    const cascadeOnboarding = this.data.onboardingItems.filter(o => o.serviceId === id);
     this.data.services = this.data.services.filter(s => s.id !== id);
     this.data.tasks = this.data.tasks.filter(t => t.serviceId !== id);
     this.data.onboardingItems = this.data.onboardingItems.filter(o => o.serviceId !== id);
@@ -1378,7 +1464,20 @@ class FlizowStore {
     // would 404 on click. Cascade the favorites list so the pin state
     // always matches what exists.
     this.data.favoriteServiceIds = this.data.favoriteServiceIds.filter(sid => sid !== id);
-    this.save();
+    const trashId = this.sendToTrash({
+      kind: 'service',
+      preview: svc.name || 'Untitled service',
+      parentLabel: client?.name,
+      payload: {
+        kind: 'service',
+        data: svc,
+        tasks: cascadeTasks,
+        comments: cascadeComments,
+        activity: cascadeActivity,
+        onboardingItems: cascadeOnboarding,
+      },
+    });
+    return () => { this.restoreFromTrash(trashId); };
   }
 
   /**
@@ -1504,14 +1603,30 @@ class FlizowStore {
     this.upsertTemplate({ ...record, archived: false });
   }
 
-  /** Hard-delete a user-created template. Built-in templates can't be
-   *  purged — call archiveTemplate instead. The caller is expected to
-   *  check `userCreated` first. */
-  purgeTemplate(id: string) {
+  /** Soft-delete a user-created template via trash. Built-in
+   *  templates can't be purged — call archiveTemplate instead.
+   *  The caller is expected to check `userCreated` first.
+   *
+   *  The "purge" name is preserved for back-compat at call sites.
+   *  Behavior changed in the trash bin pass: previously this was
+   *  a hard-delete (unrecoverable); now it routes through trash
+   *  with the standard 90-day retention. The Templates archive
+   *  strip's "Delete forever" still calls this and now means
+   *  "send to Trash" rather than "gone forever" — the actual
+   *  forever path is from inside the Trash UI's Delete-forever
+   *  button, which calls purgeFromTrash directly. */
+  purgeTemplate(id: string): (() => void) | null {
+    const tmpl = this.data.templateOverrides.find(t => t.id === id);
+    if (!tmpl) return null;
     this.data.templateOverrides = this.data.templateOverrides.filter(
       (t) => t.id !== id,
     );
-    this.save();
+    const trashId = this.sendToTrash({
+      kind: 'template',
+      preview: tmpl.name || 'Untitled template',
+      payload: { kind: 'template', data: tmpl },
+    });
+    return () => { this.restoreFromTrash(trashId); };
   }
 
   // ── Activity log helper ─────────────────────────────────────────────
@@ -1796,22 +1911,42 @@ class FlizowStore {
     this.save();
   }
 
-  deleteTask(id: string) {
+  /** Soft-delete a kanban card. Cascades comments + activity into
+   *  the trash payload so a restore brings the whole card history
+   *  back. The schedule-task mapping for this card is cleared but
+   *  not restored — schedule seeds are reproducible from upstream
+   *  data, not part of the card's own state. */
+  deleteTask(id: string): (() => void) | null {
     const t = this.data.tasks.find(t => t.id === id);
-    if (!t) return;
+    if (!t) return null;
+    const comments = this.data.taskComments.filter(c => c.taskId === id);
+    const activity = this.data.taskActivity.filter(a => a.taskId === id);
     this.data.tasks = this.data.tasks.filter(t => t.id !== id);
-    // Drop every comment + reply + activity entry hanging off this card.
     this.data.taskComments = this.data.taskComments.filter(c => c.taskId !== id);
     this.data.taskActivity = this.data.taskActivity.filter(a => a.taskId !== id);
     const service = this.data.services.find(s => s.id === t.serviceId);
     if (service) {
       service.taskIds = service.taskIds.filter(tid => tid !== id);
     }
-    // If this was a schedule-seeded card, clean up the mapping.
+    // Schedule-seed mapping is cleared inline — not restored on undo.
+    // The next schedule rebuild reseeds correctly because card state
+    // doesn't carry the seed key. Preserving it here would require
+    // patching restoreFromTrash to repair the map; not worth it for
+    // a derived index.
     if (this.data.scheduleTaskMap[id]) {
       delete this.data.scheduleTaskMap[id];
     }
-    this.save();
+    const client = this.data.clients.find(c => c.id === t.clientId);
+    const parentLabel = client && service
+      ? `${client.name} · ${service.name}`
+      : (client?.name ?? service?.name);
+    const trashId = this.sendToTrash({
+      kind: 'task',
+      preview: t.title || 'Untitled card',
+      parentLabel,
+      payload: { kind: 'task', data: t, comments, activity },
+    });
+    return () => { this.restoreFromTrash(trashId); };
   }
 
   // ── Ops tasks ────────────────────────────────────────────────────────
@@ -1990,15 +2125,24 @@ class FlizowStore {
     return newId;
   }
 
-  deleteOpsTask(id: string) {
-    const before = this.data.opsTasks.length;
-    this.data.opsTasks = this.data.opsTasks.filter(t => t.id !== id);
-    if (this.data.opsTasks.length === before) return;
-    // Matches deleteTask's cascade — comments and activity have nowhere
-    // to live without the card.
+  /** Soft-delete an ops kanban card. Same cascade shape as
+   *  deleteTask. Note: ops cards don't currently support comments
+   *  in the UI, but the data model shares taskComments — we cascade
+   *  them defensively in case any exist (legacy or future). */
+  deleteOpsTask(id: string): (() => void) | null {
+    const t = this.data.opsTasks.find(t => t.id === id);
+    if (!t) return null;
+    const activity = this.data.taskActivity.filter(a => a.taskId === id);
+    this.data.opsTasks = this.data.opsTasks.filter(other => other.id !== id);
     this.data.taskComments = this.data.taskComments.filter(c => c.taskId !== id);
     this.data.taskActivity = this.data.taskActivity.filter(a => a.taskId !== id);
-    this.save();
+    const trashId = this.sendToTrash({
+      kind: 'opsTask',
+      preview: t.title || 'Untitled ops card',
+      parentLabel: 'Ops board',
+      payload: { kind: 'opsTask', data: t, activity },
+    });
+    return () => { this.restoreFromTrash(trashId); };
   }
 
   archiveOpsTask(id: string) {
@@ -2072,11 +2216,28 @@ class FlizowStore {
     this.save();
   }
 
-  deleteOpsChecklistItem(taskId: string, itemId: string) {
+  /** Same shape as deleteChecklistItem but for ops cards. See that
+   *  method's doc for why these skip the Trash bin. */
+  deleteOpsChecklistItem(taskId: string, itemId: string): (() => void) | null {
     const t = this.data.opsTasks.find(t => t.id === taskId);
-    if (!t || !t.checklist) return;
+    if (!t || !t.checklist) return null;
+    const idx = t.checklist.findIndex(i => i.id === itemId);
+    if (idx === -1) return null;
+    const snapshot = t.checklist[idx];
     t.checklist = t.checklist.filter(i => i.id !== itemId);
     this.save();
+    return () => {
+      const live = this.data.opsTasks.find(t => t.id === taskId);
+      if (!live) return;
+      if (!live.checklist) live.checklist = [];
+      const insertAt = Math.min(idx, live.checklist.length);
+      live.checklist = [
+        ...live.checklist.slice(0, insertAt),
+        snapshot,
+        ...live.checklist.slice(insertAt),
+      ];
+      this.save();
+    };
   }
 
   // ── Task checklist ──────────────────────────────────────────────────
@@ -2131,14 +2292,42 @@ class FlizowStore {
     this.save();
   }
 
-  deleteChecklistItem(taskId: string, itemId: string) {
+  /** Hard-delete a checklist item with an undo callback. Checklist
+   *  items skip the Trash bin (they're chatty — you toggle/edit/
+   *  delete them dozens of times a day, and a long Trash full of
+   *  "deleted checklist item" rows is noise). The 5-second undo
+   *  toast is the only safety net. After that window the item is
+   *  gone for good.
+   *
+   *  Undo restores the original item with the same id + text +
+   *  done state at the same array index it occupied before. */
+  deleteChecklistItem(taskId: string, itemId: string): (() => void) | null {
     const t = this.data.tasks.find(t => t.id === taskId);
-    if (!t || !t.checklist) return;
-    const item = t.checklist.find(i => i.id === itemId);
-    if (!item) return;
+    if (!t || !t.checklist) return null;
+    const idx = t.checklist.findIndex(i => i.id === itemId);
+    if (idx === -1) return null;
+    const snapshot = t.checklist[idx];
     t.checklist = t.checklist.filter(i => i.id !== itemId);
-    this.logActivity(taskId, 'checklistDeleted', `deleted checklist item "${item.text}"`);
+    this.logActivity(taskId, 'checklistDeleted', `deleted checklist item "${snapshot.text}"`);
     this.save();
+    return () => {
+      // Re-find the task in case it changed shape between delete and
+      // undo. Defensive: bail if the task or its checklist is gone.
+      const live = this.data.tasks.find(t => t.id === taskId);
+      if (!live) return;
+      if (!live.checklist) live.checklist = [];
+      // Splice back at the original index so the order is preserved.
+      // If the index is now beyond the array length (other items
+      // deleted between delete + undo) we append instead.
+      const insertAt = Math.min(idx, live.checklist.length);
+      live.checklist = [
+        ...live.checklist.slice(0, insertAt),
+        snapshot,
+        ...live.checklist.slice(insertAt),
+      ];
+      this.logActivity(taskId, 'checklistAdded', `restored checklist item "${snapshot.text}"`);
+      this.save();
+    };
   }
 
   // ── Task comments ───────────────────────────────────────────────────
@@ -2214,13 +2403,19 @@ class FlizowStore {
     this.save();
   }
 
-  /** Delete a comment. If the comment is a top-level entry, its replies
-   *  are deleted too — an orphaned reply with no parent has nowhere to
-   *  render. */
-  deleteComment(id: string) {
+  /** Soft-delete a comment. If the comment is a top-level entry, its
+   *  replies cascade into the same trash entry — an orphaned reply
+   *  with no parent has nowhere to render, so we keep them bundled
+   *  with the parent so a restore brings the thread back together.
+   *  Activity log entry stays on the live task — unlike content,
+   *  the audit trail isn't unwound by a delete. */
+  deleteComment(id: string): (() => void) | null {
     const c = this.data.taskComments.find(c => c.id === id);
-    if (!c) return;
+    if (!c) return null;
     const isTopLevel = !c.parentId;
+    const replies = isTopLevel
+      ? this.data.taskComments.filter(other => other.parentId === id)
+      : [];
     this.data.taskComments = this.data.taskComments.filter((other) => {
       if (other.id === id) return false;
       if (isTopLevel && other.parentId === id) return false;
@@ -2231,7 +2426,15 @@ class FlizowStore {
       'commentDeleted',
       isTopLevel ? 'deleted a comment' : 'deleted a reply',
     );
-    this.save();
+    const trashId = this.sendToTrash({
+      kind: 'comment',
+      preview: c.text.slice(0, 80) || 'Comment',
+      // Comments don't carry a clean parent label — they belong to a
+      // task, but the task title isn't on the comment row. Skipping
+      // parent label keeps trash rows accurate vs guessing.
+      payload: { kind: 'comment', data: c, replies },
+    });
+    return () => { this.restoreFromTrash(trashId); };
   }
 
   // ── Manual agenda items (WIP) ────────────────────────────────────────
@@ -2284,10 +2487,21 @@ class FlizowStore {
     this.save();
   }
 
-  deleteManualAgendaItem(id: string) {
-    const before = this.data.manualAgendaItems.length;
+  /** Soft-delete a manual agenda item. */
+  deleteManualAgendaItem(id: string): (() => void) | null {
+    const item = this.data.manualAgendaItems.find(m => m.id === id);
+    if (!item) return null;
     this.data.manualAgendaItems = this.data.manualAgendaItems.filter(m => m.id !== id);
-    if (this.data.manualAgendaItems.length !== before) this.save();
+    const client = item.clientId
+      ? this.data.clients.find(c => c.id === item.clientId)
+      : null;
+    const trashId = this.sendToTrash({
+      kind: 'manualAgendaItem',
+      preview: item.title || 'Agenda item',
+      parentLabel: client?.name,
+      payload: { kind: 'manualAgendaItem', data: item },
+    });
+    return () => { this.restoreFromTrash(trashId); };
   }
 
   // ── Live-meeting Quick Capture ───────────────────────────────────────
@@ -2317,10 +2531,32 @@ class FlizowStore {
     this.save();
   }
 
-  deleteMeetingCapture(id: string): void {
-    const before = this.data.meetingCaptures.length;
+  /** Hard-delete a meeting capture (note/decision/action typed
+   *  during a Live WIP) with an undo callback. Skips the Trash
+   *  bin for the same reason checklist items do — captures are
+   *  scratch notes that pile up fast during meetings, and a Trash
+   *  full of "Sarah said..." captures is noise. The 5-second
+   *  undo toast is the only safety net.
+   *
+   *  Undo re-pushes the snapshot at the original array index so
+   *  the meeting log keeps its order. */
+  deleteMeetingCapture(id: string): (() => void) | null {
+    const idx = this.data.meetingCaptures.findIndex(c => c.id === id);
+    if (idx === -1) return null;
+    const snapshot = this.data.meetingCaptures[idx];
     this.data.meetingCaptures = this.data.meetingCaptures.filter(c => c.id !== id);
-    if (this.data.meetingCaptures.length !== before) this.save();
+    this.save();
+    return () => {
+      // If the original index is past the current end (other captures
+      // were deleted between delete and undo), append instead.
+      const insertAt = Math.min(idx, this.data.meetingCaptures.length);
+      this.data.meetingCaptures = [
+        ...this.data.meetingCaptures.slice(0, insertAt),
+        snapshot,
+        ...this.data.meetingCaptures.slice(insertAt),
+      ];
+      this.save();
+    };
   }
 
   // ── Members ──────────────────────────────────────────────────────────
@@ -2370,9 +2606,23 @@ class FlizowStore {
    *  client, they can delete it outright rather than leave a permanently
    *  unchecked row polluting the "items left" counter. Low-cost data,
    *  so no confirm dialog — the UI only exposes the × on hover. */
-  deleteOnboardingItem(id: string) {
+  /** Soft-delete an onboarding item. */
+  deleteOnboardingItem(id: string): (() => void) | null {
+    const item = this.data.onboardingItems.find(o => o.id === id);
+    if (!item) return null;
     this.data.onboardingItems = this.data.onboardingItems.filter(o => o.id !== id);
-    this.save();
+    const service = this.data.services.find(s => s.id === item.serviceId);
+    const client = service ? this.data.clients.find(c => c.id === service.clientId) : null;
+    const parentLabel = service && client
+      ? `${client.name} · ${service.name}`
+      : service?.name;
+    const trashId = this.sendToTrash({
+      kind: 'onboardingItem',
+      preview: item.label || 'Onboarding item',
+      parentLabel,
+      payload: { kind: 'onboardingItem', data: item },
+    });
+    return () => { this.restoreFromTrash(trashId); };
   }
 
   /** Rename an onboarding item. Used by the double-click-to-edit
@@ -2418,9 +2668,20 @@ class FlizowStore {
     this.save();
   }
 
-  deleteContact(id: string) {
+  /** Soft-delete a contact. See deleteNote for the lifecycle —
+   *  goes to trash for 90 days, returns an undo callback. */
+  deleteContact(id: string): (() => void) | null {
+    const contact = this.data.contacts.find(c => c.id === id);
+    if (!contact) return null;
     this.data.contacts = this.data.contacts.filter(c => c.id !== id);
-    this.save();
+    const client = this.data.clients.find(c => c.id === contact.clientId);
+    const trashId = this.sendToTrash({
+      kind: 'contact',
+      preview: contact.name || 'Unnamed contact',
+      parentLabel: client?.name,
+      payload: { kind: 'contact', data: contact },
+    });
+    return () => { this.restoreFromTrash(trashId); };
   }
 
   addQuickLink(link: QuickLink) {
@@ -2436,9 +2697,19 @@ class FlizowStore {
     this.save();
   }
 
-  deleteQuickLink(id: string) {
+  /** Soft-delete a quick link. */
+  deleteQuickLink(id: string): (() => void) | null {
+    const link = this.data.quickLinks.find(q => q.id === id);
+    if (!link) return null;
     this.data.quickLinks = this.data.quickLinks.filter(q => q.id !== id);
-    this.save();
+    const client = this.data.clients.find(c => c.id === link.clientId);
+    const trashId = this.sendToTrash({
+      kind: 'quickLink',
+      preview: link.label || link.url || 'Quick link',
+      parentLabel: client?.name,
+      payload: { kind: 'quickLink', data: link },
+    });
+    return () => { this.restoreFromTrash(trashId); };
   }
 
   /** Add a member to a client's project team. AMs go through `amId`
@@ -2493,9 +2764,23 @@ class FlizowStore {
     this.save();
   }
 
-  deleteNote(id: string) {
+  /** Soft-delete a note. The note moves to data.trash for 90 days
+   *  before auto-empty. Returns an undo callback the caller can wire
+   *  to the UndoToast — calling it restores the note to data.notes
+   *  via restoreFromTrash. Returns null when the id doesn't match
+   *  any live note (already deleted in another tab, etc.). */
+  deleteNote(id: string): (() => void) | null {
+    const note = this.data.notes.find(n => n.id === id);
+    if (!note) return null;
     this.data.notes = this.data.notes.filter(n => n.id !== id);
-    this.save();
+    const client = this.data.clients.find(c => c.id === note.clientId);
+    const trashId = this.sendToTrash({
+      kind: 'note',
+      preview: derivePreviewFromHTML(note.body) || 'Untitled note',
+      parentLabel: client?.name,
+      payload: { kind: 'note', data: note },
+    });
+    return () => { this.restoreFromTrash(trashId); };
   }
 
   toggleNotePinned(id: string) {
@@ -2536,13 +2821,24 @@ class FlizowStore {
     this.save();
   }
 
-  deleteTouchpoint(id: string) {
+  /** Soft-delete a touchpoint. Cascades its action items into the
+   *  same trash entry so a restore brings the whole conversation
+   *  back together. Promoted kanban cards stay untouched (those
+   *  live on Service.taskIds, not under the touchpoint). */
+  deleteTouchpoint(id: string): (() => void) | null {
+    const touchpoint = this.data.touchpoints.find(t => t.id === id);
+    if (!touchpoint) return null;
+    const childActionItems = this.data.actionItems.filter(a => a.touchpointId === id);
     this.data.touchpoints = this.data.touchpoints.filter(t => t.id !== id);
-    // Cascade: a touchpoint with no parent meeting has nowhere to live,
-    // so action items go too. Promoted cards remain untouched on the
-    // kanban board — losing a meeting shouldn't wipe downstream work.
     this.data.actionItems = this.data.actionItems.filter(a => a.touchpointId !== id);
-    this.save();
+    const client = this.data.clients.find(c => c.id === touchpoint.clientId);
+    const trashId = this.sendToTrash({
+      kind: 'touchpoint',
+      preview: touchpoint.topic || 'Touchpoint',
+      parentLabel: client?.name,
+      payload: { kind: 'touchpoint', data: touchpoint, actionItems: childActionItems },
+    });
+    return () => { this.restoreFromTrash(trashId); };
   }
 
   // ── Action items ─────────────────────────────────────────────────────
@@ -2566,9 +2862,19 @@ class FlizowStore {
     this.save();
   }
 
-  deleteActionItem(id: string) {
+  /** Soft-delete an action item. */
+  deleteActionItem(id: string): (() => void) | null {
+    const item = this.data.actionItems.find(a => a.id === id);
+    if (!item) return null;
     this.data.actionItems = this.data.actionItems.filter(a => a.id !== id);
-    this.save();
+    const client = this.data.clients.find(c => c.id === item.clientId);
+    const trashId = this.sendToTrash({
+      kind: 'actionItem',
+      preview: item.text || 'Action item',
+      parentLabel: client?.name,
+      payload: { kind: 'actionItem', data: item },
+    });
+    return () => { this.restoreFromTrash(trashId); };
   }
 
   /** Promote a touchpoint action item to a kanban card on one of the
@@ -2689,6 +2995,11 @@ class FlizowStore {
         break;
       case 'comment':
         this.data.taskComments.push(p.data);
+        // Restore any cascaded replies alongside the parent. Empty
+        // array when the deleted comment was itself a reply.
+        if (p.replies.length > 0) {
+          this.data.taskComments.push(...p.replies);
+        }
         break;
       case 'touchpoint':
         this.data.touchpoints.push(p.data);

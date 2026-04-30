@@ -1101,7 +1101,15 @@ export type TrashPayload =
   | { kind: 'note'; data: Note }
   | { kind: 'contact'; data: Contact }
   | { kind: 'quickLink'; data: QuickLink }
-  | { kind: 'comment'; data: TaskComment }
+  | {
+      kind: 'comment';
+      data: TaskComment;
+      /** Replies cascaded with the parent comment. Empty array when
+       *  the deleted comment was itself a reply (no children to bring
+       *  along). Populated when a top-level comment was deleted —
+       *  restoring the parent restores its thread atomically. */
+      replies: TaskComment[];
+    }
   | { kind: 'touchpoint'; data: Touchpoint; actionItems: ActionItem[] }
   | { kind: 'actionItem'; data: ActionItem }
   | { kind: 'onboardingItem'; data: OnboardingItem }

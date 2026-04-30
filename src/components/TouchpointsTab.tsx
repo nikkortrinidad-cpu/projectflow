@@ -9,6 +9,7 @@ import { navigate } from '../router';
 import { formatMonthDay, daysBetween } from '../utils/dateFormat';
 import { ConfirmDangerDialog } from './ConfirmDangerDialog';
 import { TouchpointModal } from './TouchpointModal';
+import { useUndoToast } from '../contexts/UndoToastContext';
 
 /**
  * Touchpoints tab — the meeting paper trail for a client.
@@ -192,6 +193,7 @@ function MeetingEntry({ touchpoint, actions, members, contacts, clientServices, 
   todayISO: string;
   onEdit: () => void;
 }) {
+  const toast = useUndoToast();
   const attendees = useMemo(
     () => touchpoint.attendeeIds
       .map(id => lookupAttendee(id, members, contacts))
@@ -404,7 +406,13 @@ function MeetingEntry({ touchpoint, actions, members, contacts, clientServices, 
             confirmLabel="Delete meeting"
             onConfirm={() => {
               setShowDeleteConfirm(false);
-              store.deleteTouchpoint(touchpoint.id);
+              const undo = store.deleteTouchpoint(touchpoint.id);
+              if (undo) {
+                toast.show({
+                  message: `${touchpoint.topic || 'Touchpoint'} deleted`,
+                  onUndo: undo,
+                });
+              }
             }}
             onClose={() => setShowDeleteConfirm(false)}
           />
@@ -544,6 +552,7 @@ function ActionItemRow({ item, members, clientServices, store, todayISO }: {
   store: FlizowStore;
   todayISO: string;
 }) {
+  const toast = useUndoToast();
   const assignee = item.assigneeId ? members.find(m => m.id === item.assigneeId) ?? null : null;
   const dueStatus = dueChipStatus(item.dueDate, todayISO, item.done);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -728,8 +737,14 @@ function ActionItemRow({ item, members, clientServices, store, todayISO }: {
           }
           confirmLabel="Delete action item"
           onConfirm={() => {
-            store.deleteActionItem(item.id);
+            const undo = store.deleteActionItem(item.id);
             setShowDeleteConfirm(false);
+            if (undo) {
+              toast.show({
+                message: 'Action item deleted',
+                onUndo: undo,
+              });
+            }
           }}
           onClose={() => setShowDeleteConfirm(false)}
         />
