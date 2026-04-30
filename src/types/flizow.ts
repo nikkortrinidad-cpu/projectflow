@@ -988,7 +988,12 @@ export type NotificationType =
   | 'due'
   | 'overdue'
   | 'status'
-  | 'system';
+  | 'system'
+  /** Phase 7: time-off pending review (Owner/Admin) or decided
+   *  (the requester). Routes to Ops → Time off Schedules for the
+   *  former, the requester's Account → Time off list for the
+   *  latter. */
+  | 'time_off';
 
 /** The notif panel groups the feed by recency buckets. Bucket is
  *  computed server-side (or at seed time) rather than per-render so the

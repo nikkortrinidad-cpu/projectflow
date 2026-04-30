@@ -150,7 +150,122 @@ export function deriveNotifications(
     });
   }
 
+  // ── 5. Time off — pending requests (Owner/Admin only) ────────────
+  // Surfaces every pending request to the people who can decide on
+  // it. Stable ids `tor-pending-{requestId}` so the read state
+  // sticks per request; once approved/denied the row simply
+  // disappears from the next derive (the request is no longer
+  // pending), making this self-cleaning. Cap at 6 — over that, the
+  // OM should open the approval queue directly.
+  if (showUrgent && (me?.accessLevel === 'admin' || me?.accessLevel === 'owner')) {
+    const pending = data.timeOffRequests
+      .filter((r) => r.status === 'pending')
+      .slice()
+      .sort((a, b) => a.requestedAt.localeCompare(b.requestedAt));
+    for (const r of pending.slice(0, 6)) {
+      const requester = data.members.find((m) => m.id === r.memberId);
+      items.push({
+        id: `tor-pending-${r.id}`,
+        type: 'time_off',
+        group: 'Today',
+        ago: relativeAgo(r.requestedAt, todayStr),
+        text: `<strong>${escapeHTML(requester?.name ?? 'A teammate')}</strong> requested time off ${escapeHTML(formatRange(r.start, r.end))}`,
+        context: 'Time off · Pending review',
+        href: '#ops',
+      });
+    }
+  }
+
+  // ── 6. Time off — decided requests (the requester) ───────────────
+  // Approve/deny notifications the requester sees. Capped at the
+  // recent window (14 days) so old decisions don't pile up. Read
+  // state is keyed off the request id so dismissing a notification
+  // sticks even when the underlying request stays in the ledger.
+  if (showUrgent) {
+    const fourteenDaysAgo = isoOffsetDays(todayStr, -14);
+    const recent = data.timeOffRequests
+      .filter(
+        (r) =>
+          r.memberId === memberId &&
+          (r.status === 'approved' || r.status === 'denied') &&
+          (r.decidedAt ?? '') >= fourteenDaysAgo,
+      )
+      .slice()
+      .sort((a, b) => (b.decidedAt ?? '').localeCompare(a.decidedAt ?? ''));
+    for (const r of recent.slice(0, 5)) {
+      const verb = r.status === 'approved' ? 'approved' : 'denied';
+      const note = r.decisionNote
+        ? `Time off · "${escapeHTML(r.decisionNote)}"`
+        : 'Time off';
+      items.push({
+        id: `tor-decided-${r.id}`,
+        type: 'time_off',
+        group: 'Today',
+        ago: r.decidedAt ? relativeAgo(r.decidedAt.slice(0, 10), todayStr) : '',
+        text: `Your time off ${escapeHTML(formatRange(r.start, r.end))} was <strong>${verb}</strong>`,
+        context: note,
+        // Account modal isn't routable yet, so home is the most
+        // useful destination — the user opens the Account modal
+        // manually to see the full list. Phase 7C may add a
+        // hash-driven open hook for the modal.
+        href: '#overview',
+      });
+    }
+  }
+
   return items;
+}
+
+// ── Phase-7 local helpers ──────────────────────────────────────────
+
+/** Relative "ago" string for a timestamp ('2026-05-01T10:00:00Z' or
+ *  ISO date 'YYYY-MM-DD'). Returns "Now" inside ~24h, "Xd" otherwise.
+ *  Cheap approximation — we don't pull date-fns in for one label. */
+function relativeAgo(timestamp: string, todayIso: string): string {
+  const datePart = timestamp.length >= 10 ? timestamp.slice(0, 10) : timestamp;
+  const days = daysBetween(datePart, todayIso);
+  if (days < 1) return 'Now';
+  if (days === 1) return '1d';
+  if (days < 7) return `${days}d`;
+  return 'Earlier';
+}
+
+/** Inclusive ISO date range → "May 13–15" / "May 30–Jun 2" /
+ *  "May 15". Plain text (no HTML) since the caller passes through
+ *  escapeHTML afterwards. */
+function formatRange(startIso: string, endIso: string): string {
+  if (startIso === endIso) return formatMonthDay(startIso);
+  const a = parseLocalISO(startIso);
+  const b = parseLocalISO(endIso);
+  if (!a || !b) return `${startIso}–${endIso}`;
+  const sameMonth =
+    a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
+  if (sameMonth) {
+    return `${formatMonthDay(startIso)}–${b.getDate()}`;
+  }
+  return `${formatMonthDay(startIso)}–${formatMonthDay(endIso)}`;
+}
+function formatMonthDay(iso: string): string {
+  const d = parseLocalISO(iso);
+  if (!d) return iso;
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+function parseLocalISO(iso: string): Date | null {
+  const [y, m, d] = iso.split('-').map(Number);
+  if (!y || !m || !d) return null;
+  return new Date(y, m - 1, d);
+}
+/** Today's ISO + offset days. Local time so timezone shifts don't
+ *  flip days. Negative offsets allowed — used to compute the
+ *  14-day recent-decisions cutoff. */
+function isoOffsetDays(iso: string, days: number): string {
+  const d = parseLocalISO(iso);
+  if (!d) return iso;
+  d.setDate(d.getDate() + days);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────
