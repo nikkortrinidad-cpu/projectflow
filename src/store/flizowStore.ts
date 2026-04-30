@@ -6,7 +6,7 @@ import type {
   Touchpoint, ActionItem, TaskComment, TaskActivity, TaskActivityKind,
   ManualAgendaItem, OnboardingItem, ColumnId, Priority, OpsTask,
   TaskChecklistItem,
-  TemplateRecord, AccessLevel, WorkspaceDoc, WorkspaceMembership,
+  TemplateRecord, AccessRole, WorkspaceDoc, WorkspaceMembership,
   PendingInvite,
   TrashEntry, TrashKind, TrashPayload,
 } from '../types/flizow';
@@ -14,6 +14,7 @@ import { ONBOARDING_TEMPLATES } from '../data/onboardingTemplates';
 import { TASK_POOLS } from '../data/taskPools';
 import { findTemplate } from '../data/templates';
 import { OPS_TEAM_MEMBERS, OPS_TASK_SEED } from '../data/opsSeed';
+import { migrateAccessRole } from '../utils/access';
 
 /**
  * FlizowStore — central data container.
@@ -303,6 +304,70 @@ function deriveWorkspaceInitials(name: string): string {
   return (words[0][0] + words[1][0]).toUpperCase();
 }
 
+/** Sweep a workspace doc through the AccessRole migration. Returns
+ *  the (possibly mutated) doc and a `changed` flag so the caller
+ *  knows whether a write-back is needed.
+ *
+ *  Three places get normalized:
+ *    1. WorkspaceMembership.role        — sign-in roster
+ *    2. data.members[].accessLevel       — agency roster mirror
+ *    3. PendingInvite.role               — outstanding invites
+ *
+ *  The owner uid always lands on 'owner' regardless of what the
+ *  legacy value was. 'editor' becomes 'member' everywhere. Other
+ *  values pass through unchanged.
+ *
+ *  Pure: takes a doc, returns a doc. Tests live next to the matching
+ *  pure helper in utils/access. */
+function migrateWorkspaceAccessRoles(ws: WorkspaceDoc): {
+  ws: WorkspaceDoc;
+  changed: boolean;
+} {
+  let changed = false;
+
+  // 1. Memberships
+  const nextMembers = (ws.members ?? []).map((m) => {
+    const next = migrateAccessRole(m.role, m.uid === ws.ownerUid);
+    if (next && next !== m.role) {
+      changed = true;
+      return { ...m, role: next };
+    }
+    return m;
+  });
+
+  // 2. Member.accessLevel mirrors inside data
+  const nextDataMembers = (ws.data?.members ?? []).map((m) => {
+    const next = migrateAccessRole(m.accessLevel, m.id === ws.ownerUid);
+    if (next && next !== m.accessLevel) {
+      changed = true;
+      return { ...m, accessLevel: next };
+    }
+    return m;
+  });
+
+  // 3. Pending invites — only 'editor' needs translation; the others
+  //    are already valid AccessRole values.
+  const nextInvites = (ws.pendingInvites ?? []).map((inv) => {
+    if ((inv.role as string) === 'editor') {
+      changed = true;
+      return { ...inv, role: 'member' as AccessRole };
+    }
+    return inv;
+  });
+
+  if (!changed) return { ws, changed: false };
+
+  return {
+    ws: {
+      ...ws,
+      members: nextMembers,
+      pendingInvites: nextInvites,
+      data: { ...ws.data, members: nextDataMembers },
+    },
+    changed: true,
+  };
+}
+
 /** Pre-auth stash for invite query params. App.tsx reads `?join=&token=`
  *  on boot and calls `stashPendingJoin` so the params survive the
  *  Google sign-in redirect. setUser then reads it to run the accept
@@ -509,7 +574,13 @@ class FlizowStore {
         console.warn('[flizowStore] workspace doc disappeared:', wsId);
         return;
       }
-      const ws = snap.data() as WorkspaceDoc;
+      const wsRaw = snap.data() as WorkspaceDoc;
+      // Normalize legacy access roles ('editor' → 'member', owner uid
+      // → 'owner') before anything reads from the workspace doc. The
+      // helper returns a flag so we can persist back to Firestore
+      // exactly once when something actually changed — no write loop
+      // on workspaces that are already migrated.
+      const { ws, changed: rolesChanged } = migrateWorkspaceAccessRoles(wsRaw);
       // Pull data through migrate() so older fields backfill (theme,
       // opsSeeded, templateOverrides, etc.). Same pattern as before;
       // just sourced from the workspace doc instead of flizow/{uid}.
@@ -548,6 +619,12 @@ class FlizowStore {
           initials: wsInitials,
           color: wsColor,
         }).catch(() => { /* non-fatal — banner already covers sync errors */ });
+      }
+      // Persist role migration once. Owner-only — non-owners would hit
+      // the Firestore rule wall and the next sign-in by the owner will
+      // sweep the doc anyway. Cheaper than wiring a multi-writer race.
+      if (rolesChanged && this.userId === ws.ownerUid) {
+        this.persistMigratedRoles(ws).catch(() => { /* non-fatal */ });
       }
       this.upsertOwnMember(userId, displayName, email, photoURL);
       this.safeSetItem(STORAGE_KEY, JSON.stringify(this.data));
@@ -621,7 +698,7 @@ class FlizowStore {
       displayName: displayName || undefined,
       email: email || undefined,
       photoURL: photoURL || undefined,
-      role: 'admin',
+      role: 'owner',
       joinedAt: now,
     };
     // Seed workspace identity. Name derives from the owner's display
@@ -653,7 +730,7 @@ class FlizowStore {
         role: 'Owner',
         color: '#5e5ce6',
         type: 'am',
-        accessLevel: 'admin',
+        accessLevel: 'owner',
       });
     }
     const wsRef = doc(db, WORKSPACES_COLLECTION, wsId);
@@ -719,22 +796,31 @@ class FlizowStore {
   ) {
     const existing = this.data.members.find(m => m.id === uid);
     const initials = initialsOf(displayName || email || 'You');
+    // Resolve the role from the workspace membership if we have it.
+    // The membership row is the source of truth — that's what invite
+    // flow / role changes write to. data.members[].accessLevel is a
+    // mirror so the agency-roster UI can render a pill without doing
+    // a separate lookup.
+    const isOwnerHere = this.workspaceMeta?.ownerUid === uid;
+    const membership = this.workspaceMeta?.members.find((m) => m.uid === uid);
+    const resolvedRole: AccessRole = isOwnerHere
+      ? 'owner'
+      : (membership?.role ?? 'member');
     if (existing) {
       if (displayName) existing.name = displayName;
       existing.initials = existing.initials || initials;
-      // Backfill accessLevel for returning users from before the field
-      // existed. The workspace owner is always admin; ?? preserves any
-      // future override (e.g. if we ever support transferring ownership).
-      existing.accessLevel = existing.accessLevel ?? 'admin';
+      // Always reconcile the mirror to the membership row. Cheap, and
+      // it heals any drift that came in from another device.
+      existing.accessLevel = resolvedRole;
     } else {
       this.data.members.push({
         id: uid,
         initials,
         name: displayName || 'You',
-        role: 'Owner',
+        role: isOwnerHere ? 'Owner' : (displayName || 'Member'),
         color: '#5e5ce6',
         type: 'am',
-        accessLevel: 'admin',
+        accessLevel: resolvedRole,
       });
     }
   }
@@ -851,6 +937,22 @@ class FlizowStore {
       name: fields.name,
       initials: fields.initials,
       color: fields.color,
+      updatedAt: new Date().toISOString(),
+    }, { merge: true });
+  }
+
+  /** Internal: persist the access-role migration sweep back to
+   *  Firestore so the next reader doesn't have to re-do the same
+   *  normalize. Only the workspace owner ever calls this — non-owners
+   *  would hit the rules wall, and re-running on the next owner sign-in
+   *  is fine. Writes only the three fields the migration touches. */
+  private async persistMigratedRoles(ws: WorkspaceDoc): Promise<void> {
+    if (!this.workspaceId) return;
+    const wsRef = doc(db, WORKSPACES_COLLECTION, this.workspaceId);
+    await setDoc(wsRef, {
+      members: ws.members,
+      pendingInvites: ws.pendingInvites,
+      data: ws.data,
       updatedAt: new Date().toISOString(),
     }, { merge: true });
   }
@@ -1016,10 +1118,10 @@ class FlizowStore {
   // ── Member + invite operations ────────────────────────────────────────
 
   /** Generate an invite link that any new user can click to join this
-   *  workspace as an Editor (or whatever role passed). Returns the
+   *  workspace as a Member (or whatever role passed). Returns the
    *  full URL to share. Token is a single-use random string stored on
    *  the workspace doc; consumed atomically when the invitee accepts. */
-  async createInvite(role: AccessLevel = 'editor', note?: string): Promise<string> {
+  async createInvite(role: AccessRole = 'member', note?: string): Promise<string> {
     if (!this.workspaceId || !this.workspaceMeta || !this.userId) {
       throw new Error('Cannot invite — no active workspace');
     }
@@ -1107,11 +1209,15 @@ class FlizowStore {
     this.notifyWorkspace();
   }
 
-  /** Update a member's access level. The owner's level stays admin. */
-  async changeMemberRole(uid: string, role: AccessLevel): Promise<void> {
+  /** Update a member's access role. The workspace owner's role stays
+   *  'owner' — transferring ownership is a separate flow (v2). */
+  async changeMemberRole(uid: string, role: AccessRole): Promise<void> {
     if (!this.workspaceId || !this.workspaceMeta) return;
-    if (uid === this.workspaceMeta.ownerUid && role !== 'admin') {
-      throw new Error("Workspace owner must remain admin");
+    if (uid === this.workspaceMeta.ownerUid && role !== 'owner') {
+      throw new Error("Workspace owner role can't be changed here. Transfer ownership first.");
+    }
+    if (role === 'owner' && uid !== this.workspaceMeta.ownerUid) {
+      throw new Error("Promoting to owner requires the ownership transfer flow.");
     }
     const nextMembers = this.workspaceMeta.members.map((m) =>
       m.uid === uid ? { ...m, role } : m,

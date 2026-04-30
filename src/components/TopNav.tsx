@@ -4,16 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useRoute } from '../router';
 import { useFlizow } from '../store/useFlizow';
 import FlizowNotificationsPanel from './FlizowNotificationsPanel';
-import type { AccessLevel } from '../types/flizow';
-
-/** Display label for each access level. Kept in TopNav for now — moves
- *  to a shared helper when access levels surface in more places (Members
- *  management, invite flow). */
-const ACCESS_LABEL: Record<AccessLevel, string> = {
-  admin: 'Admin',
-  editor: 'Editor',
-  viewer: 'Viewer',
-};
+import type { AccessRole } from '../types/flizow';
+import { can, ACCESS_ROLE_LABEL, type Action } from '../utils/access';
 
 // Which nav item should be visually active for each route.
 // Sub-routes (e.g. `client-detail`, `board`) inherit their parent's active state.
@@ -79,7 +71,26 @@ export function TopNav({
   // user's choice. Falls back to the brand indigo for the dev-bypass
   // path where there's no Member record.
   const avatarColor = ownMember?.color || '#5e5ce6';
-  const ownAccessLevel: AccessLevel | undefined = ownMember?.accessLevel;
+  const ownAccessLevel: AccessRole | undefined = ownMember?.accessLevel;
+  // Drive nav-link visibility off the role. Each entry is rendered
+  // only when `can(role, action)` says yes — so Member sees Home /
+  // Clients / Analytics by default and the rest stay hidden until
+  // they're promoted. The label-and-action pairing keeps the gate
+  // co-located with the link rather than scattered through JSX.
+  const NAV_ITEMS: ReadonlyArray<{
+    href: string;
+    label: string;
+    activeKey: string;
+    action: Action;
+  }> = [
+    { href: '#overview',    label: 'Home',       activeKey: 'overview',  action: 'view:home' },
+    { href: '#clients',     label: 'Clients',    activeKey: 'clients',   action: 'view:clients' },
+    { href: '#ops',         label: 'Ops',        activeKey: 'ops',       action: 'view:ops' },
+    { href: '#analytics',   label: 'Analytics',  activeKey: 'analytics', action: 'view:analytics' },
+    { href: '#wip/agenda',  label: 'Weekly WIP', activeKey: 'wip',       action: 'view:wip' },
+    { href: '#templates',   label: 'Templates',  activeKey: 'templates', action: 'view:templates' },
+  ];
+  const visibleNav = NAV_ITEMS.filter((item) => can(ownAccessLevel, item.action));
   const notifBtnRef = useRef<HTMLButtonElement>(null);
   const [unreadNotifs, setUnreadNotifs] = useState(0);
 
@@ -138,12 +149,16 @@ export function TopNav({
           <span className="header-wordmark">Flizow</span>
         </a>
         <nav className="header-nav">
-          <a href="#overview" className={active === 'overview' ? 'on' : ''} aria-current={active === 'overview' ? 'page' : undefined}>Home</a>
-          <a href="#clients" className={active === 'clients' ? 'on' : ''} aria-current={active === 'clients' ? 'page' : undefined}>Clients</a>
-          <a href="#ops" className={active === 'ops' ? 'on' : ''} aria-current={active === 'ops' ? 'page' : undefined}>Ops</a>
-          <a href="#analytics" className={active === 'analytics' ? 'on' : ''} aria-current={active === 'analytics' ? 'page' : undefined}>Analytics</a>
-          <a href="#wip/agenda" className={active === 'wip' ? 'on' : ''} aria-current={active === 'wip' ? 'page' : undefined}>Weekly WIP</a>
-          <a href="#templates" className={active === 'templates' ? 'on' : ''} aria-current={active === 'templates' ? 'page' : undefined}>Templates</a>
+          {visibleNav.map((item) => (
+            <a
+              key={item.activeKey}
+              href={item.href}
+              className={active === item.activeKey ? 'on' : ''}
+              aria-current={active === item.activeKey ? 'page' : undefined}
+            >
+              {item.label}
+            </a>
+          ))}
         </nav>
       </div>
       <div className="header-right">
@@ -232,9 +247,9 @@ export function TopNav({
                   {ownAccessLevel && (
                     <span
                       className={`access-pill access-pill--${ownAccessLevel}`}
-                      title={`${ACCESS_LABEL[ownAccessLevel]} access — full workspace permissions`}
+                      title={`${ACCESS_ROLE_LABEL[ownAccessLevel]} access`}
                     >
-                      {ACCESS_LABEL[ownAccessLevel]}
+                      {ACCESS_ROLE_LABEL[ownAccessLevel]}
                     </span>
                   )}
                 </div>

@@ -40,14 +40,23 @@ export type ServiceType = 'retainer' | 'project';
  *  uniformly. */
 export type MemberType = 'am' | 'operator';
 
-/** Access level governs what a member can do across the workspace.
- *  Admin = full access (settings, templates, billing). Editor = can
- *  edit work + cards + comments. Viewer = read-only. The signed-in
- *  workspace owner is always 'admin'; invited teammates get assigned
- *  a level when invited. Currently only displayed (pill in avatar
- *  popover, future placement on Members surface) — `useCanEditTemplates`
- *  and friends will read this when role-gating ships for real. */
-export type AccessLevel = 'admin' | 'editor' | 'viewer';
+/** Access role governs what a member can do across the workspace.
+ *  Four tiers, top-to-bottom:
+ *    'owner'  — billing, ownership transfer, everything Admin can do.
+ *               Exactly one per workspace; matches WorkspaceDoc.ownerUid.
+ *    'admin'  — manage members, approve time off, edit workspace
+ *               settings, but no billing/ownership-transfer.
+ *    'member' — edits cards they're assigned to, submits own time off.
+ *               Sees Home / Clients / Analytics by default.
+ *    'viewer' — read-only across whatever surfaces they're granted.
+ *  Migration: legacy 'editor' values map to 'member'; the workspace
+ *  owner is bumped to 'owner' on first load. See migrateAccessRoles
+ *  in flizowStore. */
+export type AccessRole = 'owner' | 'admin' | 'member' | 'viewer';
+
+/** @deprecated use AccessRole. Kept as an alias for one release so
+ *  any stragglers still importing it keep compiling while we sweep. */
+export type AccessLevel = AccessRole;
 
 // ── Workspace + multi-user types ──────────────────────────────────────────
 
@@ -68,7 +77,7 @@ export interface WorkspaceMembership {
   displayName?: string;
   email?: string;
   photoURL?: string;
-  role: AccessLevel;
+  role: AccessRole;
   /** ISO timestamp. Used in the Members list ("joined 3 days ago"). */
   joinedAt: string;
 }
@@ -81,8 +90,8 @@ export interface WorkspaceMembership {
  */
 export interface PendingInvite {
   token: string;
-  /** What role the new member gets when they accept. */
-  role: AccessLevel;
+  /** What access role the new member gets when they accept. */
+  role: AccessRole;
   createdAt: string;
   /** UID of the workspace member who generated the invite. Mostly
    *  audit trail; not used for any current logic. */
@@ -452,10 +461,12 @@ export interface Member {
    *  as a solid fill instead. */
   bg?: string;
   type: MemberType;
-  /** Access level — undefined on legacy / demo members (no pill shown).
-   *  The signed-in user always gets 'admin' set via upsertOwnMember on
-   *  every sign-in. Future-invited teammates get assigned at invite. */
-  accessLevel?: AccessLevel;
+  /** Access role — undefined on legacy / demo members (no pill shown).
+   *  The signed-in user gets one set via upsertOwnMember on every
+   *  sign-in (workspace owner gets 'owner'; everyone else 'admin' as
+   *  the legacy default). Future-invited teammates get assigned at
+   *  invite time. */
+  accessLevel?: AccessRole;
   /** What the user goes by — first-name shorthand. Optional; falls
    *  back to the first word of `name` when absent. Editable in the
    *  Profile tab of Account Settings. */

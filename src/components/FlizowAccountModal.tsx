@@ -21,11 +21,15 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useFlizow } from '../store/useFlizow';
 import { flizowStore } from '../store/flizowStore';
-import type { AccessLevel, Member, TrashEntry, TrashKind } from '../types/flizow';
+import type { AccessRole, Member, TrashEntry, TrashKind } from '../types/flizow';
 import { initialsOf } from '../utils/avatar';
 import { ConfirmDangerDialog } from './ConfirmDangerDialog';
 import { useMemberProfile } from '../contexts/MemberProfileContext';
 import { currentVacationPeriod } from '../utils/memberProfile';
+import {
+  ACCESS_ROLE_LABEL,
+  ACCESS_ROLE_DESCRIPTION,
+} from '../utils/access';
 
 /**
  * FlizowAccountModal — the Account Settings overlay reachable from the
@@ -1027,7 +1031,7 @@ function MembersSection() {
   const profile = useMemberProfile();
 
   const [inviting, setInviting] = useState(false);
-  const [inviteRole, setInviteRole] = useState<AccessLevel>('editor');
+  const [inviteRole, setInviteRole] = useState<AccessRole>('member');
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -1110,7 +1114,7 @@ function MembersSection() {
     }
   }
 
-  async function handleRoleChange(uid: string, role: AccessLevel) {
+  async function handleRoleChange(uid: string, role: AccessRole) {
     setActionError(null);
     setPendingMemberOp(uid);
     try {
@@ -1171,13 +1175,19 @@ function MembersSection() {
             <select
               className="acct-input mbrs-role-select"
               value={inviteRole}
-              onChange={(e) => setInviteRole(e.target.value as AccessLevel)}
+              onChange={(e) => setInviteRole(e.target.value as AccessRole)}
               aria-label="Role for the invited teammate"
               disabled={inviting}
+              title={ACCESS_ROLE_DESCRIPTION[inviteRole]}
             >
-              <option value="editor">Editor</option>
-              <option value="viewer">Viewer</option>
-              <option value="admin">Admin</option>
+              {/* Order goes most-restrictive → most-permissive so the
+                  default ('member') is mid-list and Admin is the
+                  conscious upgrade. Owner intentionally absent —
+                  promoting to Owner runs through the ownership-
+                  transfer flow, not the invite picker. */}
+              <option value="viewer">{ACCESS_ROLE_LABEL.viewer}</option>
+              <option value="member">{ACCESS_ROLE_LABEL.member}</option>
+              <option value="admin">{ACCESS_ROLE_LABEL.admin}</option>
             </select>
             <button
               type="button"
@@ -1309,16 +1319,24 @@ function MembersSection() {
                     className="acct-input mbrs-role-select mbrs-role-select--inline"
                     value={m.role}
                     disabled={pendingMemberOp === m.uid}
-                    onChange={(e) => handleRoleChange(m.uid, e.target.value as AccessLevel)}
-                    aria-label={`${m.displayName || m.email}'s access level`}
+                    onChange={(e) => handleRoleChange(m.uid, e.target.value as AccessRole)}
+                    aria-label={`${m.displayName || m.email}'s access role`}
+                    title={ACCESS_ROLE_DESCRIPTION[m.role]}
                   >
-                    <option value="admin">Admin</option>
-                    <option value="editor">Editor</option>
-                    <option value="viewer">Viewer</option>
+                    {/* Owner intentionally not an option here — promoting
+                        to Owner is the ownership-transfer flow, distinct
+                        from "change this member's role." Renders as a
+                        read-only pill below for the owner row. */}
+                    <option value="viewer">{ACCESS_ROLE_LABEL.viewer}</option>
+                    <option value="member">{ACCESS_ROLE_LABEL.member}</option>
+                    <option value="admin">{ACCESS_ROLE_LABEL.admin}</option>
                   </select>
                 ) : (
-                  <span className={`access-pill access-pill--${m.role}`}>
-                    {m.role.charAt(0).toUpperCase() + m.role.slice(1)}
+                  <span
+                    className={`access-pill access-pill--${m.role}`}
+                    title={ACCESS_ROLE_DESCRIPTION[m.role]}
+                  >
+                    {ACCESS_ROLE_LABEL[m.role]}
                   </span>
                 )}
                 {showRemove && (

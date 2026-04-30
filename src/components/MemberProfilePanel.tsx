@@ -16,6 +16,7 @@ import { useMemberProfile } from '../contexts/MemberProfileContext';
 import { useFlizow } from '../store/useFlizow';
 import { flizowStore } from '../store/flizowStore';
 import { loadFor, effectiveCapFor, zoneFor, type CapacityTask } from '../utils/capacity';
+import { can } from '../utils/access';
 import {
   currentVacationPeriod,
   formatReturnDate,
@@ -125,19 +126,22 @@ function ProfileBody({ member, onClose }: { member: Member; onClose: () => void 
   const [photoError, setPhotoError] = useState<string | null>(null);
 
   // Permission gate — the Edit profile button only renders for self
-  // or a workspace admin. Self check uses the auth-derived current
-  // member id; admin check reads accessLevel from the data record.
-  // Both fall back to false for the pre-auth / dev-bypass case so a
-  // signed-out user can't see edit affordances.
+  // or someone with edit-any-profile rights (Owner/Admin). Self check
+  // uses the auth-derived current member id; the role check goes
+  // through the central can() helper so we don't reinvent permission
+  // logic inline. Both fall back to false for the pre-auth / dev-
+  // bypass case so a signed-out user can't see edit affordances.
   const currentId = flizowStore.getCurrentMemberId();
   const isMe = currentId !== null && member.id === currentId;
   const currentMember = data.members.find(m => m.id === currentId);
-  const isAdmin = currentMember?.accessLevel === 'admin';
-  const canEdit = isMe || isAdmin;
+  const canEditAnyone = can(currentMember?.accessLevel, 'edit:any-profile');
+  const canEdit = isMe || canEditAnyone;
   // Within edit mode, admin-only fields (role + capacity caps) are
   // gated separately. Self-editing-self should NOT be able to bump
-  // their own access level — that's an admin call.
-  const canEditAdminFields = isAdmin;
+  // their own access level — that's an admin call. The matching
+  // actions live in the can() matrix; check both so self-editing
+  // doesn't accidentally grant cap or role edits.
+  const canEditAdminFields = canEditAnyone;
 
   // Working-with computations — what clients this member belongs to,
   // and as what role. Both are array filters so the cost is linear
@@ -699,7 +703,11 @@ function ProfileEditForm({
             <ContactRow
               Icon={UserIcon}
               label="Access"
-              value={member.accessLevel ?? '—'}
+              value={
+                member.accessLevel
+                  ? member.accessLevel.charAt(0).toUpperCase() + member.accessLevel.slice(1)
+                  : '—'
+              }
             />
             <ContactRow
               Icon={BriefcaseIcon}

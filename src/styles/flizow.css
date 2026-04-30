@@ -494,11 +494,21 @@
     flex-shrink: 0;
     line-height: 1.4;
   }
-  .access-pill--admin {
-    background: rgba(10, 132, 255, 0.14);
+  /* Owner — brand orange, the strongest signal in the four-tier
+     hierarchy. Communicates "this is the workspace owner" at a
+     glance without needing the word. */
+  .access-pill--owner {
+    background: rgba(241, 90, 36, 0.16);
     color: var(--highlight);
   }
-  .access-pill--editor {
+  /* Admin — elevated permissions but not ownership. Blue so it
+     still reads as authoritative against the rest of the chrome. */
+  .access-pill--admin {
+    background: rgba(10, 132, 255, 0.14);
+    color: #0a84ff;
+  }
+  /* Member — default workspace access. Green for "active contributor". */
+  .access-pill--member {
     background: rgba(48, 209, 88, 0.14);
     color: #30d158;
   }
