@@ -623,6 +623,83 @@ export interface Member {
 export type TimeOffStatus = 'pending' | 'approved' | 'denied' | 'cancelled';
 
 /**
+ * Coverage rule — workspace-curated constraint that the time-off
+ * engine checks every day. The OM (or admin) writes one declarative
+ * rule like "Always need 1 Account Manager present every weekday";
+ * the evaluator (utils/coverageRules) walks every date in the rolling
+ * window, computes who's in scope vs who's off, and flags conflicts.
+ *
+ * Three pieces:
+ *   - who:        which members the rule cares about
+ *                   role     → "all admins / all members / etc."
+ *                   jobTitle → "all Account Managers / all Designers"
+ *                   members  → specific named people (e.g. Adam's
+ *                              direct support: Sarah + Mike)
+ *   - constraint: the threshold check
+ *                   min-present → at least N from the scope must
+ *                                 be at work that day
+ *                   max-out     → at most N from the scope may be
+ *                                 off that day
+ *   - when:       all days vs weekdays-only
+ *
+ *  Soft-disable via `active: false` — inactive rules don't fire and
+ *  don't render in conflict reports, but stay in the catalog so the
+ *  OM can flip them back without re-creating.
+ *
+ *  Phase 5 ships the type + evaluator + tests. Phase 6 builds the
+ *  rules-builder UI on top.
+ */
+export type CoverageRuleWho =
+  | { kind: 'role'; roleIds: AccessRole[] }
+  | { kind: 'jobTitle'; jobTitleIds: string[] }
+  | { kind: 'members'; memberIds: string[] };
+
+export type CoverageRuleConstraint =
+  | { kind: 'min-present'; count: number }
+  | { kind: 'max-out'; count: number };
+
+export type CoverageRuleWhen = 'weekdays' | 'all';
+
+export interface CoverageRule {
+  id: string;
+  /** Human-readable label shown in the rules list and conflict
+   *  report. The OM writes this when creating the rule; we don't
+   *  derive it. */
+  name: string;
+  active: boolean;
+  who: CoverageRuleWho;
+  constraint: CoverageRuleConstraint;
+  when: CoverageRuleWhen;
+}
+
+/**
+ * One conflict produced by the evaluator. Returned per-rule per-day
+ * so the UI can render either:
+ *   - a flat list "May 15: Rule A broken (0/1 AMs present)"
+ *   - or a heatmap "May 15 has 2 broken rules"
+ *
+ * `expected` and `actual` make the diagnostic copy easy to write:
+ *   min-present: "needs ≥{expected} present, only {actual}"
+ *   max-out:     "limit is {expected}, {actual} are off"
+ *
+ * `membersInScope` and `membersOff` are the concrete ids that
+ * matched the rule's `who` filter so the UI can list "out: Sarah,
+ * Mike" without redoing the filter pass.
+ */
+export interface RuleConflict {
+  ruleId: string;
+  ruleName: string;
+  /** ISO date YYYY-MM-DD. */
+  date: string;
+  expected: number;
+  actual: number;
+  /** All member ids that match the rule's `who` filter. */
+  membersInScope: string[];
+  /** Subset of membersInScope on approved time off this day. */
+  membersOff: string[];
+}
+
+/**
  * One time-off entry on the workspace. Replaces the legacy flat
  * `Member.timeOff` array with a statused, append-only collection
  * that supports the approval flow.
@@ -1179,6 +1256,12 @@ export interface FlizowData {
    *  one approved entry per period; new writes go through dedicated
    *  store methods. Audit: time-off Phase 3. */
   timeOffRequests: TimeOffRequest[];
+  /** Coverage rules — declarative constraints the time-off engine
+   *  checks against every day in the rolling window. Empty list on
+   *  a fresh workspace; the OM (or admin) creates rules through the
+   *  Phase-6 builder UI. The evaluator (utils/coverageRules) reads
+   *  this list. Audit: time-off rules Phase 5. */
+  coverageRules: CoverageRule[];
   /** Light vs dark mode. Used to be owned by the legacy BoardStore;
    *  moved here so we can retire that store. App.tsx reads this and
    *  syncs to `document.documentElement` (class + data-theme attr).

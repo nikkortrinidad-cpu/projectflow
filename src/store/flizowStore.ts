@@ -10,6 +10,7 @@ import type {
   PendingInvite,
   TrashEntry, TrashKind, TrashPayload,
   JobTitle, TimeOffRequest, TimeOffStatus,
+  CoverageRule,
 } from '../types/flizow';
 import { ONBOARDING_TEMPLATES } from '../data/onboardingTemplates';
 import { TASK_POOLS } from '../data/taskPools';
@@ -98,6 +99,11 @@ function emptyData(): FlizowData {
     // entries get migrated in here on first load (see Phase-3
     // migration in the snapshot handler).
     timeOffRequests: [],
+    // Empty rules list on a fresh workspace. The OM creates rules
+    // through the Phase-6 builder UI; we deliberately don't seed
+    // defaults so silently-running coverage checks aren't a
+    // surprise on first load.
+    coverageRules: [],
   };
 }
 
@@ -282,6 +288,13 @@ function migrate(parsed: Partial<FlizowData>): FlizowData {
     timeOffRequests: Array.isArray(parsed.timeOffRequests)
       ? parsed.timeOffRequests
       : base.timeOffRequests,
+    // Coverage rules — backfill with [] for docs that predate
+    // Phase 5. The evaluator returns an empty conflict list when
+    // the catalog is empty, so an unmigrated workspace just sees
+    // nothing in the (Phase-6) calendar's conflict ribbon.
+    coverageRules: Array.isArray(parsed.coverageRules)
+      ? parsed.coverageRules
+      : base.coverageRules,
   };
 }
 
@@ -3016,6 +3029,49 @@ class FlizowStore {
       (x) => x.id !== id,
     );
     if (this.data.timeOffRequests.length === before) return;
+    this.save();
+  }
+
+  // ── Coverage rules ──────────────────────────────────────────────────
+  //
+  // Workspace-curated coverage constraints. Phase 5 lands the data
+  // layer + evaluator (utils/coverageRules); Phase 6 builds the
+  // rules-builder UI. CRUD lands here so Phase 6 can wire UI →
+  // store without touching this file.
+
+  /** Append a new coverage rule. No-op on duplicate id (defensive
+   *  against double-submits from a flaky network). */
+  addCoverageRule(rule: CoverageRule): void {
+    if (this.data.coverageRules.some((x) => x.id === rule.id)) return;
+    this.data.coverageRules.push(rule);
+    this.save();
+  }
+
+  /** Patch a rule in place. id is immutable — guard against a
+   *  caller passing it in patch. No-op when the id is unknown. */
+  updateCoverageRule(id: string, patch: Partial<CoverageRule>): void {
+    const r = this.data.coverageRules.find((x) => x.id === id);
+    if (!r) return;
+    const { id: _ignored, ...safe } = patch;
+    Object.assign(r, safe);
+    this.save();
+  }
+
+  /** Soft-disable. Inactive rules don't fire and don't appear in
+   *  conflict reports, but stay in the catalog. Reversible via
+   *  `updateCoverageRule(id, { active: true })`. */
+  archiveCoverageRule(id: string): void {
+    this.updateCoverageRule(id, { active: false });
+  }
+
+  /** Hard-delete. Use sparingly — `archiveCoverageRule` is the
+   *  reversible default. No-op when the id is unknown. */
+  deleteCoverageRule(id: string): void {
+    const before = this.data.coverageRules.length;
+    this.data.coverageRules = this.data.coverageRules.filter(
+      (x) => x.id !== id,
+    );
+    if (this.data.coverageRules.length === before) return;
     this.save();
   }
 

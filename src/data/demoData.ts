@@ -1130,5 +1130,10 @@ export function generateDemoData(): FlizowData {
     // requests interactively; seeding fake history would clutter
     // the surface without adding signal.
     timeOffRequests: [],
+    // Empty rules list. Same reasoning as the request list — the
+    // OM creates rules through the Phase-6 builder; demo loads
+    // shouldn't ship pre-baked coverage logic the user didn't
+    // choose.
+    coverageRules: [],
   };
 }
