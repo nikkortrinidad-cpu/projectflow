@@ -1301,6 +1301,289 @@
     flex: 1;
   }
 
+  /* ───── Trash bin (Account modal → Trash sidebar entry) ─────
+     Recovery surface for soft-deleted items. Reads from
+     data.trash; rendered by the TrashSection component in
+     FlizowAccountModal.tsx. The visual treatment intentionally
+     echoes Apple Notes' "Recently Deleted" folder — a quiet,
+     single-column list with date-grouped headers, leading icons
+     per item type, and inline Restore + Delete-forever actions
+     anchored to the right of each row. */
+
+  /* Toolbar above the list — search input on the left, Empty Trash
+     button on the right. Hides the Empty Trash button when there's
+     nothing to empty so it doesn't read as a dead control. */
+  .trash-toolbar {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-base);
+    margin-bottom: var(--sp-base);
+  }
+  .trash-search {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-sm);
+    padding: var(--sp-sm) var(--sp-base);
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 8px;
+    transition: border-color var(--dur-fast);
+  }
+  .trash-search:focus-within {
+    border-color: var(--highlight);
+  }
+  .trash-search svg {
+    width: 14px; height: 14px;
+    color: var(--text-soft);
+    flex: 0 0 auto;
+  }
+  .trash-search input {
+    flex: 1 1 auto;
+    min-width: 0;
+    background: transparent;
+    border: 0;
+    outline: 0;
+    color: var(--text);
+    font-size: var(--fs-md);
+    font-family: inherit;
+  }
+  .trash-search input::placeholder { color: var(--text-soft); }
+  .trash-search input:disabled { color: var(--text-faint); cursor: not-allowed; }
+
+  /* Empty Trash typed-confirm — lifted styles match the Reset
+     workspace pattern next door. Same red destructive treatment so
+     the user reads "Empty Trash" with the same caution as "Reset
+     workspace". */
+  .trash-empty-confirm {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-sm);
+    margin-bottom: var(--sp-xl);
+    padding: var(--sp-base);
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+  }
+  .trash-empty-confirm-prompt {
+    font-size: var(--fs-md);
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .trash-empty-confirm-actions {
+    display: flex;
+    gap: var(--sp-sm);
+  }
+
+  /* The empty state — both "your trash is empty" and "no matches".
+     Quiet centered layout with a soft icon, mirrors the empty-state
+     vocabulary used elsewhere (Notes, Clients). */
+  .trash-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-md);
+    padding: var(--sp-5xl) var(--sp-3xl);
+    text-align: center;
+    color: var(--text-soft);
+  }
+  .trash-empty-icon {
+    width: 36px; height: 36px;
+    opacity: 0.4;
+  }
+  .trash-empty-title {
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .trash-empty-sub {
+    font-size: var(--fs-md);
+    max-width: 56ch;
+    line-height: var(--lh-relaxed);
+  }
+
+  /* The list itself — single column, date-grouped. Each group is
+     spaced apart by margin so the eye treats each bucket as its
+     own beat. */
+  .trash-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-xl);
+  }
+  .trash-group {
+    display: flex;
+    flex-direction: column;
+  }
+  .trash-group-label {
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-sm);
+    margin-bottom: var(--sp-sm);
+    padding-bottom: var(--sp-xs);
+    border-bottom: 1px solid var(--hairline-soft);
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    color: var(--text-soft);
+  }
+  .trash-group-count {
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    color: var(--text-faint);
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  /* Per-row layout: leading icon (24px column), body (flex: 1),
+     trailing actions. Hover lifts the row a touch so it reads as
+     interactive without being loud. */
+  .trash-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: var(--sp-base);
+    padding: var(--sp-base) var(--sp-md);
+    border-radius: 8px;
+    transition: background var(--dur-fast);
+  }
+  .trash-row:hover {
+    background: var(--bg-soft);
+  }
+  .trash-row-icon {
+    width: 32px; height: 32px;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--text-soft) 8%, transparent);
+    color: var(--text-soft);
+  }
+  .trash-row-icon svg {
+    width: 16px; height: 16px;
+  }
+  .trash-row-body {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .trash-row-title {
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-xs);
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+  .trash-row-preview {
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    max-width: 100%;
+  }
+  .trash-row-parent {
+    font-size: var(--fs-sm);
+    color: var(--text-soft);
+    font-weight: 400;
+  }
+  .trash-row-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-xs);
+    font-size: var(--fs-sm);
+    color: var(--text-soft);
+    flex-wrap: wrap;
+  }
+  .trash-row-kind {
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+  .trash-row-sep {
+    color: var(--text-faint);
+  }
+  /* Expiry warning — only renders when daysRemaining ≤ 7. The
+     warmer accent color makes it stand out against the otherwise
+     muted meta line so the user notices before auto-empty fires. */
+  .trash-row-expiring {
+    color: var(--status-fire);
+    font-weight: 500;
+  }
+
+  /* Per-row action buttons. Outline + label, sized small enough to
+     not dominate the row but big enough to read. The danger variant
+     ("Delete forever") flips to a "Click again" prompt on first
+     press — the .is-armed class swaps to a solid-red treatment so
+     the second click reads as clearly destructive. */
+  .trash-row-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-xs);
+    flex: 0 0 auto;
+  }
+  .trash-row-action {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-xs);
+    padding: var(--sp-xs) var(--sp-md);
+    background: transparent;
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast);
+  }
+  .trash-row-action svg {
+    width: 12px; height: 12px;
+  }
+  .trash-row-action:hover {
+    background: var(--bg-soft);
+    border-color: var(--text-faint);
+  }
+  .trash-row-action:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
+  }
+  .trash-row-action--danger {
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+  .trash-row-action--danger:hover {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+  }
+  .trash-row-action--danger.is-armed {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .trash-row-action--danger.is-armed:hover {
+    background: #e63027;
+  }
+
+  /* Mobile — collapse the row layout to two stacked rows so the
+     actions don't clip on narrow screens. */
+  @media (max-width: 600px) {
+    .trash-row {
+      grid-template-columns: auto 1fr;
+      grid-template-rows: auto auto;
+    }
+    .trash-row-actions {
+      grid-column: 1 / -1;
+      justify-content: flex-end;
+    }
+  }
+
   /* Responsive — collapse sidebar on narrow screens */
   @media (max-width: 720px) {
     .acct-body { flex-direction: column; }

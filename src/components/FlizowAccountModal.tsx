@@ -1,9 +1,27 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { CheckIcon } from '@heroicons/react/24/outline';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import {
+  ArrowUturnLeftIcon,
+  BellAlertIcon,
+  BriefcaseIcon,
+  BuildingOffice2Icon,
+  CalendarDaysIcon,
+  ChatBubbleLeftIcon,
+  CheckCircleIcon,
+  CheckIcon,
+  ClipboardDocumentIcon,
+  DocumentTextIcon,
+  LinkIcon,
+  ListBulletIcon,
+  MagnifyingGlassIcon,
+  RectangleStackIcon,
+  TrashIcon,
+  UserIcon,
+  ViewColumnsIcon,
+} from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 import { useFlizow } from '../store/useFlizow';
 import { flizowStore } from '../store/flizowStore';
-import type { AccessLevel, Member } from '../types/flizow';
+import type { AccessLevel, Member, TrashEntry, TrashKind } from '../types/flizow';
 import { initialsOf } from '../utils/avatar';
 import { ConfirmDangerDialog } from './ConfirmDangerDialog';
 
@@ -33,7 +51,7 @@ import { ConfirmDangerDialog } from './ConfirmDangerDialog';
  *   • Timezone-driven date formatting — future pass
  */
 
-type Section = 'profile' | 'workspace' | 'preferences' | 'notifications' | 'members' | 'signin';
+type Section = 'profile' | 'workspace' | 'preferences' | 'notifications' | 'members' | 'trash' | 'signin';
 
 const AVATAR_COLORS = [
   { id: 'indigo', hex: '#5e5ce6', label: 'Indigo' },
@@ -438,6 +456,22 @@ export default function FlizowAccountModal({ onClose }: Props) {
                 <path d="M16 3.13a4 4 0 0 1 0 7.75" />
               </svg>
             </NavItem>
+            {/* Trash — recovery surface for soft-deleted items. Lives
+                between Members and Sign-in so the flow reads
+                "your stuff (Profile) → workspace stuff (Workspace,
+                Preferences, Notifications, Members, Trash) →
+                account-level (Sign-in)." Recovery is rare so it
+                doesn't merit top-nav real estate, but it's still a
+                first-class section here. */}
+            <NavItem section="trash" label="Trash" active={section === 'trash'} onClick={() => setSection('trash')}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                <path d="M10 11v6" />
+                <path d="M14 11v6" />
+                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+              </svg>
+            </NavItem>
             <NavItem section="signin" label="Sign-in" active={section === 'signin'} onClick={() => setSection('signin')}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </NavItem>
@@ -727,6 +761,11 @@ export default function FlizowAccountModal({ onClose }: Props) {
             {/* ── Members ────────────────────────────────────────── */}
             {section === 'members' && (
               <MembersSection />
+            )}
+
+            {/* ── Trash ──────────────────────────────────────────── */}
+            {section === 'trash' && (
+              <TrashSection />
             )}
 
             {/* ── Sign-in ────────────────────────────────────────── */}
@@ -1871,4 +1910,371 @@ function formatRelativeShort(iso: string): string {
   if (days < 7) return `${days}d ago`;
   if (days < 30) return `${Math.floor(days / 7)}w ago`;
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+// ── Trash section ────────────────────────────────────────────────────────
+//
+// The recovery surface for every soft-deleted item in the workspace.
+// Lives behind the "Trash" sidebar entry in the Account modal so it
+// stays out of the daily nav (recovery is rare; promoting it to the
+// top would over-promote it).
+//
+// Reads from data.trash directly. The store's restoreFromTrash() and
+// purgeFromTrash() methods own the data round-trip; this component is
+// pure UI.
+//
+// Phase 2 ships the surface against an empty data.trash. Once Phase 4
+// flips every existing hard-delete to route through sendToTrash(),
+// this view will start showing real entries.
+
+/** Per-kind config for the Trash row. Drives the icon and the
+ *  "Note" / "Comment" / "Client" label that sits next to the
+ *  preview, plus a sort priority for breaking ties when two entries
+ *  share a deletedAt (group bigger things higher so a deleted
+ *  client lands above a deleted note from the same moment). */
+const TRASH_KIND_META: Record<TrashKind, {
+  Icon: typeof DocumentTextIcon;
+  label: string;
+  weight: number;
+}> = {
+  client:           { Icon: BuildingOffice2Icon,     label: 'Client',             weight: 1 },
+  service:          { Icon: ViewColumnsIcon,         label: 'Service',            weight: 2 },
+  task:             { Icon: RectangleStackIcon,      label: 'Card',               weight: 3 },
+  opsTask:          { Icon: BriefcaseIcon,           label: 'Ops card',           weight: 4 },
+  template:         { Icon: ClipboardDocumentIcon,   label: 'Template',           weight: 5 },
+  note:             { Icon: DocumentTextIcon,        label: 'Note',               weight: 6 },
+  contact:          { Icon: UserIcon,                label: 'Contact',            weight: 7 },
+  touchpoint:       { Icon: CalendarDaysIcon,        label: 'Touchpoint',         weight: 8 },
+  actionItem:       { Icon: CheckCircleIcon,         label: 'Action item',        weight: 9 },
+  comment:          { Icon: ChatBubbleLeftIcon,      label: 'Comment',            weight: 10 },
+  quickLink:        { Icon: LinkIcon,                label: 'Quick link',         weight: 11 },
+  onboardingItem:   { Icon: ListBulletIcon,          label: 'Onboarding item',    weight: 12 },
+  manualAgendaItem: { Icon: BellAlertIcon,           label: 'Agenda item',        weight: 13 },
+};
+
+/** Days within auto-empty when the row gets an "Expires soon" warning. */
+const EXPIRY_WARNING_DAYS = 7;
+
+/** 90-day retention mirrored from the store. Used here to compute the
+ *  expiry warning + countdown. Kept as a local constant rather than
+ *  imported because the store's TRASH_RETENTION_MS is private to that
+ *  module — duplicating one number is cheaper than re-architecting. */
+const TRASH_RETENTION_DAYS = 90;
+
+function TrashSection() {
+  const { data } = useFlizow();
+  const trash = data.trash;
+
+  const [query, setQuery] = useState('');
+  // Single-row "Are you sure" gate. Tracks the entry id of the row
+  // whose Delete-forever button was just clicked. The button label
+  // flips to "Click again to confirm" on first press; second press
+  // fires purge. Click anywhere else (or a different row's button)
+  // resets it. Inline rather than a stacked dialog because the
+  // action is per-row, not page-level — the typed-confirm shape is
+  // saved for "Empty Trash" which IS page-level. */
+  const [purgeArming, setPurgeArming] = useState<string | null>(null);
+  // Empty Trash typed-confirm — same pattern as "Reset workspace".
+  const [emptyPhase, setEmptyPhase] = useState<'idle' | 'confirm'>('idle');
+  const [emptyInput, setEmptyInput] = useState('');
+
+  // Filter + sort. Newest first; client/service deletes float to the
+  // top of a same-day group via `weight`. Search matches on preview
+  // and parent label, case-insensitive.
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    let rows = trash.slice();
+    if (q) {
+      rows = rows.filter(e =>
+        e.preview.toLowerCase().includes(q) ||
+        (e.parentLabel ?? '').toLowerCase().includes(q),
+      );
+    }
+    rows.sort((a, b) => {
+      const tDiff = b.deletedAt.localeCompare(a.deletedAt);
+      if (tDiff !== 0) return tDiff;
+      return TRASH_KIND_META[a.kind].weight - TRASH_KIND_META[b.kind].weight;
+    });
+    return rows;
+  }, [trash, query]);
+
+  // Group by date bucket so the list reads like Apple Notes /
+  // Recently Deleted. Buckets in order: Today / Yesterday / This week
+  // / This month / Older. Matches user mental model — "I deleted that
+  // a couple days ago" lands on Yesterday or This week, not lost in a
+  // flat newest-first list.
+  const groups = useMemo(() => {
+    const buckets: Array<{ key: string; label: string; rows: TrashEntry[] }> = [
+      { key: 'today',   label: 'Today',           rows: [] },
+      { key: 'yest',    label: 'Yesterday',       rows: [] },
+      { key: 'week',    label: 'Earlier this week', rows: [] },
+      { key: 'month',   label: 'Earlier this month', rows: [] },
+      { key: 'older',   label: 'Older',           rows: [] },
+    ];
+    const now = Date.now();
+    for (const e of filtered) {
+      const t = new Date(e.deletedAt).getTime();
+      const days = Math.floor((now - t) / 86_400_000);
+      if (days < 1) buckets[0].rows.push(e);
+      else if (days < 2) buckets[1].rows.push(e);
+      else if (days < 7) buckets[2].rows.push(e);
+      else if (days < 30) buckets[3].rows.push(e);
+      else buckets[4].rows.push(e);
+    }
+    return buckets.filter(b => b.rows.length > 0);
+  }, [filtered]);
+
+  function handleRestore(entryId: string) {
+    flizowStore.restoreFromTrash(entryId);
+    // No toast/alert on success — the row visibly disappears, which
+    // is feedback enough. If the entry was already gone we silently
+    // no-op (concurrent purge from another tab).
+  }
+
+  function handlePurgeArm(entryId: string) {
+    setPurgeArming(entryId);
+  }
+
+  function handlePurgeConfirm(entryId: string) {
+    flizowStore.purgeFromTrash(entryId);
+    setPurgeArming(null);
+  }
+
+  function handleEmptyTrash() {
+    flizowStore.emptyTrash();
+    setEmptyPhase('idle');
+    setEmptyInput('');
+  }
+
+  // Click-anywhere-else cancels an armed purge so the "Click again"
+  // state doesn't linger past intent. Effects-driven so the listener
+  // is added/removed in lockstep with armed state.
+  useEffect(() => {
+    if (!purgeArming) return;
+    function clear(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      // Don't cancel when clicking the same row's purge button —
+      // that's the second-click path that actually fires the purge.
+      if (target.closest('[data-trash-purge-armed="true"]')) return;
+      setPurgeArming(null);
+    }
+    // Capture phase so we always run before the row's onClick.
+    document.addEventListener('mousedown', clear, true);
+    return () => document.removeEventListener('mousedown', clear, true);
+  }, [purgeArming]);
+
+  return (
+    <section
+      className="acct-section"
+      role="tabpanel"
+      id="acct-panel-trash"
+      aria-labelledby="acct-tab-trash"
+      tabIndex={0}
+      data-active="true"
+    >
+      <div className="acct-section-header">
+        <h3 className="acct-section-title">Trash</h3>
+        <p className="acct-section-sub">
+          Items deleted in the last {TRASH_RETENTION_DAYS} days. After that they're permanently removed.
+        </p>
+      </div>
+
+      <div className="trash-toolbar">
+        <label className="trash-search">
+          <MagnifyingGlassIcon aria-hidden="true" />
+          <input
+            type="search"
+            placeholder="Search trash"
+            aria-label="Search trash"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            disabled={trash.length === 0}
+          />
+        </label>
+        {trash.length > 0 && emptyPhase === 'idle' && (
+          <button
+            type="button"
+            className="acct-btn-outline acct-btn-outline--danger"
+            onClick={() => setEmptyPhase('confirm')}
+          >
+            Empty Trash
+          </button>
+        )}
+      </div>
+
+      {emptyPhase === 'confirm' && (
+        <div className="trash-empty-confirm">
+          <div className="trash-empty-confirm-prompt">
+            This permanently deletes all {trash.length} item{trash.length === 1 ? '' : 's'} in your Trash. Type <strong>empty</strong> to confirm.
+          </div>
+          <div className="trash-empty-confirm-actions">
+            <input
+              type="text"
+              className="acct-input acct-reset-input"
+              value={emptyInput}
+              onChange={(e) => setEmptyInput(e.target.value)}
+              placeholder="Type empty to confirm"
+              autoFocus
+            />
+            <button
+              type="button"
+              className="acct-btn-solid acct-btn-solid--danger"
+              onClick={handleEmptyTrash}
+              disabled={emptyInput.trim().toLowerCase() !== 'empty'}
+            >
+              Empty Trash
+            </button>
+            <button
+              type="button"
+              className="acct-btn-text"
+              onClick={() => { setEmptyPhase('idle'); setEmptyInput(''); }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {trash.length === 0 ? (
+        <div className="trash-empty" role="status">
+          <TrashIcon aria-hidden="true" className="trash-empty-icon" />
+          <div className="trash-empty-title">Your Trash is empty</div>
+          <div className="trash-empty-sub">
+            Deleted items show up here for {TRASH_RETENTION_DAYS} days before they're permanently removed.
+          </div>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="trash-empty" role="status">
+          <div className="trash-empty-title">No matches</div>
+          <div className="trash-empty-sub">No trashed items match "{query}".</div>
+        </div>
+      ) : (
+        <div className="trash-list">
+          {groups.map(group => (
+            <div key={group.key} className="trash-group">
+              <div className="trash-group-label">
+                {group.label}
+                <span className="trash-group-count">{group.rows.length}</span>
+              </div>
+              {group.rows.map(entry => (
+                <TrashRow
+                  key={entry.id}
+                  entry={entry}
+                  purgeArmed={purgeArming === entry.id}
+                  onRestore={() => handleRestore(entry.id)}
+                  onPurgeArm={() => handlePurgeArm(entry.id)}
+                  onPurgeConfirm={() => handlePurgeConfirm(entry.id)}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function TrashRow({
+  entry,
+  purgeArmed,
+  onRestore,
+  onPurgeArm,
+  onPurgeConfirm,
+}: {
+  entry: TrashEntry;
+  purgeArmed: boolean;
+  onRestore: () => void;
+  onPurgeArm: () => void;
+  onPurgeConfirm: () => void;
+}) {
+  const { Icon, label } = TRASH_KIND_META[entry.kind];
+  const deletedAgo = formatRelativeShort(entry.deletedAt);
+
+  // Days remaining until auto-empty. When ≤ EXPIRY_WARNING_DAYS the row
+  // shows a warning badge so the user notices before it's gone.
+  const daysRemaining = (() => {
+    const t = new Date(entry.deletedAt).getTime();
+    if (isNaN(t)) return null;
+    const ageDays = (Date.now() - t) / 86_400_000;
+    return Math.max(0, Math.ceil(TRASH_RETENTION_DAYS - ageDays));
+  })();
+  const expiringSoon = daysRemaining !== null && daysRemaining <= EXPIRY_WARNING_DAYS;
+
+  // Cascade size hint for client/service deletes — surfaces "8 cards,
+  // 12 notes" so the user sees what they'd be restoring before they
+  // click. Pulled from the payload's child arrays.
+  const cascadeHint = (() => {
+    if (entry.payload.kind === 'client') {
+      const c = entry.payload.cascade;
+      const parts: string[] = [];
+      if (c.services.length) parts.push(`${c.services.length} ${c.services.length === 1 ? 'service' : 'services'}`);
+      if (c.tasks.length) parts.push(`${c.tasks.length} ${c.tasks.length === 1 ? 'card' : 'cards'}`);
+      if (c.notes.length) parts.push(`${c.notes.length} ${c.notes.length === 1 ? 'note' : 'notes'}`);
+      if (c.contacts.length) parts.push(`${c.contacts.length} ${c.contacts.length === 1 ? 'contact' : 'contacts'}`);
+      return parts.length > 0 ? parts.join(', ') : null;
+    }
+    if (entry.payload.kind === 'service') {
+      const tasks = entry.payload.tasks.length;
+      if (tasks) return `${tasks} ${tasks === 1 ? 'card' : 'cards'}`;
+    }
+    return null;
+  })();
+
+  return (
+    <div className="trash-row">
+      <div className="trash-row-icon">
+        <Icon aria-hidden="true" />
+      </div>
+      <div className="trash-row-body">
+        <div className="trash-row-title">
+          <span className="trash-row-preview">{entry.preview || '(untitled)'}</span>
+          {entry.parentLabel && (
+            <span className="trash-row-parent">— {entry.parentLabel}</span>
+          )}
+        </div>
+        <div className="trash-row-meta">
+          <span className="trash-row-kind">{label}</span>
+          <span className="trash-row-sep">·</span>
+          <span>deleted {deletedAgo}</span>
+          {cascadeHint && (
+            <>
+              <span className="trash-row-sep">·</span>
+              <span>{cascadeHint}</span>
+            </>
+          )}
+          {expiringSoon && daysRemaining !== null && (
+            <>
+              <span className="trash-row-sep">·</span>
+              <span className="trash-row-expiring">
+                Expires in {daysRemaining}d
+              </span>
+            </>
+          )}
+        </div>
+      </div>
+      <div className="trash-row-actions">
+        <button
+          type="button"
+          className="trash-row-action"
+          onClick={onRestore}
+          aria-label={`Restore ${entry.preview || label}`}
+          title={`Restore ${entry.preview || label}`}
+        >
+          <ArrowUturnLeftIcon aria-hidden="true" />
+          Restore
+        </button>
+        <button
+          type="button"
+          className={`trash-row-action trash-row-action--danger${purgeArmed ? ' is-armed' : ''}`}
+          onClick={purgeArmed ? onPurgeConfirm : onPurgeArm}
+          data-trash-purge-armed={purgeArmed ? 'true' : undefined}
+          aria-label={purgeArmed ? `Confirm permanent delete of ${entry.preview || label}` : `Delete ${entry.preview || label} forever`}
+          title={purgeArmed ? 'Click again to confirm permanent delete' : 'Delete forever'}
+        >
+          <TrashIcon aria-hidden="true" />
+          {purgeArmed ? 'Click again' : 'Delete forever'}
+        </button>
+      </div>
+    </div>
+  );
 }
