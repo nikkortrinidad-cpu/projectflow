@@ -1,7 +1,20 @@
-import { useEffect, useMemo, useState } from 'react';
-import { XMarkIcon, EnvelopeIcon, PhoneIcon, GlobeAmericasIcon, BriefcaseIcon, ChatBubbleBottomCenterTextIcon, BuildingOffice2Icon, UserIcon } from '@heroicons/react/24/outline';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  XMarkIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  GlobeAmericasIcon,
+  BriefcaseIcon,
+  ChatBubbleBottomCenterTextIcon,
+  BuildingOffice2Icon,
+  UserIcon,
+  PencilSquareIcon,
+  CameraIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import { useMemberProfile } from '../contexts/MemberProfileContext';
 import { useFlizow } from '../store/useFlizow';
+import { flizowStore } from '../store/flizowStore';
 import { loadFor, effectiveCapFor, zoneFor, type CapacityTask } from '../utils/capacity';
 import type { Member } from '../types/flizow';
 
@@ -85,6 +98,41 @@ export function MemberProfilePanel() {
 function ProfileBody({ member, onClose }: { member: Member; onClose: () => void }) {
   const { data } = useFlizow();
 
+  // Edit mode + draft state. Drafts shadow each editable field so the
+  // user can mash Cancel without committing. Save patches the live
+  // record via store.updateMember; Cancel discards. We keep drafts in
+  // local state (not the store) because half-typed values shouldn't
+  // sync to other peers via Firestore until the user explicitly saves.
+  const [editing, setEditing] = useState(false);
+  const [drafts, setDrafts] = useState<EditableDrafts>(() => draftsFromMember(member));
+  // Reset drafts whenever the member changes (peer opens a different
+  // profile, or live updates flow in for the current one).
+  useEffect(() => {
+    setDrafts(draftsFromMember(member));
+    setEditing(false);
+  }, [member.id]);
+  // Photo upload state — file input ref + uploading flag for the
+  // disabled state during the Storage round-trip + an error string
+  // for surfacing failures inline (size cap, network, etc.).
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+
+  // Permission gate — the Edit profile button only renders for self
+  // or a workspace admin. Self check uses the auth-derived current
+  // member id; admin check reads accessLevel from the data record.
+  // Both fall back to false for the pre-auth / dev-bypass case so a
+  // signed-out user can't see edit affordances.
+  const currentId = flizowStore.getCurrentMemberId();
+  const isMe = currentId !== null && member.id === currentId;
+  const currentMember = data.members.find(m => m.id === currentId);
+  const isAdmin = currentMember?.accessLevel === 'admin';
+  const canEdit = isMe || isAdmin;
+  // Within edit mode, admin-only fields (role + capacity caps) are
+  // gated separately. Self-editing-self should NOT be able to bump
+  // their own access level — that's an admin call.
+  const canEditAdminFields = isAdmin;
+
   // Working-with computations — what clients this member belongs to,
   // and as what role. Both are array filters so the cost is linear
   // in clients (small N). Memoised so a re-render driven by an
@@ -137,22 +185,168 @@ function ProfileBody({ member, onClose }: { member: Member; onClose: () => void 
     !!member.email || !!member.phone || !!member.ianaTimeZone ||
     !!workingHoursLine || !!member.pronouns;
 
+  function startEditing() {
+    setDrafts(draftsFromMember(member));
+    setEditing(true);
+  }
+  function cancelEditing() {
+    setDrafts(draftsFromMember(member));
+    setEditing(false);
+    setPhotoError(null);
+  }
+  function saveEdits() {
+    // Build the patch from drafts. Empty strings flip to undefined
+    // so a field cleared in the form doesn't render as a blank line
+    // on the profile (the section-hides-when-empty policy reads
+    // undefined, not '').
+    const patch: Partial<Member> = {
+      name: drafts.name.trim() || member.name, // never blank a name
+      role: emptyToUndefined(drafts.role),
+      email: emptyToUndefined(drafts.email),
+      phone: emptyToUndefined(drafts.phone),
+      pronouns: emptyToUndefined(drafts.pronouns),
+      bio: emptyToUndefined(drafts.bio),
+      ianaTimeZone: emptyToUndefined(drafts.ianaTimeZone),
+      workingHoursStart: emptyToUndefined(drafts.workingHoursStart),
+      workingHoursEnd: emptyToUndefined(drafts.workingHoursEnd),
+      workingDays: drafts.workingDays.length > 0 ? drafts.workingDays : undefined,
+      // Skills: split on comma, trim, drop empties. Limits to 12 to
+      // keep the chip list readable; users with more than that have
+      // probably mis-pasted a list and the cap is a friendlier guard
+      // than a silent overflow.
+      skills: drafts.skills
+        .split(',')
+        .map(s => s.trim())
+        .filter(s => s.length > 0)
+        .slice(0, 12),
+    };
+    flizowStore.updateMember(member.id, patch);
+    setEditing(false);
+  }
+
+  async function handlePhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhotoError(null);
+    // Client-side size cap matches the workspace logo path. 5MB is
+    // plenty for a profile photo (most JPEGs are < 1MB at standard
+    // resolutions); the Storage rules also enforce this server-side.
+    if (file.size > 5 * 1024 * 1024) {
+      setPhotoError('Photo must be 5MB or smaller.');
+      return;
+    }
+    if (!file.type.startsWith('image/')) {
+      setPhotoError('Please pick an image file.');
+      return;
+    }
+    setPhotoUploading(true);
+    try {
+      await flizowStore.uploadMemberPhoto(member.id, file);
+    } catch (err) {
+      setPhotoError(err instanceof Error ? err.message : 'Upload failed.');
+    } finally {
+      setPhotoUploading(false);
+      // Clear the input value so the same file can be re-selected
+      // after a Remove → re-upload cycle.
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  }
+
+  async function handlePhotoRemove() {
+    setPhotoError(null);
+    try {
+      await flizowStore.removeMemberPhoto(member.id);
+    } catch (err) {
+      setPhotoError(err instanceof Error ? err.message : 'Could not remove photo.');
+    }
+  }
+
   return (
     <>
       <div className="member-profile-head">
-        <ProfileAvatar member={member} />
-        <div className="member-profile-identity">
-          <h2 className="member-profile-name" id="member-profile-name">
-            {member.name}
-          </h2>
-          {member.role && (
-            <div className="member-profile-role">{member.role}</div>
+        <div className="member-profile-avatar-wrap">
+          <ProfileAvatar member={member} />
+          {editing && (
+            <div className="member-profile-photo-controls">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handlePhotoSelect}
+              />
+              <button
+                type="button"
+                className="member-profile-photo-btn"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={photoUploading}
+                aria-label={member.photoUrl ? 'Change photo' : 'Upload photo'}
+              >
+                <CameraIcon aria-hidden="true" />
+                {photoUploading ? 'Uploading…' : member.photoUrl ? 'Change' : 'Upload'}
+              </button>
+              {member.photoUrl && (
+                <button
+                  type="button"
+                  className="member-profile-photo-btn member-profile-photo-btn--danger"
+                  onClick={handlePhotoRemove}
+                  disabled={photoUploading}
+                  aria-label="Remove photo"
+                >
+                  <TrashIcon aria-hidden="true" />
+                  Remove
+                </button>
+              )}
+            </div>
           )}
-          {onVacation && (
+          {photoError && (
+            <div className="member-profile-photo-error" role="alert">
+              {photoError}
+            </div>
+          )}
+        </div>
+        <div className="member-profile-identity">
+          {editing ? (
+            <input
+              type="text"
+              className="member-profile-name-input"
+              value={drafts.name}
+              onChange={(e) => setDrafts({ ...drafts, name: e.target.value })}
+              placeholder="Full name"
+              aria-label="Name"
+            />
+          ) : (
+            <h2 className="member-profile-name" id="member-profile-name">
+              {member.name}
+            </h2>
+          )}
+          {editing ? (
+            <input
+              type="text"
+              className="member-profile-role-input"
+              value={drafts.role}
+              onChange={(e) => setDrafts({ ...drafts, role: e.target.value })}
+              placeholder="Role / title (e.g. Senior Account Manager)"
+              aria-label="Role"
+            />
+          ) : (
+            member.role && <div className="member-profile-role">{member.role}</div>
+          )}
+          {!editing && onVacation && (
             <div className="member-profile-vacation">
               <span className="member-profile-vacation-icon" aria-hidden="true">🌴</span>
               On vacation · back {formatReturnDate(onVacation.end)}
             </div>
+          )}
+          {!editing && canEdit && (
+            <button
+              type="button"
+              className="member-profile-edit-btn"
+              onClick={startEditing}
+            >
+              <PencilSquareIcon aria-hidden="true" />
+              Edit profile
+            </button>
           )}
         </div>
         <button
@@ -166,113 +360,364 @@ function ProfileBody({ member, onClose }: { member: Member; onClose: () => void 
       </div>
 
       <div className="member-profile-body">
-        {hasContactInfo && (
-          <section className="member-profile-section">
-            <h3 className="member-profile-section-label">Contact</h3>
-            <ul className="member-profile-contact">
-              {member.email && (
-                <ContactRow
-                  Icon={EnvelopeIcon}
-                  label="Email"
-                  value={member.email}
-                  href={`mailto:${member.email}`}
-                />
-              )}
-              {member.phone && (
-                <ContactRow
-                  Icon={PhoneIcon}
-                  label="Phone"
-                  value={member.phone}
-                  href={`tel:${member.phone.replace(/[^+\d]/g, '')}`}
-                />
-              )}
-              {member.ianaTimeZone && (
-                <ContactRow
-                  Icon={GlobeAmericasIcon}
-                  label="Time zone"
-                  value={formatTimeZone(member.ianaTimeZone)}
-                />
-              )}
-              {workingHoursLine && (
-                <ContactRow
-                  Icon={BriefcaseIcon}
-                  label="Working hours"
-                  value={workingHoursLine}
-                />
-              )}
-              {member.pronouns && (
-                <ContactRow
-                  Icon={ChatBubbleBottomCenterTextIcon}
-                  label="Pronouns"
-                  value={member.pronouns}
-                />
-              )}
-            </ul>
-          </section>
+        {editing ? (
+          <ProfileEditForm
+            member={member}
+            drafts={drafts}
+            setDrafts={setDrafts}
+            canEditAdminFields={canEditAdminFields}
+          />
+        ) : (
+          <ProfileDisplay
+            member={member}
+            workingHoursLine={workingHoursLine}
+            hasContactInfo={hasContactInfo}
+            amClients={amClients.map(c => c.name)}
+            operatorClients={operatorClients.map(c => c.name)}
+            todayLoad={todayLoad}
+            onVacation={!!onVacation}
+          />
         )}
+      </div>
 
-        {member.bio && member.bio.trim() !== '' && (
-          <section className="member-profile-section">
-            <h3 className="member-profile-section-label">About</h3>
-            <p className="member-profile-bio">{member.bio}</p>
-          </section>
-        )}
+      {editing && (
+        <footer className="member-profile-footer">
+          <button
+            type="button"
+            className="member-profile-footer-btn member-profile-footer-btn--ghost"
+            onClick={cancelEditing}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="member-profile-footer-btn member-profile-footer-btn--primary"
+            onClick={saveEdits}
+          >
+            Save
+          </button>
+        </footer>
+      )}
+    </>
+  );
+}
 
-        {member.skills && member.skills.length > 0 && (
-          <section className="member-profile-section">
-            <h3 className="member-profile-section-label">Skills</h3>
-            <ul className="member-profile-skills">
-              {member.skills.map(skill => (
-                <li key={skill} className="member-profile-skill">{skill}</li>
-              ))}
-            </ul>
-          </section>
-        )}
+// ── Read-only display body ───────────────────────────────────────────────
 
+function ProfileDisplay({
+  member,
+  workingHoursLine,
+  hasContactInfo,
+  amClients,
+  operatorClients,
+  todayLoad,
+  onVacation,
+}: {
+  member: Member;
+  workingHoursLine: string | null;
+  hasContactInfo: boolean;
+  amClients: string[];
+  operatorClients: string[];
+  todayLoad: { load: number; caps: { soft: number; max: number }; zone: 'green' | 'amber' | 'red' };
+  onVacation: boolean;
+}) {
+  return (
+    <>
+      {hasContactInfo && (
         <section className="member-profile-section">
-          <h3 className="member-profile-section-label">Working with</h3>
-          {amClients.length === 0 && operatorClients.length === 0 ? (
-            <p className="member-profile-empty">
-              Not yet assigned to any clients in this workspace.
-            </p>
-          ) : (
-            <div className="member-profile-working">
-              {amClients.length > 0 && (
-                <WorkingRow
-                  Icon={BuildingOffice2Icon}
-                  label="Account manager for"
-                  values={amClients.map(c => c.name)}
-                />
-              )}
-              {operatorClients.length > 0 && (
-                <WorkingRow
-                  Icon={UserIcon}
-                  label="Operator on"
-                  values={operatorClients.map(c => c.name)}
-                />
-              )}
-            </div>
-          )}
-          {/* Today's load — quiet metric line. Reads alongside the
-              "Working with" section so users get the people-context
-              + the workload-context in one section instead of two
-              competing for visual weight. */}
-          <div className={`member-profile-load member-profile-load--${todayLoad.zone}`}>
-            <span className="member-profile-load-value">
-              {todayLoad.load} / {todayLoad.caps.soft}
-            </span>
-            <span className="member-profile-load-label">
-              slots booked today
-            </span>
-            {onVacation && (
-              <span className="member-profile-load-note">
-                · away
-              </span>
+          <h3 className="member-profile-section-label">Contact</h3>
+          <ul className="member-profile-contact">
+            {member.email && (
+              <ContactRow
+                Icon={EnvelopeIcon}
+                label="Email"
+                value={member.email}
+                href={`mailto:${member.email}`}
+              />
+            )}
+            {member.phone && (
+              <ContactRow
+                Icon={PhoneIcon}
+                label="Phone"
+                value={member.phone}
+                href={`tel:${member.phone.replace(/[^+\d]/g, '')}`}
+              />
+            )}
+            {member.ianaTimeZone && (
+              <ContactRow
+                Icon={GlobeAmericasIcon}
+                label="Time zone"
+                value={formatTimeZone(member.ianaTimeZone)}
+              />
+            )}
+            {workingHoursLine && (
+              <ContactRow
+                Icon={BriefcaseIcon}
+                label="Working hours"
+                value={workingHoursLine}
+              />
+            )}
+            {member.pronouns && (
+              <ContactRow
+                Icon={ChatBubbleBottomCenterTextIcon}
+                label="Pronouns"
+                value={member.pronouns}
+              />
+            )}
+          </ul>
+        </section>
+      )}
+
+      {member.bio && member.bio.trim() !== '' && (
+        <section className="member-profile-section">
+          <h3 className="member-profile-section-label">About</h3>
+          <p className="member-profile-bio">{member.bio}</p>
+        </section>
+      )}
+
+      {member.skills && member.skills.length > 0 && (
+        <section className="member-profile-section">
+          <h3 className="member-profile-section-label">Skills</h3>
+          <ul className="member-profile-skills">
+            {member.skills.map(skill => (
+              <li key={skill} className="member-profile-skill">{skill}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <section className="member-profile-section">
+        <h3 className="member-profile-section-label">Working with</h3>
+        {amClients.length === 0 && operatorClients.length === 0 ? (
+          <p className="member-profile-empty">
+            Not yet assigned to any clients in this workspace.
+          </p>
+        ) : (
+          <div className="member-profile-working">
+            {amClients.length > 0 && (
+              <WorkingRow
+                Icon={BuildingOffice2Icon}
+                label="Account manager for"
+                values={amClients}
+              />
+            )}
+            {operatorClients.length > 0 && (
+              <WorkingRow
+                Icon={UserIcon}
+                label="Operator on"
+                values={operatorClients}
+              />
             )}
           </div>
-        </section>
-      </div>
+        )}
+        {/* Today's load — quiet metric line. Reads alongside the
+            "Working with" section so users get the people-context
+            + the workload-context in one section instead of two
+            competing for visual weight. */}
+        <div className={`member-profile-load member-profile-load--${todayLoad.zone}`}>
+          <span className="member-profile-load-value">
+            {todayLoad.load} / {todayLoad.caps.soft}
+          </span>
+          <span className="member-profile-load-label">
+            slots booked today
+          </span>
+          {onVacation && (
+            <span className="member-profile-load-note">
+              · away
+            </span>
+          )}
+        </div>
+      </section>
     </>
+  );
+}
+
+// ── Edit form ────────────────────────────────────────────────────────────
+
+function ProfileEditForm({
+  member,
+  drafts,
+  setDrafts,
+  canEditAdminFields,
+}: {
+  member: Member;
+  drafts: EditableDrafts;
+  setDrafts: (d: EditableDrafts) => void;
+  canEditAdminFields: boolean;
+}) {
+  const set = <K extends keyof EditableDrafts>(key: K, value: EditableDrafts[K]) => {
+    setDrafts({ ...drafts, [key]: value });
+  };
+  const toggleDay = (day: number) => {
+    const has = drafts.workingDays.includes(day);
+    const next = has
+      ? drafts.workingDays.filter(d => d !== day)
+      : [...drafts.workingDays, day].sort((a, b) => a - b);
+    set('workingDays', next);
+  };
+
+  return (
+    <>
+      <section className="member-profile-section">
+        <h3 className="member-profile-section-label">Contact</h3>
+        <div className="member-profile-edit-grid">
+          <FieldGroup label="Email">
+            <input
+              type="email"
+              className="member-profile-input"
+              value={drafts.email}
+              onChange={(e) => set('email', e.target.value)}
+              placeholder="name@flizow.com"
+            />
+          </FieldGroup>
+          <FieldGroup label="Phone">
+            <input
+              type="tel"
+              className="member-profile-input"
+              value={drafts.phone}
+              onChange={(e) => set('phone', e.target.value)}
+              placeholder="+1 415 555 0148"
+            />
+          </FieldGroup>
+          <FieldGroup label="Time zone">
+            <select
+              className="member-profile-input"
+              value={drafts.ianaTimeZone}
+              onChange={(e) => set('ianaTimeZone', e.target.value)}
+            >
+              <option value="">— Pick a time zone —</option>
+              {COMMON_TIME_ZONES.map(tz => (
+                <option key={tz.iana} value={tz.iana}>{tz.label}</option>
+              ))}
+            </select>
+          </FieldGroup>
+          <FieldGroup label="Pronouns">
+            <input
+              type="text"
+              className="member-profile-input"
+              value={drafts.pronouns}
+              onChange={(e) => set('pronouns', e.target.value)}
+              placeholder="she/her, they/them, …"
+            />
+          </FieldGroup>
+        </div>
+      </section>
+
+      <section className="member-profile-section">
+        <h3 className="member-profile-section-label">Working hours</h3>
+        <div className="member-profile-hours-row">
+          <FieldGroup label="Start">
+            <input
+              type="time"
+              className="member-profile-input"
+              value={drafts.workingHoursStart}
+              onChange={(e) => set('workingHoursStart', e.target.value)}
+            />
+          </FieldGroup>
+          <FieldGroup label="End">
+            <input
+              type="time"
+              className="member-profile-input"
+              value={drafts.workingHoursEnd}
+              onChange={(e) => set('workingHoursEnd', e.target.value)}
+            />
+          </FieldGroup>
+        </div>
+        <FieldGroup label="Working days">
+          <div className="member-profile-day-toggles" role="group" aria-label="Working days">
+            {DAY_NAMES_FULL.map((name, idx) => {
+              const active = drafts.workingDays.includes(idx);
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  className={`member-profile-day-toggle${active ? ' is-active' : ''}`}
+                  aria-pressed={active}
+                  onClick={() => toggleDay(idx)}
+                >
+                  {name}
+                </button>
+              );
+            })}
+          </div>
+        </FieldGroup>
+      </section>
+
+      <section className="member-profile-section">
+        <h3 className="member-profile-section-label">About</h3>
+        <textarea
+          className="member-profile-input member-profile-textarea"
+          value={drafts.bio}
+          onChange={(e) => set('bio', e.target.value)}
+          placeholder="A short bio — what you focus on, how you got here."
+          rows={4}
+        />
+      </section>
+
+      <section className="member-profile-section">
+        <h3 className="member-profile-section-label">Skills</h3>
+        <input
+          type="text"
+          className="member-profile-input"
+          value={drafts.skills}
+          onChange={(e) => set('skills', e.target.value)}
+          placeholder="Content, SEO, Brand, Editing"
+          aria-describedby="member-profile-skills-help"
+        />
+        <p
+          id="member-profile-skills-help"
+          className="member-profile-help"
+        >
+          Separate each skill with a comma. Up to 12.
+        </p>
+      </section>
+
+      {/* Admin-only fields footer note. Self-edit hides this entire
+          section since role + access level + caps are governance
+          concerns, not personal-profile concerns. The note is light
+          and editable inline so admins editing teammates have a
+          clear "you're acting as admin" context. */}
+      {canEditAdminFields && (
+        <section className="member-profile-section">
+          <h3 className="member-profile-section-label">Admin only</h3>
+          <p className="member-profile-help">
+            These fields are visible to and editable by workspace admins.
+            They aren't part of personal profile — they govern access
+            and capacity.
+          </p>
+          <p className="member-profile-help" style={{ marginTop: 'var(--sp-md)' }}>
+            Role and capacity caps are managed in{' '}
+            <strong>Account → Members</strong>. Photo and personal
+            fields above can be set here, but the admin-side controls
+            for access and caps live in their dedicated surface to
+            avoid duplicating UI.
+          </p>
+          {/* Display the current values inline so admins can confirm
+              what they're working with without leaving the panel. */}
+          <ul className="member-profile-contact" style={{ marginTop: 'var(--sp-md)' }}>
+            <ContactRow
+              Icon={UserIcon}
+              label="Access"
+              value={member.accessLevel ?? '—'}
+            />
+            <ContactRow
+              Icon={BriefcaseIcon}
+              label="Capacity"
+              value={`${member.capSoft ?? 6} soft / ${member.capMax ?? 8} max`}
+            />
+          </ul>
+        </section>
+      )}
+    </>
+  );
+}
+
+function FieldGroup({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="member-profile-field">
+      <span className="member-profile-field-label">{label}</span>
+      {children}
+    </label>
   );
 }
 
@@ -357,6 +802,85 @@ function WorkingRow({
     </div>
   );
 }
+
+// ── Edit-mode types and constants ────────────────────────────────────────
+
+/** Local form state that shadows Member fields during edit mode.
+ *  String-based so empty-but-typed values round-trip cleanly through
+ *  controlled inputs; we coerce empties → undefined on save. */
+interface EditableDrafts {
+  name: string;
+  role: string;
+  email: string;
+  phone: string;
+  pronouns: string;
+  bio: string;
+  ianaTimeZone: string;
+  workingHoursStart: string;
+  workingHoursEnd: string;
+  workingDays: number[];
+  /** Comma-separated string in the form. Split + trimmed on save. */
+  skills: string;
+}
+
+function draftsFromMember(member: Member): EditableDrafts {
+  return {
+    name: member.name ?? '',
+    role: member.role ?? '',
+    email: member.email ?? '',
+    phone: member.phone ?? '',
+    pronouns: member.pronouns ?? '',
+    bio: member.bio ?? '',
+    ianaTimeZone: member.ianaTimeZone ?? '',
+    workingHoursStart: member.workingHoursStart ?? '',
+    workingHoursEnd: member.workingHoursEnd ?? '',
+    workingDays: member.workingDays ?? [1, 2, 3, 4, 5],
+    skills: (member.skills ?? []).join(', '),
+  };
+}
+
+function emptyToUndefined(s: string): string | undefined {
+  const t = s.trim();
+  return t.length === 0 ? undefined : t;
+}
+
+const DAY_NAMES_FULL = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+/**
+ * Curated list of common time zones — covers the major working-hours
+ * regions for a small/mid-sized agency without dumping all 400+ IANA
+ * entries on the user. Order is rough geographic west→east so a US
+ * user finds their zone near the top. Easy to extend if a teammate
+ * lands in a region not represented here.
+ */
+const COMMON_TIME_ZONES: Array<{ iana: string; label: string }> = [
+  { iana: 'Pacific/Honolulu',     label: 'Hawaii (Honolulu)' },
+  { iana: 'America/Anchorage',    label: 'Alaska (Anchorage)' },
+  { iana: 'America/Los_Angeles',  label: 'Pacific (Los Angeles)' },
+  { iana: 'America/Denver',       label: 'Mountain (Denver)' },
+  { iana: 'America/Chicago',      label: 'Central (Chicago)' },
+  { iana: 'America/New_York',     label: 'Eastern (New York)' },
+  { iana: 'America/Halifax',      label: 'Atlantic (Halifax)' },
+  { iana: 'America/Sao_Paulo',    label: 'São Paulo' },
+  { iana: 'Atlantic/Azores',      label: 'Azores' },
+  { iana: 'Europe/London',        label: 'London' },
+  { iana: 'Europe/Paris',         label: 'Paris' },
+  { iana: 'Europe/Berlin',        label: 'Berlin' },
+  { iana: 'Europe/Helsinki',      label: 'Helsinki' },
+  { iana: 'Europe/Moscow',        label: 'Moscow' },
+  { iana: 'Asia/Dubai',           label: 'Dubai' },
+  { iana: 'Asia/Kolkata',         label: 'India (Kolkata)' },
+  { iana: 'Asia/Bangkok',         label: 'Bangkok' },
+  { iana: 'Asia/Singapore',       label: 'Singapore' },
+  { iana: 'Asia/Manila',          label: 'Manila' },
+  { iana: 'Asia/Hong_Kong',       label: 'Hong Kong' },
+  { iana: 'Asia/Shanghai',        label: 'Shanghai' },
+  { iana: 'Asia/Tokyo',           label: 'Tokyo' },
+  { iana: 'Asia/Seoul',           label: 'Seoul' },
+  { iana: 'Australia/Perth',      label: 'Perth' },
+  { iana: 'Australia/Sydney',     label: 'Sydney' },
+  { iana: 'Pacific/Auckland',     label: 'Auckland' },
+];
 
 // ── Format helpers ───────────────────────────────────────────────────────
 

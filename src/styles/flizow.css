@@ -6855,6 +6855,279 @@
   .member-profile-load-label  { color: var(--text-soft); }
   .member-profile-load-note   { color: var(--text-faint); font-style: italic; }
 
+  /* ── Edit affordances ────────────────────────────────────────────────
+     Edit profile button (display mode), Save/Cancel footer (edit mode),
+     plus inputs for the form fields. Same visual vocabulary as the
+     Account modal forms — outlined inputs, hairline borders, focus
+     rings in --highlight. */
+
+  /* "Edit profile" button — sits below the role line in display mode,
+     visible only when the viewer is the member or a workspace admin.
+     Light outline so it doesn't compete with the close X. */
+  .member-profile-edit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-xs);
+    padding: var(--sp-xs) var(--sp-md);
+    background: transparent;
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: var(--sp-sm);
+    transition: background var(--dur-fast, 120ms) ease, border-color var(--dur-fast, 120ms) ease;
+    width: fit-content;
+  }
+  .member-profile-edit-btn svg {
+    width: 13px;
+    height: 13px;
+  }
+  .member-profile-edit-btn:hover {
+    background: var(--bg-soft);
+    border-color: var(--text-faint);
+  }
+  .member-profile-edit-btn:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
+  }
+
+  /* Photo upload controls — appear under the avatar in edit mode.
+     Two side-by-side buttons (Upload/Change + Remove) sized to fit
+     under the 64px avatar without spilling. The error line drops
+     below if the upload bounces. */
+  .member-profile-avatar-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sp-xs);
+    flex-shrink: 0;
+  }
+  .member-profile-photo-controls {
+    display: flex;
+    gap: var(--sp-micro);
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .member-profile-photo-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-micro);
+    padding: 4px var(--sp-sm);
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--dur-fast, 120ms) ease;
+  }
+  .member-profile-photo-btn svg {
+    width: 11px;
+    height: 11px;
+  }
+  .member-profile-photo-btn:hover { background: var(--bg-elev); }
+  .member-profile-photo-btn:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 1px;
+  }
+  .member-profile-photo-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .member-profile-photo-btn--danger:hover {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+  .member-profile-photo-error {
+    font-size: var(--fs-xs);
+    color: var(--accent);
+    text-align: center;
+    max-width: 200px;
+    line-height: 1.4;
+  }
+
+  /* Identity edit inputs — replace the static name + role lines with
+     inline-styled inputs that read as part of the header rather than
+     a heavy form. The borders are hairline and only thicken on focus. */
+  .member-profile-name-input,
+  .member-profile-role-input {
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--hairline);
+    color: var(--text);
+    font-family: inherit;
+    padding: var(--sp-micro) 0;
+    width: 100%;
+    transition: border-color var(--dur-fast, 120ms) ease;
+  }
+  .member-profile-name-input {
+    font-size: var(--fs-xl);
+    font-weight: 700;
+    letter-spacing: -0.015em;
+  }
+  .member-profile-role-input {
+    font-size: var(--fs-md);
+    color: var(--text-soft);
+  }
+  .member-profile-name-input:focus,
+  .member-profile-role-input:focus {
+    outline: none;
+    border-bottom-color: var(--highlight);
+  }
+
+  /* General-purpose form input — used by the Contact + Working hours
+     + Bio textarea + Skills + Time-zone select. Matches the .acct-input
+     pattern visually but scoped to the panel so changes here don't
+     leak into Account modal forms. */
+  .member-profile-input {
+    width: 100%;
+    padding: 8px 12px;
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: var(--fs-md);
+    transition: border-color var(--dur-fast, 120ms) ease, background var(--dur-fast, 120ms) ease;
+  }
+  .member-profile-input:focus {
+    outline: none;
+    border-color: var(--highlight);
+    background: var(--bg-elev);
+  }
+  .member-profile-input::placeholder {
+    color: var(--text-faint);
+  }
+  .member-profile-textarea {
+    resize: vertical;
+    min-height: 80px;
+    line-height: var(--lh-relaxed, 1.6);
+    font-family: inherit;
+  }
+  /* Help text under inputs — quiet copy that explains a constraint or
+     pattern (e.g. comma-separated, max 12). */
+  .member-profile-help {
+    margin: var(--sp-xs) 0 0;
+    font-size: var(--fs-xs);
+    color: var(--text-soft);
+    line-height: var(--lh-relaxed, 1.6);
+  }
+
+  /* Edit-mode field grid — Contact section's email/phone/tz/pronouns
+     in a 2-column layout that collapses to single-column on narrow
+     panels. */
+  .member-profile-edit-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-base);
+  }
+  @media (max-width: 480px) {
+    .member-profile-edit-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .member-profile-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-micro);
+  }
+  .member-profile-field-label {
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 500;
+    color: var(--text-faint);
+  }
+
+  /* Working hours — start/end on one row, days below */
+  .member-profile-hours-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-base);
+    margin-bottom: var(--sp-md);
+  }
+
+  /* Day-of-week toggle pills — Sun..Sat. Active days fill in with
+     the highlight color. Click to toggle. Same pill geometry as the
+     skills chips so the form reads visually consistent. */
+  .member-profile-day-toggles {
+    display: flex;
+    gap: var(--sp-xs);
+    flex-wrap: wrap;
+  }
+  .member-profile-day-toggle {
+    padding: var(--sp-xs) var(--sp-md);
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--dur-fast, 120ms) ease, color var(--dur-fast, 120ms) ease, border-color var(--dur-fast, 120ms) ease;
+  }
+  .member-profile-day-toggle:hover {
+    background: var(--bg-elev);
+  }
+  .member-profile-day-toggle.is-active {
+    background: var(--highlight-soft);
+    color: var(--highlight);
+    border-color: var(--highlight);
+  }
+  .member-profile-day-toggle:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 1px;
+  }
+
+  /* Footer — Save / Cancel anchored at the bottom of the panel.
+     Sticky so the buttons don't scroll out of reach with a long form. */
+  .member-profile-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--sp-sm);
+    padding: var(--sp-base) var(--sp-3xl);
+    border-top: 1px solid var(--hairline-soft);
+    background: var(--bg-elev);
+    flex-shrink: 0;
+  }
+  .member-profile-footer-btn {
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: var(--fs-md);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--dur-fast, 120ms) ease, opacity var(--dur-fast, 120ms) ease;
+  }
+  .member-profile-footer-btn--ghost {
+    background: transparent;
+    border: 1px solid var(--hairline);
+    color: var(--text);
+  }
+  .member-profile-footer-btn--ghost:hover {
+    background: var(--bg-soft);
+  }
+  .member-profile-footer-btn--primary {
+    background: var(--highlight);
+    color: #fff;
+    border: 0;
+  }
+  .member-profile-footer-btn--primary:hover {
+    filter: brightness(1.08);
+  }
+  .member-profile-footer-btn:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
+  }
+
   /* Mobile — full-screen panel below 600px so the panel doesn't
      squeeze the underlying page on phones. */
   @media (max-width: 600px) {
@@ -6868,6 +7141,9 @@
     .member-profile-body {
       padding: var(--sp-base) var(--sp-xl) var(--sp-xl);
       gap: var(--sp-xl);
+    }
+    .member-profile-footer {
+      padding: var(--sp-base) var(--sp-xl);
     }
   }
 

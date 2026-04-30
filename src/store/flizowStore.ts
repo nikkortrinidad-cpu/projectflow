@@ -946,6 +946,73 @@ class FlizowStore {
     }
   }
 
+  /** Upload a profile photo for a workspace member. Mirrors
+   *  uploadWorkspaceLogo: race against a 60s timeout, write the
+   *  resulting URL to the member record (which Firestore syncs via
+   *  the data save), append a cache-bust so re-uploads to the same
+   *  path show immediately.
+   *
+   *  Path: workspaces/{wsId}/members/{memberId}/photo. Single file
+   *  per member; re-uploads overwrite, so we never accumulate
+   *  orphaned files in Storage.
+   *
+   *  Caller is responsible for size + content-type validation
+   *  before calling — Storage rules enforce a 5MB cap as a backstop
+   *  but a client-side warning is friendlier than a permission-
+   *  denied error from the server. */
+  async uploadMemberPhoto(memberId: string, file: File): Promise<void> {
+    if (!this.workspaceId) {
+      throw new Error('Cannot upload photo — no active workspace');
+    }
+    const member = this.data.members.find(m => m.id === memberId);
+    if (!member) {
+      throw new Error('Cannot upload photo — member not found');
+    }
+    const objectPath = `workspaces/${this.workspaceId}/members/${memberId}/photo`;
+    const objectRef = storageRef(storage, objectPath);
+    const timeoutMs = 60_000;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(
+        () => reject(new Error(
+          `Upload timed out after ${timeoutMs / 1000}s. Check that Firebase Storage is enabled and the rules in docs/firestore-rules.md are published.`,
+        )),
+        timeoutMs,
+      );
+    });
+    await Promise.race([
+      uploadBytes(objectRef, file, {
+        contentType: file.type || 'image/png',
+      }),
+      timeoutPromise,
+    ]);
+    const url = await Promise.race([getDownloadURL(objectRef), timeoutPromise]);
+    const bustedUrl = `${url}${url.includes('?') ? '&' : '?'}t=${Date.now()}`;
+    // Patch the member record + persist. updateMember handles the
+    // save() round-trip; inline edits to data.members would skip
+    // the dirty-detection in some consumers.
+    this.updateMember(memberId, { photoUrl: bustedUrl });
+  }
+
+  /** Remove a member's profile photo. Clears photoUrl on the data
+   *  record (so the avatar falls back to initials immediately) and
+   *  best-effort deletes the Storage object. Storage delete failures
+   *  are swallowed — an orphan file is harmless; the data clear is
+   *  what drives rendering. */
+  async removeMemberPhoto(memberId: string): Promise<void> {
+    if (!this.workspaceId) return;
+    const member = this.data.members.find(m => m.id === memberId);
+    if (!member) return;
+    // Clear photoUrl in the data store first — UI updates to
+    // initials right away even if the Storage delete is slow.
+    this.updateMember(memberId, { photoUrl: undefined });
+    try {
+      const objectRef = storageRef(storage, `workspaces/${this.workspaceId}/members/${memberId}/photo`);
+      await deleteObject(objectRef);
+    } catch {
+      // Object might not exist (never uploaded) — non-fatal.
+    }
+  }
+
   // ── Member + invite operations ────────────────────────────────────────
 
   /** Generate an invite link that any new user can click to join this
