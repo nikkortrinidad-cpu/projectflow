@@ -16,6 +16,7 @@ import FlizowCardModal from '../components/FlizowCardModal';
 import { InlineCardComposer } from '../components/shared/InlineCardComposer';
 import { TeamCapacityHeatmap } from '../components/TeamCapacityHeatmap';
 import { NotesTab } from '../components/NotesTab';
+import { useMemberProfile } from '../contexts/MemberProfileContext';
 
 /**
  * Workspace-scope marker used as the `clientId` field on Ops notes.
@@ -596,6 +597,7 @@ function CardTile({
   today: string;
   dragging?: boolean;
 }) {
+  const profile = useMemberProfile();
   const isDone = task.columnId === 'done';
   const due = dueDescriptor(task, today);
   const assignee = task.assigneeId ? members.find(m => m.id === task.assigneeId) : null;
@@ -640,16 +642,22 @@ function CardTile({
           )}
         </div>
         {assignee ? (
-          <div
-            className="card-assignee"
-            title={assignee.name}
+          <button
+            type="button"
+            className="card-assignee card-assignee--clickable"
+            title={`${assignee.name} — click to open profile`}
             style={assignee.type === 'operator' && assignee.bg
               ? { background: assignee.bg, color: assignee.color }
               : { background: assignee.color, color: '#fff' }
             }
+            onClick={(e) => {
+              e.stopPropagation();
+              profile.open(assignee.id);
+            }}
+            aria-label={`Open profile for ${assignee.name}`}
           >
             {assignee.initials}
-          </div>
+          </button>
         ) : (
           <div className="card-assignee" title="Unassigned" style={{ background: 'var(--bg-faint)', color: 'var(--text-faint)' }}>
             —

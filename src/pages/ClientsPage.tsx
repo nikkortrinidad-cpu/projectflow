@@ -5,6 +5,7 @@ import { flizowStore } from '../store/flizowStore';
 import { useFlizow } from '../store/useFlizow';
 import { useModalAutofocus } from '../hooks/useModalAutofocus';
 import { useModalKeyboard } from '../hooks/useModalKeyboard';
+import { useMemberProfile } from '../contexts/MemberProfileContext';
 import {
   servicePills,
   clientMetric,
@@ -292,6 +293,7 @@ interface RowProps {
 
 function ClientRow({ client, selected }: RowProps) {
   const { data } = useFlizow();
+  const profile = useMemberProfile();
   const pills = servicePills(client, data.services);
   const metric = clientMetric(client, data);
   const lastTouched = clientLastTouched(client, data.tasks);
@@ -358,9 +360,23 @@ function ClientRow({ client, selected }: RowProps) {
       <div className="client-am">
         {am ? (
           <>
-            <div className="client-am-avatar" style={{ background: am.color }}>
+            <button
+              type="button"
+              className="client-am-avatar client-am-avatar--clickable"
+              style={{ background: am.color }}
+              // The row itself is an <a> that navigates to the client.
+              // stopPropagation keeps the avatar click scoped to opening
+              // the profile panel — otherwise the row would also fire
+              // its navigate handler underneath.
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                profile.open(am.id);
+              }}
+              aria-label={`Open profile for ${am.name}`}
+            >
               {am.initials}
-            </div>
+            </button>
             <div className="client-am-name">{am.name}</div>
           </>
         ) : (

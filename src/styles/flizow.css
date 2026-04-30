@@ -7147,6 +7147,115 @@
     }
   }
 
+  /* ── Clickable-avatar variants ──────────────────────────────────────
+     Every member avatar across the app converts to a button that opens
+     the profile panel on click. The base visual stays — these rules
+     only reset button-element defaults and add interactive cues
+     (cursor, hover lift, focus ring). One pattern per surface keeps
+     the existing styles untouched while making the click target
+     unmistakable. */
+
+  /* Card assignees on the kanban (Board + Ops). The card itself is
+     clickable, so the assignee button uses stopPropagation in JS;
+     the visual cue is the slight lift + focus ring. */
+  button.card-assignee--clickable {
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+    transition: transform var(--dur-fast, 120ms) ease, box-shadow var(--dur-fast, 120ms) ease;
+  }
+  button.card-assignee--clickable:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 2px var(--bg-elev), 0 0 0 4px var(--highlight-soft);
+  }
+  button.card-assignee--clickable:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
+  }
+
+  /* Client AM avatar in the Clients list rows. The row is an <a>
+     that navigates; the avatar's onClick uses preventDefault +
+     stopPropagation to avoid both nav and parent handlers firing. */
+  button.client-am-avatar--clickable {
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+    color: #fff;
+    transition: transform var(--dur-fast, 120ms) ease, box-shadow var(--dur-fast, 120ms) ease;
+  }
+  button.client-am-avatar--clickable:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 2px var(--bg-elev), 0 0 0 4px var(--highlight-soft);
+  }
+  button.client-am-avatar--clickable:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
+  }
+
+  /* Hero AM avatar on Client Detail. Sits inline next to text labels;
+     same lift pattern. */
+  button.hero-am-avatar--clickable {
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+    color: #fff;
+    transition: transform var(--dur-fast, 120ms) ease, box-shadow var(--dur-fast, 120ms) ease;
+  }
+  button.hero-am-avatar--clickable:hover {
+    transform: scale(1.06);
+    box-shadow: 0 0 0 2px var(--bg-elev), 0 0 0 4px var(--highlight-soft);
+  }
+  button.hero-am-avatar--clickable:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
+  }
+
+  /* Project team member cards on Client Detail About → Relationship.
+     The avatar button sits inside a card; full-card hover already
+     exists on .team-member-card, so the button's hover treatment is
+     subtle (just a focus ring + cursor) to avoid double-emphasising. */
+  button.team-member-avatar--clickable {
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+    transition: transform var(--dur-fast, 120ms) ease;
+  }
+  button.team-member-avatar--clickable:hover {
+    transform: scale(1.05);
+  }
+  button.team-member-avatar--clickable:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
+  }
+
+  /* Capacity heatmap row labels. The avatar button anchors the row
+     and has plenty of horizontal space so the lift-on-hover reads
+     clearly as a click target. */
+  button.cap-member-avatar--clickable {
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+    transition: transform var(--dur-fast, 120ms) ease, box-shadow var(--dur-fast, 120ms) ease;
+  }
+  button.cap-member-avatar--clickable:hover {
+    transform: scale(1.06);
+    box-shadow: 0 0 0 2px var(--bg-elev), 0 0 0 4px var(--highlight-soft);
+  }
+  button.cap-member-avatar--clickable:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
+  }
+
   /* ───── Reply composer ───── */
   .reply-composer {
     display: flex;

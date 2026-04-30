@@ -8,6 +8,7 @@ import type {
   Task,
 } from '../types/flizow';
 import { loadFor, effectiveCapFor, zoneFor } from '../utils/capacity';
+import { useMemberProfile } from '../contexts/MemberProfileContext';
 
 /**
  * Team Capacity heatmap.
@@ -105,6 +106,7 @@ export function TeamCapacityHeatmap({
   services: Service[];
 }) {
   const days = useMemo(() => buildHeatmapDays(todayISO), [todayISO]);
+  const profile = useMemberProfile();
   // Combined slot pile — client tasks + ops tasks both consume the
   // same finite attention, so the heatmap counts both. Same rule the
   // card-modal capacity warning + My Schedule per-day badge use.
@@ -173,13 +175,15 @@ export function TeamCapacityHeatmap({
         {sortedMembers.map(m => (
           <div key={m.id} className="cap-row" role="row">
             <div className="cap-cell cap-cell--member" role="rowheader">
-              <span
-                className="cap-member-avatar"
+              <button
+                type="button"
+                className="cap-member-avatar cap-member-avatar--clickable"
                 style={{ background: m.bg ?? m.color, color: m.bg ? m.color : '#fff' }}
-                aria-hidden="true"
+                onClick={() => profile.open(m.id)}
+                aria-label={`Open profile for ${m.name || 'this member'}`}
               >
                 {m.initials}
-              </span>
+              </button>
               <div className="cap-member-text">
                 <div className="cap-member-name">{m.name || 'Unnamed'}</div>
                 {m.role && <div className="cap-member-role">{m.role}</div>}

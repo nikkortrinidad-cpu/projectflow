@@ -29,6 +29,7 @@ import { labelById } from '../constants/labels';
 import { useDismissable } from '../hooks/useDismissable';
 import { InlineCardComposer } from '../components/shared/InlineCardComposer';
 import { useUndoToast } from '../contexts/UndoToastContext';
+import { useMemberProfile } from '../contexts/MemberProfileContext';
 
 /**
  * Service Kanban board — per-client workspace for a single service. Shows
@@ -1478,6 +1479,7 @@ function CardTile({
   dragging?: boolean;
   onOpen?: (taskId: string) => void;
 }) {
+  const profile = useMemberProfile();
   const due = dueDescriptor(task, todayISO);
   const isDone = task.columnId === 'done';
   return (
@@ -1542,7 +1544,22 @@ function CardTile({
           )}
         </div>
         {assignee ? (
-          <div className="card-assignee" title={assignee.name}>{assignee.initials}</div>
+          <button
+            type="button"
+            className="card-assignee card-assignee--clickable"
+            title={`${assignee.name} — click to open profile`}
+            // The card itself opens the modal on click. stopPropagation
+            // keeps the avatar click scoped to the profile panel; the
+            // user can pick which surface they meant by clicking the
+            // body (modal) or the avatar (profile).
+            onClick={(e) => {
+              e.stopPropagation();
+              profile.open(assignee.id);
+            }}
+            aria-label={`Open profile for ${assignee.name}`}
+          >
+            {assignee.initials}
+          </button>
         ) : (
           <div className="card-assignee empty" title="Unassigned">·</div>
         )}

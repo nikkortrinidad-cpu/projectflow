@@ -37,6 +37,7 @@ import { ServiceMetadataForm } from '../components/shared/ServiceMetadataForm';
 import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
 import { useModalAutofocus } from '../hooks/useModalAutofocus';
 import { useUndoToast } from '../contexts/UndoToastContext';
+import { useMemberProfile } from '../contexts/MemberProfileContext';
 
 /**
  * Right-hand pane of the Clients split view. Ports the Acme detail layout
@@ -395,6 +396,7 @@ function Hero({ client, am, onArchive, onUnarchive, onRequestDelete }: {
   onUnarchive: () => void;
   onRequestDelete: () => void;
 }) {
+  const profile = useMemberProfile();
   const statusLabel = statusChipLabel(client.status);
   // Inline rename: click the name to edit, Enter/blur to commit, Esc to
   // cancel. No pencil icon — cursor:text + hover tint + ring on focus do
@@ -580,7 +582,15 @@ function Hero({ client, am, onArchive, onUnarchive, onRequestDelete }: {
                   <circle cx="12" cy="7" r="4" />
                 </svg>
                 <span className="hero-meta-label">Manager:</span>
-                <span className="hero-am-avatar" style={{ background: am.color }}>{am.initials}</span>
+                <button
+                  type="button"
+                  className="hero-am-avatar hero-am-avatar--clickable"
+                  style={{ background: am.color }}
+                  onClick={() => profile.open(am.id)}
+                  aria-label={`Open profile for ${am.name}`}
+                >
+                  {am.initials}
+                </button>
                 <span>{am.name}</span>
               </span>
             </>
@@ -2228,6 +2238,7 @@ function MemberCard({ member, solid = false, onRemove }: {
   solid?: boolean;
   onRemove?: () => void;
 }) {
+  const profile = useMemberProfile();
   // AMs use a solid avatar fill; operators use a soft background with
   // coloured text. Mirrors the mockup's visual split between the two roles
   // so you can tell roles apart at a glance.
@@ -2236,7 +2247,15 @@ function MemberCard({ member, solid = false, onRemove }: {
     : { background: member.bg ?? 'var(--bg-soft)', color: member.color };
   return (
     <div className="team-member-card" data-team-member>
-      <span className="team-member-avatar" style={style}>{member.initials}</span>
+      <button
+        type="button"
+        className="team-member-avatar team-member-avatar--clickable"
+        style={style}
+        onClick={() => profile.open(member.id)}
+        aria-label={`Open profile for ${member.name}`}
+      >
+        {member.initials}
+      </button>
       <div className="team-member-body">
         <div className="team-member-name">{member.name}</div>
         {member.role && <div className="team-member-role">{member.role}</div>}
