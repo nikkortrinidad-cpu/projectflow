@@ -6197,6 +6197,8 @@
   .mbrs-search svg {
     position: absolute;
     left: 10px;
+    width: 14px;
+    height: 14px;
     color: var(--text-faint);
     pointer-events: none;
   }
@@ -8353,6 +8355,13 @@
     font-size: 11px;
     cursor: pointer;
     transition: background 0.1s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .schedules-month-step svg {
+    width: 14px;
+    height: 14px;
   }
   .schedules-month-step:hover { background: var(--bg-faint); }
   .schedules-month-label {
@@ -8832,13 +8841,23 @@
   .schedules-popover-close {
     background: transparent;
     border: 0;
-    font-size: 22px;
     cursor: pointer;
     color: var(--text-muted);
     line-height: 1;
-    padding: 0 4px;
+    padding: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
   }
-  .schedules-popover-close:hover { color: var(--text); }
+  .schedules-popover-close svg {
+    width: 18px;
+    height: 18px;
+  }
+  .schedules-popover-close:hover {
+    color: var(--text);
+    background: var(--bg-soft);
+  }
   .schedules-popover-body {
     overflow-y: auto;
     padding: var(--sp-md);

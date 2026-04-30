@@ -38,6 +38,11 @@
 import {
   useEffect, useMemo, useRef, useState,
 } from 'react';
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import { useFlizow } from '../store/useFlizow';
 import { flizowStore } from '../store/flizowStore';
 import {
@@ -346,7 +351,7 @@ function SchedulesToolbar({
           onClick={() => onStepMonth(-1)}
           aria-label="Previous month"
         >
-          ◀
+          <ChevronLeftIcon aria-hidden="true" />
         </button>
         <span className="schedules-month-label">{monthLabel}</span>
         <button
@@ -355,7 +360,7 @@ function SchedulesToolbar({
           onClick={() => onStepMonth(1)}
           aria-label="Next month"
         >
-          ▶
+          <ChevronRightIcon aria-hidden="true" />
         </button>
         <button
           type="button"
@@ -1243,7 +1248,7 @@ function DayPopover({
             onClick={onClose}
             aria-label="Close"
           >
-            ×
+            <XMarkIcon aria-hidden="true" />
           </button>
         </header>
         <div className="schedules-popover-body">
