@@ -1,0 +1,1008 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Flizow → Path to Launch · Leadership Briefing</title>
+  <style>
+    /* ─────────────────────────────────────────────────────────────────
+       Layout: 16:9 letter-landscape slides (13.33" × 7.5"), one slide
+       per PDF page. Voice/copy follows the about-me guide: plain
+       language, no em dashes, narrative arc per slide, generous
+       whitespace, no jargon.
+    ───────────────────────────────────────────────────────────────── */
+
+    :root {
+      --bg: #0d0d10;
+      --bg-elev: #16161a;
+      --bg-soft: #1c1c20;
+      --text: #f0f0f3;
+      --text-soft: #b6b6bc;
+      --text-muted: #8e8e94;
+      --text-faint: #6a6a70;
+      --highlight: #F15A24;
+      --highlight-soft: rgba(241, 90, 36, 0.16);
+      --highlight-line: rgba(241, 90, 36, 0.35);
+      --hairline: #2a2a30;
+      --hairline-soft: #1f1f25;
+      --status-ok: #4ade80;
+      --status-warn: #f59e0b;
+      --status-fire: #ef4444;
+    }
+
+    @page { size: 13.33in 7.5in; margin: 0; }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .slide {
+      width: 13.33in;
+      height: 7.5in;
+      padding: 0.55in 0.7in;
+      position: relative;
+      page-break-after: always;
+      overflow: hidden;
+    }
+    .slide:last-child { page-break-after: auto; }
+
+    /* Brand corner mark on every slide except the title */
+    .slide-mark {
+      position: absolute;
+      top: 0.4in;
+      right: 0.7in;
+      font-size: 9pt;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      font-weight: 600;
+    }
+    .slide-mark span { color: var(--highlight); }
+
+    .slide-num {
+      position: absolute;
+      bottom: 0.3in;
+      right: 0.7in;
+      font-size: 8pt;
+      letter-spacing: 0.1em;
+      color: var(--text-faint);
+    }
+
+    /* ────────────────────────────────────────────────────────────────
+       Slide 1 — Title
+    ──────────────────────────────────────────────────────────────── */
+
+    .slide-title {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .slide-title .eyebrow {
+      font-size: 11pt;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--highlight);
+      font-weight: 600;
+      margin-bottom: 18pt;
+    }
+    .slide-title h1 {
+      margin: 0;
+      font-size: 72pt;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      line-height: 1;
+    }
+    .slide-title h1 .arrow {
+      color: var(--highlight);
+      font-weight: 400;
+    }
+    .slide-title .sub {
+      margin: 12pt 0 0;
+      font-size: 19pt;
+      color: var(--text-soft);
+      letter-spacing: -0.005em;
+    }
+    .slide-title .stamp {
+      position: absolute;
+      bottom: 0.55in;
+      left: 0.7in;
+      font-size: 11pt;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .slide-title .stamp strong {
+      color: var(--text);
+      font-weight: 600;
+      display: block;
+      margin-bottom: 2pt;
+    }
+
+    /* ────────────────────────────────────────────────────────────────
+       Generic slide head (used by content slides)
+    ──────────────────────────────────────────────────────────────── */
+
+    .slide-head {
+      margin-bottom: 24pt;
+    }
+    .slide-eyebrow {
+      font-size: 10pt;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--highlight);
+      font-weight: 700;
+      margin-bottom: 8pt;
+    }
+    .slide-h2 {
+      margin: 0;
+      font-size: 36pt;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+    }
+    .slide-h2-sub {
+      margin: 10pt 0 0;
+      font-size: 14pt;
+      color: var(--text-soft);
+      max-width: 56ch;
+      line-height: 1.45;
+    }
+
+    /* ────────────────────────────────────────────────────────────────
+       Slide 2 — Apology (text-first slide)
+    ──────────────────────────────────────────────────────────────── */
+
+    .text-block {
+      max-width: 9in;
+    }
+    .text-block p {
+      margin: 0 0 14pt;
+      font-size: 16pt;
+      color: var(--text);
+      line-height: 1.55;
+      letter-spacing: -0.005em;
+    }
+    .text-block p.lead {
+      font-size: 22pt;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.01em;
+      line-height: 1.3;
+      margin-bottom: 22pt;
+    }
+    .text-block p.tail {
+      color: var(--text-soft);
+      font-size: 14pt;
+      margin-top: 22pt;
+    }
+    .text-block strong {
+      color: var(--highlight);
+      font-weight: 600;
+    }
+
+    /* ────────────────────────────────────────────────────────────────
+       Slide 3 — What I learned (4-card grid)
+    ──────────────────────────────────────────────────────────────── */
+
+    .lessons-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16pt;
+    }
+    .lesson-card {
+      background: var(--bg-elev);
+      border: 1px solid var(--hairline);
+      border-left: 3px solid var(--highlight);
+      border-radius: 8pt;
+      padding: 18pt 22pt;
+    }
+    .lesson-num {
+      font-size: 8pt;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--highlight);
+      font-weight: 700;
+      margin-bottom: 6pt;
+    }
+    .lesson-title {
+      margin: 0 0 8pt;
+      font-size: 17pt;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+    }
+    .lesson-body {
+      margin: 0;
+      font-size: 12pt;
+      color: var(--text-soft);
+      line-height: 1.5;
+    }
+
+    /* ────────────────────────────────────────────────────────────────
+       Slide 4 — What's built (6 feature cards in 3×2 grid)
+    ──────────────────────────────────────────────────────────────── */
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14pt;
+    }
+    .feature-card {
+      background: var(--bg-elev);
+      border: 1px solid var(--hairline);
+      border-radius: 10pt;
+      padding: 18pt 20pt;
+      display: flex;
+      flex-direction: column;
+      gap: 8pt;
+    }
+    .feature-icon {
+      width: 36pt;
+      height: 36pt;
+      border-radius: 8pt;
+      background: var(--highlight-soft);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--highlight);
+      margin-bottom: 4pt;
+    }
+    .feature-icon svg {
+      width: 18pt;
+      height: 18pt;
+    }
+    .feature-title {
+      margin: 0;
+      font-size: 14pt;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.005em;
+      line-height: 1.2;
+    }
+    .feature-body {
+      margin: 0;
+      font-size: 11pt;
+      color: var(--text-soft);
+      line-height: 1.5;
+    }
+
+    /* ────────────────────────────────────────────────────────────────
+       Slide 5 — See it live
+    ──────────────────────────────────────────────────────────────── */
+
+    .live-block {
+      display: flex;
+      flex-direction: column;
+      gap: 24pt;
+      margin-top: 8pt;
+    }
+    .live-url-card {
+      background: var(--bg-elev);
+      border: 1px solid var(--highlight);
+      border-radius: 12pt;
+      padding: 22pt 28pt;
+      display: flex;
+      flex-direction: column;
+      gap: 6pt;
+      max-width: 9.5in;
+    }
+    .live-url-label {
+      font-size: 10pt;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--highlight);
+      font-weight: 700;
+    }
+    .live-url-value {
+      font-size: 19pt;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: 0;
+      font-family: 'SF Mono', 'Monaco', Menlo, monospace;
+      word-break: break-all;
+    }
+    .live-ps {
+      max-width: 9in;
+      padding: 16pt 20pt;
+      background: var(--bg-soft);
+      border: 1px solid var(--hairline-soft);
+      border-radius: 10pt;
+    }
+    .live-ps-label {
+      font-size: 9pt;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      font-weight: 700;
+      margin-bottom: 6pt;
+    }
+    .live-ps-body {
+      margin: 0;
+      font-size: 12pt;
+      color: var(--text-soft);
+      line-height: 1.55;
+    }
+    .live-ps-body strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+    .live-ps-steps {
+      margin: 10pt 0 0;
+      padding: 0;
+      list-style: none;
+      counter-reset: step;
+      display: flex;
+      flex-direction: column;
+      gap: 4pt;
+    }
+    .live-ps-steps li {
+      font-size: 11pt;
+      color: var(--text-soft);
+      padding-left: 22pt;
+      position: relative;
+      counter-increment: step;
+    }
+    .live-ps-steps li::before {
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 16pt;
+      height: 16pt;
+      border-radius: 50%;
+      background: var(--highlight-soft);
+      color: var(--highlight);
+      font-weight: 700;
+      font-size: 9pt;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ────────────────────────────────────────────────────────────────
+       Slide 6 — Where we're going (portal flow)
+    ──────────────────────────────────────────────────────────────── */
+
+    .flow {
+      display: flex;
+      align-items: stretch;
+      gap: 18pt;
+      margin-top: 12pt;
+    }
+    .flow-stage {
+      flex: 1;
+      background: var(--bg-elev);
+      border: 1px solid var(--hairline);
+      border-radius: 10pt;
+      padding: 18pt 20pt;
+      display: flex;
+      flex-direction: column;
+      gap: 6pt;
+    }
+    .flow-stage--current {
+      border-color: var(--text-muted);
+    }
+    .flow-stage--target {
+      border-color: var(--highlight);
+      background: linear-gradient(180deg, var(--highlight-soft) 0%, var(--bg-elev) 60%);
+    }
+    .flow-arrow {
+      align-self: center;
+      color: var(--highlight);
+      font-size: 28pt;
+      font-weight: 300;
+    }
+    .flow-label {
+      font-size: 9pt;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      font-weight: 700;
+    }
+    .flow-stage--target .flow-label { color: var(--highlight); }
+    .flow-title {
+      margin: 4pt 0 6pt;
+      font-size: 18pt;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text);
+    }
+    .flow-body {
+      margin: 0;
+      font-size: 11pt;
+      color: var(--text-soft);
+      line-height: 1.5;
+    }
+    .flow-list {
+      margin: 8pt 0 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 5pt;
+    }
+    .flow-list li {
+      font-size: 11pt;
+      color: var(--text-soft);
+      padding-left: 14pt;
+      position: relative;
+      line-height: 1.45;
+    }
+    .flow-list li::before {
+      content: '';
+      position: absolute;
+      left: 2pt;
+      top: 6pt;
+      width: 4pt;
+      height: 4pt;
+      border-radius: 50%;
+      background: var(--highlight);
+    }
+
+    /* ────────────────────────────────────────────────────────────────
+       Slide 7 — Timeline
+    ──────────────────────────────────────────────────────────────── */
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14pt;
+    }
+    .tl-week {
+      background: var(--bg-elev);
+      border: 1px solid var(--hairline);
+      border-radius: 10pt;
+      padding: 16pt 18pt;
+      display: flex;
+      flex-direction: column;
+      gap: 8pt;
+    }
+    .tl-week--key {
+      border-color: var(--highlight);
+    }
+    .tl-num {
+      font-size: 8pt;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--highlight);
+      font-weight: 700;
+    }
+    .tl-name {
+      margin: 0;
+      font-size: 14pt;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.005em;
+      line-height: 1.2;
+    }
+    .tl-range {
+      font-size: 10pt;
+      color: var(--text-faint);
+      font-weight: 500;
+    }
+    .tl-list {
+      margin: 6pt 0 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 5pt;
+    }
+    .tl-list li {
+      font-size: 10.5pt;
+      color: var(--text-soft);
+      line-height: 1.45;
+    }
+    .tl-list li strong {
+      color: var(--text);
+      font-weight: 700;
+      display: block;
+      margin-bottom: 1pt;
+    }
+
+    .key-dates {
+      margin-top: 22pt;
+      padding-top: 16pt;
+      border-top: 1px solid var(--hairline);
+      display: flex;
+      gap: 24pt;
+      align-items: baseline;
+    }
+    .key-dates-label {
+      font-size: 9pt;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      font-weight: 700;
+    }
+    .key-date {
+      display: flex;
+      flex-direction: column;
+      gap: 2pt;
+    }
+    .key-date-day {
+      font-size: 14pt;
+      font-weight: 700;
+      color: var(--highlight);
+      letter-spacing: -0.005em;
+    }
+    .key-date-what {
+      font-size: 10pt;
+      color: var(--text-soft);
+    }
+
+    /* ────────────────────────────────────────────────────────────────
+       Slide 8 — Risks + asks (two columns)
+    ──────────────────────────────────────────────────────────────── */
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28pt;
+      margin-top: 8pt;
+    }
+    .col-card {
+      display: flex;
+      flex-direction: column;
+      gap: 12pt;
+    }
+    .col-title {
+      font-size: 14pt;
+      font-weight: 700;
+      letter-spacing: -0.005em;
+      color: var(--text);
+      margin: 0;
+    }
+    .col-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12pt;
+    }
+    .col-list li {
+      background: var(--bg-elev);
+      border: 1px solid var(--hairline);
+      border-radius: 8pt;
+      padding: 12pt 16pt;
+      font-size: 12pt;
+      color: var(--text-soft);
+      line-height: 1.5;
+    }
+    .col-list li strong {
+      color: var(--text);
+      font-weight: 700;
+      display: block;
+      margin-bottom: 3pt;
+      font-size: 12.5pt;
+    }
+    .col-list--risks li { border-left: 3px solid var(--status-fire); }
+    .col-list--asks  li { border-left: 3px solid var(--highlight); }
+
+    /* ────────────────────────────────────────────────────────────────
+       Slide 9 — Closing
+    ──────────────────────────────────────────────────────────────── */
+
+    .close-block {
+      max-width: 9.5in;
+    }
+    .close-block .lead {
+      font-size: 24pt;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      line-height: 1.3;
+      margin: 0 0 22pt;
+    }
+    .close-block .lead strong { color: var(--highlight); font-weight: 600; }
+    .close-block .body {
+      font-size: 14pt;
+      color: var(--text-soft);
+      line-height: 1.55;
+      margin: 0 0 16pt;
+    }
+    .close-card {
+      margin-top: 20pt;
+      padding: 18pt 22pt;
+      background: var(--bg-elev);
+      border: 1px solid var(--highlight);
+      border-radius: 10pt;
+    }
+    .close-card-label {
+      font-size: 10pt;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--highlight);
+      font-weight: 700;
+      margin-bottom: 6pt;
+    }
+    .close-card-body {
+      font-size: 14pt;
+      color: var(--text);
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <!-- SLIDE 1 — Title                                                -->
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <section class="slide slide-title">
+    <div class="eyebrow">Leadership briefing · April 30, 2026</div>
+    <h1>Flizow <span class="arrow">→</span> Path to Launch</h1>
+    <p class="sub">Bringing Flizow into the 121 Group portal · prepared by Nikko Trinidad</p>
+    <div class="stamp">
+      <strong>For Adam and the leadership team</strong>
+      Honest update on where we are, what's built, and how we land it.
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <!-- SLIDE 2 — Where this went wrong (apology)                      -->
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <section class="slide">
+    <div class="slide-mark">Flizow <span>·</span> Path to Launch</div>
+    <header class="slide-head">
+      <div class="slide-eyebrow">Honest start</div>
+      <h2 class="slide-h2">Where this went wrong.</h2>
+    </header>
+
+    <div class="text-block">
+      <p class="lead">I underestimated how complex this project would be.</p>
+      <p>This is the first time I've led a project this technical. I didn't see the requirements, the dependencies, or the roadblocks ahead of time. The original timeline I set came from that gap, not from negligence.</p>
+      <p>AI helped me move fast, but it couldn't tell me what I didn't know to ask.</p>
+      <p class="tail">We missed the original launch window. <strong>I owe Adam and the leadership team an apology for the delay.</strong></p>
+    </div>
+
+    <div class="slide-num">02 / 09</div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <!-- SLIDE 3 — What I learned                                       -->
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <section class="slide">
+    <div class="slide-mark">Flizow <span>·</span> Path to Launch</div>
+    <header class="slide-head">
+      <div class="slide-eyebrow">What changed</div>
+      <h2 class="slide-h2">What I learned.</h2>
+      <p class="slide-h2-sub">Naming the gaps directly so the same trap doesn't catch the next project.</p>
+    </header>
+
+    <div class="lessons-grid">
+      <div class="lesson-card">
+        <div class="lesson-num">Lesson 01</div>
+        <h3 class="lesson-title">Technical projects need technical foresight from day one.</h3>
+        <p class="lesson-body">A senior dev should be in the planning room before the timeline is set, not after. They see the dependencies a non-technical PM can't see yet.</p>
+      </div>
+      <div class="lesson-card">
+        <div class="lesson-num">Lesson 02</div>
+        <h3 class="lesson-title">AI moves you fast on the path you can already see.</h3>
+        <p class="lesson-body">It doesn't show you the path you're missing. The blind spots are still on the person who's planning, not the tool.</p>
+      </div>
+      <div class="lesson-card">
+        <div class="lesson-num">Lesson 03</div>
+        <h3 class="lesson-title">"Done by Friday" is not a plan.</h3>
+        <p class="lesson-body">Real plans have phases, hand-offs, and named owners per step. I'll bring that level of structure to every technical project from now on.</p>
+      </div>
+      <div class="lesson-card">
+        <div class="lesson-num">Lesson 04</div>
+        <h3 class="lesson-title">Buffer days are not optional.</h3>
+        <p class="lesson-body">If every day is allocated, the schedule has no shock absorber. The plan we have today builds buffer into every week.</p>
+      </div>
+    </div>
+
+    <div class="slide-num">03 / 09</div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <!-- SLIDE 4 — What's built                                         -->
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <section class="slide">
+    <div class="slide-mark">Flizow <span>·</span> Path to Launch</div>
+    <header class="slide-head">
+      <div class="slide-eyebrow">Where Flizow stands today</div>
+      <h2 class="slide-h2">What's built.</h2>
+      <p class="slide-h2-sub">Six surfaces leadership will care about. The rest of the app supports these.</p>
+    </header>
+
+    <div class="features-grid">
+      <!-- 1 Client home -->
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/>
+            <line x1="9" y1="9" x2="9" y2="9.01"/><line x1="9" y1="13" x2="9" y2="13.01"/>
+          </svg>
+        </div>
+        <h3 class="feature-title">Client home</h3>
+        <p class="feature-body">Every client in one place. Status at a glance. Six tabs per client (overview, onboarding, about, stats, notes, touchpoints) so account managers stop digging through Drive folders to find what they need.</p>
+      </div>
+      <!-- 2 Per-service kanban -->
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="6" height="18" rx="1"/>
+            <rect x="11" y="3" width="6" height="12" rx="1"/>
+            <rect x="19" y="3" width="2" height="8" rx="1"/>
+          </svg>
+        </div>
+        <h3 class="feature-title">Per-service kanban</h3>
+        <p class="feature-body">A working kanban board per client service. Drag-and-drop, work-in-progress limits, and capacity-aware booking so we stop assigning Sarah eight cards on a day she's already at capacity.</p>
+      </div>
+      <!-- 3 Weekly WIP -->
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+        </div>
+        <h3 class="feature-title">Weekly WIP</h3>
+        <p class="feature-body">The whole weekly meeting flow in one surface. Auto-built agenda, live-meeting timer, captured notes / decisions / actions. The meeting ends and the follow-ups are already in the system.</p>
+      </div>
+      <!-- 4 Capacity model -->
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="12" y1="20" x2="12" y2="10"/>
+            <line x1="18" y1="20" x2="18" y2="4"/>
+            <line x1="6" y1="20" x2="6" y2="16"/>
+          </svg>
+        </div>
+        <h3 class="feature-title">Capacity heatmap</h3>
+        <p class="feature-body">Workspace-wide view of who's slammed this week and who has room. Green / amber / red zones across ten weekdays. Booking against soft and hard caps so overbooking gets flagged before it ships.</p>
+      </div>
+      <!-- 5 Templates -->
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <line x1="3" y1="9" x2="21" y2="9"/>
+            <line x1="9" y1="21" x2="9" y2="9"/>
+          </svg>
+        </div>
+        <h3 class="feature-title">Service templates</h3>
+        <p class="feature-body">Reusable blueprints for every kind of work the agency does. Spinning up a new service inherits onboarding, brief, and phase cards in one click. Setup that used to take an hour takes a minute.</p>
+      </div>
+      <!-- 6 Trash + undo -->
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+          </svg>
+        </div>
+        <h3 class="feature-title">Safety net</h3>
+        <p class="feature-body">Every delete is recoverable. Five-second undo on any action, then 90 days in the trash bin. Nobody has to live in fear of misclicking. Nothing is gone for good unless we mean it.</p>
+      </div>
+    </div>
+
+    <div class="slide-num">04 / 09</div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <!-- SLIDE 5 — See it live                                          -->
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <section class="slide">
+    <div class="slide-mark">Flizow <span>·</span> Path to Launch</div>
+    <header class="slide-head">
+      <div class="slide-eyebrow">See it for yourself</div>
+      <h2 class="slide-h2">Flizow is live now.</h2>
+      <p class="slide-h2-sub">The current build runs on its own URL. Sign in with Google to see your own workspace. Use the demo data path below to see it populated with realistic content.</p>
+    </header>
+
+    <div class="live-block">
+      <div class="live-url-card">
+        <div class="live-url-label">Open Flizow</div>
+        <div class="live-url-value">https://nikkortrinidad-cpu.github.io/flizow/</div>
+      </div>
+
+      <div class="live-ps">
+        <div class="live-ps-label">P.S. — How to test with demo data</div>
+        <p class="live-ps-body">
+          A fresh sign-in lands you on an empty workspace. To see Flizow with realistic content (50 clients, services, tasks, a populated team), follow these four clicks:
+        </p>
+        <ol class="live-ps-steps">
+          <li>Sign in with your Google account.</li>
+          <li>Click your avatar in the top-right corner of the page.</li>
+          <li>Open <strong>Account settings → Profile</strong>.</li>
+          <li>Scroll to <strong>Workspace data</strong> and click <strong>"Load demo data"</strong>.</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="slide-num">05 / 09</div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <!-- SLIDE 6 — Where we're going                                    -->
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <section class="slide">
+    <div class="slide-mark">Flizow <span>·</span> Path to Launch</div>
+    <header class="slide-head">
+      <div class="slide-eyebrow">What's next</div>
+      <h2 class="slide-h2">Bringing Flizow into the 121 Group portal.</h2>
+      <p class="slide-h2-sub">Flizow today runs on its own. Next stop: it lives inside the agency's portal site, signed in with the same account everyone already has.</p>
+    </header>
+
+    <div class="flow">
+      <div class="flow-stage flow-stage--current">
+        <div class="flow-label">Today</div>
+        <h3 class="flow-title">Standalone Flizow</h3>
+        <p class="flow-body">Runs on its own URL. Google sign-in. Single workspace per founder.</p>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-stage flow-stage--target">
+        <div class="flow-label">Next</div>
+        <h3 class="flow-title">Inside the 121 Group portal</h3>
+        <p class="flow-body">Senior web dev is rebuilding the frontend inside the portal site. What changes:</p>
+        <ul class="flow-list">
+          <li>Authentication moves to the portal SSO so the team uses one login.</li>
+          <li>Existing workspace data imports into the new instance. No data left behind.</li>
+          <li>Every team gets access through the portal nav, same place they already go.</li>
+          <li>Hosting, security, and backups live with the portal infrastructure, not on a separate stack.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="slide-num">06 / 09</div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <!-- SLIDE 7 — Timeline to launch                                   -->
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <section class="slide">
+    <div class="slide-mark">Flizow <span>·</span> Path to Launch</div>
+    <header class="slide-head">
+      <div class="slide-eyebrow">Timeline to launch</div>
+      <h2 class="slide-h2">Three weeks of structured work, then we go.</h2>
+      <p class="slide-h2-sub">Phased plan with buffer days, soft launch on Friday May 15, full go-live Monday May 18.</p>
+    </header>
+
+    <div class="timeline">
+      <div class="tl-week">
+        <div class="tl-num">Week 1</div>
+        <div class="tl-range">Apr 30 – May 1</div>
+        <h3 class="tl-name">Polish</h3>
+        <ul class="tl-list">
+          <li><strong>Dev finishes</strong> Analytics, Templates, WIP, Account settings.</li>
+          <li><strong>Hand-off</strong> Tue May 5 EOD; worst case Wed May 6 mid-day.</li>
+        </ul>
+      </div>
+      <div class="tl-week">
+        <div class="tl-num">Week 2</div>
+        <div class="tl-range">May 4 – May 8</div>
+        <h3 class="tl-name">Per-page QA</h3>
+        <ul class="tl-list">
+          <li><strong>Mon–Thu</strong> One surface per day. Bugs caught and fixed.</li>
+          <li><strong>Fri</strong> Buffer day for any work that slipped.</li>
+        </ul>
+      </div>
+      <div class="tl-week tl-week--key">
+        <div class="tl-num">Week 3</div>
+        <div class="tl-range">May 11 – May 15</div>
+        <h3 class="tl-name">Full QA + imports</h3>
+        <ul class="tl-list">
+          <li><strong>Mon</strong> End-to-end smoke test.</li>
+          <li><strong>Tue / Thu</strong> Two-stage client import.</li>
+          <li><strong>Fri PM</strong> Soft launch with one internal team.</li>
+        </ul>
+      </div>
+      <div class="tl-week tl-week--key">
+        <div class="tl-num">Week 4</div>
+        <div class="tl-range">May 18 – May 22</div>
+        <h3 class="tl-name">Launch + rollout</h3>
+        <ul class="tl-list">
+          <li><strong>Mon AM</strong> Leadership briefed against running system.</li>
+          <li><strong>Mon–Thu</strong> Phased team rollout, one team per day.</li>
+          <li><strong>Fri</strong> Hotfix wrap, feedback gathering.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="key-dates">
+      <span class="key-dates-label">Three dates to remember</span>
+      <div class="key-date">
+        <span class="key-date-day">Mon May 11</span>
+        <span class="key-date-what">Full system QA</span>
+      </div>
+      <div class="key-date">
+        <span class="key-date-day">Fri May 15 PM</span>
+        <span class="key-date-what">Soft launch</span>
+      </div>
+      <div class="key-date">
+        <span class="key-date-day">Mon May 18</span>
+        <span class="key-date-what">Launch + leadership briefing</span>
+      </div>
+    </div>
+
+    <div class="slide-num">07 / 09</div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <!-- SLIDE 8 — Risks + asks                                         -->
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <section class="slide">
+    <div class="slide-mark">Flizow <span>·</span> Path to Launch</div>
+    <header class="slide-head">
+      <div class="slide-eyebrow">Eyes open</div>
+      <h2 class="slide-h2">Risks, and what I need.</h2>
+      <p class="slide-h2-sub">The places this can still go sideways, and the three asks I need from leadership for the plan above to hold.</p>
+    </header>
+
+    <div class="two-col">
+      <div class="col-card">
+        <h3 class="col-title">Top three risks</h3>
+        <ul class="col-list col-list--risks">
+          <li>
+            <strong>Senior dev wraps later than planned.</strong>
+            Adding Account settings to his scope pushes hand-off to Tue / Wed. If anything slips here, every downstream date moves with it.
+          </li>
+          <li>
+            <strong>No rollback strategy.</strong>
+            If launch goes sideways the senior dev hotfixes live. The Friday May 15 soft launch is the de-risker: 72 hours of real use before the leadership briefing.
+          </li>
+          <li>
+            <strong>Hard launch date.</strong>
+            May 18 leadership presentation is on the calendar. Everything upstream has to hit its mark. There's no "we'll move it a week."
+          </li>
+        </ul>
+      </div>
+
+      <div class="col-card">
+        <h3 class="col-title">What I need from leadership</h3>
+        <ul class="col-list col-list--asks">
+          <li>
+            <strong>Approve the May 18 launch with phased rollout.</strong>
+            Leadership Mon AM. One team per day Mon-Thu. No big-bang day where we present and roll out everyone simultaneously.
+          </li>
+          <li>
+            <strong>Allow the Friday May 15 soft launch.</strong>
+            One internal team gets early access for 72 hours. Risk insurance for the leadership presentation.
+          </li>
+          <li>
+            <strong>Acknowledge May 19–22 as hotfix-readiness mode.</strong>
+            Senior dev on call for fixes, no other commitments. Bugs found in the first week of real use get patched fast.
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="slide-num">08 / 09</div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <!-- SLIDE 9 — Closing                                              -->
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <section class="slide">
+    <div class="slide-mark">Flizow <span>·</span> Path to Launch</div>
+    <header class="slide-head">
+      <div class="slide-eyebrow">Closing</div>
+      <h2 class="slide-h2">What you'll see next.</h2>
+    </header>
+
+    <div class="close-block">
+      <p class="lead">The work is real. The plan is honest. <strong>The launch holds.</strong></p>
+      <p class="body">Thank you for the patience while I figured this one out. The original timeline was wrong because I didn't have the foresight yet. The plan we have today comes from that lesson.</p>
+
+      <div class="close-card">
+        <div class="close-card-label">Next checkpoint</div>
+        <div class="close-card-body">
+          <strong>Monday May 11.</strong> I'll send a status note that day with what passed full system QA, what's still flagged, and confidence level on the May 18 date. If anything threatens the plan between now and then, I'll surface it the day I see it, not the day before.
+        </div>
+      </div>
+    </div>
+
+    <div class="slide-num">09 / 09</div>
+  </section>
+
+</body>
+</html>
