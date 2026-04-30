@@ -4,16 +4,35 @@
   <meta charset="utf-8">
   <title>Flizow → Project Portal · Deployment Timeline</title>
   <style>
+    /* ─────────────────────────────────────────────────────────────────
+       Layout principles applied:
+
+       • Type scale: 9 / 10 / 11 / 13 / 19pt (5 steps; nothing else)
+       • Line length: body ~50-65cpl across the day-content column
+       • Line height: 1.45 body (within 120-145% rule)
+       • Spacing: 4pt grid (4, 8, 12, 16, 20, 24, 32)
+       • Margins: 0.5in print margin + internal page padding
+       • Hierarchy: size + weight first, color second; no decoration
+
+       Bug fixed from v1: the outer .week-days had `display: grid`
+       and each .day-row was ALSO a grid — children were laying into
+       alternating cells of the parent grid, producing the
+       one-word-per-line column you saw on every other day. New
+       layout: .week-days is a plain block; .day-row is a flex
+       row with a fixed-width date column.
+    ───────────────────────────────────────────────────────────────── */
+
     :root {
       --bg: #0d0d10;
-      --bg-elev: #161619;
+      --bg-elev: #16161a;
       --bg-soft: #1c1c20;
       --text: #f0f0f3;
-      --text-soft: #b0b0b6;
-      --text-muted: #88888e;
+      --text-soft: #b6b6bc;
+      --text-muted: #8e8e94;
       --text-faint: #6a6a70;
       --highlight: #F15A24;
-      --highlight-soft: rgba(241, 90, 36, 0.14);
+      --highlight-soft: rgba(241, 90, 36, 0.16);
+      --highlight-line: rgba(241, 90, 36, 0.35);
       --hairline: #2a2a30;
       --hairline-soft: #1f1f25;
       --status-ok: #4ade80;
@@ -21,7 +40,7 @@
       --status-fire: #ef4444;
     }
 
-    @page { size: letter; margin: 0.5in; }
+    @page { size: letter; margin: 0.4in; }
 
     * { box-sizing: border-box; }
     html, body {
@@ -30,177 +49,190 @@
       background: var(--bg);
       color: var(--text);
       font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-      font-size: 10pt;
-      line-height: 1.5;
+      font-size: 9.5pt;
+      line-height: 1.45;
       -webkit-font-smoothing: antialiased;
     }
 
     .page {
-      max-width: 7.5in;
+      max-width: 7.7in;
       margin: 0 auto;
-      padding: 0.25in 0;
     }
 
-    /* ───── Header ───── */
+    /* ───── Header ────────────────────────────────────────────────── */
     .head {
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
       gap: 24px;
-      padding-bottom: 14px;
+      padding-bottom: 10px;
       border-bottom: 2px solid var(--highlight);
-      margin-bottom: 18px;
-    }
-    .brand {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
+      margin-bottom: 14px;
     }
     .brand-eyebrow {
-      font-size: 8pt;
-      letter-spacing: 0.18em;
+      font-size: 7.5pt;
+      letter-spacing: 0.2em;
       text-transform: uppercase;
       color: var(--highlight);
       font-weight: 600;
+      margin-bottom: 2px;
     }
     .brand-title {
       margin: 0;
       font-size: 19pt;
       font-weight: 700;
       letter-spacing: -0.015em;
-      line-height: 1.15;
+      line-height: 1.1;
     }
     .brand-sub {
-      margin: 2px 0 0;
-      font-size: 9.5pt;
+      margin: 3px 0 0;
+      font-size: 9pt;
       color: var(--text-soft);
     }
     .head-meta {
       text-align: right;
       font-size: 8pt;
       color: var(--text-muted);
-      line-height: 1.45;
+      line-height: 1.5;
     }
     .head-meta strong {
       color: var(--text);
       font-weight: 600;
+      display: block;
+      margin-bottom: 2px;
     }
 
-    /* ───── TL;DR strip ───── */
+    /* ───── TL;DR strip ───────────────────────────────────────────── */
     .tldr {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-bottom: 18px;
+      gap: 8px;
+      margin-bottom: 14px;
     }
     .tldr-cell {
       background: var(--bg-elev);
       border: 1px solid var(--hairline);
-      border-radius: 8px;
-      padding: 10px 12px;
+      border-radius: 6px;
+      padding: 8px 11px;
     }
     .tldr-label {
-      font-size: 7.5pt;
-      letter-spacing: 0.08em;
+      font-size: 7pt;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--text-muted);
       font-weight: 600;
-      margin-bottom: 3px;
+      margin-bottom: 2px;
     }
     .tldr-value {
       font-size: 11pt;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--text);
-      letter-spacing: -0.01em;
+      letter-spacing: -0.005em;
     }
-    .tldr-value strong { color: var(--highlight); }
+    .tldr-cell--accent .tldr-value { color: var(--highlight); }
 
-    /* ───── Week sections ───── */
+    /* ───── Week sections ─────────────────────────────────────────── */
     .week {
-      margin-bottom: 16px;
+      margin-bottom: 12px;
+      page-break-inside: avoid;
     }
+
     .week-head {
       display: flex;
       align-items: baseline;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 6px 12px;
+      gap: 14px;
+      padding: 6px 11px;
       background: var(--bg-elev);
       border-left: 3px solid var(--highlight);
       border-radius: 4px;
-      margin-bottom: 6px;
+      margin-bottom: 0;
     }
     .week-num {
-      font-size: 8pt;
-      letter-spacing: 0.1em;
+      font-size: 7.5pt;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--highlight);
       font-weight: 700;
+      flex: 0 0 auto;
     }
     .week-name {
       font-size: 11pt;
       font-weight: 700;
       color: var(--text);
-      letter-spacing: -0.01em;
+      letter-spacing: -0.008em;
       flex: 1;
-      margin-left: 14px;
     }
     .week-range {
-      font-size: 8.5pt;
+      font-size: 8pt;
       color: var(--text-muted);
+      flex: 0 0 auto;
     }
 
+    /* The day rows. KEY FIX from v1: this is a plain block container,
+       not a grid. Each row is a flex row with a fixed-width date
+       column — no parent grid means no children-stuffing-into-cells
+       bug. */
     .week-days {
-      display: grid;
-      grid-template-columns: 80px 1fr;
-      gap: 0;
+      padding: 2px 0 4px;
     }
     .day-row {
-      display: grid;
-      grid-template-columns: 80px 1fr;
-      gap: 0;
-      padding: 5px 12px;
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      padding: 4px 11px;
       border-bottom: 1px solid var(--hairline-soft);
     }
     .day-row:last-child {
       border-bottom: 0;
     }
     .day-label {
-      color: var(--text-muted);
+      flex: 0 0 110px;
       font-size: 8.5pt;
       font-weight: 600;
-      letter-spacing: 0.02em;
+      color: var(--text-muted);
+      letter-spacing: 0.005em;
     }
     .day-label .day-name {
       color: var(--highlight);
       font-weight: 700;
+      margin-right: 4px;
     }
     .day-content {
+      flex: 1 1 auto;
       font-size: 9pt;
       color: var(--text);
-      line-height: 1.45;
+      line-height: 1.5;
+      min-width: 0;
+    }
+    .day-content strong {
+      color: var(--text);
+      font-weight: 700;
     }
     .day-content .tag {
       display: inline-block;
-      font-size: 7.5pt;
-      letter-spacing: 0.06em;
+      font-size: 7pt;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      font-weight: 600;
+      font-weight: 700;
       padding: 1px 6px;
       border-radius: 3px;
-      margin-right: 6px;
-      vertical-align: 1px;
+      margin-right: 7px;
+      vertical-align: 1.5px;
+      white-space: nowrap;
     }
     .tag-dev    { background: var(--highlight-soft); color: var(--highlight); }
-    .tag-qa     { background: rgba(74, 222, 128, 0.12); color: var(--status-ok); }
-    .tag-import { background: rgba(245, 158, 11, 0.14); color: var(--status-warn); }
-    .tag-launch { background: rgba(239, 68, 68, 0.14); color: var(--status-fire); }
-    .tag-soft   { background: var(--bg-soft); color: var(--text-soft); }
+    .tag-qa     { background: rgba(74, 222, 128, 0.14); color: var(--status-ok); }
+    .tag-import { background: rgba(245, 158, 11, 0.16); color: var(--status-warn); }
+    .tag-launch { background: rgba(239, 68, 68, 0.16); color: var(--status-fire); }
+    .tag-soft   { background: var(--bg-soft); color: var(--text-soft); border: 1px solid var(--hairline); }
+    .tag-wrap   { background: var(--bg-soft); color: var(--text-soft); }
 
-    /* Days that mark a critical milestone get a subtle highlight */
-    .day-row.is-milestone {
-      background: var(--highlight-soft);
-      border-radius: 4px;
+    /* Milestone days get a subtle accent — soft highlight band on
+       the left, no full row tint so the rest of the week stays
+       visually quiet. */
+    .day-row.is-milestone .day-label {
+      box-shadow: -3px 0 0 0 var(--highlight);
+      padding-left: 3px;
     }
     .day-row.is-holiday {
       opacity: 0.55;
@@ -210,24 +242,24 @@
       font-style: italic;
     }
 
-    /* ───── Risk + roles two-column footer ───── */
+    /* ───── Risks + roles two-column footer ───────────────────────── */
     .footer-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      margin-top: 16px;
+      gap: 10px;
+      margin-top: 14px;
       page-break-inside: avoid;
     }
     .footer-card {
       background: var(--bg-elev);
       border: 1px solid var(--hairline);
-      border-radius: 8px;
-      padding: 12px 14px;
+      border-radius: 6px;
+      padding: 10px 12px;
     }
     .footer-title {
-      margin: 0 0 8px;
-      font-size: 9pt;
-      letter-spacing: 0.08em;
+      margin: 0 0 6px;
+      font-size: 8pt;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--highlight);
       font-weight: 700;
@@ -238,20 +270,20 @@
       list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 4px;
     }
     .footer-list li {
       font-size: 8.5pt;
-      line-height: 1.5;
+      line-height: 1.45;
       color: var(--text-soft);
-      padding-left: 12px;
+      padding-left: 11px;
       position: relative;
     }
     .footer-list li::before {
       content: '';
       position: absolute;
       left: 2px;
-      top: 7px;
+      top: 5px;
       width: 4px;
       height: 4px;
       border-radius: 50%;
@@ -259,18 +291,18 @@
     }
     .footer-list strong {
       color: var(--text);
-      font-weight: 600;
+      font-weight: 700;
     }
 
-    /* ───── Final stamp ───── */
+    /* ───── Stamp ─────────────────────────────────────────────────── */
     .stamp {
-      margin-top: 14px;
-      padding-top: 10px;
+      margin-top: 10px;
+      padding-top: 8px;
       border-top: 1px solid var(--hairline-soft);
       display: flex;
       justify-content: space-between;
       gap: 12px;
-      font-size: 7.5pt;
+      font-size: 7pt;
       color: var(--text-faint);
       letter-spacing: 0.04em;
     }
@@ -280,9 +312,8 @@
     }
 
     @media print {
-      .page { padding: 0; }
-      .footer-grid { page-break-inside: avoid; }
-      .week { page-break-inside: avoid; }
+      .week, .footer-grid { page-break-inside: avoid; }
+      .day-row            { page-break-inside: avoid; }
     }
   </style>
 </head>
@@ -290,24 +321,24 @@
   <div class="page">
 
     <header class="head">
-      <div class="brand">
+      <div>
         <div class="brand-eyebrow">Deployment plan</div>
         <h1 class="brand-title">Flizow → Project Portal</h1>
         <p class="brand-sub">3-week runway from polish to launch · prepared by Nikko Trinidad</p>
       </div>
       <div class="head-meta">
-        <strong>Apr 30 – May 22, 2026</strong><br>
+        <strong>Apr 30 – May 22, 2026</strong>
         Stakeholders: top leadership + every team<br>
-        Owner on tech: senior web dev<br>
-        Owner on rollout: founder
+        Tech owner: senior web dev<br>
+        Rollout owner: founder
       </div>
     </header>
 
     <!-- TL;DR strip -->
     <div class="tldr">
-      <div class="tldr-cell">
+      <div class="tldr-cell tldr-cell--accent">
         <div class="tldr-label">Launch date</div>
-        <div class="tldr-value"><strong>Mon May 18</strong></div>
+        <div class="tldr-value">Mon May 18</div>
       </div>
       <div class="tldr-cell">
         <div class="tldr-label">Soft launch</div>
@@ -335,7 +366,7 @@
           <div class="day-label"><span class="day-name">Thu</span> Apr 30</div>
           <div class="day-content">
             <span class="tag tag-dev">Dev</span>
-            Senior dev finishes Analytics, Templates, Weekly WIP, and Account settings (added scope). Target hand-off: Tue May 5 EOD, worst case Wed May 6 mid-day.
+            Senior dev finishes Analytics, Templates, Weekly WIP, and Account settings (added scope). Hand-off target: Tue May 5 EOD; worst case Wed May 6 mid-day.
           </div>
         </div>
         <div class="day-row is-holiday">
@@ -359,7 +390,7 @@
           <div class="day-label"><span class="day-name">Mon</span> May 4</div>
           <div class="day-content">
             <span class="tag tag-qa">QA</span>
-            Overview / Home page QA on the already-deployed surfaces (Clients, Board, Overview, Ops). Catalog any blocker bugs for dev to fix in parallel.
+            Overview / Home page QA on the already-deployed surfaces (Clients, Board, Overview, Ops). Catalog blocker bugs for parallel dev fixes.
           </div>
         </div>
         <div class="day-row">
@@ -373,14 +404,14 @@
           <div class="day-label"><span class="day-name">Wed</span> May 6</div>
           <div class="day-content">
             <span class="tag tag-qa">QA</span>
-            Templates page QA in the morning · Templates content authoring in the afternoon (real service templates the agency will use).
+            Templates page QA (AM) · Templates content authoring (PM) — real service templates the agency will use.
           </div>
         </div>
         <div class="day-row">
           <div class="day-label"><span class="day-name">Thu</span> May 7</div>
           <div class="day-content">
             <span class="tag tag-qa">QA</span>
-            Internal team-as-client test run: a teammate clicks through onboarding, notes, and a card workflow as if they were a client. Real clients are not yet in the system. Analytics page QA.
+            Internal team-as-client test run: a teammate clicks through onboarding, notes, and a card workflow as if they were a client. No real clients yet. Analytics page QA.
           </div>
         </div>
         <div class="day-row">
@@ -405,14 +436,14 @@
           <div class="day-label"><span class="day-name">Mon</span> May 11</div>
           <div class="day-content">
             <span class="tag tag-qa">QA</span>
-            <strong>Full system QA.</strong> End-to-end smoke test across every surface — sign in, add client, run kanban, capture a meeting, run analytics, edit profile, schedule time off. Block list locked here.
+            <strong>Full system QA.</strong> End-to-end smoke test: sign in, add client, run kanban, capture a meeting, run analytics, edit profile, schedule time off. Block list locked here.
           </div>
         </div>
         <div class="day-row">
           <div class="day-label"><span class="day-name">Tue</span> May 12</div>
           <div class="day-content">
             <span class="tag tag-import">Import</span>
-            Second batch of clients + team members imported. Spot-QA the imported records (no data loss, status correct, AM links intact).
+            Second batch of clients + team members imported. Spot-QA: data loss, status correct, AM links intact.
           </div>
         </div>
         <div class="day-row">
@@ -433,7 +464,7 @@
           <div class="day-label"><span class="day-name">Fri</span> May 15</div>
           <div class="day-content">
             <span class="tag tag-soft">Soft launch</span>
-            Imports finish AM · <strong>soft launch with one internal team</strong> in the afternoon (dev-dependent). They use the system for real over the weekend; senior dev on call to fix anything that surfaces before Monday.
+            Imports finish AM · <strong>soft launch with one internal team</strong> in the afternoon (dev-dependent). They use the system over the weekend; senior dev on call before Monday.
           </div>
         </div>
       </div>
@@ -451,14 +482,14 @@
           <div class="day-label"><span class="day-name">Mon</span> May 18</div>
           <div class="day-content">
             <span class="tag tag-launch">Launch</span>
-            <strong>Top leadership presentation in the morning</strong> — system has already been live since Friday, so this is presented against a working product. First team rollout in the afternoon.
+            <strong>Top leadership presentation (AM)</strong> — system has been live since Friday, presented against a working product. First team rollout in the afternoon.
           </div>
         </div>
         <div class="day-row">
           <div class="day-label"><span class="day-name">Tue</span> May 19</div>
           <div class="day-content">
             <span class="tag tag-launch">Rollout</span>
-            Second team rollout · feedback loop with Monday's team starts producing fixes for any rough edges before next teams come in.
+            Second team rollout · feedback loop with Monday's team produces fixes for any rough edges before next teams come in.
           </div>
         </div>
         <div class="day-row">
@@ -478,7 +509,7 @@
         <div class="day-row">
           <div class="day-label"><span class="day-name">Fri</span> May 22</div>
           <div class="day-content">
-            <span class="tag tag-soft">Wrap</span>
+            <span class="tag tag-wrap">Wrap</span>
             Hotfix readiness wraps · feedback gathering session · short retrospective on what to revisit in v1.1.
           </div>
         </div>
@@ -491,8 +522,8 @@
         <h3 class="footer-title">Risks · Mitigations</h3>
         <ul class="footer-list">
           <li><strong>Dev scope creep on Account settings.</strong> Eight sub-surfaces means hand-off may slip to Wed May 6. Buffer day on Fri May 8 absorbs.</li>
-          <li><strong>No rollback strategy.</strong> Hotfix-forward only; if launch goes sideways the senior dev fixes live. Soft launch on May 15 is the de-risker.</li>
-          <li><strong>Hard launch date.</strong> May 18 leadership presentation can't move; everything upstream has to hit its mark.</li>
+          <li><strong>No rollback strategy.</strong> Hotfix-forward only. Soft launch on May 15 is the de-risker.</li>
+          <li><strong>Hard launch date.</strong> May 18 leadership presentation can't move; everything upstream must hit its mark.</li>
           <li><strong>Import data integrity.</strong> Two-stage import (Tue + Thu) with a Wed buffer. QA after each batch.</li>
         </ul>
       </div>
@@ -502,14 +533,14 @@
           <li><strong>Senior web dev.</strong> Finishes Analytics + Templates + WIP + Account settings; owns deployment + hotfix readiness through May 22.</li>
           <li><strong>Founder (Nikko).</strong> Co-QA across every surface, authors real Templates content, oversees imports, runs leadership + per-team presentations.</li>
           <li><strong>Internal team (soft-launch group).</strong> Lives on the system from Fri May 15 PM through the weekend; reports any blockers before Mon AM.</li>
-          <li><strong>Top leadership.</strong> Briefed Mon May 18 AM; system is already running.</li>
+          <li><strong>Top leadership.</strong> Briefed Mon May 18 AM against an already-running system.</li>
         </ul>
       </div>
     </div>
 
     <div class="stamp">
-      <div>Generated <strong>April 30, 2026</strong></div>
-      <div>Flizow · Apr 30 → May 22 · 16 working days</div>
+      <span>Generated <strong>April 30, 2026</strong></span>
+      <span>Flizow · Apr 30 → May 22 · 16 working days</span>
     </div>
 
   </div>
