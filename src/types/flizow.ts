@@ -485,6 +485,63 @@ export interface Member {
    *  block — agency reality has rush days; the warning is a nudge,
    *  not a wall. Defaults to DEFAULT_CAP_MAX (8). */
   capMax?: number;
+
+  // ── Profile fields ──────────────────────────────────────────────────
+  //
+  // Identity-first additions for the per-member profile panel. Every
+  // field is optional — absent = render an empty state on the panel,
+  // not an error. The panel is opened by clicking any member avatar
+  // app-wide; self + admin can edit, everyone else views read-only.
+  // See MemberProfilePanel for how each field renders.
+
+  /** Email address, displayed on the contact line. Distinct from
+   *  the auth email (Google sign-in) — Members are workspace-scoped
+   *  records and their profile email may differ from their login. */
+  email?: string;
+  /** Phone number, free-text so international formats round-trip
+   *  cleanly without a parser. */
+  phone?: string;
+  /** Pronouns ("she/her", "they/them"). Optional and free-text so
+   *  the member picks what fits rather than choosing from a closed
+   *  list that might miss their preference. */
+  pronouns?: string;
+  /** Short bio — a few lines about who this person is, what they
+   *  focus on. Plain text, no rich formatting. */
+  bio?: string;
+  /** Skills / focus areas — chip list. Surfaces context next to a
+   *  name in assignee pickers and on the profile panel. Free-text
+   *  tags so the team can author whatever vocabulary fits ("SEO",
+   *  "Brand systems", "Webflow"). */
+  skills?: string[];
+  /** Profile photo URL. Uploaded to Firebase Storage; falls back to
+   *  initials + color avatar if absent or the URL fails to load.
+   *  Initials are the default — photos are opt-in. */
+  photoUrl?: string;
+  /** IANA time zone identifier, e.g. 'America/Los_Angeles'. Distinct
+   *  from the legacy `timezone` slug which is being phased out — the
+   *  legacy slug stays for back-compat with the existing tz dropdown
+   *  in Profile settings; this new field is what the profile panel
+   *  reads to render the "Pacific Time" line and to hint when the
+   *  member is currently working hours-wise. */
+  ianaTimeZone?: string;
+  /** Working hours — start time of the workday in HH:mm 24-hour
+   *  format ('09:00'). Combined with workingHoursEnd + workingDays
+   *  to render "Mon–Fri, 9:00 AM – 6:00 PM PT" on the profile and
+   *  later to drive an "online now" indicator. */
+  workingHoursStart?: string;
+  /** Working hours — end time. HH:mm 24-hour format ('18:00'). */
+  workingHoursEnd?: string;
+  /** Days of the week the member is at work. 0=Sunday, 6=Saturday.
+   *  Default treatment when absent: weekdays Mon–Fri ([1,2,3,4,5]).
+   *  Stored as an array so non-contiguous schedules (4-day weeks
+   *  with Wednesday off, etc.) round-trip cleanly. */
+  workingDays?: number[];
+  /** Time off periods. Each entry is a { start, end } pair of ISO
+   *  date strings (YYYY-MM-DD), inclusive on both ends. The profile
+   *  panel shows a "🌴 On vacation through May 15" pill when today
+   *  falls inside any period. The Account → Time off settings page
+   *  is the canonical CRUD surface; the profile only reads. */
+  timeOff?: Array<{ start: string; end: string }>;
 }
 
 /**

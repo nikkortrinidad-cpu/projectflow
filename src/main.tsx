@@ -5,6 +5,7 @@ import './styles/flizow.css'
 import App from './App.tsx'
 import { AuthProvider } from './contexts/AuthContext.tsx'
 import { UndoToastProvider } from './contexts/UndoToastContext.tsx'
+import { MemberProfileProvider } from './contexts/MemberProfileContext.tsx'
 import { flizowStore } from './store/flizowStore'
 
 // Dev-only console helpers. Lets me smoke-test the demo generator and
@@ -28,7 +29,15 @@ createRoot(document.getElementById('root')!).render(
           so it lives outside any other layout container — bottom-
           right of the viewport regardless of which page is showing. */}
       <UndoToastProvider>
-        <App />
+        {/* MemberProfileProvider owns "currently open profile" state
+            for the side-panel sheet that slides in when any member
+            avatar is clicked. Lives inside Auth so calls to .open()
+            from anywhere in the app land on the post-auth shell.
+            The panel itself is rendered by MemberProfilePanel
+            mounted near the app root. */}
+        <MemberProfileProvider>
+          <App />
+        </MemberProfileProvider>
       </UndoToastProvider>
     </AuthProvider>
   </StrictMode>,
