@@ -17,7 +17,11 @@ import FlizowCardModal from '../components/FlizowCardModal';
 import { InlineCardComposer } from '../components/shared/InlineCardComposer';
 import { TeamCapacityHeatmap } from '../components/TeamCapacityHeatmap';
 import { NotesTab } from '../components/NotesTab';
+import { OpsTimeOffTab } from '../components/OpsTimeOffTab';
 import { useMemberProfile } from '../contexts/MemberProfileContext';
+import { can } from '../utils/access';
+import { useAuth } from '../contexts/AuthContext';
+import { CalendarDaysIcon } from '@heroicons/react/24/outline';
 
 /**
  * Workspace-scope marker used as the `clientId` field on Ops notes.
@@ -70,12 +74,20 @@ const COLUMNS: Array<{ id: ColumnId; title: string; dot: string }> = [
 
 // ── Page ─────────────────────────────────────────────────────────────
 
-type OpsTab = 'board' | 'brief' | 'capacity';
+type OpsTab = 'board' | 'brief' | 'capacity' | 'timeoff';
 
 export function OpsPage() {
   const { data } = useFlizow();
   const tasks = data.opsTasks;
   const members = data.members;
+  // Read the signed-in user's role so we can gate the Time off
+  // Schedules tab to Owner/Admin. Member/Viewer skip the tab; the
+  // page itself is already gated to view:ops by TopNav.
+  const { user } = useAuth();
+  const ownAccessRole = user?.uid
+    ? data.members.find((m) => m.id === user.uid)?.accessLevel
+    : undefined;
+  const canManageSchedules = can(ownAccessRole, 'approve:time-off');
 
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<BoardFilterState>(EMPTY_FILTERS);
@@ -234,6 +246,23 @@ export function OpsPage() {
           <ChartBarIcon width={14} height={14} aria-hidden="true" />
           Team Capacity
         </button>
+        {/* Time off Schedules — Owner/Admin only. Phase 6 lands the
+            calendar + approval queue + rules builder; Phase 6B will
+            add holidays + transfer credits on top. */}
+        {canManageSchedules && (
+          <button
+            type="button"
+            id="ops-tab-timeoff"
+            role="tab"
+            aria-selected={tab === 'timeoff'}
+            aria-controls="ops-panel-timeoff"
+            className={`ops-tab${tab === 'timeoff' ? ' on' : ''}`}
+            onClick={() => setTab('timeoff')}
+          >
+            <CalendarDaysIcon width={14} height={14} aria-hidden="true" />
+            Time off Schedules
+          </button>
+        )}
       </div>
 
       {tab === 'board' && (
@@ -341,6 +370,10 @@ export function OpsPage() {
             services={data.services}
           />
         </section>
+      )}
+
+      {tab === 'timeoff' && canManageSchedules && (
+        <OpsTimeOffTab />
       )}
 
       {selectedId && (
