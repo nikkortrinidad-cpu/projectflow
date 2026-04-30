@@ -2000,8 +2000,15 @@ function TimeOffSection({ focusId }: { focusId?: string } = {}) {
           {activeRequest && (
             <button
               type="button"
-              className="acct-btn-text"
-              onClick={handleEndEarly}
+              className="timeoff-active-banner-end"
+              onClick={() => {
+                // Confirm before clipping — this changes an
+                // already-approved request and ends time off
+                // immediately. Cheap guard against a misclick.
+                if (window.confirm('End your time off today? Your active period will be clipped to yesterday.')) {
+                  handleEndEarly();
+                }
+              }}
             >
               End early
             </button>
@@ -3066,6 +3073,8 @@ function HolidaysSection() {
       </div>
 
       <div className="holidays-toolbar">
+        {/* Year filter stays a dropdown — the value set is unbounded
+            (grows yearly), so chips would balloon. */}
         <select
           className="acct-input holidays-filter"
           value={String(yearFilter)}
@@ -3079,17 +3088,22 @@ function HolidaysSection() {
             <option key={y} value={y}>{y}</option>
           ))}
         </select>
-        <select
-          className="acct-input holidays-filter"
-          value={countryFilter}
-          onChange={(e) => setCountryFilter(e.target.value as typeof countryFilter)}
-          aria-label="Filter by country"
-        >
-          <option value="all">All countries</option>
-          <option value="PH">Philippines</option>
-          <option value="AU">Australia</option>
-          <option value="global">Global</option>
-        </select>
+        {/* Country filter — chips, matching the Members + Schedules
+            tabs. Fixed small set (PH / AU / Global), so chips read
+            faster than a dropdown. */}
+        <div className="holidays-country-chips" role="group" aria-label="Filter by country">
+          {(['all', 'PH', 'AU', 'global'] as const).map((c) => (
+            <button
+              key={c}
+              type="button"
+              className={`mbrs-chip${countryFilter === c ? ' mbrs-chip--on' : ''}`}
+              onClick={() => setCountryFilter(c)}
+              aria-pressed={countryFilter === c}
+            >
+              {c === 'all' ? 'All' : c === 'global' ? 'Global' : c}
+            </button>
+          ))}
+        </div>
         <button
           type="button"
           className="acct-btn acct-btn--primary holidays-add-btn"

@@ -1477,6 +1477,30 @@
     color: var(--text-soft);
     margin-top: 2px;
   }
+  /* End-early — secondary tier (ring) button. The action mutates
+     an already-approved request, so the prominence sits between a
+     casual link and a primary CTA. White background + brand
+     border so it pops against the orange-tinted banner. */
+  .timeoff-active-banner-end {
+    flex-shrink: 0;
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--highlight);
+    background: var(--bg-elev);
+    color: var(--highlight);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.1s, color 0.1s;
+  }
+  .timeoff-active-banner-end:hover {
+    background: var(--highlight);
+    color: #fff;
+  }
+  .timeoff-active-banner-end:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
+  }
 
   /* Request CTA — primary button block above the lists. Always
      renders so the path to "submit a request" is one click no
@@ -6271,11 +6295,22 @@
 
   /* Inline job-title pill on a member row — small, color-tinted,
      same letter-spacing as the You/Owner tags. The background color
-     comes inline from the JobTitle.color field. */
+     comes inline from the JobTitle.color field. Truncates long
+     labels with ellipsis so a "Senior Strategy Consultant" pill
+     doesn't push the role select off the row. Audit: MED polish
+     2026-05-01. */
   .mbrs-tag--jt {
     background: var(--bg-soft);
     color: var(--text);
     font-weight: 600;
+    max-width: 14ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    /* Override the .mbrs-tag flex-shrink: 0 so the pill yields to
+       its siblings on narrow rows instead of forcing horizontal
+       overflow. */
+    flex-shrink: 1;
   }
 
   /* Narrow viewport — stack the invite controls under the title
@@ -8672,6 +8707,23 @@
     font-family: inherit;
     resize: vertical;
   }
+  /* Progressive note toggle — replaces the always-rendered textarea
+     with an inline link until the OM wants to type something. Saves
+     visual weight on routine approvals. */
+  .schedules-request-note-toggle {
+    background: transparent;
+    border: 0;
+    padding: 4px 0;
+    color: var(--text-muted);
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    cursor: pointer;
+    align-self: flex-start;
+    text-align: left;
+  }
+  .schedules-request-note-toggle:hover {
+    color: var(--text);
+  }
   .schedules-request-actions {
     display: flex;
     justify-content: flex-end;
@@ -8963,6 +9015,12 @@
     flex: 0 0 auto;
     min-width: 120px;
   }
+  .holidays-country-chips {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
   .holidays-add-btn {
     margin-left: auto;
   }
@@ -9202,6 +9260,35 @@
     padding-top: var(--sp-sm);
     border-top: 1px dashed var(--hairline-soft);
     gap: var(--sp-xs);
+    /* Cap height so a workspace with many in-country members
+       doesn't blow out the popover. Internal scroll keeps the
+       conflicts section + popover footer visible regardless. */
+    max-height: 280px;
+    overflow-y: auto;
+  }
+  /* Filter input — only renders when the in-scope list exceeds
+     8 members. Sits above the list inside the same holiday
+     section. Compact + matches the input styling elsewhere. */
+  .schedules-popover-member-filter {
+    width: 100%;
+    margin-top: var(--sp-sm);
+    padding: 6px 10px;
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+    background: var(--bg-elev);
+    color: var(--text);
+    font-size: var(--fs-sm);
+    font-family: inherit;
+  }
+  .schedules-popover-member-filter:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 1px;
+  }
+  .schedules-popover-member-empty {
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+    padding: var(--sp-sm) 0;
+    text-align: center;
   }
   .schedules-popover-member-row {
     display: flex;
@@ -9220,9 +9307,15 @@
   }
   .schedules-popover-member-name {
     flex: 1;
+    min-width: 0;
     font-size: var(--fs-sm);
     color: var(--text);
     font-weight: 500;
+    /* Long names truncate with ellipsis so the avatar + status
+       select stay aligned on every row. */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .schedules-popover-member-status {
     font-size: var(--fs-xs);

@@ -633,6 +633,21 @@ function ApprovalQueue({
 }) {
   const [decisionNotes, setDecisionNotes] = useState<Record<string, string>>({});
   const [pending, setPending] = useState<string | null>(null);
+  // Progressive disclosure on the decision-note textarea: it hides
+  // until the OM clicks "Add note" on a row. Most approvals don't
+  // need a note (the dates speak for themselves); rendering an
+  // empty textarea on every row was dead visual weight per the
+  // post-Phase-7C design audit. Tracked by request id so each row
+  // toggles independently.
+  const [noteOpen, setNoteOpen] = useState<Set<string>>(new Set());
+  function toggleNote(id: string) {
+    setNoteOpen((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
   // One-shot focus highlight when a deep-link points at a request.
   // Scrolls into view + applies a `data-focused` attribute that the
   // CSS pulses for ~1.5s. Tracking the id across renders so the
@@ -759,16 +774,27 @@ function ApprovalQueue({
                 </ul>
               </div>
             )}
-            <textarea
-              className="schedules-request-note"
-              value={decisionNotes[r.id] ?? ''}
-              onChange={(e) =>
-                setDecisionNotes((p) => ({ ...p, [r.id]: e.target.value }))
-              }
-              placeholder="Optional note (visible to the requester)"
-              rows={2}
-              maxLength={280}
-            />
+            {noteOpen.has(r.id) ? (
+              <textarea
+                className="schedules-request-note"
+                value={decisionNotes[r.id] ?? ''}
+                onChange={(e) =>
+                  setDecisionNotes((p) => ({ ...p, [r.id]: e.target.value }))
+                }
+                placeholder="Optional note (visible to the requester)"
+                rows={2}
+                maxLength={280}
+                autoFocus
+              />
+            ) : (
+              <button
+                type="button"
+                className="schedules-request-note-toggle"
+                onClick={() => toggleNote(r.id)}
+              >
+                + Add note
+              </button>
+            )}
             <div className="schedules-request-actions">
               <button
                 type="button"
@@ -1283,43 +1309,16 @@ function DayPopover({
                     a member's status to "Worked" so a transfer
                     credit accrues, or back to "Observed" to revert.
                     Only shown when there's anyone in the holiday's
-                    country to override. */}
+                    country to override. Caps height + adds a filter
+                    input when the in-scope list exceeds 8 members
+                    so a popover with a 50-PH-member workspace stays
+                    usable. */}
                 {inScope.length > 0 && (
-                  <ul className="schedules-popover-list schedules-popover-list--members">
-                    {inScope.map((m) => {
-                      const status = memberObservationFor(m, h, observations);
-                      return (
-                        <li key={`${h.id}-${m.id}`} className="schedules-popover-member-row">
-                          <span
-                            className="schedules-popover-member-avatar"
-                            style={
-                              m.bg
-                                ? { background: m.bg, color: m.color }
-                                : { background: m.color, color: '#fff' }
-                            }
-                          >
-                            {m.initials}
-                          </span>
-                          <span className="schedules-popover-member-name">{m.name}</span>
-                          <select
-                            className="schedules-popover-member-status"
-                            value={status}
-                            onChange={(e) =>
-                              flizowStore.setHolidayObservation({
-                                holidayId: h.id,
-                                memberId: m.id,
-                                status: e.target.value as 'observed' | 'worked',
-                              })
-                            }
-                            aria-label={`${m.name}'s status for ${h.name}`}
-                          >
-                            <option value="observed">Observed</option>
-                            <option value="worked">Worked (+1 credit)</option>
-                          </select>
-                        </li>
-                      );
-                    })}
-                  </ul>
+                  <HolidayObservationList
+                    holiday={h}
+                    members={inScope}
+                    observations={observations}
+                  />
                 )}
               </div>
             );
@@ -1374,5 +1373,105 @@ function DayPopover({
         </div>
       </div>
     </div>
+  );
+}
+
+// ── HolidayObservationList ─────────────────────────────────────────
+//
+// Per-holiday per-member status list rendered inside DayPopover.
+// Caps height + adds a filter input when the in-scope list exceeds
+// the visible threshold so a workspace with 50+ PH-tagged members
+// doesn't blow out the popover. M5 confirm prompt also lives here
+// so flipping Worked → Observed (which drops a transfer credit)
+// surfaces what's about to happen.
+
+const POPOVER_MEMBER_FILTER_THRESHOLD = 8;
+
+function HolidayObservationList({
+  holiday,
+  members,
+  observations,
+}: {
+  holiday: Holiday;
+  members: ReadonlyArray<Member>;
+  observations: ReadonlyArray<HolidayObservation>;
+}) {
+  const [filter, setFilter] = useState('');
+  const showFilter = members.length > POPOVER_MEMBER_FILTER_THRESHOLD;
+
+  const filtered = useMemo(() => {
+    const q = filter.trim().toLowerCase();
+    if (!q) return members;
+    return members.filter((m) => m.name.toLowerCase().includes(q));
+  }, [members, filter]);
+
+  function handleStatusChange(memberId: string, current: 'observed' | 'worked', next: 'observed' | 'worked') {
+    if (current === next) return;
+    // M5 — confirm before flipping a member from Worked back to
+    // Observed: this drops the +1 holiday transfer credit they
+    // earned, and a misclick costs them a paid day later. The
+    // observed → worked direction is non-destructive, so no prompt.
+    if (current === 'worked' && next === 'observed') {
+      const member = members.find((m) => m.id === memberId);
+      const ok = window.confirm(
+        `${member?.name ?? 'This member'} will lose the holiday transfer credit they earned for ${holiday.name}. Continue?`,
+      );
+      if (!ok) return;
+    }
+    flizowStore.setHolidayObservation({
+      holidayId: holiday.id,
+      memberId,
+      status: next,
+    });
+  }
+
+  return (
+    <>
+      {showFilter && (
+        <input
+          type="search"
+          className="schedules-popover-member-filter"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          placeholder={`Filter ${members.length} members…`}
+          aria-label={`Filter members for ${holiday.name}`}
+        />
+      )}
+      <ul className="schedules-popover-list schedules-popover-list--members">
+        {filtered.length === 0 ? (
+          <li className="schedules-popover-member-empty">No members match.</li>
+        ) : (
+          filtered.map((m) => {
+            const status = memberObservationFor(m, holiday, observations);
+            return (
+              <li key={`${holiday.id}-${m.id}`} className="schedules-popover-member-row">
+                <span
+                  className="schedules-popover-member-avatar"
+                  style={
+                    m.bg
+                      ? { background: m.bg, color: m.color }
+                      : { background: m.color, color: '#fff' }
+                  }
+                >
+                  {m.initials}
+                </span>
+                <span className="schedules-popover-member-name">{m.name}</span>
+                <select
+                  className="schedules-popover-member-status"
+                  value={status}
+                  onChange={(e) =>
+                    handleStatusChange(m.id, status, e.target.value as 'observed' | 'worked')
+                  }
+                  aria-label={`${m.name}'s status for ${holiday.name}`}
+                >
+                  <option value="observed">Observed</option>
+                  <option value="worked">Worked (+1 credit)</option>
+                </select>
+              </li>
+            );
+          })
+        )}
+      </ul>
+    </>
   );
 }
