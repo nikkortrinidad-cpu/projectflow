@@ -175,8 +175,8 @@ function ProfileBody({ member, onClose }: { member: Member; onClose: () => void 
   // unit-tested separately. Returns the matching {start, end} period
   // (so the pill can show "back May 15") or null when not on vacation.
   const onVacation = useMemo(
-    () => currentVacationPeriod(member, data.today),
-    [member, data.today],
+    () => currentVacationPeriod(member, data.today, data.timeOffRequests),
+    [member, data.today, data.timeOffRequests],
   );
 
   // Working hours line — built from structured fields. Falls back to

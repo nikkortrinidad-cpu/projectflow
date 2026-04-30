@@ -1,4 +1,5 @@
-import type { Member } from '../types/flizow';
+import type { Member, TimeOffRequest } from '../types/flizow';
+import { currentApprovedPeriod } from './timeOff';
 
 /**
  * Pure helpers for rendering and querying Member profile data.
@@ -15,20 +16,34 @@ import type { Member } from '../types/flizow';
 
 /**
  * Find the vacation period (if any) that `todayISO` falls inside.
- * Returns the matching `{ start, end }` entry from the member's
- * timeOff array, or null when the member is not on vacation today.
+ * Returns the matching `{ start, end }` entry from the workspace's
+ * approved time-off ledger, or null when the member is not on
+ * vacation today.
  *
  * Bounds are inclusive on both sides — a period starting today
  * counts as "on vacation today" and a period ending today still
  * counts (returning tomorrow). Matches user mental model where
  * "I'm out from May 13 to May 15" includes both endpoints.
  *
- * Defensive: missing/empty timeOff returns null.
+ * Phase-3 update: now reads from the workspace `timeOffRequests`
+ * collection instead of the deprecated `Member.timeOff` array.
+ * Only approved entries count — pending requests don't render the
+ * pill, denied/cancelled never count. The legacy `Member.timeOff`
+ * field is consulted as a back-compat fallback for any reader that
+ * runs before the migration sweep has cleared the field.
  */
 export function currentVacationPeriod(
   member: Member,
   todayISO: string,
+  timeOffRequests?: ReadonlyArray<TimeOffRequest>,
 ): { start: string; end: string } | null {
+  // Preferred path: read from the workspace ledger.
+  if (timeOffRequests && timeOffRequests.length > 0) {
+    const r = currentApprovedPeriod(timeOffRequests, member.id, todayISO);
+    if (r) return { start: r.start, end: r.end };
+  }
+  // Back-compat fallback for any caller that hasn't been swept to
+  // pass the workspace-level ledger yet, or for pre-migration reads.
   if (!member.timeOff || member.timeOff.length === 0) return null;
   for (const period of member.timeOff) {
     if (todayISO >= period.start && todayISO <= period.end) {
@@ -38,9 +53,16 @@ export function currentVacationPeriod(
   return null;
 }
 
-/** True iff the member has a vacation period covering todayISO. */
-export function isOnVacation(member: Member, todayISO: string): boolean {
-  return currentVacationPeriod(member, todayISO) !== null;
+/** True iff the member has a vacation period covering todayISO.
+ *  Pass `timeOffRequests` when calling from a workspace context;
+ *  the helper falls back to the legacy `Member.timeOff` array
+ *  when omitted. */
+export function isOnVacation(
+  member: Member,
+  todayISO: string,
+  timeOffRequests?: ReadonlyArray<TimeOffRequest>,
+): boolean {
+  return currentVacationPeriod(member, todayISO, timeOffRequests) !== null;
 }
 
 // ── Time-of-day formatting ─────────────────────────────────────────────

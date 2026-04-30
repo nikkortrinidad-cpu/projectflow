@@ -1126,5 +1126,9 @@ export function generateDemoData(): FlizowData {
     // entries), so the catalog here keeps them resolved on a fresh
     // load without waiting for the migration pass.
     jobTitles: DEFAULT_JOB_TITLES.map((jt) => ({ ...jt })),
+    // Empty time-off ledger. Demo members can submit / approve
+    // requests interactively; seeding fake history would clutter
+    // the surface without adding signal.
+    timeOffRequests: [],
   };
 }

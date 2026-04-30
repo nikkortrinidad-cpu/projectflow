@@ -21,7 +21,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useFlizow } from '../store/useFlizow';
 import { flizowStore } from '../store/flizowStore';
-import type { AccessRole, JobTitle, JobTitleKind, Member, TrashEntry, TrashKind, WorkspaceMembership } from '../types/flizow';
+import type { AccessRole, JobTitle, JobTitleKind, Member, TimeOffRequest, TrashEntry, TrashKind, WorkspaceMembership } from '../types/flizow';
 import { initialsOf } from '../utils/avatar';
 import { ConfirmDangerDialog } from './ConfirmDangerDialog';
 import { useMemberProfile } from '../contexts/MemberProfileContext';
@@ -1756,31 +1756,47 @@ function TimeOffSection() {
     );
   }
 
-  const periods = me.timeOff ?? [];
+  // Stash the narrowed reference once so closures + nested handlers
+  // below don't lose the non-null narrowing through React's hook
+  // boundaries. Cheaper than annotating every callback's `me!`.
+  const meId = me.id;
   const today = data.today;
+  // Phase-3 read: pull THIS member's requests from the workspace
+  // ledger and treat the approved ones as "vacation periods" (the
+  // current UX). Pending/denied/cancelled don't show on this self-
+  // serve list yet — Phase 4 reworks the surface to expose status.
+  const myRequests = useMemo(
+    () =>
+      data.timeOffRequests
+        .filter((r) => r.memberId === meId && r.status === 'approved')
+        .slice()
+        .sort((a, b) => a.start.localeCompare(b.start)),
+    [data.timeOffRequests, meId],
+  );
 
-  // Bucket periods into past vs current/upcoming for the two-list
-  // display. A period counts as past when its end date is strictly
-  // before today; a current period (today inside) counts as upcoming
-  // for grouping purposes so the user sees their active vacation
-  // alongside what's coming next.
-  const upcoming: Array<{ period: { start: string; end: string }; index: number }> = [];
-  const past:     Array<{ period: { start: string; end: string }; index: number }> = [];
-  periods.forEach((period, index) => {
-    if (period.end < today) past.push({ period, index });
-    else upcoming.push({ period, index });
-  });
-  upcoming.sort((a, b) => a.period.start.localeCompare(b.period.start));
-  past.sort((a, b) => b.period.end.localeCompare(a.period.end));
-
-  // Active = today inside any period. Drives the toggle's checked
-  // state and the "End time off" path.
-  const activePeriod = currentVacationPeriod(me, today);
-  const isCurrentlyAway = !!activePeriod;
-
-  function setPeriods(next: Array<{ start: string; end: string }>) {
-    store.updateMember(currentId!, { timeOff: next });
+  // Bucket periods into past vs current/upcoming. A period counts as
+  // past when its end date is strictly before today; the active one
+  // (today inside) groups with upcoming so the user sees current +
+  // future together.
+  const upcoming: TimeOffRequest[] = [];
+  const past: TimeOffRequest[] = [];
+  for (const r of myRequests) {
+    if (r.end < today) past.push(r);
+    else upcoming.push(r);
   }
+  upcoming.sort((a, b) => a.start.localeCompare(b.start));
+  past.sort((a, b) => b.end.localeCompare(a.end));
+
+  // Active = today inside any approved period. Drives the toggle's
+  // checked state + the "End time off" path.
+  const activePeriod = useMemo(
+    () => currentVacationPeriod(me, today, data.timeOffRequests),
+    [me, today, data.timeOffRequests],
+  );
+  const activeRequest = activePeriod
+    ? myRequests.find((r) => r.start === activePeriod.start && r.end === activePeriod.end)
+    : undefined;
+  const isCurrentlyAway = !!activePeriod;
 
   function handleToggle(checked: boolean) {
     if (checked) {
@@ -1790,17 +1806,13 @@ function TimeOffSection() {
       setModalOpen({ editIndex: -1 });
     } else {
       // ON → OFF: end the active period now by clipping its end
-      // date to yesterday. This preserves the period's history
-      // (admins can still see "Sarah was out May 13–14") rather
-      // than deleting the row, while flipping the live status off.
-      if (!activePeriod) return;
+      // date to yesterday. This preserves the period's history (the
+      // approval queue + audit trail still see "Sarah was out May
+      // 13–14") rather than deleting the row.
+      if (!activeRequest) return;
       const yesterday = isoOffsetDays(today, -1);
-      const idx = periods.findIndex(p => p.start === activePeriod.start && p.end === activePeriod.end);
-      if (idx === -1) return;
-      const next = periods.map((p, i) =>
-        i === idx ? { ...p, end: yesterday < p.start ? p.start : yesterday } : p,
-      );
-      setPeriods(next);
+      const safeEnd = yesterday < activeRequest.start ? activeRequest.start : yesterday;
+      store.updateTimeOffRequest(activeRequest.id, { end: safeEnd });
     }
   }
 
@@ -1811,16 +1823,34 @@ function TimeOffSection() {
     setModalOpen({ editIndex: index });
   }
   function handleRemove(index: number) {
-    const next = periods.filter((_, i) => i !== index);
-    setPeriods(next);
+    const r = myRequests[index];
+    if (!r) return;
+    // Hard-delete to keep parity with the pre-Phase-3 "Remove"
+    // behaviour. A future pass may swap this for cancel + audit
+    // trail once we surface status to the user.
+    store.deleteTimeOffRequest(r.id);
   }
   function handleSave(period: { start: string; end: string }) {
     if (!modalOpen) return;
     if (modalOpen.editIndex === -1) {
-      setPeriods([...periods, period]);
+      // Self-serve add lands as 'approved' to preserve the legacy
+      // behaviour ("I added a vacation, it's now active"). Phase 4
+      // flips this to 'pending' once the approval flow ships.
+      store.submitTimeOffRequest({
+        memberId: meId,
+        start: period.start,
+        end: period.end,
+        status: 'approved',
+        decidedBy: meId,
+      });
     } else {
-      const next = periods.map((p, i) => i === modalOpen.editIndex ? period : p);
-      setPeriods(next);
+      const r = myRequests[modalOpen.editIndex];
+      if (r) {
+        store.updateTimeOffRequest(r.id, {
+          start: period.start,
+          end: period.end,
+        });
+      }
     }
     setModalOpen(null);
   }
@@ -1863,15 +1893,18 @@ function TimeOffSection() {
           <div className="timeoff-empty">No upcoming time off.</div>
         ) : (
           <ul className="timeoff-list">
-            {upcoming.map(({ period, index }) => (
-              <TimeOffRow
-                key={`up-${index}`}
-                period={period}
-                isActive={!!activePeriod && period.start === activePeriod.start && period.end === activePeriod.end}
-                onEdit={() => handleEdit(index)}
-                onRemove={() => handleRemove(index)}
-              />
-            ))}
+            {upcoming.map((r) => {
+              const idx = myRequests.findIndex((x) => x.id === r.id);
+              return (
+                <TimeOffRow
+                  key={r.id}
+                  period={{ start: r.start, end: r.end }}
+                  isActive={!!activePeriod && r.start === activePeriod.start && r.end === activePeriod.end}
+                  onEdit={() => handleEdit(idx)}
+                  onRemove={() => handleRemove(idx)}
+                />
+              );
+            })}
           </ul>
         )}
         <button
@@ -1888,16 +1921,19 @@ function TimeOffSection() {
         <div className="acct-section-divider">
           <div className="acct-eyebrow">Past time off</div>
           <ul className="timeoff-list">
-            {past.map(({ period, index }) => (
-              <TimeOffRow
-                key={`past-${index}`}
-                period={period}
-                isActive={false}
-                onEdit={() => handleEdit(index)}
-                onRemove={() => handleRemove(index)}
-                muted
-              />
-            ))}
+            {past.map((r) => {
+              const idx = myRequests.findIndex((x) => x.id === r.id);
+              return (
+                <TimeOffRow
+                  key={r.id}
+                  period={{ start: r.start, end: r.end }}
+                  isActive={false}
+                  onEdit={() => handleEdit(idx)}
+                  onRemove={() => handleRemove(idx)}
+                  muted
+                />
+              );
+            })}
           </ul>
         </div>
       )}
@@ -1906,12 +1942,12 @@ function TimeOffSection() {
         <TimeOffPeriodModal
           initialStart={
             modalOpen.editIndex >= 0
-              ? periods[modalOpen.editIndex].start
+              ? myRequests[modalOpen.editIndex]?.start ?? today
               : today
           }
           initialEnd={
             modalOpen.editIndex >= 0
-              ? periods[modalOpen.editIndex].end
+              ? myRequests[modalOpen.editIndex]?.end ?? isoOffsetDays(today, 1)
               : isoOffsetDays(today, 1)
           }
           isEditing={modalOpen.editIndex >= 0}

@@ -596,12 +596,66 @@ export interface Member {
    *  Stored as an array so non-contiguous schedules (4-day weeks
    *  with Wednesday off, etc.) round-trip cleanly. */
   workingDays?: number[];
-  /** Time off periods. Each entry is a { start, end } pair of ISO
-   *  date strings (YYYY-MM-DD), inclusive on both ends. The profile
-   *  panel shows a "🌴 On vacation through May 15" pill when today
-   *  falls inside any period. The Account → Time off settings page
-   *  is the canonical CRUD surface; the profile only reads. */
+  /** @deprecated since Phase 3. Time-off periods now live on the
+   *  workspace-level `FlizowData.timeOffRequests[]` collection with
+   *  status (pending / approved / denied / cancelled) on each entry.
+   *  This field stays on the type for back-compat with any in-flight
+   *  reads and as the migration source — the Phase-3 sweep walks any
+   *  entries here, mints an approved TimeOffRequest per entry, then
+   *  clears the field. New writes never land here. */
   timeOff?: Array<{ start: string; end: string }>;
+}
+
+/**
+ * Status of a time-off request. Drives the approval flow + filtering:
+ *  - 'pending'   = submitted, awaiting OM/Admin decision
+ *  - 'approved'  = decision approved; counts as time off everywhere
+ *                  (calendar, profile pill, capacity overrides)
+ *  - 'denied'    = decision denied; kept for audit + requester sees
+ *                  the reason. Doesn't count as time off.
+ *  - 'cancelled' = requester (or admin) withdrew before/after the
+ *                  decision. Doesn't count as time off.
+ *
+ *  Phase 3 ships with status='approved' as the default for the
+ *  existing UI's writes; Phase 4 flips submissions to 'pending' and
+ *  Phase 6 builds the approval queue.
+ */
+export type TimeOffStatus = 'pending' | 'approved' | 'denied' | 'cancelled';
+
+/**
+ * One time-off entry on the workspace. Replaces the legacy flat
+ * `Member.timeOff` array with a statused, append-only collection
+ * that supports the approval flow.
+ *
+ *  - id: stable opaque string ('tor-${random}'). Every UI element
+ *    that references a request (notifications, approval queue,
+ *    cancel button) keys off this.
+ *  - memberId: who's off. Matches a `Member.id`.
+ *  - start / end: ISO date strings (YYYY-MM-DD), inclusive both ends.
+ *    Same convention as the legacy shape so calendar math doesn't
+ *    change.
+ *  - reason: optional free-text submitted by the requester. Visible
+ *    to the approver; helps decide.
+ *  - status: see TimeOffStatus above.
+ *  - requestedAt: ISO timestamp. Always set.
+ *  - decidedAt / decidedBy: set when status flips to approved or
+ *    denied. decidedBy is the uid of the OM/Owner who clicked the
+ *    button (audit trail).
+ *  - decisionNote: optional free-text the approver leaves with the
+ *    decision. Surfaces to the requester so a denial isn't a black
+ *    hole.
+ */
+export interface TimeOffRequest {
+  id: string;
+  memberId: string;
+  start: string;
+  end: string;
+  reason?: string;
+  status: TimeOffStatus;
+  requestedAt: string;
+  decidedAt?: string;
+  decidedBy?: string;
+  decisionNote?: string;
 }
 
 /**
@@ -1117,6 +1171,14 @@ export interface FlizowData {
    *  a workspace loads after Phase 2 ships, so existing AMs/operators
    *  have somewhere to land. Audit: roles + job-titles Phase 2. */
   jobTitles: JobTitle[];
+  /** Workspace-wide time-off ledger. Replaces the legacy
+   *  `Member.timeOff` flat array. Each entry is a TimeOffRequest with
+   *  status (pending / approved / denied / cancelled), kept append-
+   *  only so the audit trail survives across decisions. Phase-3
+   *  migration walks every member's legacy timeOff array and mints
+   *  one approved entry per period; new writes go through dedicated
+   *  store methods. Audit: time-off Phase 3. */
+  timeOffRequests: TimeOffRequest[];
   /** Light vs dark mode. Used to be owned by the legacy BoardStore;
    *  moved here so we can retire that store. App.tsx reads this and
    *  syncs to `document.documentElement` (class + data-theme attr).

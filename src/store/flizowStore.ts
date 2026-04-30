@@ -9,7 +9,7 @@ import type {
   TemplateRecord, AccessRole, WorkspaceDoc, WorkspaceMembership,
   PendingInvite,
   TrashEntry, TrashKind, TrashPayload,
-  JobTitle,
+  JobTitle, TimeOffRequest, TimeOffStatus,
 } from '../types/flizow';
 import { ONBOARDING_TEMPLATES } from '../data/onboardingTemplates';
 import { TASK_POOLS } from '../data/taskPools';
@@ -17,6 +17,7 @@ import { findTemplate } from '../data/templates';
 import { OPS_TEAM_MEMBERS, OPS_TASK_SEED } from '../data/opsSeed';
 import { migrateAccessRole } from '../utils/access';
 import { DEFAULT_JOB_TITLES, pickMigratedJobTitleId } from '../utils/jobTitles';
+import { makeTimeOffRequest, migrateLegacyTimeOff } from '../utils/timeOff';
 
 /**
  * FlizowStore — central data container.
@@ -92,6 +93,11 @@ function emptyData(): FlizowData {
     // place new members from day one. The owner can edit the list
     // (Settings → Job titles) — labels, colors, kind toggle, archive.
     jobTitles: DEFAULT_JOB_TITLES.map((jt) => ({ ...jt })),
+    // Empty time-off ledger on a fresh workspace. Submissions land
+    // here through submitTimeOffRequest; legacy `Member.timeOff`
+    // entries get migrated in here on first load (see Phase-3
+    // migration in the snapshot handler).
+    timeOffRequests: [],
   };
 }
 
@@ -270,6 +276,12 @@ function migrate(parsed: Partial<FlizowData>): FlizowData {
     jobTitles: Array.isArray(parsed.jobTitles) && parsed.jobTitles.length > 0
       ? parsed.jobTitles
       : base.jobTitles,
+    // Time-off ledger — backfill with [] for docs that predate
+    // Phase 3. The legacy-timeOff sweep in the snapshot handler
+    // walks Member.timeOff and appends migrated entries here.
+    timeOffRequests: Array.isArray(parsed.timeOffRequests)
+      ? parsed.timeOffRequests
+      : base.timeOffRequests,
   };
 }
 
@@ -630,7 +642,21 @@ class FlizowStore {
       // on the existing role-migration write below.
       const memberMig = migrateMembersToJobTitles(cloud.members, cloud.jobTitles);
       cloud.members = memberMig.members;
-      const dataChanged = memberMig.changed;
+      // Phase-3 sweep: legacy Member.timeOff → workspace timeOffRequests.
+      // Walks every member's old timeOff array, mints an approved
+      // TimeOffRequest per period, clears the legacy field. Idempotent
+      // — running twice on the same data is a no-op (dup guard
+      // inside the helper).
+      const todayForMig = todayISO();
+      const timeOffMig = migrateLegacyTimeOff(
+        cloud.members,
+        cloud.timeOffRequests,
+        ws.ownerUid,
+        todayForMig,
+      );
+      cloud.members = timeOffMig.members;
+      cloud.timeOffRequests = timeOffMig.requests;
+      const dataChanged = memberMig.changed || timeOffMig.changed;
       this.data = cloud;
       // Identity backfill for workspaces created before the
       // name/initials/color slice landed. Default name derives from
@@ -2855,6 +2881,142 @@ class FlizowStore {
    *  `updateJobTitle(id, { active: true })`. */
   archiveJobTitle(id: string) {
     this.updateJobTitle(id, { active: false });
+  }
+
+  // ── Time off ─────────────────────────────────────────────────────────
+  //
+  // Replaces the legacy `Member.timeOff` array. Every entry is now a
+  // statused TimeOffRequest on the workspace; submission, approval,
+  // denial, cancellation, and edits all flow through the methods
+  // below. Phase 3 ships with the data layer + Account → Time off
+  // writing as 'approved' (current UX preserved); Phase 4 flips
+  // submissions to 'pending' and Phase 6 builds the OM approval
+  // queue that resolves them.
+
+  /** Submit a time-off request. Returns the new entry so the caller
+   *  can reference its id (e.g. for an optimistic "submitted" toast).
+   *  Status defaults to 'pending' — the Phase-3 Account → Time off
+   *  UI passes 'approved' explicitly to preserve the legacy "I just
+   *  added a vacation, it's now active" behaviour until Phase 4
+   *  adds the approval flow. */
+  submitTimeOffRequest(input: {
+    memberId: string;
+    start: string;
+    end: string;
+    reason?: string;
+    status?: TimeOffStatus;
+    decidedBy?: string;
+  }): TimeOffRequest {
+    const status = input.status ?? 'pending';
+    const now = new Date().toISOString();
+    // When the caller submits at 'approved' (the Phase-3 self-serve
+    // path), stamp decidedAt + decidedBy so the audit trail is
+    // honest about who confirmed.
+    const decidedFields = status === 'approved' || status === 'denied'
+      ? {
+          decidedAt: now,
+          decidedBy: input.decidedBy ?? this.userId ?? undefined,
+        }
+      : {};
+    const req = makeTimeOffRequest({
+      memberId: input.memberId,
+      start: input.start,
+      end: input.end,
+      reason: input.reason,
+      status,
+      requestedAt: now,
+      ...decidedFields,
+    });
+    this.data.timeOffRequests = [...this.data.timeOffRequests, req];
+    this.save();
+    return req;
+  }
+
+  /** Approve a pending request. No-op when the id is unknown or the
+   *  request is already in a terminal state. The decidedBy uid is
+   *  stamped from the signed-in user; pass through `decisionNote`
+   *  when the OM left a comment in the approval dialog. */
+  approveTimeOffRequest(id: string, decisionNote?: string): void {
+    this.decideTimeOffRequest(id, 'approved', decisionNote);
+  }
+
+  /** Deny a pending request. Mirrors approveTimeOffRequest; the
+   *  request stays in the ledger so the requester can see the
+   *  decision + note. */
+  denyTimeOffRequest(id: string, decisionNote?: string): void {
+    this.decideTimeOffRequest(id, 'denied', decisionNote);
+  }
+
+  /** Internal: shared status-flip path for approve / deny. Skips
+   *  the write when nothing would change (idempotent retries from
+   *  a flaky network don't churn Firestore). */
+  private decideTimeOffRequest(
+    id: string,
+    status: 'approved' | 'denied',
+    decisionNote?: string,
+  ): void {
+    const r = this.data.timeOffRequests.find((x) => x.id === id);
+    if (!r) return;
+    if (r.status === status) return;
+    const now = new Date().toISOString();
+    this.data.timeOffRequests = this.data.timeOffRequests.map((x) =>
+      x.id === id
+        ? {
+            ...x,
+            status,
+            decidedAt: now,
+            decidedBy: this.userId ?? x.decidedBy,
+            decisionNote: decisionNote ?? x.decisionNote,
+          }
+        : x,
+    );
+    this.save();
+  }
+
+  /** Cancel a request. Status flip rather than hard-delete so the
+   *  audit trail survives. Anyone can cancel their own pending
+   *  request; the OM can also cancel approved requests through this
+   *  path (e.g. when a member returns to a different schedule).
+   *  No-op when the id is unknown. */
+  cancelTimeOffRequest(id: string): void {
+    const r = this.data.timeOffRequests.find((x) => x.id === id);
+    if (!r) return;
+    if (r.status === 'cancelled') return;
+    this.data.timeOffRequests = this.data.timeOffRequests.map((x) =>
+      x.id === id ? { ...x, status: 'cancelled' as const } : x,
+    );
+    this.save();
+  }
+
+  /** Patch a request's editable fields (start, end, reason). Status
+   *  changes go through the dedicated approve / deny / cancel
+   *  methods so audit fields stay honest — `updateTimeOffRequest`
+   *  intentionally rejects status changes. */
+  updateTimeOffRequest(
+    id: string,
+    patch: Partial<Pick<TimeOffRequest, 'start' | 'end' | 'reason'>>,
+  ): void {
+    const r = this.data.timeOffRequests.find((x) => x.id === id);
+    if (!r) return;
+    this.data.timeOffRequests = this.data.timeOffRequests.map((x) =>
+      x.id === id ? { ...x, ...patch } : x,
+    );
+    this.save();
+  }
+
+  /** Hard-delete a request from the ledger. Rare — prefer
+   *  `cancelTimeOffRequest` so the audit trail survives. The legacy
+   *  Account → Time off "Remove" button maps to this for parity
+   *  with the old behaviour (where removing a vacation period
+   *  erased it without a trace); Phase 4 may rework that surface to
+   *  cancel-by-default. */
+  deleteTimeOffRequest(id: string): void {
+    const before = this.data.timeOffRequests.length;
+    this.data.timeOffRequests = this.data.timeOffRequests.filter(
+      (x) => x.id !== id,
+    );
+    if (this.data.timeOffRequests.length === before) return;
+    this.save();
   }
 
   // ── Onboarding ───────────────────────────────────────────────────────
