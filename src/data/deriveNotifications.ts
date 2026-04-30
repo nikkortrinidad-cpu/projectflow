@@ -196,16 +196,22 @@ export function deriveNotifications(
       .sort((a, b) => (b.decidedAt ?? '').localeCompare(a.decidedAt ?? ''));
     for (const r of recent.slice(0, 5)) {
       const verb = r.status === 'approved' ? 'approved' : 'denied';
-      const note = r.decisionNote
-        ? `Time off · "${escapeHTML(r.decisionNote)}"`
-        : 'Time off';
+      // L3: parallel format to the pending row's
+      // "Time off · Pending review". Decided rows now read as
+      // "Time off · Approved" / "Time off · Denied", with the
+      // approver's note appended after a colon when present
+      // ("Time off · Denied: 'Big launch that week'").
+      const verbCap = verb.charAt(0).toUpperCase() + verb.slice(1);
+      const context = r.decisionNote
+        ? `Time off · ${verbCap}: "${escapeHTML(r.decisionNote)}"`
+        : `Time off · ${verbCap}`;
       items.push({
         id: `tor-decided-${r.id}`,
         type: 'time_off',
         group: 'Today',
         ago: r.decidedAt ? relativeAgo(r.decidedAt.slice(0, 10), todayStr) : '',
         text: `Your time off ${escapeHTML(formatRange(r.start, r.end))} was <strong>${verb}</strong>`,
-        context: note,
+        context,
         // Phase 7C deep-link: opens the Account modal at the
         // Time off section with this request scrolled-into-view
         // + pulsed. The App-level hash-watcher catches the

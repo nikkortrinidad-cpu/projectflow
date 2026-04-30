@@ -8517,6 +8517,16 @@
     overflow: hidden;
   }
   .schedules-day:hover { background: var(--bg-soft); }
+  /* L5 — fully-empty days (no off, no conflict, no holiday) drop
+     the pointer cursor + hover background since clicking them is
+     a no-op. The cell stays in the tab order so keyboard nav
+     still works; it just doesn't pretend to be interactive. */
+  .schedules-day--empty {
+    cursor: default;
+  }
+  .schedules-day--empty:hover {
+    background: transparent;
+  }
   /* Out-of-month days — dim so the focal weeks pop. */
   .schedules-day--out {
     background: var(--bg-soft);
@@ -8973,7 +8983,9 @@
      holiday names get truncated by the component (16-char cap +
      ellipsis). */
   .schedules-day-holiday {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     font-size: 9px;
     font-weight: 700;
     padding: 1px 4px;
@@ -8982,10 +8994,23 @@
     color: var(--text);
     line-height: 1.3;
     align-self: flex-start;
-    white-space: nowrap;
+    max-width: 100%;
+    /* Inner name carries the ellipsis; the +N badge stays at full
+       width and never truncates so the count is always readable. */
+  }
+  .schedules-day-holiday-name {
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 100%;
+    white-space: nowrap;
+    min-width: 0;
+  }
+  .schedules-day-holiday-more {
+    flex-shrink: 0;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 999px;
+    padding: 0 4px;
+    font-size: 8px;
+    line-height: 1.3;
   }
   /* Day-popover holiday country pill — smaller, no text shadow,
      sits inline with the holiday's name + meta line. */
@@ -9347,6 +9372,15 @@
     outline: 2px solid var(--highlight-line, rgba(241, 90, 36, 0.35));
     outline-offset: 2px;
     border-radius: 8px;
+  }
+  /* L4 — honor prefers-reduced-motion. Kill the pulse but keep
+     the outline so the user still sees the positional cue (the
+     point of the focus highlight is "this is what you're looking
+     at," which works statically). */
+  @media (prefers-reduced-motion: reduce) {
+    [data-focused="true"] {
+      animation: none;
+    }
   }
 
   .capacity-strip-empty {

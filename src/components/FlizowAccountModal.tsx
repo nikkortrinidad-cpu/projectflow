@@ -1789,7 +1789,14 @@ function TimeOffSection({ focusId }: { focusId?: string } = {}) {
       const el = document.querySelector<HTMLElement>(
         `[data-focus-id="${focusId}"]`,
       );
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (!el) return;
+      // L6 — honor prefers-reduced-motion: jump directly instead
+      // of animating the scroll when the user has it on.
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      el.scrollIntoView({
+        behavior: reducedMotion ? 'auto' : 'smooth',
+        block: 'center',
+      });
     });
     const timer = setTimeout(() => setFocusedNow(null), 1800);
     return () => clearTimeout(timer);

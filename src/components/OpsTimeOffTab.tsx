@@ -457,6 +457,13 @@ function SchedulesCalendar({
           const conflicts = conflictsByDate.get(cell.iso) ?? [];
           const holidays = holidaysByDate.get(cell.iso) ?? [];
           const isToday = cell.iso === today;
+          // L5 — only open the popover when there's something
+          // to show. A click on a fully-empty day (no off, no
+          // conflict, no holiday) used to open a popover that
+          // just said "Nobody is on approved time off." — wasted
+          // click. The cell stays focusable for keyboard nav;
+          // we just no-op the onClick.
+          const hasContent = off.length > 0 || conflicts.length > 0 || holidays.length > 0;
           return (
             <CalendarDayCell
               key={cell.iso}
@@ -467,7 +474,10 @@ function SchedulesCalendar({
               holidays={holidays}
               hasConflict={conflicts.length > 0}
               conflictCount={conflicts.length}
-              onClick={() => onSelectDate(cell.iso)}
+              hasContent={hasContent}
+              onClick={() => {
+                if (hasContent) onSelectDate(cell.iso);
+              }}
             />
           );
         })}
@@ -484,6 +494,7 @@ function CalendarDayCell({
   holidays,
   hasConflict,
   conflictCount,
+  hasContent,
   onClick,
 }: {
   iso: string;
@@ -493,6 +504,10 @@ function CalendarDayCell({
   holidays: ReadonlyArray<Holiday>;
   hasConflict: boolean;
   conflictCount: number;
+  /** L5 — true when off / holiday / conflict is present, false on
+   *  fully-empty days. Drives the cursor + click behaviour: empty
+   *  cells render with default cursor and skip the popover open. */
+  hasContent: boolean;
   onClick: () => void;
 }) {
   const day = parseInt(iso.slice(8, 10), 10);
@@ -510,6 +525,7 @@ function CalendarDayCell({
     hasConflict ? 'schedules-day--conflict' : '',
     off.length > 0 ? 'schedules-day--has-off' : '',
     primaryHoliday ? 'schedules-day--holiday' : '',
+    hasContent ? '' : 'schedules-day--empty',
   ].filter(Boolean).join(' ');
 
   return (
@@ -536,11 +552,21 @@ function CalendarDayCell({
               : primaryHoliday.name
           }
         >
-          {countryShortLabel(primaryHoliday.country)}
-          {' '}
-          {primaryHoliday.name.length > 18
-            ? primaryHoliday.name.slice(0, 16) + '…'
-            : primaryHoliday.name}
+          {/* L1: width-based ellipsis from CSS replaces the old
+              16-char JS slice — CSS knows the actual rendered
+              width and breaks at the right boundary regardless of
+              font / device-pixel-ratio. */}
+          <span className="schedules-day-holiday-name">
+            {countryShortLabel(primaryHoliday.country)}
+            {' '}
+            {primaryHoliday.name}
+          </span>
+          {/* L2: tiny suffix when more holidays land on this date.
+              The popover lists them all; this signals "there's
+              more" without taking another row. */}
+          {holidays.length > 1 && (
+            <span className="schedules-day-holiday-more">+{holidays.length - 1}</span>
+          )}
         </span>
       )}
       {hasConflict && (
@@ -659,12 +685,18 @@ function ApprovalQueue({
     setFocusedNow(focusId);
     // Wait one frame so the row mounts, then scroll. requestAnimationFrame
     // keeps this readable + avoids the brief flash of an unscrolled
-    // first paint.
+    // first paint. L6 — honor prefers-reduced-motion: skip the
+    // smooth animation, jump directly when the user has it on.
     requestAnimationFrame(() => {
       const el = document.querySelector<HTMLElement>(
         `[data-focus-id="${focusId}"]`,
       );
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (!el) return;
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      el.scrollIntoView({
+        behavior: reducedMotion ? 'auto' : 'smooth',
+        block: 'center',
+      });
     });
     // Clear the highlight after the CSS animation completes so a
     // re-render doesn't snap it back on indefinitely.
