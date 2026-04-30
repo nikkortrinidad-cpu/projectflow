@@ -447,7 +447,7 @@ export function OverviewPage() {
           </div>
           <div className="attention-list" id="attention-list">
             {allAttention.length === 0 ? (
-              <div className="attn-empty" style={{ padding: 24, color: 'var(--text-soft)', fontSize: 'var(--fs-base)' }}>
+              <div className="attn-empty" style={{ padding: 'var(--sp-3xl)', color: 'var(--text-soft)', fontSize: 'var(--fs-base)' }}>
                 Nothing urgent right now. Enjoy the quiet.
               </div>
             ) : (
@@ -507,7 +507,7 @@ export function OverviewPage() {
               <CalendarDaysIcon width={14} height={14} aria-hidden="true" />
               My Schedule
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-base)' }}>
               {/* Toggle buttons — NOT ARIA tabs (no paired tabpanel below
                   these; the schedule grid swaps content in place via the
                   .show-next class). aria-pressed conveys the active state
@@ -523,7 +523,7 @@ export function OverviewPage() {
                   onClick={() => setWeekTab('current')}
                 >
                   This week
-                  <span style={{ fontWeight: 400, color: 'var(--text-soft)', marginLeft: 6 }}>
+                  <span style={{ fontWeight: 400, color: 'var(--text-soft)', marginLeft: 'var(--sp-xs)' }}>
                     {weekLabels.current}
                   </span>
                 </button>
@@ -534,7 +534,7 @@ export function OverviewPage() {
                   onClick={() => setWeekTab('next')}
                 >
                   Next week
-                  <span style={{ fontWeight: 400, color: 'var(--text-soft)', marginLeft: 6 }}>
+                  <span style={{ fontWeight: 400, color: 'var(--text-soft)', marginLeft: 'var(--sp-xs)' }}>
                     {weekLabels.next}
                   </span>
                 </button>

@@ -886,7 +886,7 @@ export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDupl
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
                     Labels
                   </div>
-                  <div className="meta-value" style={{ position: 'relative', display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
+                  <div className="meta-value" style={{ position: 'relative', display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--sp-xs)' }}>
                     {task.labels.length === 0 && (
                       <span style={{ color: 'var(--text-faint)', fontSize: 'var(--fs-md)' }}>No labels</span>
                     )}
@@ -939,7 +939,7 @@ export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDupl
                       aria-haspopup="listbox"
                       aria-expanded={labelPickerOpen}
                       onClick={() => setLabelPickerOpen(v => !v)}
-                      style={{ marginLeft: 6 }}
+                      style={{ marginLeft: 'var(--sp-xs)' }}
                     >+</button>
                     {labelPickerOpen && (
                       <LabelPicker
@@ -1415,7 +1415,7 @@ function AssigneePicker({
             <span className="assignee-option-name">
               {m.name}
               {m.role && (
-                <span style={{ color: 'var(--text-soft)', fontSize: 'var(--fs-xs)', marginLeft: 6 }}>
+                <span style={{ color: 'var(--text-soft)', fontSize: 'var(--fs-xs)', marginLeft: 'var(--sp-xs)' }}>
                   · {m.role}
                 </span>
               )}
@@ -1562,7 +1562,7 @@ function CommentsPanel({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ flex: 1, overflow: 'auto', padding: '16px 16px 8px' }}>
+      <div style={{ flex: 1, overflow: 'auto', padding: 'var(--sp-xl) var(--sp-xl) var(--sp-sm)' }}>
         {tops.length === 0 ? (
           <div style={{
             padding: '24px 8px',
@@ -1982,11 +1982,11 @@ function ActivityPanel({
   }
 
   return (
-    <div style={{ padding: '16px 16px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <div style={{ padding: 'var(--sp-xl) var(--sp-xl) var(--sp-3xl)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-lg)' }}>
       {rows.map(row => {
         const actor = memberById(row.actorId);
         return (
-          <div key={row.id} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+          <div key={row.id} style={{ display: 'flex', gap: 'var(--sp-base)', alignItems: 'flex-start' }}>
             <Avatar member={actor} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 'var(--fs-md)', color: 'var(--text)', lineHeight: 1.45 }}>

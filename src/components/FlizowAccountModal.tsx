@@ -553,7 +553,7 @@ export default function FlizowAccountModal({ onClose }: Props) {
 
                 <div className="acct-section-divider">
                   <div className="acct-eyebrow">Workspace data</div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-sm)', alignItems: 'center' }}>
                     <button type="button" className="acct-btn-text" onClick={handleLoadDemo}>
                       Load demo data
                     </button>
@@ -717,7 +717,7 @@ export default function FlizowAccountModal({ onClose }: Props) {
                     behaviours that don't actually work — no email
                     infra exists. Removed the 3 email-only ones; the
                     other 2 got repurposed as bell-only controls. */}
-                <p className="acct-section-sub" style={{ marginTop: 14, color: 'var(--text-faint)', fontStyle: 'italic' }}>
+                <p className="acct-section-sub" style={{ marginTop: 'var(--sp-lg)', color: 'var(--text-faint)', fontStyle: 'italic' }}>
                   Email digests, mention alerts, and per-channel controls land when email delivery wires up.
                 </p>
               </section>
@@ -1499,7 +1499,7 @@ function DangerZone() {
   const [confirming, setConfirming] = useState(false);
   return (
     <>
-      <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px solid var(--hairline)' }}>
+      <div style={{ marginTop: 'var(--sp-18)', paddingTop: 'var(--sp-lg)', borderTop: '1px solid var(--hairline)' }}>
         <div style={{ fontSize: 'var(--fs-xs)', fontWeight: 600, color: 'var(--status-fire)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 10 }}>
           Danger zone
         </div>
@@ -1524,7 +1524,7 @@ function DangerZone() {
         >
           Clear workspace data
         </button>
-        <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-faint)', marginTop: 8, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-faint)', marginTop: 'var(--sp-sm)', lineHeight: 1.5 }}>
           Wipes every client, service, task, contact, note, and activity entry.
           Members, templates, and your workspace identity (name, logo) stay.
         </div>
@@ -1629,7 +1629,7 @@ function WorkspaceLogoUploader({ hasLogo }: { hasLogo: boolean }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-sm)', alignItems: 'center' }}>
       <input
         ref={inputRef}
         type="file"
@@ -1773,11 +1773,11 @@ function ExportWorkspaceButton({ workspaceName }: { workspaceName: string }) {
         </svg>
         {exporting ? 'Preparing…' : 'Export workspace as JSON'}
       </button>
-      <p style={{ marginTop: 8, fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', lineHeight: 1.45 }}>
+      <p style={{ marginTop: 'var(--sp-sm)', fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', lineHeight: 1.45 }}>
         Downloads everything in this workspace — clients, services, tasks, notes, members. Excludes pending invite tokens. Use it as a backup or to migrate to a new workspace later.
       </p>
       {error && (
-        <p style={{ marginTop: 6, fontSize: 'var(--fs-sm)', color: 'var(--accent)' }} role="alert">
+        <p style={{ marginTop: 'var(--sp-xs)', fontSize: 'var(--fs-sm)', color: 'var(--accent)' }} role="alert">
           {error}
         </p>
       )}

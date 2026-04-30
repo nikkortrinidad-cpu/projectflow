@@ -383,7 +383,7 @@ function EmptyState({ serviceId }: { serviceId?: string }) {
         href="#clients"
         onClick={(e) => { e.preventDefault(); navigate('#clients'); }}
         className="btn-sm"
-        style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+        style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 'var(--sp-xs)' }}
       >
         ← Back to clients
       </a>
@@ -1612,7 +1612,7 @@ function Swimlane({
         }}
       >
         <ChevronDownIcon className="swimlane-chevron" aria-hidden="true" />
-        <div className="swimlane-title" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+        <div className="swimlane-title" style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--sp-sm)' }}>
           {lane.accent}
           {/* Skip the plain text for label lanes (the accent is a pill
               that already contains the name). Priority + assignee
@@ -1877,7 +1877,7 @@ function ArchivedCardsModal({
 
         <div
           className="wip-modal-body"
-          style={{ paddingTop: 12, paddingBottom: 12, maxHeight: '60vh', overflow: 'auto' }}
+          style={{ paddingTop: 'var(--sp-base)', paddingBottom: 'var(--sp-base)', maxHeight: '60vh', overflow: 'auto' }}
         >
           <p
             style={{
@@ -1910,7 +1910,7 @@ function ArchivedCardsModal({
               Archive a card from its detail modal's kebab menu.
             </div>
           ) : (
-            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--sp-xs)' }}>
               {sorted.map(t => (
                 <ArchivedCardRow
                   key={t.id}

@@ -260,7 +260,7 @@ export function TemplatesPage() {
   if (!selected) {
     return (
       <div className="view view-templates active">
-        <main style={{ padding: '64px 32px', maxWidth: 480, margin: '0 auto', color: 'var(--text-soft)' }}>
+        <main style={{ padding: 'var(--sp-7xl) var(--sp-4xl)', maxWidth: 480, margin: '0 auto', color: 'var(--text-soft)' }}>
           No templates available. Restore one from the archive or create a new template.
         </main>
       </div>
@@ -298,7 +298,7 @@ export function TemplatesPage() {
                 onboarding and phases — those snapshots aren't tied to
                 the template at runtime.
               </p>
-              <p style={{ margin: '10px 0 0' }}>
+              <p style={{ margin: 'var(--sp-md) 0 0' }}>
                 You can't undo this. To bring it back, you'll need to
                 rebuild it from scratch.
               </p>
@@ -405,7 +405,7 @@ function ListPane({
           L2 + L3. */}
       <div className="templates-list">
         {templates.length === 0 && (
-          <div style={{ padding: '24px 12px', color: 'var(--text-soft)', fontSize: 'var(--fs-sm)' }}>
+          <div style={{ padding: 'var(--sp-3xl) var(--sp-base)', color: 'var(--text-soft)', fontSize: 'var(--fs-sm)' }}>
             No templates match "{query}".
           </div>
         )}
@@ -927,7 +927,7 @@ function DetailPane({
                 </strong>
                 {' '}that will go with it.
               </p>
-              <p style={{ margin: '10px 0 0' }}>
+              <p style={{ margin: 'var(--sp-md) 0 0' }}>
                 Existing services that were created from this template
                 keep their seeded phases — those snapshots aren't tied
                 to the template at runtime. Only new services started

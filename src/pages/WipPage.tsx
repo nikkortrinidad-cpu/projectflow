@@ -517,7 +517,7 @@ function AgendaGroupBlock({ group, onRemove, onEditManual }: {
               touch everything. Previously `.slice(0, N)` trimmed
               silently. Audit: wip M5. */}
           {group.hiddenCount > 0 && (
-            <span style={{ marginLeft: 6, color: 'var(--text-faint)' }}>
+            <span style={{ marginLeft: 'var(--sp-xs)', color: 'var(--text-faint)' }}>
               · +{group.hiddenCount} more
             </span>
           )}
@@ -630,12 +630,12 @@ function FlatRow({ item, onRemove, onActivate }: {
       <span className="wip-agenda-card-title">
         <strong style={{ fontWeight: 600 }}>{item.label}</strong>
         {item.meta && (
-          <span style={{ color: 'var(--text-soft)', marginLeft: 8, fontWeight: 400 }}>
+          <span style={{ color: 'var(--text-soft)', marginLeft: 'var(--sp-sm)', fontWeight: 400 }}>
             {item.meta}
           </span>
         )}
         {item.note && (
-          <div style={{ color: 'var(--text-soft)', marginTop: 4, fontWeight: 400, fontSize: 'var(--fs-sm)', lineHeight: 1.45 }}>
+          <div style={{ color: 'var(--text-soft)', marginTop: 'var(--sp-micro)', fontWeight: 400, fontSize: 'var(--fs-sm)', lineHeight: 1.45 }}>
             {item.note}
           </div>
         )}
@@ -1203,7 +1203,7 @@ function PreReadModal({ groups, todayISO, nextMeeting, itemCount, estMinutes, on
         </header>
 
         <div className="wip-modal-body">
-          <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-soft)', marginBottom: 8 }}>
+          <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-soft)', marginBottom: 'var(--sp-sm)' }}>
             Copy this into Slack/email or open in your mail client. We don't
             send from here — the team's addresses live elsewhere.
           </div>
@@ -1217,7 +1217,7 @@ function PreReadModal({ groups, todayISO, nextMeeting, itemCount, estMinutes, on
               onFocus={(e) => e.currentTarget.select()}
             />
           </label>
-          <label className="wip-field" style={{ marginTop: 12 }}>
+          <label className="wip-field" style={{ marginTop: 'var(--sp-base)' }}>
             <span className="wip-field-label">Body</span>
             <textarea
               ref={textareaRef}

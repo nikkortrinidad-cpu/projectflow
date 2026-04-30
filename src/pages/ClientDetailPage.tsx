@@ -518,7 +518,7 @@ function Hero({ client, am, onArchive, onUnarchive, onRequestDelete }: {
               from the keyboard at all. Audit: client-detail M3. */}
           <span
             className="status-chip-wrap"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--sp-xs)' }}
           >
             <span
               style={{
@@ -700,7 +700,7 @@ function AttentionSection({ tasks, services }: {
         </div>
         <div
           className="attention-panel"
-          style={{ padding: 20, color: 'var(--text-soft)', fontSize: 'var(--fs-base)' }}
+          style={{ padding: 'var(--sp-2xl)', color: 'var(--text-soft)', fontSize: 'var(--fs-base)' }}
         >
           Nothing's on fire right now. You're good.
         </div>
@@ -848,7 +848,7 @@ function ServicesSection({ services, tasks, todayIso, onAdd, editing, onToggleEd
         </div>
         <div
           className="services-list"
-          style={{ padding: 20, color: 'var(--text-soft)', fontSize: 'var(--fs-base)' }}
+          style={{ padding: 'var(--sp-2xl)', color: 'var(--text-soft)', fontSize: 'var(--fs-base)' }}
         >
           Nothing is running for this client yet.{' '}
           <button
@@ -1143,7 +1143,7 @@ function ActivitySection({ client, tasks, todayISO }: {
         <div className="detail-section-header">
           <div className="detail-section-title">Latest tasks</div>
         </div>
-        <div style={{ padding: 20, color: 'var(--text-soft)', fontSize: 'var(--fs-base)' }}>
+        <div style={{ padding: 'var(--sp-2xl)', color: 'var(--text-soft)', fontSize: 'var(--fs-base)' }}>
           No cards on this client yet. New tasks land here as work kicks off.
         </div>
       </div>
@@ -1265,7 +1265,7 @@ function OnboardingSection({ services, items, onToggle, onAdd, onDelete, onRenam
         </div>
         <div
           className="onboarding-service-stack"
-          style={{ padding: 20, color: 'var(--text-soft)', fontSize: 'var(--fs-base)' }}
+          style={{ padding: 'var(--sp-2xl)', color: 'var(--text-soft)', fontSize: 'var(--fs-base)' }}
         >
           Spin up a service to see its onboarding checklist here.
         </div>
@@ -1284,7 +1284,7 @@ function OnboardingSection({ services, items, onToggle, onAdd, onDelete, onRenam
         </div>
         <div
           className="onboarding-service-stack"
-          style={{ padding: 20, color: 'var(--text-soft)', fontSize: 'var(--fs-base)' }}
+          style={{ padding: 'var(--sp-2xl)', color: 'var(--text-soft)', fontSize: 'var(--fs-base)' }}
         >
           Setup checklists attach to services through templates. Swap in a
           template to see yours here.
@@ -1415,7 +1415,7 @@ function OnboardingServiceCard({ group, onToggle, onAdd, onDelete, onRename }: {
             onAdd={onAdd}
           />
 
-          <div className="onboarding-group-label" style={{ marginTop: 16 }}>
+          <div className="onboarding-group-label" style={{ marginTop: 'var(--sp-xl)' }}>
             <WrenchScrewdriverIcon width={12} height={12} aria-hidden="true" />
             We take care of
           </div>
@@ -2050,7 +2050,7 @@ function QuickLinksCard({ links, onAdd, editing, onToggleEdit, onRemove, onEdit 
       </div>
 
       {links.length === 0 ? (
-        <div style={{ padding: '12px 0', color: 'var(--text-soft)', fontSize: 'var(--fs-base)' }}>
+        <div style={{ padding: 'var(--sp-base) 0', color: 'var(--text-soft)', fontSize: 'var(--fs-base)' }}>
           No saved links yet.{' '}
           <button
             type="button"
@@ -2562,7 +2562,7 @@ function AddContactModal({ clientId, existingPrimary, contact, onClose }: {
               <span
                 id="contact-name-error"
                 role="alert"
-                style={{ fontSize: 'var(--fs-sm)', color: 'var(--status-fire)', marginTop: 4 }}
+                style={{ fontSize: 'var(--fs-sm)', color: 'var(--status-fire)', marginTop: 'var(--sp-micro)' }}
               >
                 Name is required.
               </span>
@@ -2587,7 +2587,7 @@ function AddContactModal({ clientId, existingPrimary, contact, onClose }: {
             />
           </label>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-base)' }}>
             <label className="wip-field">
               <span className="wip-field-label">Email</span>
               <input
@@ -2606,7 +2606,7 @@ function AddContactModal({ clientId, existingPrimary, contact, onClose }: {
                 <span
                   id="contact-email-error"
                   role="alert"
-                  style={{ fontSize: 'var(--fs-sm)', color: 'var(--status-fire)', marginTop: 4 }}
+                  style={{ fontSize: 'var(--fs-sm)', color: 'var(--status-fire)', marginTop: 'var(--sp-micro)' }}
                 >
                   Enter a valid email, or leave it blank.
                 </span>
@@ -2630,7 +2630,7 @@ function AddContactModal({ clientId, existingPrimary, contact, onClose }: {
                 <span
                   id="contact-phone-error"
                   role="alert"
-                  style={{ fontSize: 'var(--fs-sm)', color: 'var(--status-fire)', marginTop: 4 }}
+                  style={{ fontSize: 'var(--fs-sm)', color: 'var(--status-fire)', marginTop: 'var(--sp-micro)' }}
                 >
                   Enter at least 7 digits, or leave it blank.
                 </span>
@@ -2646,9 +2646,9 @@ function AddContactModal({ clientId, existingPrimary, contact, onClose }: {
               from the hint and wiring aria-describedby gives the reader
               a clean "label, then description" beat and lets the hint
               flow below on every width. Audit: add-contact-modal M5. */}
-          <div className="wip-field" style={{ gap: 4 }}>
+          <div className="wip-field" style={{ gap: 'var(--sp-micro)' }}>
             <label
-              style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10, cursor: 'pointer' }}
+              style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 'var(--sp-md)', cursor: 'pointer' }}
             >
               <input
                 type="checkbox"
@@ -2663,7 +2663,7 @@ function AddContactModal({ clientId, existingPrimary, contact, onClose }: {
             </label>
             <span
               id="contact-primary-hint"
-              style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-faint)', marginLeft: 26 }}
+              style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-faint)', marginLeft: 'var(--sp-26)' }}
             >
               {/* Naming the existing primary here means a distracted
                   user sees the consequence before saving, not just in
@@ -2698,7 +2698,7 @@ function AddContactModal({ clientId, existingPrimary, contact, onClose }: {
                 primary contact for this client. They'll no longer receive
                 Weekly WIP pings.
               </p>
-              <p style={{ margin: '10px 0 0' }}>
+              <p style={{ margin: 'var(--sp-md) 0 0' }}>
                 <strong>{pendingDemotion}</strong> will take over the
                 primary role.
               </p>
@@ -3002,7 +3002,7 @@ function AddOperatorModal({ clientId, allMembers, currentTeamIds, onClose }: {
 
         <div className="wip-modal-body">
           {available.length === 0 ? (
-            <div style={{ padding: 12, color: 'var(--text-soft)', fontSize: 'var(--fs-base)' }}>
+            <div style={{ padding: 'var(--sp-base)', color: 'var(--text-soft)', fontSize: 'var(--fs-base)' }}>
               Every operator is already on this team. Add a new team member in
               Settings, then come back.
             </div>
@@ -3023,7 +3023,7 @@ function AddOperatorModal({ clientId, allMembers, currentTeamIds, onClose }: {
                 />
               </label>
               {filtered.length === 0 ? (
-                <div style={{ padding: 12, color: 'var(--text-soft)', fontSize: 'var(--fs-base)' }}>
+                <div style={{ padding: 'var(--sp-base)', color: 'var(--text-soft)', fontSize: 'var(--fs-base)' }}>
                   No operators match "{query.trim()}".
                 </div>
               ) : (
