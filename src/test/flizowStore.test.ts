@@ -298,3 +298,514 @@ describe('flizowStore reset()', () => {
     expect(flizowStore.getSnapshot().opsTasks).toEqual([]);
   });
 });
+
+// ── Trash bin ────────────────────────────────────────────────────────────
+//
+// Soft-delete coverage for the workspace-wide Trash. Each soft-deletable
+// kind (note, contact, quick link, comment, touchpoint, action item,
+// onboarding item, manual agenda item, task, ops task, service, client,
+// template) gets a "delete + verify trash entry + restore + verify
+// recovered" round-trip. Then a few suite-level checks for purge,
+// emptyTrash, auto-prune, and the hard-delete-with-toast path.
+//
+// Tests use the undo callback API: every deleteX method returns a
+// `(() => void) | null` we invoke to restore. Same code path the UI
+// wires into the UndoToast.
+
+describe('flizowStore trash — note', () => {
+  beforeEach(() => {
+    flizowStore.addClient(baseClient());
+  });
+
+  it('deleteNote sends the note to trash and returns an undo callback', () => {
+    flizowStore.addNote({
+      id: 'n1', clientId: 'c1', body: '<p>Quarterly review</p>',
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z',
+      pinned: false,
+    });
+    const undo = flizowStore.deleteNote('n1');
+    const data = flizowStore.getSnapshot();
+
+    expect(undo).toBeTypeOf('function');
+    expect(data.notes).toHaveLength(0);
+    expect(data.trash).toHaveLength(1);
+    expect(data.trash[0].kind).toBe('note');
+    expect(data.trash[0].parentLabel).toBe('Acme Corp');
+    if (data.trash[0].payload.kind === 'note') {
+      expect(data.trash[0].payload.data.id).toBe('n1');
+    }
+  });
+
+  it('deleteNote returns null when the id is unknown', () => {
+    expect(flizowStore.deleteNote('does-not-exist')).toBeNull();
+  });
+
+  it('the undo callback restores the note and clears the trash entry', () => {
+    flizowStore.addNote({
+      id: 'n1', clientId: 'c1', body: '<p>Body</p>',
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z',
+      pinned: false,
+    });
+    const undo = flizowStore.deleteNote('n1');
+    expect(undo).not.toBeNull();
+    undo!();
+
+    const data = flizowStore.getSnapshot();
+    expect(data.notes).toHaveLength(1);
+    expect(data.notes[0].id).toBe('n1');
+    expect(data.trash).toHaveLength(0);
+  });
+});
+
+describe('flizowStore trash — contact, quick link, action item, onboarding item, agenda item', () => {
+  beforeEach(() => {
+    flizowStore.addClient(baseClient());
+  });
+
+  it('deleteContact sends to trash and round-trips', () => {
+    flizowStore.addContact({
+      id: 'ct1', clientId: 'c1', name: 'Jane', primary: true,
+    });
+    const undo = flizowStore.deleteContact('ct1');
+    expect(flizowStore.getSnapshot().contacts).toHaveLength(0);
+    expect(flizowStore.getSnapshot().trash[0].kind).toBe('contact');
+    undo!();
+    expect(flizowStore.getSnapshot().contacts).toHaveLength(1);
+    expect(flizowStore.getSnapshot().trash).toHaveLength(0);
+  });
+
+  it('deleteQuickLink sends to trash and round-trips', () => {
+    flizowStore.addQuickLink({
+      id: 'ql1', clientId: 'c1', label: 'Drive', url: 'https://drive',
+    });
+    const undo = flizowStore.deleteQuickLink('ql1');
+    expect(flizowStore.getSnapshot().quickLinks).toHaveLength(0);
+    expect(flizowStore.getSnapshot().trash[0].kind).toBe('quickLink');
+    undo!();
+    expect(flizowStore.getSnapshot().quickLinks).toHaveLength(1);
+  });
+
+  it('deleteActionItem sends to trash and round-trips', () => {
+    flizowStore.addActionItem({
+      id: 'a1', touchpointId: 'tp1', clientId: 'c1', text: 'Follow up',
+      assigneeId: null, done: false,
+    });
+    const undo = flizowStore.deleteActionItem('a1');
+    expect(flizowStore.getSnapshot().actionItems).toHaveLength(0);
+    expect(flizowStore.getSnapshot().trash[0].kind).toBe('actionItem');
+    undo!();
+    expect(flizowStore.getSnapshot().actionItems).toHaveLength(1);
+  });
+
+  it('deleteOnboardingItem sends to trash and round-trips', () => {
+    flizowStore.addService(baseService());
+    flizowStore.addOnboardingItem({
+      id: 'on1', serviceId: 's1', group: 'client',
+      label: 'Send brand assets', done: false,
+    });
+    const undo = flizowStore.deleteOnboardingItem('on1');
+    expect(flizowStore.getSnapshot().onboardingItems.find(o => o.id === 'on1')).toBeUndefined();
+    expect(flizowStore.getSnapshot().trash[0].kind).toBe('onboardingItem');
+    undo!();
+    expect(flizowStore.getSnapshot().onboardingItems.find(o => o.id === 'on1')).toBeDefined();
+  });
+
+  it('deleteManualAgendaItem sends to trash and round-trips', () => {
+    const item = flizowStore.addManualAgendaItem({
+      title: 'Discuss Q3 plan', clientId: 'c1',
+    });
+    const undo = flizowStore.deleteManualAgendaItem(item.id);
+    expect(flizowStore.getSnapshot().manualAgendaItems).toHaveLength(0);
+    expect(flizowStore.getSnapshot().trash[0].kind).toBe('manualAgendaItem');
+    undo!();
+    expect(flizowStore.getSnapshot().manualAgendaItems).toHaveLength(1);
+  });
+});
+
+describe('flizowStore trash — touchpoint cascades action items', () => {
+  beforeEach(() => {
+    flizowStore.addClient(baseClient());
+  });
+
+  it('deleteTouchpoint bundles its action items into the trash payload', () => {
+    flizowStore.addTouchpoint({
+      id: 'tp1', clientId: 'c1', topic: 'Kickoff',
+      occurredAt: '2026-04-20T10:00:00.000Z',
+      kind: 'meeting', scheduled: false,
+      attendeeIds: [],
+    });
+    flizowStore.addActionItem({
+      id: 'a1', touchpointId: 'tp1', clientId: 'c1', text: 'Send recap',
+      assigneeId: null, done: false,
+    });
+    flizowStore.addActionItem({
+      id: 'a2', touchpointId: 'tp1', clientId: 'c1', text: 'Schedule follow-up',
+      assigneeId: null, done: false,
+    });
+    const undo = flizowStore.deleteTouchpoint('tp1');
+    const data = flizowStore.getSnapshot();
+    expect(data.touchpoints).toHaveLength(0);
+    expect(data.actionItems).toHaveLength(0);
+    expect(data.trash[0].kind).toBe('touchpoint');
+    if (data.trash[0].payload.kind === 'touchpoint') {
+      expect(data.trash[0].payload.actionItems).toHaveLength(2);
+    }
+    undo!();
+    const restored = flizowStore.getSnapshot();
+    expect(restored.touchpoints).toHaveLength(1);
+    expect(restored.actionItems).toHaveLength(2);
+  });
+});
+
+describe('flizowStore trash — comment cascades replies', () => {
+  beforeEach(() => {
+    flizowStore.addClient(baseClient());
+    flizowStore.addService(baseService());
+    flizowStore.addTask(baseTask({ id: 'tsk-comment' }));
+  });
+
+  it('deleteComment on a top-level comment cascades replies into the trash', () => {
+    const parentId = flizowStore.addComment('tsk-comment', 'Top-level');
+    flizowStore.addComment('tsk-comment', 'Reply A', parentId);
+    flizowStore.addComment('tsk-comment', 'Reply B', parentId);
+    expect(flizowStore.getSnapshot().taskComments).toHaveLength(3);
+
+    const undo = flizowStore.deleteComment(parentId!);
+    const data = flizowStore.getSnapshot();
+    expect(data.taskComments).toHaveLength(0);
+    if (data.trash[0].payload.kind === 'comment') {
+      expect(data.trash[0].payload.replies).toHaveLength(2);
+    }
+
+    undo!();
+    expect(flizowStore.getSnapshot().taskComments).toHaveLength(3);
+  });
+
+  it('deleteComment on a reply leaves the parent intact and bundles no children', () => {
+    const parentId = flizowStore.addComment('tsk-comment', 'Top');
+    const replyId = flizowStore.addComment('tsk-comment', 'Reply', parentId);
+
+    flizowStore.deleteComment(replyId!);
+    const data = flizowStore.getSnapshot();
+    expect(data.taskComments).toHaveLength(1);
+    expect(data.taskComments[0].id).toBe(parentId);
+    if (data.trash[0].payload.kind === 'comment') {
+      expect(data.trash[0].payload.replies).toHaveLength(0);
+    }
+  });
+});
+
+describe('flizowStore trash — task cascades comments + activity', () => {
+  beforeEach(() => {
+    flizowStore.addClient(baseClient());
+    flizowStore.addService(baseService());
+  });
+
+  it('deleteTask bundles comments + activity and round-trips them', () => {
+    flizowStore.addTask(baseTask({ id: 't-cascade' }));
+    flizowStore.addComment('t-cascade', 'A comment');
+    // Activity is auto-logged by addComment; updateTask, etc.
+    flizowStore.updateTask('t-cascade', { title: 'Renamed' });
+
+    const commentsBefore = flizowStore.getSnapshot().taskComments
+      .filter(c => c.taskId === 't-cascade').length;
+    const activityBefore = flizowStore.getSnapshot().taskActivity
+      .filter(a => a.taskId === 't-cascade').length;
+    expect(commentsBefore).toBeGreaterThan(0);
+    expect(activityBefore).toBeGreaterThan(0);
+
+    const undo = flizowStore.deleteTask('t-cascade');
+    expect(flizowStore.getSnapshot().tasks.find(t => t.id === 't-cascade')).toBeUndefined();
+    expect(flizowStore.getSnapshot().taskComments
+      .filter(c => c.taskId === 't-cascade')).toHaveLength(0);
+    expect(flizowStore.getSnapshot().taskActivity
+      .filter(a => a.taskId === 't-cascade')).toHaveLength(0);
+
+    undo!();
+    expect(flizowStore.getSnapshot().tasks.find(t => t.id === 't-cascade')).toBeDefined();
+    expect(flizowStore.getSnapshot().taskComments
+      .filter(c => c.taskId === 't-cascade')).toHaveLength(commentsBefore);
+    expect(flizowStore.getSnapshot().taskActivity
+      .filter(a => a.taskId === 't-cascade')).toHaveLength(activityBefore);
+  });
+
+  it('deleteTask repairs Service.taskIds on restore', () => {
+    flizowStore.addTask(baseTask({ id: 't-repair' }));
+    expect(flizowStore.getSnapshot().services[0].taskIds).toContain('t-repair');
+    const undo = flizowStore.deleteTask('t-repair');
+    expect(flizowStore.getSnapshot().services[0].taskIds).not.toContain('t-repair');
+    undo!();
+    expect(flizowStore.getSnapshot().services[0].taskIds).toContain('t-repair');
+  });
+});
+
+describe('flizowStore trash — service cascade', () => {
+  beforeEach(() => {
+    flizowStore.addClient(baseClient());
+  });
+
+  it('deleteService bundles tasks + comments + activity + onboarding', () => {
+    flizowStore.addService(baseService());
+    // addService auto-seeds onboarding items from the template, so we
+    // capture the post-seed count and add one more on top to verify
+    // both seed-derived AND user-added items get bundled into the
+    // trash payload.
+    const onboardingSeeded = flizowStore.getSnapshot().onboardingItems.length;
+    flizowStore.addOnboardingItem({
+      id: 'on-svc', serviceId: 's1', group: 'us',
+      label: 'Set up tracking', done: false,
+    });
+    const onboardingTotal = onboardingSeeded + 1;
+    // addService seeded 3 tasks; pick one and add a comment so the
+    // cascade hits all four arrays.
+    const aTask = flizowStore.getSnapshot().tasks[0];
+    flizowStore.addComment(aTask.id, 'A note');
+
+    const tasksBefore = flizowStore.getSnapshot().tasks.length;
+    const undo = flizowStore.deleteService('s1');
+    const data = flizowStore.getSnapshot();
+    expect(data.services).toHaveLength(0);
+    expect(data.tasks).toHaveLength(0);
+    expect(data.onboardingItems).toHaveLength(0);
+    expect(data.trash[0].kind).toBe('service');
+    if (data.trash[0].payload.kind === 'service') {
+      expect(data.trash[0].payload.tasks).toHaveLength(tasksBefore);
+      expect(data.trash[0].payload.onboardingItems).toHaveLength(onboardingTotal);
+    }
+
+    undo!();
+    const restored = flizowStore.getSnapshot();
+    expect(restored.services).toHaveLength(1);
+    expect(restored.tasks).toHaveLength(tasksBefore);
+    expect(restored.onboardingItems).toHaveLength(onboardingTotal);
+    // Parent client.serviceIds should be repaired on restore.
+    expect(restored.clients[0].serviceIds).toContain('s1');
+  });
+});
+
+describe('flizowStore trash — client cascade', () => {
+  it('deleteClient bundles every cascade child and round-trips them', () => {
+    flizowStore.addClient(baseClient());
+    flizowStore.addService(baseService());
+    flizowStore.addContact({
+      id: 'ct1', clientId: 'c1', name: 'Jane', primary: true,
+    });
+    flizowStore.addNote({
+      id: 'n1', clientId: 'c1', body: '<p>hi</p>',
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z',
+      pinned: false,
+    });
+    flizowStore.addTouchpoint({
+      id: 'tp1', clientId: 'c1', topic: 'Kickoff',
+      occurredAt: '2026-04-20T10:00:00.000Z',
+      kind: 'meeting', scheduled: false,
+      attendeeIds: [],
+    });
+
+    const tasksBefore = flizowStore.getSnapshot().tasks.length;
+
+    const undo = flizowStore.deleteClient('c1');
+    const data = flizowStore.getSnapshot();
+    expect(data.clients).toHaveLength(0);
+    expect(data.services).toHaveLength(0);
+    expect(data.tasks).toHaveLength(0);
+    expect(data.contacts).toHaveLength(0);
+    expect(data.notes).toHaveLength(0);
+    expect(data.touchpoints).toHaveLength(0);
+    expect(data.trash[0].kind).toBe('client');
+    if (data.trash[0].payload.kind === 'client') {
+      expect(data.trash[0].payload.cascade.services).toHaveLength(1);
+      expect(data.trash[0].payload.cascade.tasks).toHaveLength(tasksBefore);
+      expect(data.trash[0].payload.cascade.contacts).toHaveLength(1);
+      expect(data.trash[0].payload.cascade.notes).toHaveLength(1);
+      expect(data.trash[0].payload.cascade.touchpoints).toHaveLength(1);
+    }
+
+    undo!();
+    const restored = flizowStore.getSnapshot();
+    expect(restored.clients).toHaveLength(1);
+    expect(restored.services).toHaveLength(1);
+    expect(restored.tasks).toHaveLength(tasksBefore);
+    expect(restored.contacts).toHaveLength(1);
+    expect(restored.notes).toHaveLength(1);
+    expect(restored.touchpoints).toHaveLength(1);
+  });
+});
+
+describe('flizowStore trash — opsTask', () => {
+  it('deleteOpsTask sends to trash and round-trips', () => {
+    flizowStore.addOpsTask({
+      id: 'op1', title: 'Hire designer',
+      columnId: 'todo', priority: 'medium',
+      assigneeId: null, labels: [],
+      createdAt: '2026-04-25T00:00:00.000Z',
+    });
+    const undo = flizowStore.deleteOpsTask('op1');
+    expect(flizowStore.getSnapshot().opsTasks).toHaveLength(0);
+    expect(flizowStore.getSnapshot().trash[0].kind).toBe('opsTask');
+    undo!();
+    expect(flizowStore.getSnapshot().opsTasks).toHaveLength(1);
+  });
+});
+
+describe('flizowStore trash — template', () => {
+  it('purgeTemplate sends user-created templates to trash (not permanent)', () => {
+    flizowStore.upsertTemplate(baseTemplate());
+    const undo = flizowStore.purgeTemplate('tmpl-test');
+    expect(flizowStore.getSnapshot().templateOverrides).toHaveLength(0);
+    expect(flizowStore.getSnapshot().trash[0].kind).toBe('template');
+    undo!();
+    expect(flizowStore.getSnapshot().templateOverrides).toHaveLength(1);
+  });
+});
+
+describe('flizowStore trash — hard-delete with snapshot (toast-only)', () => {
+  beforeEach(() => {
+    flizowStore.addClient(baseClient());
+    flizowStore.addService(baseService());
+    flizowStore.addTask(baseTask({ id: 't-cl' }));
+  });
+
+  it('deleteChecklistItem skips trash but returns a snapshot-restoring callback', () => {
+    flizowStore.addChecklistItem('t-cl', 'First step');
+    flizowStore.addChecklistItem('t-cl', 'Second step');
+    flizowStore.addChecklistItem('t-cl', 'Third step');
+    const task = flizowStore.getSnapshot().tasks.find(t => t.id === 't-cl')!;
+    const middleId = task.checklist![1].id;
+
+    const undo = flizowStore.deleteChecklistItem('t-cl', middleId);
+    const after = flizowStore.getSnapshot().tasks.find(t => t.id === 't-cl')!;
+    // Trash stays empty — checklist items deliberately skip the bin.
+    expect(flizowStore.getSnapshot().trash).toHaveLength(0);
+    expect(after.checklist).toHaveLength(2);
+
+    undo!();
+    const restored = flizowStore.getSnapshot().tasks.find(t => t.id === 't-cl')!;
+    expect(restored.checklist).toHaveLength(3);
+    // Restored at original index — the middle item is back in position 1.
+    expect(restored.checklist![1].id).toBe(middleId);
+  });
+
+  it('deleteMeetingCapture skips trash but restores at original index on undo', () => {
+    flizowStore.addMeetingCapture({
+      type: 'note', text: 'First',
+      agendaItemKey: 'a1', agendaItemLabel: 'Topic A',
+    });
+    flizowStore.addMeetingCapture({
+      type: 'decision', text: 'Second',
+      agendaItemKey: 'a1', agendaItemLabel: 'Topic A',
+    });
+    flizowStore.addMeetingCapture({
+      type: 'action', text: 'Third',
+      agendaItemKey: 'a1', agendaItemLabel: 'Topic A',
+    });
+    const captures = flizowStore.getSnapshot().meetingCaptures;
+    const middleId = captures[1].id;
+
+    const undo = flizowStore.deleteMeetingCapture(middleId);
+    expect(flizowStore.getSnapshot().meetingCaptures).toHaveLength(2);
+    expect(flizowStore.getSnapshot().trash).toHaveLength(0);
+
+    undo!();
+    const restored = flizowStore.getSnapshot().meetingCaptures;
+    expect(restored).toHaveLength(3);
+    expect(restored[1].id).toBe(middleId);
+  });
+});
+
+describe('flizowStore trash — purgeFromTrash and emptyTrash', () => {
+  beforeEach(() => {
+    flizowStore.addClient(baseClient());
+  });
+
+  it('purgeFromTrash removes a single entry permanently', () => {
+    flizowStore.addNote({
+      id: 'n1', clientId: 'c1', body: '<p>x</p>',
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z',
+      pinned: false,
+    });
+    flizowStore.deleteNote('n1');
+    const entryId = flizowStore.getSnapshot().trash[0].id;
+    flizowStore.purgeFromTrash(entryId);
+    expect(flizowStore.getSnapshot().trash).toHaveLength(0);
+    expect(flizowStore.getSnapshot().notes).toHaveLength(0);
+  });
+
+  it('emptyTrash wipes every entry', () => {
+    flizowStore.addContact({ id: 'ct1', clientId: 'c1', name: 'A', primary: false });
+    flizowStore.addContact({ id: 'ct2', clientId: 'c1', name: 'B', primary: false });
+    flizowStore.deleteContact('ct1');
+    flizowStore.deleteContact('ct2');
+    expect(flizowStore.getSnapshot().trash).toHaveLength(2);
+    flizowStore.emptyTrash();
+    expect(flizowStore.getSnapshot().trash).toHaveLength(0);
+  });
+});
+
+describe('flizowStore trash — auto-prune on load', () => {
+  it('migrate() drops entries older than 90 days', () => {
+    // Inject a doc with one fresh entry + one stale entry by going
+    // through replaceAll(migrate(...)). The stale entry should not
+    // survive the load.
+    const fresh = new Date().toISOString();
+    const ancient = new Date(Date.now() - 91 * 24 * 60 * 60 * 1000).toISOString();
+    const doc = {
+      ...flizowStore.getSnapshot(),
+      trash: [
+        {
+          id: 't-fresh', kind: 'note' as const,
+          deletedAt: fresh, deletedBy: null,
+          preview: 'fresh', payload: {
+            kind: 'note' as const,
+            data: {
+              id: 'n-fresh', clientId: 'c1', body: '',
+              createdAt: fresh, updatedAt: fresh, pinned: false,
+            },
+          },
+        },
+        {
+          id: 't-ancient', kind: 'note' as const,
+          deletedAt: ancient, deletedBy: null,
+          preview: 'ancient', payload: {
+            kind: 'note' as const,
+            data: {
+              id: 'n-ancient', clientId: 'c1', body: '',
+              createdAt: ancient, updatedAt: ancient, pinned: false,
+            },
+          },
+        },
+      ],
+    };
+    flizowStore.replaceAll(doc);
+    const trash = flizowStore.getSnapshot().trash;
+    expect(trash).toHaveLength(1);
+    expect(trash[0].id).toBe('t-fresh');
+  });
+
+  it('migrate() backfills [] for legacy docs that predate the trash field', () => {
+    const legacyDoc = flizowStore.getSnapshot();
+    delete (legacyDoc as Partial<typeof legacyDoc>).trash;
+    flizowStore.replaceAll(legacyDoc as typeof legacyDoc);
+    expect(flizowStore.getSnapshot().trash).toEqual([]);
+  });
+});
+
+describe('flizowStore trash — reset workspace empties trash too', () => {
+  it('reset() wipes the trash bin alongside the rest of the data', () => {
+    flizowStore.addClient(baseClient());
+    flizowStore.addNote({
+      id: 'n1', clientId: 'c1', body: '<p>x</p>',
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z',
+      pinned: false,
+    });
+    flizowStore.deleteNote('n1');
+    expect(flizowStore.getSnapshot().trash).toHaveLength(1);
+    flizowStore.reset();
+    expect(flizowStore.getSnapshot().trash).toEqual([]);
+  });
+});
