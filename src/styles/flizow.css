@@ -6545,13 +6545,20 @@
      on mobile. Backdrop dims the page beneath at 30% opacity to
      focus attention without making the rest of the app look broken. */
 
+  /* Stacks above the Account modal (z-1500) since the profile panel
+     is a sub-modal opened from within the Members list inside Account
+     settings. The backdrop sits one layer below the panel itself so
+     a click outside dismisses cleanly without the panel catching its
+     own backdrop click. Both stay below the command palette
+     (--z-cmdk: 2000) — a global keyboard escape hatch should always
+     win when invoked. */
   .member-profile-backdrop {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(2px);
     -webkit-backdrop-filter: blur(2px);
-    z-index: 1480;
+    z-index: 1700;
     animation: member-profile-fade-in var(--dur-med, 200ms) ease-out;
   }
 
@@ -6561,7 +6568,7 @@
     right: 0;
     bottom: 0;
     width: min(420px, 100vw);
-    z-index: 1490;
+    z-index: 1710;
     background: var(--bg-elev);
     border-left: 1px solid var(--hairline);
     box-shadow: -16px 0 40px rgba(0, 0, 0, 0.18);
