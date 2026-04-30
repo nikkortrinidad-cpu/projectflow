@@ -381,6 +381,126 @@ describe('flizowStore job titles', () => {
   });
 });
 
+// ── Time-off requests (Phase 3 + 4) ──────────────────────────────────
+
+describe('flizowStore time-off requests', () => {
+  it('submitTimeOffRequest defaults to pending and stamps requestedAt', () => {
+    flizowStore.reset();
+    const r = flizowStore.submitTimeOffRequest({
+      memberId: 'm-1',
+      start: '2026-05-10',
+      end: '2026-05-12',
+      reason: 'Family wedding',
+    });
+    expect(r.status).toBe('pending');
+    expect(r.requestedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    expect(r.reason).toBe('Family wedding');
+    // Stored on the workspace ledger.
+    expect(flizowStore.getSnapshot().timeOffRequests).toContainEqual(
+      expect.objectContaining({ id: r.id, status: 'pending' }),
+    );
+  });
+
+  it('submitTimeOffRequest with status=approved stamps decidedAt + decidedBy', () => {
+    flizowStore.reset();
+    const r = flizowStore.submitTimeOffRequest({
+      memberId: 'm-1',
+      start: '2026-05-10',
+      end: '2026-05-12',
+      status: 'approved',
+      decidedBy: 'm-1',
+    });
+    expect(r.status).toBe('approved');
+    expect(r.decidedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    expect(r.decidedBy).toBe('m-1');
+  });
+
+  it('approveTimeOffRequest flips a pending entry to approved + stamps decision fields', () => {
+    flizowStore.reset();
+    const r = flizowStore.submitTimeOffRequest({
+      memberId: 'm-1',
+      start: '2026-05-10',
+      end: '2026-05-12',
+    });
+    flizowStore.approveTimeOffRequest(r.id, 'Looks good');
+    const stored = flizowStore.getSnapshot().timeOffRequests.find((x) => x.id === r.id);
+    expect(stored?.status).toBe('approved');
+    expect(stored?.decisionNote).toBe('Looks good');
+    expect(stored?.decidedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  });
+
+  it('denyTimeOffRequest flips to denied + preserves the reason note', () => {
+    flizowStore.reset();
+    const r = flizowStore.submitTimeOffRequest({
+      memberId: 'm-1',
+      start: '2026-05-10',
+      end: '2026-05-12',
+      reason: 'Personal',
+    });
+    flizowStore.denyTimeOffRequest(r.id, 'Big launch that week — try the week before.');
+    const stored = flizowStore.getSnapshot().timeOffRequests.find((x) => x.id === r.id);
+    expect(stored?.status).toBe('denied');
+    expect(stored?.reason).toBe('Personal');
+    expect(stored?.decisionNote).toMatch(/Big launch/);
+  });
+
+  it("approve / deny are no-ops when the request id doesn't exist", () => {
+    flizowStore.reset();
+    const before = JSON.stringify(flizowStore.getSnapshot().timeOffRequests);
+    flizowStore.approveTimeOffRequest('tor-nonexistent');
+    flizowStore.denyTimeOffRequest('tor-nonexistent');
+    expect(JSON.stringify(flizowStore.getSnapshot().timeOffRequests)).toBe(before);
+  });
+
+  it("cancelTimeOffRequest flips status to cancelled (audit trail preserved)", () => {
+    flizowStore.reset();
+    const r = flizowStore.submitTimeOffRequest({
+      memberId: 'm-1',
+      start: '2026-05-10',
+      end: '2026-05-12',
+    });
+    flizowStore.cancelTimeOffRequest(r.id);
+    const stored = flizowStore.getSnapshot().timeOffRequests.find((x) => x.id === r.id);
+    // Status flipped, request still exists.
+    expect(stored?.status).toBe('cancelled');
+  });
+
+  it('updateTimeOffRequest patches dates + reason but leaves status alone', () => {
+    flizowStore.reset();
+    const r = flizowStore.submitTimeOffRequest({
+      memberId: 'm-1',
+      start: '2026-05-10',
+      end: '2026-05-12',
+      status: 'approved',
+      decidedBy: 'm-1',
+    });
+    flizowStore.updateTimeOffRequest(r.id, {
+      start: '2026-05-11',
+      end: '2026-05-13',
+      reason: 'Updated reason',
+    });
+    const stored = flizowStore.getSnapshot().timeOffRequests.find((x) => x.id === r.id);
+    expect(stored?.start).toBe('2026-05-11');
+    expect(stored?.end).toBe('2026-05-13');
+    expect(stored?.reason).toBe('Updated reason');
+    // Status untouched.
+    expect(stored?.status).toBe('approved');
+  });
+
+  it('deleteTimeOffRequest removes the entry permanently', () => {
+    flizowStore.reset();
+    const r = flizowStore.submitTimeOffRequest({
+      memberId: 'm-1',
+      start: '2026-05-10',
+      end: '2026-05-12',
+    });
+    flizowStore.deleteTimeOffRequest(r.id);
+    expect(
+      flizowStore.getSnapshot().timeOffRequests.find((x) => x.id === r.id),
+    ).toBeUndefined();
+  });
+});
+
 // ── Trash bin ────────────────────────────────────────────────────────────
 //
 // Soft-delete coverage for the workspace-wide Trash. Each soft-deletable

@@ -1714,29 +1714,26 @@ function projectMembers(
 
 // ── Time off section ────────────────────────────────────────────────────
 //
-// Self-service-only configuration of the signed-in user's vacation
-// periods. Reads + writes data.members[me].timeOff. The toggle reflects
-// whether ANY currently-active period covers today; clicking it pops a
-// date-picker modal to schedule a new period (when off) or asks to end
-// the current one (when on).
+// Self-service surface for submitting + tracking time-off requests.
+// Phase-4 rework: every submission lands as 'pending' (was 'approved'
+// in Phase 3) and goes through the OM/Admin approval queue. Status
+// surfaces as a pill on each row + the list splits into Pending /
+// Approved / Denied / Past sections so the requester can see exactly
+// where each request stands.
 //
-// The list below the toggle shows every period — current/upcoming first,
-// then past — with Edit + Remove actions per row.
-//
-// Profile panel (MemberProfilePanel) reads each member's timeOff to
-// render the "🌴 On vacation" pill; this surface is the only place
-// you edit your own.
+// Profile panel (MemberProfilePanel) reads only APPROVED entries to
+// render the "🌴 On vacation" pill — pending requests don't show
+// the pill (no false signals about who's actually out).
 
 function TimeOffSection() {
   const { data, store } = useFlizow();
   const currentId = store.getCurrentMemberId();
   const me = currentId ? data.members.find(m => m.id === currentId) ?? null : null;
 
-  // Modal state — null when closed; an `editIndex` of -1 means "adding
-  // a new period," any other index means "editing the existing one."
-  // Drafts live on the modal itself, not here, so cancel doesn't need
-  // a manual reset.
-  const [modalOpen, setModalOpen] = useState<{ editIndex: number } | null>(null);
+  // Modal state — null when closed; `requestId: null` means "submit
+  // a new request," a string id means "edit that one." Drafts live
+  // on the modal itself so cancelling doesn't need a manual reset.
+  const [modalOpen, setModalOpen] = useState<{ requestId: string | null } | null>(null);
 
   if (!currentId || !me) {
     return (
@@ -1761,99 +1758,128 @@ function TimeOffSection() {
   // boundaries. Cheaper than annotating every callback's `me!`.
   const meId = me.id;
   const today = data.today;
-  // Phase-3 read: pull THIS member's requests from the workspace
-  // ledger and treat the approved ones as "vacation periods" (the
-  // current UX). Pending/denied/cancelled don't show on this self-
-  // serve list yet — Phase 4 reworks the surface to expose status.
-  const myRequests = useMemo(
-    () =>
-      data.timeOffRequests
-        .filter((r) => r.memberId === meId && r.status === 'approved')
-        .slice()
-        .sort((a, b) => a.start.localeCompare(b.start)),
-    [data.timeOffRequests, meId],
-  );
 
-  // Bucket periods into past vs current/upcoming. A period counts as
-  // past when its end date is strictly before today; the active one
-  // (today inside) groups with upcoming so the user sees current +
-  // future together.
-  const upcoming: TimeOffRequest[] = [];
-  const past: TimeOffRequest[] = [];
-  for (const r of myRequests) {
-    if (r.end < today) past.push(r);
-    else upcoming.push(r);
-  }
-  upcoming.sort((a, b) => a.start.localeCompare(b.start));
-  past.sort((a, b) => b.end.localeCompare(a.end));
+  // Phase-4 read: every status the requester needs to see, bucketed.
+  // Cancelled requests stay out of view (cancellation is the
+  // requester's own action — re-surfacing them clutters the list).
+  // Approved gets split further into upcoming vs past so the UI
+  // matches the user's mental model: "what's coming up" + "what's
+  // already happened."
+  const buckets = useMemo(() => {
+    const mine = data.timeOffRequests.filter((r) => r.memberId === meId);
+    const pending: TimeOffRequest[] = [];
+    const denied:  TimeOffRequest[] = [];
+    const upcomingApproved: TimeOffRequest[] = [];
+    const pastApproved:     TimeOffRequest[] = [];
+    for (const r of mine) {
+      if (r.status === 'pending') pending.push(r);
+      else if (r.status === 'denied') denied.push(r);
+      else if (r.status === 'approved') {
+        if (r.end < today) pastApproved.push(r);
+        else upcomingApproved.push(r);
+      }
+      // cancelled: dropped from the requester view
+    }
+    pending.sort((a, b) => a.start.localeCompare(b.start));
+    upcomingApproved.sort((a, b) => a.start.localeCompare(b.start));
+    pastApproved.sort((a, b) => b.end.localeCompare(a.end));
+    denied.sort((a, b) => (b.decidedAt ?? '').localeCompare(a.decidedAt ?? ''));
+    return { pending, denied, upcomingApproved, pastApproved };
+  }, [data.timeOffRequests, meId, today]);
 
-  // Active = today inside any approved period. Drives the toggle's
-  // checked state + the "End time off" path.
+  // Active = today inside any approved period. Drives the "currently
+  // away" banner above the lists. Pending requests don't trigger this.
   const activePeriod = useMemo(
     () => currentVacationPeriod(me, today, data.timeOffRequests),
     [me, today, data.timeOffRequests],
   );
   const activeRequest = activePeriod
-    ? myRequests.find((r) => r.start === activePeriod.start && r.end === activePeriod.end)
+    ? buckets.upcomingApproved.find(
+        (r) => r.start === activePeriod.start && r.end === activePeriod.end,
+      )
     : undefined;
   const isCurrentlyAway = !!activePeriod;
 
-  function handleToggle(checked: boolean) {
-    if (checked) {
-      // OFF → ON: open the modal for a new period. Default range
-      // starts today and ends tomorrow — most users want a quick
-      // "I'm out today + tomorrow" entry, with the option to extend.
-      setModalOpen({ editIndex: -1 });
-    } else {
-      // ON → OFF: end the active period now by clipping its end
-      // date to yesterday. This preserves the period's history (the
-      // approval queue + audit trail still see "Sarah was out May
-      // 13–14") rather than deleting the row.
-      if (!activeRequest) return;
-      const yesterday = isoOffsetDays(today, -1);
-      const safeEnd = yesterday < activeRequest.start ? activeRequest.start : yesterday;
-      store.updateTimeOffRequest(activeRequest.id, { end: safeEnd });
-    }
+  function handleRequest() {
+    setModalOpen({ requestId: null });
   }
 
-  function handleAdd() {
-    setModalOpen({ editIndex: -1 });
+  function handleEdit(id: string) {
+    setModalOpen({ requestId: id });
   }
-  function handleEdit(index: number) {
-    setModalOpen({ editIndex: index });
+
+  function handleCancel(id: string) {
+    // Status flip rather than hard-delete so the audit trail
+    // survives. The approver sees "Sarah cancelled this" alongside
+    // their own decision history.
+    store.cancelTimeOffRequest(id);
   }
-  function handleRemove(index: number) {
-    const r = myRequests[index];
-    if (!r) return;
-    // Hard-delete to keep parity with the pre-Phase-3 "Remove"
-    // behaviour. A future pass may swap this for cancel + audit
-    // trail once we surface status to the user.
-    store.deleteTimeOffRequest(r.id);
+
+  /** "Resubmit" copies a denied request as a fresh pending one so
+   *  the requester doesn't have to re-type dates and reason. The
+   *  denied entry stays in place for context — it doesn't get
+   *  hidden — so the audit trail of what got rejected and why is
+   *  preserved. */
+  function handleResubmit(denied: TimeOffRequest) {
+    store.submitTimeOffRequest({
+      memberId: meId,
+      start: denied.start,
+      end: denied.end,
+      reason: denied.reason,
+      // status defaults to 'pending' — the Phase-4 default.
+    });
   }
-  function handleSave(period: { start: string; end: string }) {
+
+  /** End time off early — clip the active approved period's end to
+   *  yesterday. Preserves the audit trail (the approval still
+   *  happened, the period was just shorter than originally) without
+   *  needing a fresh round-trip through approval. */
+  function handleEndEarly() {
+    if (!activeRequest) return;
+    const yesterday = isoOffsetDays(today, -1);
+    const safeEnd = yesterday < activeRequest.start ? activeRequest.start : yesterday;
+    store.updateTimeOffRequest(activeRequest.id, { end: safeEnd });
+  }
+
+  function handleSave(period: { start: string; end: string; reason?: string }) {
     if (!modalOpen) return;
-    if (modalOpen.editIndex === -1) {
-      // Self-serve add lands as 'approved' to preserve the legacy
-      // behaviour ("I added a vacation, it's now active"). Phase 4
-      // flips this to 'pending' once the approval flow ships.
+    if (!modalOpen.requestId) {
+      // New submission: 'pending' by default (Phase-4 flip from
+      // 'approved'). The OM/Admin sees this in the approval queue
+      // (Phase 6) and decides.
       store.submitTimeOffRequest({
         memberId: meId,
         start: period.start,
         end: period.end,
-        status: 'approved',
-        decidedBy: meId,
+        reason: period.reason,
       });
     } else {
-      const r = myRequests[modalOpen.editIndex];
-      if (r) {
-        store.updateTimeOffRequest(r.id, {
-          start: period.start,
-          end: period.end,
-        });
-      }
+      // Edit-in-place. Phase 6 may revisit this — editing an
+      // approved request arguably should re-submit through approval
+      // — but for v1 the assumption is the requester is doing a
+      // small adjustment within the already-approved window.
+      store.updateTimeOffRequest(modalOpen.requestId, {
+        start: period.start,
+        end: period.end,
+        reason: period.reason,
+      });
     }
     setModalOpen(null);
   }
+
+  // Resolve the request being edited (if any) so the modal can
+  // initialise its inputs from the existing values.
+  const editingRequest = modalOpen?.requestId
+    ? data.timeOffRequests.find((r) => r.id === modalOpen.requestId)
+    : undefined;
+
+  // Empty-state check — if the requester has nothing in any bucket,
+  // a single CTA reads cleaner than five empty sections.
+  const hasAny =
+    buckets.pending.length > 0 ||
+    buckets.denied.length > 0 ||
+    buckets.upcomingApproved.length > 0 ||
+    buckets.pastApproved.length > 0;
 
   return (
     <section
@@ -1867,90 +1893,138 @@ function TimeOffSection() {
       <div className="acct-section-header">
         <h3 className="acct-section-title">Time off</h3>
         <p className="acct-section-sub">
-          Tell your team you'll be away. Active time off shows a "🌴 On vacation" pill
-          on your profile and dims your row in the capacity heatmap.
+          Submit a time-off request and your manager will approve or deny it.
+          Approved time off shows a "🌴 On vacation" pill on your profile and
+          dims your row in the capacity heatmap.
         </p>
       </div>
 
-      <Row
-        title="Currently away"
-        sub={
-          isCurrentlyAway
-            ? `Active through ${formatDateLong(activePeriod!.end)}`
-            : 'Toggle on to schedule time off — pick a from + to date.'
-        }
-      >
-        <Toggle
-          checked={isCurrentlyAway}
-          onChange={handleToggle}
-          label="Currently away"
-        />
-      </Row>
+      {/* Status banner — visible only when an approved period covers
+          today. Sits above the request CTA so the user sees their
+          live status before the form. */}
+      {isCurrentlyAway && activePeriod && (
+        <div className="timeoff-active-banner" role="status">
+          <span className="timeoff-active-banner-icon" aria-hidden="true">🌴</span>
+          <div className="timeoff-active-banner-text">
+            <div className="timeoff-active-banner-title">
+              You're on vacation
+            </div>
+            <div className="timeoff-active-banner-sub">
+              Through {formatDateLong(activePeriod.end)}
+            </div>
+          </div>
+          {activeRequest && (
+            <button
+              type="button"
+              className="acct-btn-text"
+              onClick={handleEndEarly}
+            >
+              End early
+            </button>
+          )}
+        </div>
+      )}
 
-      <div className="acct-section-divider">
-        <div className="acct-eyebrow">Scheduled time off</div>
-        {upcoming.length === 0 ? (
-          <div className="timeoff-empty">No upcoming time off.</div>
-        ) : (
-          <ul className="timeoff-list">
-            {upcoming.map((r) => {
-              const idx = myRequests.findIndex((x) => x.id === r.id);
-              return (
-                <TimeOffRow
-                  key={r.id}
-                  period={{ start: r.start, end: r.end }}
-                  isActive={!!activePeriod && r.start === activePeriod.start && r.end === activePeriod.end}
-                  onEdit={() => handleEdit(idx)}
-                  onRemove={() => handleRemove(idx)}
-                />
-              );
-            })}
-          </ul>
-        )}
+      {/* Primary CTA — always present so the path to "request time
+          off" is one click regardless of which sections render below. */}
+      <div className="timeoff-request-cta">
         <button
           type="button"
-          className="acct-btn-text"
-          onClick={handleAdd}
-          style={{ marginTop: 'var(--sp-base)' }}
+          className="acct-btn acct-btn--primary"
+          onClick={handleRequest}
         >
-          + Schedule time off
+          Request time off
         </button>
       </div>
 
-      {past.length > 0 && (
+      {/* Empty state — no requests of any status yet. */}
+      {!hasAny && (
+        <div className="timeoff-empty timeoff-empty--full">
+          You haven't submitted any time-off requests yet.
+        </div>
+      )}
+
+      {/* Pending — most actionable from the requester's view, so it
+          surfaces first. Each row gets a Cancel action; the Edit
+          path lets them adjust dates while the request is still in
+          flight (saves the OM having to deny + ask for resubmit). */}
+      {buckets.pending.length > 0 && (
         <div className="acct-section-divider">
-          <div className="acct-eyebrow">Past time off</div>
+          <div className="acct-eyebrow">Pending review · {buckets.pending.length}</div>
           <ul className="timeoff-list">
-            {past.map((r) => {
-              const idx = myRequests.findIndex((x) => x.id === r.id);
-              return (
-                <TimeOffRow
-                  key={r.id}
-                  period={{ start: r.start, end: r.end }}
-                  isActive={false}
-                  onEdit={() => handleEdit(idx)}
-                  onRemove={() => handleRemove(idx)}
-                  muted
-                />
-              );
-            })}
+            {buckets.pending.map((r) => (
+              <TimeOffRow
+                key={r.id}
+                request={r}
+                isActive={false}
+                onEdit={() => handleEdit(r.id)}
+                onCancel={() => handleCancel(r.id)}
+              />
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Approved (upcoming + currently active). */}
+      {buckets.upcomingApproved.length > 0 && (
+        <div className="acct-section-divider">
+          <div className="acct-eyebrow">Approved · {buckets.upcomingApproved.length}</div>
+          <ul className="timeoff-list">
+            {buckets.upcomingApproved.map((r) => (
+              <TimeOffRow
+                key={r.id}
+                request={r}
+                isActive={!!activePeriod && r.start === activePeriod.start && r.end === activePeriod.end}
+                onEdit={() => handleEdit(r.id)}
+                onCancel={() => handleCancel(r.id)}
+              />
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Denied — read-only history with the decision note + a
+          Resubmit affordance. Surfaces below approved because the
+          requester needs less context here (it's already settled). */}
+      {buckets.denied.length > 0 && (
+        <div className="acct-section-divider">
+          <div className="acct-eyebrow">Denied · {buckets.denied.length}</div>
+          <ul className="timeoff-list">
+            {buckets.denied.map((r) => (
+              <TimeOffRow
+                key={r.id}
+                request={r}
+                isActive={false}
+                onResubmit={() => handleResubmit(r)}
+              />
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Past approved — historical record, muted styling. */}
+      {buckets.pastApproved.length > 0 && (
+        <div className="acct-section-divider">
+          <div className="acct-eyebrow">Past · {buckets.pastApproved.length}</div>
+          <ul className="timeoff-list">
+            {buckets.pastApproved.map((r) => (
+              <TimeOffRow
+                key={r.id}
+                request={r}
+                isActive={false}
+                muted
+              />
+            ))}
           </ul>
         </div>
       )}
 
       {modalOpen && (
         <TimeOffPeriodModal
-          initialStart={
-            modalOpen.editIndex >= 0
-              ? myRequests[modalOpen.editIndex]?.start ?? today
-              : today
-          }
-          initialEnd={
-            modalOpen.editIndex >= 0
-              ? myRequests[modalOpen.editIndex]?.end ?? isoOffsetDays(today, 1)
-              : isoOffsetDays(today, 1)
-          }
-          isEditing={modalOpen.editIndex >= 0}
+          initialStart={editingRequest?.start ?? today}
+          initialEnd={editingRequest?.end ?? isoOffsetDays(today, 1)}
+          initialReason={editingRequest?.reason}
+          isEditing={!!editingRequest}
           onSave={handleSave}
           onClose={() => setModalOpen(null)}
         />
@@ -1959,69 +2033,147 @@ function TimeOffSection() {
   );
 }
 
+/** A single row in the requester's time-off list.
+ *
+ *  Status drives what's rendered:
+ *    - pending  : amber pill + Edit + Cancel
+ *    - approved : green pill + Edit + Cancel (Edit hidden when muted/past)
+ *    - denied   : red pill + decision note + Resubmit
+ *    - cancelled: not rendered to the requester (filtered out upstream)
+ *
+ *  Reason and decisionNote render inline beneath the dates so the
+ *  requester sees the full conversation in one row without a popover.
+ */
 function TimeOffRow({
-  period,
+  request,
   isActive,
   onEdit,
-  onRemove,
+  onCancel,
+  onResubmit,
   muted,
 }: {
-  period: { start: string; end: string };
+  request: TimeOffRequest;
   isActive: boolean;
-  onEdit: () => void;
-  onRemove: () => void;
+  onEdit?: () => void;
+  onCancel?: () => void;
+  onResubmit?: () => void;
   muted?: boolean;
 }) {
+  const dateLabel = formatPeriodLabel(request.start, request.end);
   return (
     <li className={`timeoff-row${muted ? ' timeoff-row--muted' : ''}`}>
       <div className="timeoff-row-main">
-        <span className="timeoff-row-dates">
-          {formatPeriodLabel(period.start, period.end)}
-        </span>
-        {isActive && (
-          <span className="timeoff-row-active-pill">Currently away</span>
+        <div className="timeoff-row-headline">
+          <span className="timeoff-row-dates">{dateLabel}</span>
+          <TimeOffStatusBadge status={request.status} />
+          {isActive && (
+            <span className="timeoff-row-active-pill">Currently away</span>
+          )}
+        </div>
+        {request.reason && (
+          <div className="timeoff-row-reason">"{request.reason}"</div>
+        )}
+        {request.status === 'denied' && request.decisionNote && (
+          <div className="timeoff-row-decision">
+            <span className="timeoff-row-decision-label">Note from approver: </span>
+            {request.decisionNote}
+          </div>
         )}
       </div>
       <div className="timeoff-row-actions">
-        <button
-          type="button"
-          className="acct-btn-text"
-          onClick={onEdit}
-        >
-          Edit
-        </button>
-        <button
-          type="button"
-          className="acct-btn-text timeoff-row-remove"
-          onClick={onRemove}
-          aria-label={`Remove ${formatPeriodLabel(period.start, period.end)}`}
-        >
-          Remove
-        </button>
+        {onEdit && (
+          <button
+            type="button"
+            className="acct-btn-text"
+            onClick={onEdit}
+          >
+            Edit
+          </button>
+        )}
+        {onCancel && (
+          <button
+            type="button"
+            className="acct-btn-text timeoff-row-remove"
+            onClick={onCancel}
+            aria-label={`Cancel ${dateLabel}`}
+          >
+            Cancel
+          </button>
+        )}
+        {onResubmit && (
+          <button
+            type="button"
+            className="acct-btn-text"
+            onClick={onResubmit}
+            aria-label={`Resubmit ${dateLabel}`}
+          >
+            Resubmit
+          </button>
+        )}
       </div>
     </li>
   );
 }
 
-/** Modal for adding or editing a single time-off period. Uses native
+/** Status pill for time-off rows. Color tier maps to the four-tier
+ *  blue-highlight system in flizow.css: orange = primary attention
+ *  (pending review), green = settled positive (approved), red =
+ *  blocking signal (denied). Cancelled requests don't surface to
+ *  the requester so we don't render a pill for them. */
+function TimeOffStatusBadge({ status }: { status: TimeOffRequest['status'] }) {
+  if (status === 'cancelled') return null;
+  const meta: Record<
+    Exclude<TimeOffRequest['status'], 'cancelled'>,
+    { label: string; className: string; title: string }
+  > = {
+    pending: {
+      label: 'Pending review',
+      className: 'timeoff-status timeoff-status--pending',
+      title: 'Waiting for your manager to approve or deny',
+    },
+    approved: {
+      label: 'Approved',
+      className: 'timeoff-status timeoff-status--approved',
+      title: 'Your manager approved this request',
+    },
+    denied: {
+      label: 'Denied',
+      className: 'timeoff-status timeoff-status--denied',
+      title: 'Your manager denied this request',
+    },
+  };
+  const m = meta[status];
+  return (
+    <span className={m.className} title={m.title}>
+      {m.label}
+    </span>
+  );
+}
+
+/** Modal for submitting or editing a time-off request. Uses native
  *  `<input type="date">` for the calendar pickers — every modern
  *  browser pops a date grid on click without us shipping a third-
- *  party library. */
+ *  party library. Phase-4 additions: optional reason textarea
+ *  alongside the date inputs, footer copy clarifies that the OM
+ *  reviews before approval. */
 function TimeOffPeriodModal({
   initialStart,
   initialEnd,
+  initialReason,
   isEditing,
   onSave,
   onClose,
 }: {
   initialStart: string;
   initialEnd: string;
+  initialReason?: string;
   isEditing: boolean;
-  onSave: (period: { start: string; end: string }) => void;
+  onSave: (period: { start: string; end: string; reason?: string }) => void;
   onClose: () => void;
 }) {
   const [start, setStart] = useState(initialStart);
   const [end, setEnd] = useState(initialEnd);
+  const [reason, setReason] = useState(initialReason ?? '');
   const dialogRef = useRef<HTMLDivElement>(null);
 
   // Esc closes; same convention as the other modals in the app.
@@ -2040,7 +2192,12 @@ function TimeOffPeriodModal({
 
   function handleSave() {
     if (!valid) return;
-    onSave({ start, end });
+    const trimmed = reason.trim();
+    onSave({
+      start,
+      end,
+      reason: trimmed.length > 0 ? trimmed : undefined,
+    });
   }
 
   function handleBackdropClick(e: React.MouseEvent<HTMLDivElement>) {
@@ -2058,7 +2215,7 @@ function TimeOffPeriodModal({
       <div ref={dialogRef} className="wip-modal" role="document" style={{ maxWidth: 480 }}>
         <header className="wip-modal-head">
           <h2 className="wip-modal-title" id="timeoff-modal-title">
-            {isEditing ? 'Edit time off' : 'Schedule time off'}
+            {isEditing ? 'Edit time off' : 'Request time off'}
           </h2>
           <button
             type="button"
@@ -2104,6 +2261,26 @@ function TimeOffPeriodModal({
               />
             </label>
           </div>
+          {/* Reason — optional. Helps the OM decide; surfaces
+              alongside the request in the approval queue (Phase 6).
+              Plain textarea, not rich text, so the input stays
+              quick to fill. */}
+          <label
+            className="member-profile-field"
+            style={{ marginTop: 'var(--sp-md)' }}
+          >
+            <span className="member-profile-field-label">
+              Reason <span className="member-profile-field-hint">(optional)</span>
+            </span>
+            <textarea
+              className="acct-input"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="A short note for whoever approves this — helps with planning."
+              rows={3}
+              maxLength={280}
+            />
+          </label>
           {!valid && (
             <p className="acct-section-sub" style={{
               color: 'var(--accent)',
@@ -2114,7 +2291,16 @@ function TimeOffPeriodModal({
             </p>
           )}
         </div>
-        <footer className="wip-modal-foot">
+        <footer className="wip-modal-foot timeoff-modal-foot">
+          {/* Footer hint reminds the user this isn't auto-approved.
+              Lives in the modal (not the section header) so the
+              "approval expected" framing lands at the moment of
+              commit, not when the user is just browsing the page. */}
+          {!isEditing && (
+            <span className="timeoff-modal-foot-hint">
+              Goes to your manager for review.
+            </span>
+          )}
           <button
             type="button"
             className="wip-btn wip-btn-ghost"
@@ -2128,7 +2314,7 @@ function TimeOffPeriodModal({
             onClick={handleSave}
             disabled={!valid}
           >
-            {isEditing ? 'Save changes' : 'Schedule'}
+            {isEditing ? 'Save changes' : 'Submit request'}
           </button>
         </footer>
       </div>

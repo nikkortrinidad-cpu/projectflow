@@ -1326,7 +1326,7 @@
   }
   .timeoff-row {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     gap: var(--sp-base);
     padding: var(--sp-md) var(--sp-base);
@@ -1340,9 +1340,17 @@
   }
   .timeoff-row-main {
     display: flex;
-    align-items: center;
-    gap: var(--sp-md);
+    flex-direction: column;
+    gap: var(--sp-xs);
     min-width: 0;
+    flex: 1;
+  }
+  /* Top line of a row — date label + status badge + active pill,
+     all on one line. Wraps gracefully on narrow viewports. */
+  .timeoff-row-headline {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-sm);
     flex-wrap: wrap;
   }
   .timeoff-row-dates {
@@ -1353,6 +1361,30 @@
   .timeoff-row--muted .timeoff-row-dates {
     color: var(--text-soft);
     font-weight: 400;
+  }
+  /* Reason — surfaces under the date line so the requester sees
+     what they wrote at a glance. Italic + quoted to read as
+     conversational, not metadata. */
+  .timeoff-row-reason {
+    font-size: var(--fs-sm);
+    color: var(--text-soft);
+    font-style: italic;
+    line-height: 1.4;
+  }
+  /* Decision note from the approver. Sits beneath the reason on
+     denied rows so the back-and-forth reads top-down: requester's
+     reason → approver's note. Slight left bar communicates "this
+     is a reply." */
+  .timeoff-row-decision {
+    font-size: var(--fs-sm);
+    color: var(--text-soft);
+    line-height: 1.4;
+    padding-left: var(--sp-sm);
+    border-left: 2px solid var(--hairline);
+  }
+  .timeoff-row-decision-label {
+    font-weight: 600;
+    color: var(--text);
   }
   /* Active-period pill — soft orange tint matching the profile
      panel's vacation pill so the visual signal is consistent
@@ -1390,6 +1422,103 @@
     .timeoff-modal-grid {
       grid-template-columns: 1fr;
     }
+  }
+  /* Footer hint — sits left of the action buttons in the modal so
+     the "goes to your manager" framing is right where the user is
+     about to commit. Spaces against the buttons via auto-margin. */
+  .timeoff-modal-foot {
+    align-items: center;
+  }
+  .timeoff-modal-foot-hint {
+    font-size: var(--fs-xs);
+    color: var(--text-faint);
+    margin-right: auto;
+  }
+  .member-profile-field-hint {
+    font-weight: 400;
+    color: var(--text-faint);
+    font-size: var(--fs-xs);
+    margin-left: 4px;
+  }
+
+  /* Status banner — "You're on vacation" block above the request
+     CTA. Lights up only when an approved period covers today.
+     Orange tint matches the profile-panel vacation pill so the
+     same visual cue carries across surfaces. */
+  .timeoff-active-banner {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-md);
+    padding: var(--sp-md) var(--sp-base);
+    background: var(--highlight-soft);
+    border: 1px solid var(--highlight-line, rgba(241, 90, 36, 0.35));
+    border-radius: 10px;
+    margin-bottom: var(--sp-md);
+  }
+  .timeoff-active-banner-icon {
+    font-size: 22px;
+    line-height: 1;
+  }
+  .timeoff-active-banner-text {
+    flex: 1;
+    min-width: 0;
+  }
+  .timeoff-active-banner-title {
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--text);
+  }
+  .timeoff-active-banner-sub {
+    font-size: var(--fs-sm);
+    color: var(--text-soft);
+    margin-top: 2px;
+  }
+
+  /* Request CTA — primary button block above the lists. Always
+     renders so the path to "submit a request" is one click no
+     matter what's below. */
+  .timeoff-request-cta {
+    margin-bottom: var(--sp-md);
+  }
+
+  /* Full-width empty state — replaces every list when the user has
+     never submitted a request. */
+  .timeoff-empty--full {
+    padding: var(--sp-lg) var(--sp-md);
+    text-align: center;
+    border: 1px dashed var(--hairline);
+    border-radius: 10px;
+    color: var(--text-muted);
+    background: var(--bg-soft);
+  }
+
+  /* Status badges — three colors mirror the four-tier blue-highlight
+     hierarchy used elsewhere in the app:
+       pending  → orange (primary attention)
+       approved → green (settled positive)
+       denied   → red (blocking signal) */
+  .timeoff-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 9px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    line-height: 1.4;
+  }
+  .timeoff-status--pending {
+    background: var(--highlight-soft);
+    color: var(--highlight);
+  }
+  .timeoff-status--approved {
+    background: rgba(48, 209, 88, 0.14);
+    color: #30d158;
+  }
+  .timeoff-status--denied {
+    background: rgba(255, 59, 48, 0.14);
+    color: #ff453a;
   }
 
   /* Reset workspace row — wraps the trigger and the typed-confirm
