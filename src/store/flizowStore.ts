@@ -413,7 +413,7 @@ function deriveWorkspaceInitials(name: string): string {
  *
  *  Pure: takes a doc, returns a doc. Tests live next to the matching
  *  pure helper in utils/access. */
-function migrateWorkspaceAccessRoles(ws: WorkspaceDoc): {
+export function migrateWorkspaceAccessRoles(ws: WorkspaceDoc): {
   ws: WorkspaceDoc;
   changed: boolean;
 } {
@@ -449,12 +449,29 @@ function migrateWorkspaceAccessRoles(ws: WorkspaceDoc): {
     return inv;
   });
 
+  // 4. memberRoles denormalized map — backfill when missing or
+  //    out-of-sync with the (already-migrated) members[]. This is
+  //    the field the Firestore rules read for role checks.
+  //    Always recompute from the post-migration members so a stale
+  //    map from before the role-rename gets corrected even when no
+  //    individual member's role string actually changed.
+  const expectedMemberRoles: Record<string, AccessRole> = {};
+  for (const m of nextMembers) expectedMemberRoles[m.uid] = m.role;
+  const existingMemberRoles = ws.memberRoles ?? {};
+  const memberRolesDrift =
+    Object.keys(expectedMemberRoles).length !== Object.keys(existingMemberRoles).length
+    || Object.entries(expectedMemberRoles).some(
+        ([uid, role]) => existingMemberRoles[uid] !== role,
+      );
+  if (memberRolesDrift) changed = true;
+
   if (!changed) return { ws, changed: false };
 
   return {
     ws: {
       ...ws,
       members: nextMembers,
+      memberRoles: expectedMemberRoles,
       pendingInvites: nextInvites,
       data: { ...ws.data, members: nextDataMembers },
     },
@@ -835,6 +852,9 @@ class FlizowStore {
       color: '#5e5ce6',
       members: [ownMembership],
       memberUids: [uid],
+      // Denormalized role map for Firestore-rule role checks. Stays
+      // in sync with members[] on every mutation below.
+      memberRoles: { [uid]: 'owner' },
       pendingInvites: [],
       data: legacyData ?? emptyData(),
       createdAt: now,
@@ -894,6 +914,9 @@ class FlizowStore {
     const nextMemberUids = alreadyMember
       ? ws.memberUids
       : [...(ws.memberUids ?? []), uid];
+    const nextMemberRoles = alreadyMember
+      ? (ws.memberRoles ?? {})
+      : { ...(ws.memberRoles ?? {}), [uid]: invite.role };
     const nextPendingInvites = (ws.pendingInvites ?? []).filter(
       (i) => i.token !== pending.token,
     );
@@ -901,6 +924,7 @@ class FlizowStore {
       ...ws,
       members: nextMembers,
       memberUids: nextMemberUids,
+      memberRoles: nextMemberRoles,
       pendingInvites: nextPendingInvites,
       updatedAt: now,
     });
@@ -1072,6 +1096,10 @@ class FlizowStore {
     const wsRef = doc(db, WORKSPACES_COLLECTION, this.workspaceId);
     await setDoc(wsRef, {
       members: ws.members,
+      // memberRoles backfilled by the migration. Firestore-rule
+      // role checks read this map, so getting it onto the doc is
+      // what unlocks the tightened rules for legacy workspaces.
+      memberRoles: ws.memberRoles ?? {},
       pendingInvites: ws.pendingInvites,
       data: ws.data,
       updatedAt: new Date().toISOString(),
@@ -1310,6 +1338,11 @@ class FlizowStore {
     }
     const nextMembers = this.workspaceMeta.members.filter((m) => m.uid !== uid);
     const nextMemberUids = nextMembers.map((m) => m.uid);
+    // Drop the role entry too — keep memberRoles in sync with
+    // members[]. Firestore-rule role checks read this map.
+    const nextMemberRoles = Object.fromEntries(
+      nextMembers.map((m) => [m.uid, m.role]),
+    );
     this.workspaceMeta = {
       ...this.workspaceMeta,
       members: nextMembers,
@@ -1318,6 +1351,7 @@ class FlizowStore {
     await setDoc(wsRef, {
       members: nextMembers,
       memberUids: nextMemberUids,
+      memberRoles: nextMemberRoles,
       updatedAt: new Date().toISOString(),
     }, { merge: true });
     // Also clear the user's lookup so they don't keep loading this
@@ -1343,10 +1377,16 @@ class FlizowStore {
     const nextMembers = this.workspaceMeta.members.map((m) =>
       m.uid === uid ? { ...m, role } : m,
     );
+    // Update the denormalized role map alongside members[] so the
+    // Firestore-rule role check sees the change immediately.
+    const nextMemberRoles = Object.fromEntries(
+      nextMembers.map((m) => [m.uid, m.role]),
+    );
     this.workspaceMeta = { ...this.workspaceMeta, members: nextMembers };
     const wsRef = doc(db, WORKSPACES_COLLECTION, this.workspaceId);
     await setDoc(wsRef, {
       members: nextMembers,
+      memberRoles: nextMemberRoles,
       updatedAt: new Date().toISOString(),
     }, { merge: true });
     this.notifyWorkspace();

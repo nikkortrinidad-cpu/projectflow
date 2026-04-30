@@ -171,6 +171,13 @@ export interface WorkspaceDoc {
    *  flat array of UIDs for permission queries. Must stay in sync
    *  with `members[]`. */
   memberUids: string[];
+  /** Denormalized role lookup keyed by uid. Same reason as
+   *  memberUids: Firestore rules can't iterate `members[]` to find
+   *  a row by uid, so we keep a `{ uid: role }` map for fast
+   *  permission checks at the rules layer. Must stay in sync with
+   *  `members[]` — every place that mutates one mutates the other.
+   *  Audit: rules tightening 2026-05-01. */
+  memberRoles: { [uid: string]: AccessRole };
   /** Outstanding invites — one entry per generated link. */
   pendingInvites: PendingInvite[];
   /** The actual workspace data. Same shape that used to live at
