@@ -560,45 +560,44 @@ export default function FlizowAccountModal({ onClose }: Props) {
                     <span style={{ color: 'var(--text-faint)', fontSize: 'var(--fs-sm)' }}>· Seeds the mockup's 50 demo clients</span>
                   </div>
 
-                  <div style={{ marginTop: 12 }}>
+                  {/* Two-step destructive flow:
+                        1. .acct-btn-outline--danger trigger pops the
+                           confirm UI (typed-confirmation gate)
+                        2. .acct-btn-solid--danger fires the wipe once
+                           the user types "reset"
+                      Previously each button carried its own inline
+                      style block re-implementing the destructive
+                      colours. Switched to the shared button classes
+                      so this section speaks the same visual vocabulary
+                      as the rest of the Account modal and the wider
+                      app's destructive-action convention.
+                      Audit: account MED. */}
+                  <div className="acct-reset-row">
                     {resetPhase === 'idle' ? (
                       <button
                         type="button"
+                        className="acct-btn-outline acct-btn-outline--danger"
                         onClick={() => setResetPhase('confirm')}
-                        style={{
-                          padding: '8px 14px', borderRadius: 8,
-                          background: 'transparent',
-                          border: '1px solid var(--accent)', color: 'var(--accent)',
-                          fontSize: 'var(--fs-md)', fontWeight: 600, cursor: 'pointer',
-                        }}
                       >Reset workspace…</button>
                     ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 420 }}>
-                        <div style={{ fontSize: 'var(--fs-md)', color: 'var(--text)' }}>
+                      <div className="acct-reset-confirm">
+                        <div className="acct-reset-confirm-prompt">
                           This deletes every client, service, and task in your workspace. Type <strong>reset</strong> to confirm.
                         </div>
-                        <div style={{ display: 'flex', gap: 8 }}>
+                        <div className="acct-reset-confirm-actions">
                           <input
                             type="text"
-                            className="acct-input"
+                            className="acct-input acct-reset-input"
                             value={resetInput}
                             onChange={(e) => setResetInput(e.target.value)}
                             placeholder="Type reset to confirm"
                             autoFocus
-                            style={{ flex: 1 }}
                           />
                           <button
                             type="button"
+                            className="acct-btn-solid acct-btn-solid--danger"
                             onClick={handleReset}
                             disabled={resetInput.trim().toLowerCase() !== 'reset'}
-                            style={{
-                              padding: '0 14px', borderRadius: 8,
-                              background: resetInput.trim().toLowerCase() === 'reset' ? 'var(--accent)' : 'var(--bg-faint)',
-                              color: resetInput.trim().toLowerCase() === 'reset' ? '#fff' : 'var(--text-faint)',
-                              border: 'none',
-                              fontSize: 'var(--fs-md)', fontWeight: 600,
-                              cursor: resetInput.trim().toLowerCase() === 'reset' ? 'pointer' : 'not-allowed',
-                            }}
                           >Reset</button>
                           <button
                             type="button"

@@ -1256,6 +1256,51 @@
     opacity: 0.4; cursor: not-allowed;
   }
 
+  /* Solid destructive variant — pairs with .acct-btn-outline--danger
+     for the trigger → solid confirm pattern. Uses the same --accent
+     token as ConfirmDangerDialog's red so destructive actions across
+     the app speak one color, not two. The disabled state stays
+     greyed so a half-typed confirmation doesn't read as actionable. */
+  .acct-btn-solid--danger {
+    background: var(--accent);
+  }
+  .acct-btn-solid--danger:hover {
+    /* Slightly deeper red on hover. Hand-mixed to land between the
+       light-theme #ff3b30 and dark-theme #ff453a values without
+       picking up the brand-blue hover that .acct-btn-solid uses. */
+    background: #e63027;
+  }
+  .acct-btn-solid--danger:disabled {
+    background: var(--bg-faint);
+    color: var(--text-faint);
+    opacity: 1;
+  }
+
+  /* Reset workspace row — wraps the trigger and the typed-confirm
+     inline UI. Lifted out of inline styles in FlizowAccountModal so
+     the layout primitives sit alongside the rest of the .acct- system
+     and the buttons keep their canonical classes. */
+  .acct-reset-row {
+    margin-top: var(--sp-md);
+  }
+  .acct-reset-confirm {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-sm);
+    max-width: 420px;
+  }
+  .acct-reset-confirm-prompt {
+    font-size: var(--fs-md);
+    color: var(--text);
+  }
+  .acct-reset-confirm-actions {
+    display: flex;
+    gap: var(--sp-sm);
+  }
+  .acct-reset-input {
+    flex: 1;
+  }
+
   /* Responsive — collapse sidebar on narrow screens */
   @media (max-width: 720px) {
     .acct-body { flex-direction: column; }
