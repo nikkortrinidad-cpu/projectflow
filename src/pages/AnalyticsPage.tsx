@@ -9,6 +9,7 @@ import {
   FireIcon,
   NoSymbolIcon,
   UsersIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import type { ComponentType, SVGProps } from 'react';
 import { navigate } from '../router';
@@ -643,10 +644,7 @@ function DrillDownPanel({
           aria-label="Close drill-down"
           onClick={onClose}
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
+          <XMarkIcon aria-hidden="true" />
         </button>
       </div>
       {content.rows.length === 0 ? (
@@ -846,10 +844,7 @@ function MemberDrillPanel({
           aria-label="Close member drill-down"
           onClick={onClose}
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
+          <XMarkIcon aria-hidden="true" />
         </button>
       </div>
       {rows.length === 0 ? (
