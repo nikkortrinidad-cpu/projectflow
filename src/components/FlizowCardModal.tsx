@@ -15,6 +15,7 @@ import {
   zoneFor,
   nextAvailableDate,
 } from '../utils/capacity';
+import { avatarStyle } from '../utils/avatar';
 import { createPortal } from 'react-dom';
 import { useFlizow } from '../store/useFlizow';
 import type { ColumnId, Priority, Member, TaskComment, TaskActivity, Task, OpsTask } from '../types/flizow';
@@ -788,18 +789,17 @@ export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDupl
                         <span
                           key={m.id}
                           className="assignee-chip"
-                          style={m.type === 'operator'
-                            ? { background: m.bg, color: m.color }
-                            : { background: m.color, color: '#fff' }
-                          }
+                          style={avatarStyle(m)}
                           title={m.name}
                         >
                           <span
                             className="assignee-chip-avatar"
-                            style={m.type === 'operator'
+                            // The inner avatar dot uses translucent
+                            // white over a solid (AM) chip and matches
+                            // the soft background on an operator chip.
+                            style={m.bg
                               ? { background: m.bg, color: m.color }
-                              : { background: 'rgba(255,255,255,0.2)', color: '#fff' }
-                            }
+                              : { background: 'rgba(255,255,255,0.2)', color: '#fff' }}
                           >
                             {m.initials}
                           </span>
@@ -1417,9 +1417,7 @@ function AssigneePicker({
           <>
             <span
               className="assignee-option-avatar"
-              style={m.type === 'operator'
-                ? { background: m.bg, color: m.color }
-                : { background: m.color, color: '#fff' }}
+              style={avatarStyle(m)}
             >
               {m.initials}
             </span>
@@ -1913,14 +1911,10 @@ function Avatar({ member }: { member: Member | null }) {
       </div>
     );
   }
-  const isOperator = member.type === 'operator';
   return (
     <div
       className="comment-avatar"
-      style={{
-        background: isOperator ? (member.bg ?? 'var(--bg-faint)') : member.color,
-        color: isOperator ? member.color : '#fff',
-      }}
+      style={avatarStyle(member)}
       title={member.name}
       aria-label={member.name}
     >

@@ -873,6 +873,25 @@
     padding: 10px 8px;
     overflow-y: auto;
   }
+  /* Group label between sidebar sections — "MY ACCOUNT" / "WORKSPACE"
+     / "ACCOUNT". Small caps, faint, with breathing room above so each
+     group reads as a unit instead of a flat tab list. The first
+     instance loses the top margin via :first-of-type so the modal
+     doesn't open with awkward blank space. */
+  .acct-nav-group-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    padding: 12px 10px 4px;
+    margin-top: 6px;
+    user-select: none;
+  }
+  .acct-nav-group-label:first-of-type {
+    margin-top: 0;
+    padding-top: 4px;
+  }
   .acct-nav-item {
     display: flex; align-items: center; gap: 9px;
     width: 100%;
@@ -5939,6 +5958,191 @@
     outline-offset: 2px;
   }
 
+  /* ── Job titles section (Phase 2) ────────────────────────────────
+     The Job titles tab is a flat catalog of role labels. Each row
+     reads `[swatch] [label + meta] [actions]`. Same elevations and
+     spacing scale as the Members rows so the Workspace section
+     reads as one design language across both tabs. */
+  .jt-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-xs);
+    margin-top: var(--sp-md);
+  }
+  .jt-row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-sm);
+    padding: var(--sp-sm) var(--sp-md);
+    border-radius: var(--radius-md, 8px);
+    border: 1px solid var(--hairline-soft);
+    background: var(--bg-elev);
+  }
+  /* Archived rows fade out so the eye skims past them but they
+     stay scannable for restore. */
+  .jt-row--archived {
+    opacity: 0.55;
+  }
+  /* Editing row keeps full opacity and gets a slight elevation lift
+     (border-color shift) so the active form stands out from siblings. */
+  .jt-row--editing {
+    align-items: flex-start;
+    border-color: var(--highlight-line, rgba(241, 90, 36, 0.35));
+  }
+  .jt-swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 1px var(--hairline-soft);
+  }
+  .jt-row-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .jt-row-label {
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--text);
+  }
+  .jt-row-meta {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+  }
+  .jt-edit-controls {
+    margin-top: var(--sp-xs);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-md);
+    flex-wrap: wrap;
+  }
+  .jt-color-picker {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .jt-color-dot {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 0;
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.1s;
+  }
+  .jt-color-dot:hover {
+    transform: scale(1.1);
+  }
+
+  /* ── Members tab list controls (Phase 2) ─────────────────────────
+     Search + sort + group-by + role filter chips. Sits above the
+     member list so the eye lands on controls first when scanning a
+     long roster. Two rows: top has the search + sort + group selects;
+     bottom is the chip strip. Compact at narrow viewports. */
+  .mbrs-controls {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-sm);
+    margin-bottom: var(--sp-md);
+  }
+  .mbrs-controls-row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-sm);
+    flex-wrap: wrap;
+  }
+  .mbrs-search {
+    flex: 1;
+    min-width: 180px;
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .mbrs-search svg {
+    position: absolute;
+    left: 10px;
+    color: var(--text-faint);
+    pointer-events: none;
+  }
+  .mbrs-search-input {
+    padding-left: 30px;
+    width: 100%;
+  }
+  .mbrs-control-select {
+    flex-shrink: 0;
+  }
+  .mbrs-chip-row { gap: 6px; }
+  .mbrs-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--hairline);
+    background: var(--bg-elev);
+    color: var(--text-soft);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.1s, color 0.1s, border-color 0.1s;
+  }
+  .mbrs-chip:hover {
+    background: var(--bg-soft);
+    color: var(--text);
+  }
+  .mbrs-chip--on {
+    background: rgba(241, 90, 36, 0.16);
+    color: var(--highlight);
+    border-color: var(--highlight-line, rgba(241, 90, 36, 0.35));
+  }
+  .mbrs-chip--clear {
+    background: transparent;
+    color: var(--text-faint);
+    border-style: dashed;
+  }
+  .mbrs-chip--hint {
+    background: transparent;
+    color: var(--text-faint);
+    border-color: transparent;
+    cursor: default;
+    font-weight: 500;
+  }
+
+  /* Group label between sub-lists when groupBy is on. Smaller and
+     more muted than the section "Members · N" eyebrow so the
+     hierarchy reads top-down: section header → toolbar → group → row. */
+  .mbrs-group-label {
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: var(--sp-sm) 0 var(--sp-xs);
+  }
+  .mbrs-list-group + .mbrs-list-group { margin-top: var(--sp-md); }
+
+  /* Empty state — replaces the list when the filters reduce to zero. */
+  .mbrs-empty {
+    padding: var(--sp-lg) var(--sp-md);
+    text-align: center;
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+    background: var(--bg-soft);
+    border-radius: var(--radius-md, 8px);
+    border: 1px dashed var(--hairline);
+  }
+
+  /* Inline job-title pill on a member row — small, color-tinted,
+     same letter-spacing as the You/Owner tags. The background color
+     comes inline from the JobTitle.color field. */
+  .mbrs-tag--jt {
+    background: var(--bg-soft);
+    color: var(--text);
+    font-weight: 600;
+  }
+
   /* Narrow viewport — stack the invite controls under the title
      instead of cramming everything onto one row. */
   @media (max-width: 600px) {
@@ -6739,6 +6943,22 @@
     font-size: var(--fs-md);
     color: var(--text-soft);
     letter-spacing: -0.005em;
+  }
+  /* Pill variant — when a curated job title resolves, the role
+     line gets a tinted background so the title reads as a chip
+     instead of plain prose. Color comes inline from JobTitle.color. */
+  .member-profile-role--pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 999px;
+    color: #fff;
+    font-weight: 600;
+    letter-spacing: 0;
+    align-self: flex-start;
+  }
+  .member-profile-role-edit {
+    width: 100%;
   }
   /* Vacation pill — sits under the role line. Warm orange tint so
      it's clearly a status callout, not chrome. The 🌴 emoji is the

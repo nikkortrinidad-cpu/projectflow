@@ -3,6 +3,7 @@ import { useFlizow } from '../store/useFlizow';
 import { navigate } from '../router';
 import type { Client, Service, Task, Member, ColumnId, ClientStatus } from '../types/flizow';
 import { categoryLabel } from '../utils/clientDerived';
+import { memberJobTitleLabel, isAccountManager } from '../utils/jobTitles';
 
 /**
  * Flizow Command Palette — the ⌘K surface.
@@ -241,10 +242,17 @@ export default function FlizowCommandPalette({ open, onClose }: Props) {
       )
         continue;
       n++;
+      // Prefer the curated job-title label; fall back to the legacy
+      // category-name when no jobTitle resolves yet (mid-migration
+      // workspaces, Member records without a jobTitleId).
+      const titleLabel = memberJobTitleLabel(m, data.jobTitles);
+      const fallback = isAccountManager(m, data.jobTitles)
+        ? 'Account Manager'
+        : 'Team member';
       out.push({
         type: 'member',
         title: m.name,
-        sub: m.role || (m.type === 'operator' ? 'Team member' : 'Account Manager'),
+        sub: titleLabel || fallback,
         icon: m.initials,
       });
     }

@@ -207,6 +207,7 @@ function ProfileBody({ member, onClose }: { member: Member; onClose: () => void 
     const patch: Partial<Member> = {
       name: drafts.name.trim() || member.name, // never blank a name
       role: emptyToUndefined(drafts.role),
+      jobTitleId: drafts.jobTitleId, // empty-string select binds to undefined
       email: emptyToUndefined(drafts.email),
       phone: emptyToUndefined(drafts.phone),
       pronouns: emptyToUndefined(drafts.pronouns),
@@ -326,17 +327,67 @@ function ProfileBody({ member, onClose }: { member: Member; onClose: () => void 
             </h2>
           )}
           {editing ? (
-            <input
-              type="text"
-              className="member-profile-role-input"
-              value={drafts.role}
-              onChange={(e) => setDrafts({ ...drafts, role: e.target.value })}
-              placeholder="Role / title (e.g. Senior Account Manager)"
-              aria-label="Role"
-            />
-          ) : (
-            member.role && <div className="member-profile-role">{member.role}</div>
-          )}
+            <div className="member-profile-role-edit">
+              {/* Job title — pulled from the workspace catalog when
+                  available; falls back to a free-text input only
+                  when the workspace has no titles yet (shouldn't
+                  happen post-Phase-2 because defaults seed). The
+                  free-text Member.role lingers as a back-compat
+                  fallback for any pre-seed records that didn't
+                  match a catalog label during migration. */}
+              {data.jobTitles.length > 0 ? (
+                <select
+                  className="member-profile-role-input"
+                  value={drafts.jobTitleId ?? ''}
+                  onChange={(e) =>
+                    setDrafts({ ...drafts, jobTitleId: e.target.value || undefined })
+                  }
+                  aria-label="Job title"
+                >
+                  <option value="">No title</option>
+                  {data.jobTitles
+                    .filter((t) => t.active || t.id === drafts.jobTitleId)
+                    .map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.label}{!t.active ? ' (archived)' : ''}
+                      </option>
+                    ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  className="member-profile-role-input"
+                  value={drafts.role}
+                  onChange={(e) => setDrafts({ ...drafts, role: e.target.value })}
+                  placeholder="Role / title (e.g. Senior Account Manager)"
+                  aria-label="Role"
+                />
+              )}
+            </div>
+          ) : (() => {
+            // Read-only render. Prefer the curated jobTitle pill;
+            // fall back to the legacy free-text role if no title
+            // resolves. Tinted pill matches the per-title color so
+            // a quick scan tells you "this person is a Designer" at
+            // a glance.
+            const jt = member.jobTitleId
+              ? data.jobTitles.find((t) => t.id === member.jobTitleId)
+              : undefined;
+            if (jt) {
+              return (
+                <div
+                  className="member-profile-role member-profile-role--pill"
+                  style={{ background: jt.color || 'var(--bg-soft)' }}
+                  title={jt.kind === 'account-manager' ? 'Account manager' : 'Operator'}
+                >
+                  {jt.label}
+                </div>
+              );
+            }
+            return member.role
+              ? <div className="member-profile-role">{member.role}</div>
+              : null;
+          })()}
           {!editing && onVacation && (
             <div className="member-profile-vacation">
               <span className="member-profile-vacation-icon" aria-hidden="true">🌴</span>
@@ -820,6 +871,10 @@ function WorkingRow({
 interface EditableDrafts {
   name: string;
   role: string;
+  /** Curated job-title id (Phase 2). Optional in edit state because
+   *  "No title" is a valid choice — empty string in the select binds
+   *  to undefined on save. */
+  jobTitleId: string | undefined;
   email: string;
   phone: string;
   pronouns: string;
@@ -836,6 +891,7 @@ function draftsFromMember(member: Member): EditableDrafts {
   return {
     name: member.name ?? '',
     role: member.role ?? '',
+    jobTitleId: member.jobTitleId,
     email: member.email ?? '',
     phone: member.phone ?? '',
     pronouns: member.pronouns ?? '',

@@ -3,6 +3,7 @@ import { ChevronRightIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 import { useRoute } from '../router';
 import { useFlizow } from '../store/useFlizow';
+import { flizowStore } from '../store/flizowStore';
 import FlizowNotificationsPanel from './FlizowNotificationsPanel';
 import type { AccessRole } from '../types/flizow';
 import { can, ACCESS_ROLE_LABEL, type Action } from '../utils/access';
@@ -130,6 +131,16 @@ export function TopNav({
       // Firebase surfaces its own toast on failure; swallow here so the
       // menu stays closed either way.
     }
+  };
+
+  // Theme toggle in the avatar menu — quick-action for switching
+  // light/dark without opening Account → Preferences. Reads from
+  // data.theme so the icon reflects the live state and toggles
+  // optimistically through store.setTheme. Doesn't close the menu
+  // (people often toggle and want to see the result inline).
+  const isDark = data.theme === 'dark';
+  const handleToggleTheme = () => {
+    flizowStore.setTheme(isDark ? 'light' : 'dark');
   };
 
   return (
@@ -272,6 +283,39 @@ export function TopNav({
                 <span>Account settings</span>
               </span>
               <ChevronRightIcon className="account-menu-item-chev" aria-hidden="true" />
+            </button>
+            {/* Theme — quick toggle for light/dark. Stays in the
+                avatar menu (not Account → Preferences) because it's
+                the single most-flipped preference and a one-click
+                surface earns its space. Icon swaps to reflect the
+                state you'd switch TO, not the current state. */}
+            <button
+              className="account-menu-item account-menu-item--theme"
+              type="button"
+              role="menuitem"
+              onClick={handleToggleTheme}
+              aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
+            >
+              <span className="account-menu-item-label">
+                {isDark ? (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="5"/>
+                    <line x1="12" y1="1" x2="12" y2="3"/>
+                    <line x1="12" y1="21" x2="12" y2="23"/>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                    <line x1="1" y1="12" x2="3" y2="12"/>
+                    <line x1="21" y1="12" x2="23" y2="12"/>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                  </svg>
+                )}
+                <span>{isDark ? 'Light theme' : 'Dark theme'}</span>
+              </span>
             </button>
             <button
               className="account-menu-item"

@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { CheckIcon as HeroCheckIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import type { Member, Priority } from '../types/flizow';
 import { BOARD_LABELS, labelById } from '../constants/labels';
+import { avatarStyle } from '../utils/avatar';
 
 /**
  * Shared filter bar for the service board (BoardPage) and the internal
@@ -283,8 +284,7 @@ export function BoardFilters({ state, onChange, members, show, groupBy, onGroupB
                         width: 20,
                         height: 20,
                         borderRadius: '50%',
-                        background: m.type === 'operator' ? m.bg : m.color,
-                        color: m.type === 'operator' ? m.color : '#fff',
+                        ...avatarStyle(m),
                         fontSize: 10,
                         fontWeight: 700,
                         display: 'inline-flex',

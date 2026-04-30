@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import type { Member } from '../types/flizow';
 import { useModalAutofocus } from '../hooks/useModalAutofocus';
 import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
+import { avatarStyle } from '../utils/avatar';
 
 /**
  * FlizowShareModal — "Share card" dialog launched from the card detail
@@ -476,16 +477,12 @@ export default function FlizowShareModal({ taskId, onClose }: Props) {
     const name = currentMember?.name ?? authUser?.displayName ?? 'You';
     const initials = currentMember?.initials ?? initialsFrom(name);
     const sub = authUser?.email ?? currentMember?.role ?? '';
-    const avatarStyle = currentMember?.type === 'operator' && currentMember.bg
-      ? { background: currentMember.bg, color: currentMember.color }
-      : currentMember
-        ? { background: currentMember.color, color: '#fff' }
-        : undefined;
+    const ownerAvatarStyle = currentMember ? avatarStyle(currentMember) : undefined;
     return (
       <div className="members-row" data-owner="true">
         <div
           className="members-avatar"
-          style={avatarStyle}
+          style={ownerAvatarStyle}
         >
           {initials}
         </div>
@@ -503,12 +500,9 @@ export default function FlizowShareModal({ taskId, onClose }: Props) {
 
   function renderMemberRow(m: Member) {
     const role = memberRoles[m.id] ?? 'edit';
-    const avatarStyle = m.type === 'operator' && m.bg
-      ? { background: m.bg, color: m.color }
-      : { background: m.color, color: '#fff' };
     return (
       <div key={m.id} className="members-row" data-member-id={m.id} data-role={role}>
-        <div className="members-avatar" style={avatarStyle}>{m.initials}</div>
+        <div className="members-avatar" style={avatarStyle(m)}>{m.initials}</div>
         <div className="members-identity">
           <div className="members-name">{m.name}</div>
           {m.role ? <div className="members-sub">{m.role}</div> : null}

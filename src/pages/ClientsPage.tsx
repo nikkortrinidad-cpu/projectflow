@@ -13,7 +13,8 @@ import {
   relativeTimeAgo,
   categoryLabel,
 } from '../utils/clientDerived';
-import type { Client, ClientStatus, IndustryCategory, Member } from '../types/flizow';
+import type { Client, ClientStatus, IndustryCategory, Member, JobTitle } from '../types/flizow';
+import { isAccountManager } from '../utils/jobTitles';
 
 /**
  * Clients directory — the left (list) pane of the Mail.app-style split
@@ -276,6 +277,7 @@ export function ClientsPage() {
         <AddClientModal
           clients={data.clients}
           members={data.members}
+          jobTitles={data.jobTitles}
           todayISO={data.today}
           onClose={() => setShowAddClient(false)}
         />
@@ -607,12 +609,13 @@ interface DraftExtraContact {
   phone: string;
 }
 
-function AddClientModal({ clients, members, todayISO, onClose }: {
+function AddClientModal({ clients, members, jobTitles, todayISO, onClose }: {
   /** Snapshot of the workspace's current clients. Used at save time
    *  to auto-pick a logo colour that's least-recently-used; the modal
    *  no longer asks the user to choose one. */
   clients: Client[];
   members: Member[];
+  jobTitles: JobTitle[];
   todayISO: string;
   onClose: () => void;
 }) {
@@ -652,10 +655,16 @@ function AddClientModal({ clients, members, todayISO, onClose }: {
   const contactEmailRef = useRef<HTMLInputElement>(null);
   const contactPhoneRef = useRef<HTMLInputElement>(null);
 
-  // AM picker shows only members typed 'am'. Operators live on the team
-  // strip of the client detail page — a new client doesn't pick operators
-  // at creation.
-  const ams = useMemo(() => members.filter(m => m.type === 'am'), [members]);
+  // AM picker shows only members whose job title is categorised
+  // as 'account-manager'. Operators live on the team strip of the
+  // client detail page — a new client doesn't pick operators at
+  // creation. The check goes through the JobTitle catalog so the
+  // workspace owner can recategorise titles without changing
+  // every member at once.
+  const ams = useMemo(
+    () => members.filter((m) => isAccountManager(m, jobTitles)),
+    [members, jobTitles],
+  );
 
   useModalAutofocus(nameRef);
 

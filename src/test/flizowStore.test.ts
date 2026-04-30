@@ -308,6 +308,79 @@ describe('flizowStore reset()', () => {
   });
 });
 
+// ── Job titles ────────────────────────────────────────────────────────
+
+describe('flizowStore job titles', () => {
+  it('seeds the default job-title catalog on a fresh workspace', () => {
+    flizowStore.reset();
+    const titles = flizowStore.getSnapshot().jobTitles;
+    expect(titles.length).toBe(5);
+    // Defaults always include the AM + Operator anchors that
+    // migrateMembersToJobTitles depends on.
+    const ids = titles.map((t) => t.id);
+    expect(ids).toContain('jt-account-manager');
+    expect(ids).toContain('jt-operator');
+  });
+
+  it('addJobTitle appends a new entry', () => {
+    flizowStore.reset();
+    flizowStore.addJobTitle({
+      id: 'jt-test',
+      label: 'Tester',
+      kind: 'operator',
+      color: '#fff',
+      active: true,
+    });
+    const titles = flizowStore.getSnapshot().jobTitles;
+    expect(titles.find((t) => t.id === 'jt-test')?.label).toBe('Tester');
+  });
+
+  it('addJobTitle is a no-op on duplicate id', () => {
+    flizowStore.reset();
+    const before = flizowStore.getSnapshot().jobTitles.length;
+    flizowStore.addJobTitle({
+      id: 'jt-account-manager', // already seeded
+      label: 'Trying to overwrite',
+      kind: 'operator',
+      color: '#fff',
+      active: true,
+    });
+    const after = flizowStore.getSnapshot().jobTitles;
+    expect(after.length).toBe(before);
+    // Confirm the original entry is intact.
+    expect(after.find((t) => t.id === 'jt-account-manager')?.label).toBe('Account Manager');
+  });
+
+  it('updateJobTitle patches in place and ignores attempts to change id', () => {
+    flizowStore.reset();
+    flizowStore.updateJobTitle('jt-designer', {
+      label: 'Senior Designer',
+      // Caller passing id should be ignored (id is immutable).
+      id: 'jt-overridden',
+    } as Parameters<typeof flizowStore.updateJobTitle>[1]);
+    const t = flizowStore.getSnapshot().jobTitles.find((x) => x.id === 'jt-designer');
+    expect(t?.label).toBe('Senior Designer');
+    expect(flizowStore.getSnapshot().jobTitles.find((x) => x.id === 'jt-overridden')).toBeUndefined();
+  });
+
+  it('archiveJobTitle flips active to false without removing the entry', () => {
+    flizowStore.reset();
+    flizowStore.archiveJobTitle('jt-strategist');
+    const t = flizowStore.getSnapshot().jobTitles.find((x) => x.id === 'jt-strategist');
+    expect(t?.active).toBe(false);
+  });
+
+  it('deleteJobTitle removes the entry; subsequent calls no-op', () => {
+    flizowStore.reset();
+    const before = flizowStore.getSnapshot().jobTitles.length;
+    flizowStore.deleteJobTitle('jt-manager');
+    expect(flizowStore.getSnapshot().jobTitles.length).toBe(before - 1);
+    // Second delete is a no-op (defensive against double-clicks).
+    flizowStore.deleteJobTitle('jt-manager');
+    expect(flizowStore.getSnapshot().jobTitles.length).toBe(before - 1);
+  });
+});
+
 // ── Trash bin ────────────────────────────────────────────────────────────
 //
 // Soft-delete coverage for the workspace-wide Trash. Each soft-deletable

@@ -9,6 +9,7 @@ import { DEMO_AMS, OPS_TEAM } from './demoRosters';
 import { OPS_TASK_SEED } from './opsSeed';
 import { ONBOARDING_TEMPLATES, slugifyLabel } from './onboardingTemplates';
 import { TASK_POOLS as SHARED_TASK_POOLS } from './taskPools';
+import { DEFAULT_JOB_TITLES } from '../utils/jobTitles';
 
 /**
  * Port of the mockup's window.FLIZOW_DATA generator
@@ -1119,5 +1120,11 @@ export function generateDemoData(): FlizowData {
     // user makes while exploring will populate this; on a fresh
     // demo load nothing is in there yet.
     trash: [],
+    // Bundle the default job-title catalog with the demo. The
+    // demo's seeded members already carry stable jobTitleId values
+    // (mapping to the Account Manager / Designer / Strategist
+    // entries), so the catalog here keeps them resolved on a fresh
+    // load without waiting for the migration pass.
+    jobTitles: DEFAULT_JOB_TITLES.map((jt) => ({ ...jt })),
   };
 }

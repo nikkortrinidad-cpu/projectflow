@@ -34,10 +34,44 @@ export type TaskSeverity = 'critical' | 'warning';
 
 export type ServiceType = 'retainer' | 'project';
 
-/** `am` = Account Manager (inferred from the client's AM column).
- *  `operator` = anyone on OPS_TEAM (SEO, web, paid, ops). Both share the
- *  same shape so the delegate popover and assignee pickers can treat them
- *  uniformly. */
+/** Categorical that says how a job title behaves in the agency.
+ *  - 'account-manager' = client-facing lead. Eligible for the AM slot
+ *    on a client; renders with a solid avatar fill.
+ *  - 'operator' = delivery person (designer, strategist, ops, etc.).
+ *    Renders with a soft avatar fill. Eligible for the team list on
+ *    services they're assigned to.
+ *
+ *  Lives on JobTitle so the workspace owner can recategorize without
+ *  changing every member at once. Replaces the legacy MemberType
+ *  binary (kept as a deprecated alias below). */
+export type JobTitleKind = 'account-manager' | 'operator';
+
+/** A workspace-curated job title — a label that sits on a member's
+ *  profile and drives filtering / coverage rules. The list is owned
+ *  by Owner+Admin (Settings → Job titles). Defaults are seeded the
+ *  first time a workspace loads after Phase 2 ships.
+ *
+ *  - id: stable opaque string. Members store this on `jobTitleId`.
+ *  - label: human-readable ("Account Manager"). Shown on profile + pills.
+ *  - kind: AM vs operator behaviour. See JobTitleKind above.
+ *  - color: optional accent for the pill. Falls back to a neutral chip.
+ *  - active: soft-disable. Inactive titles disappear from new pickers
+ *    but existing members tagged with the title keep showing it until
+ *    moved off. Lets the owner retire a title without orphaning data.
+ */
+export interface JobTitle {
+  id: string;
+  label: string;
+  kind: JobTitleKind;
+  color?: string;
+  active: boolean;
+}
+
+/** @deprecated since Phase 2. The MemberType binary ('am' | 'operator')
+ *  has been replaced by JobTitleKind on JobTitle. Kept as a string
+ *  alias so legacy reads compile while in-flight code is swept;
+ *  every consumer should call `memberKind(member, jobTitles)` instead.
+ *  Removable once no file imports MemberType. */
 export type MemberType = 'am' | 'operator';
 
 /** Access role governs what a member can do across the workspace.
@@ -451,15 +485,30 @@ export interface Member {
   /** Two-letter initials used everywhere an avatar shows up. */
   initials: string;
   name: string;
-  /** Job title. Optional because AMs inferred from the client rows only
-   *  know their name/colour, not their role. Operators always have one. */
+  /** Free-text job-title fallback. Predates the workspace `jobTitles[]`
+   *  catalog and only fires when `jobTitleId` is unset (legacy demo
+   *  members, members the owner hasn't categorised yet). New writes
+   *  go through `jobTitleId`; this field stays read-only for back-
+   *  compat and is the source we migrate FROM into the catalog. */
   role?: string;
+  /** Reference into FlizowData.jobTitles[]. Drives the title pill on
+   *  the profile, AM filtering, avatar style hints, and (later) rule
+   *  targeting. Optional because legacy members may not be tagged
+   *  yet — `memberKind()` falls back to `Member.type` then `'operator'`
+   *  in that case. Audit: roles + job-titles Phase 2. */
+  jobTitleId?: string;
   /** Hex colour for the solid avatar (AMs) or the text colour on the
    *  soft-bg avatar (operators). */
   color: string;
   /** Soft background colour for operators. AMs skip this and use `color`
-   *  as a solid fill instead. */
+   *  as a solid fill instead. The presence of `bg` (not `type`) is
+   *  what avatar helpers check now — see utils/avatar.avatarStyle. */
   bg?: string;
+  /** @deprecated since Phase 2. The 'am' | 'operator' binary moved to
+   *  JobTitleKind on JobTitle. Kept on the record for back-compat with
+   *  legacy demo data and as the migration source for jobTitleId. New
+   *  code should call `memberKind(member, jobTitles)` instead of
+   *  reading this directly. */
   type: MemberType;
   /** Access role — undefined on legacy / demo members (no pill shown).
    *  The signed-in user gets one set via upsertOwnMember on every
@@ -1062,6 +1111,12 @@ export interface FlizowData {
    *  read time. Empty by default — a fresh install renders the five
    *  built-in templates as-is. Audit: templates M2 (admin editor). */
   templateOverrides: TemplateRecord[];
+  /** Workspace-curated job-title catalog. Owner+Admin manage the list
+   *  in Settings → Job titles; every Member with a job title points
+   *  to one of these by id. Seeded with five defaults the first time
+   *  a workspace loads after Phase 2 ships, so existing AMs/operators
+   *  have somewhere to land. Audit: roles + job-titles Phase 2. */
+  jobTitles: JobTitle[];
   /** Light vs dark mode. Used to be owned by the legacy BoardStore;
    *  moved here so we can retire that store. App.tsx reads this and
    *  syncs to `document.documentElement` (class + data-theme attr).

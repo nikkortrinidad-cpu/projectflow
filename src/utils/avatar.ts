@@ -33,3 +33,25 @@ export function avatarColor(seed: string): string {
   const hue = Math.abs(h) % 360;
   return `hsl(${hue} 55% 55%)`;
 }
+
+/**
+ * Inline avatar background + foreground colour pair for a Member.
+ *
+ * Pre-Phase-2, every assignee chip computed this inline as
+ *   `m.type === 'operator' ? { background: m.bg, color: m.color }
+ *                          : { background: m.color, color: '#fff' }`
+ * which was both duplicated everywhere and tied to the deprecated
+ * `Member.type` field. Now the styling decision lives here and reads
+ * presence-of-`bg` directly: operators have a soft `bg` set on their
+ * record, AMs don't. Same visual result, decoupled from MemberType.
+ *
+ * Returns React-style camelCase keys so callers can pass it straight
+ * into a `style={...}` prop.
+ */
+export function avatarStyle(
+  member: { color: string; bg?: string },
+): { background: string; color: string } {
+  return member.bg
+    ? { background: member.bg, color: member.color }
+    : { background: member.color, color: '#fff' };
+}

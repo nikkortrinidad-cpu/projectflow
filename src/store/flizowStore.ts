@@ -9,12 +9,14 @@ import type {
   TemplateRecord, AccessRole, WorkspaceDoc, WorkspaceMembership,
   PendingInvite,
   TrashEntry, TrashKind, TrashPayload,
+  JobTitle,
 } from '../types/flizow';
 import { ONBOARDING_TEMPLATES } from '../data/onboardingTemplates';
 import { TASK_POOLS } from '../data/taskPools';
 import { findTemplate } from '../data/templates';
 import { OPS_TEAM_MEMBERS, OPS_TASK_SEED } from '../data/opsSeed';
 import { migrateAccessRole } from '../utils/access';
+import { DEFAULT_JOB_TITLES, pickMigratedJobTitleId } from '../utils/jobTitles';
 
 /**
  * FlizowStore — central data container.
@@ -86,6 +88,10 @@ function emptyData(): FlizowData {
     // for 90 days before auto-empty. Auto-prune runs on every load
     // via migrate() so stale entries don't accumulate.
     trash: [],
+    // Five seeded job titles so a fresh workspace has somewhere to
+    // place new members from day one. The owner can edit the list
+    // (Settings → Job titles) — labels, colors, kind toggle, archive.
+    jobTitles: DEFAULT_JOB_TITLES.map((jt) => ({ ...jt })),
   };
 }
 
@@ -257,7 +263,40 @@ function migrate(parsed: Partial<FlizowData>): FlizowData {
     // migrate() — so reading the store stays cheap. The next save()
     // (any user mutation) writes the pruned trash back to disk.
     trash: pruneTrash(Array.isArray(parsed.trash) ? parsed.trash : []),
+    // Job titles catalog — backfill with the 5-item default list for
+    // any doc that predates the Phase-2 catalog. Members get migrated
+    // onto these ids by migrateMembersToJobTitles below; the seed has
+    // to be present BEFORE that runs, hence this lands first.
+    jobTitles: Array.isArray(parsed.jobTitles) && parsed.jobTitles.length > 0
+      ? parsed.jobTitles
+      : base.jobTitles,
   };
+}
+
+/** One-shot member migration: assign a `jobTitleId` to every member
+ *  that doesn't have one yet, mapping from the legacy `Member.role`
+ *  free-text field and `Member.type` ('am' | 'operator') binary into
+ *  the workspace's job-title catalog.
+ *
+ *  Pure: takes (members, jobTitles), returns (next members, changed
+ *  flag). The store calls this from the workspace snapshot handler
+ *  and persists when changed=true so subsequent reads are clean. */
+function migrateMembersToJobTitles(
+  members: Member[],
+  jobTitles: ReadonlyArray<JobTitle>,
+): { members: Member[]; changed: boolean } {
+  if (jobTitles.length === 0) return { members, changed: false };
+  let changed = false;
+  const next = members.map((m) => {
+    if (m.jobTitleId && jobTitles.some((j) => j.id === m.jobTitleId)) {
+      return m;
+    }
+    const id = pickMigratedJobTitleId(m, jobTitles);
+    if (!id || id === m.jobTitleId) return m;
+    changed = true;
+    return { ...m, jobTitleId: id };
+  });
+  return { members: next, changed };
 }
 
 /** One-shot read of the legacy BoardStore's theme cookie. Only used
@@ -585,6 +624,13 @@ class FlizowStore {
       // opsSeeded, templateOverrides, etc.). Same pattern as before;
       // just sourced from the workspace doc instead of flizow/{uid}.
       const cloud = migrate(ws.data ?? {});
+      // Phase-2 sweep: members → jobTitleId. Runs after migrate() so
+      // the seeded jobTitles catalog is guaranteed to exist. The
+      // changed flag tells us whether to persist back; we piggy-back
+      // on the existing role-migration write below.
+      const memberMig = migrateMembersToJobTitles(cloud.members, cloud.jobTitles);
+      cloud.members = memberMig.members;
+      const dataChanged = memberMig.changed;
       this.data = cloud;
       // Identity backfill for workspaces created before the
       // name/initials/color slice landed. Default name derives from
@@ -620,11 +666,17 @@ class FlizowStore {
           color: wsColor,
         }).catch(() => { /* non-fatal — banner already covers sync errors */ });
       }
-      // Persist role migration once. Owner-only — non-owners would hit
+      // Persist migrations once. Owner-only — non-owners would hit
       // the Firestore rule wall and the next sign-in by the owner will
       // sweep the doc anyway. Cheaper than wiring a multi-writer race.
-      if (rolesChanged && this.userId === ws.ownerUid) {
-        this.persistMigratedRoles(ws).catch(() => { /* non-fatal */ });
+      // Both migrations (access roles + member→jobTitleId) collapse
+      // into a single write because they touch the same workspace doc.
+      const needsMigrationWrite = rolesChanged || dataChanged;
+      if (needsMigrationWrite && this.userId === ws.ownerUid) {
+        this.persistMigratedRoles({
+          ...ws,
+          data: cloud,
+        }).catch(() => { /* non-fatal */ });
       }
       this.upsertOwnMember(userId, displayName, email, photoURL);
       this.safeSetItem(STORAGE_KEY, JSON.stringify(this.data));
@@ -2752,6 +2804,57 @@ class FlizowStore {
     // show "Unknown" until someone reassigns them.
     this.data.members = this.data.members.filter(m => m.id !== id);
     this.save();
+  }
+
+  // ── Job titles ───────────────────────────────────────────────────────
+  //
+  // Workspace-curated catalog used for profile pills, AM filtering,
+  // and (in later phases) coverage rule targeting. Owner+Admin manage
+  // the list from Settings → Job titles. Five defaults seed on first
+  // load (utils/jobTitles.DEFAULT_JOB_TITLES); the owner can rename,
+  // recolor, recategorise, archive, or delete after that.
+
+  /** Append a new job title. Caller passes the full record so we
+   *  don't have to invent ids/colors here — the form generates a
+   *  slug-style id (`jt-${random}`) and lets the user pick the color
+   *  from the same palette as members. No-op on duplicate id. */
+  addJobTitle(jt: JobTitle) {
+    if (this.data.jobTitles.some((x) => x.id === jt.id)) return;
+    this.data.jobTitles.push(jt);
+    this.save();
+  }
+
+  /** Patch a job title in place. Common patches: `label` (rename),
+   *  `color` (recolor), `kind` (recategorise AM ↔ operator),
+   *  `active: false` (soft archive). No-op when the id is unknown. */
+  updateJobTitle(id: string, patch: Partial<JobTitle>) {
+    const jt = this.data.jobTitles.find((x) => x.id === id);
+    if (!jt) return;
+    // `id` is immutable — guard against a caller passing it in patch.
+    const { id: _ignored, ...safe } = patch;
+    Object.assign(jt, safe);
+    this.save();
+  }
+
+  /** Permanently remove a job title. Members still pointing at the
+   *  deleted id keep their `jobTitleId` value but `findJobTitle`
+   *  returns undefined, so the profile pill silently falls back to
+   *  the legacy `Member.role` text or the empty state. Prefer
+   *  `archiveJobTitle` (soft) for anything that has live members.
+   *  No-op when the id is unknown. */
+  deleteJobTitle(id: string) {
+    const before = this.data.jobTitles.length;
+    this.data.jobTitles = this.data.jobTitles.filter((x) => x.id !== id);
+    if (this.data.jobTitles.length === before) return;
+    this.save();
+  }
+
+  /** Soft-disable a job title without dropping it from the list.
+   *  Inactive titles disappear from new pickers but existing members
+   *  tagged with the title keep their pill. Reversible via
+   *  `updateJobTitle(id, { active: true })`. */
+  archiveJobTitle(id: string) {
+    this.updateJobTitle(id, { active: false });
   }
 
   // ── Onboarding ───────────────────────────────────────────────────────

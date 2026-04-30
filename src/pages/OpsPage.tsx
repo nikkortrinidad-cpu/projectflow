@@ -8,6 +8,7 @@ import {
 import { DndContext, DragOverlay, PointerSensor, KeyboardSensor, useSensor, useSensors, closestCenter, useDraggable, useDroppable } from '@dnd-kit/core';
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { daysBetween, formatMonthDay } from '../utils/dateFormat';
+import { avatarStyle } from '../utils/avatar';
 import { BoardFilters, applyFilters, EMPTY_FILTERS, type BoardFilterState } from '../components/BoardFilters';
 import { useFlizow } from '../store/useFlizow';
 import { flizowStore } from '../store/flizowStore';
@@ -646,10 +647,7 @@ function CardTile({
             type="button"
             className="card-assignee card-assignee--clickable"
             title={`${assignee.name} — click to open profile`}
-            style={assignee.type === 'operator' && assignee.bg
-              ? { background: assignee.bg, color: assignee.color }
-              : { background: assignee.color, color: '#fff' }
-            }
+            style={avatarStyle(assignee)}
             onClick={(e) => {
               e.stopPropagation();
               profile.open(assignee.id);

@@ -20,11 +20,12 @@ import { useRoute, navigate } from '../router';
 import { useFlizow } from '../store/useFlizow';
 import type {
   Client, Service, Task, Member, FlizowData, ClientStatus, ColumnId,
-  OnboardingItem, Contact, QuickLink,
+  OnboardingItem, Contact, QuickLink, JobTitle,
 } from '../types/flizow';
 import { flizowStore, type FlizowStore } from '../store/flizowStore';
 import { formatMonthYear, formatMonthDay, daysBetween } from '../utils/dateFormat';
 import { categoryLabel, serviceHealth, serviceHealthLabel, type ServiceHealth } from '../utils/clientDerived';
+import { isOperator } from '../utils/jobTitles';
 import { NotesTab } from '../components/NotesTab';
 // Touchpoints panel hidden 2026-04-28 by product call — see TABS
 // comment below. Restore: uncomment this import + the tab entry +
@@ -1841,6 +1842,7 @@ function AboutSection({ client, data }: { client: Client; data: FlizowData }) {
         <AddOperatorModal
           clientId={client.id}
           allMembers={data.members}
+          jobTitles={data.jobTitles}
           currentTeamIds={client.teamIds}
           onClose={() => setShowAddOperator(false)}
         />
@@ -2955,20 +2957,23 @@ function AddQuickLinkModal({ clientId, link, onClose }: {
 
 // ── Add Operator Modal ────────────────────────────────────────────────────
 
-function AddOperatorModal({ clientId, allMembers, currentTeamIds, onClose }: {
+function AddOperatorModal({ clientId, allMembers, jobTitles, currentTeamIds, onClose }: {
   clientId: string;
   allMembers: Member[];
+  jobTitles: JobTitle[];
   currentTeamIds: string[];
   onClose: () => void;
 }) {
-  // Only operators can join the project team — AMs go through `amId` on
-  // the client itself. Hide anyone already on the team so the list only
-  // shows people the user can actually act on.
+  // Only operators can join the project team — AMs go through `amId`
+  // on the client itself. Hide anyone already on the team so the list
+  // only shows people the user can actually act on. Filter goes
+  // through the job-title catalog so the workspace owner can move a
+  // member between AM/operator without changing this code.
   const available = useMemo(
-    () => allMembers.filter(m =>
-      m.type === 'operator' && !currentTeamIds.includes(m.id),
+    () => allMembers.filter((m) =>
+      isOperator(m, jobTitles) && !currentTeamIds.includes(m.id),
     ),
-    [allMembers, currentTeamIds],
+    [allMembers, jobTitles, currentTeamIds],
   );
 
   const [picked, setPicked] = useState<Set<string>>(new Set());

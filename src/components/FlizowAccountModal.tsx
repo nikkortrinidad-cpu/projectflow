@@ -21,7 +21,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useFlizow } from '../store/useFlizow';
 import { flizowStore } from '../store/flizowStore';
-import type { AccessRole, Member, TrashEntry, TrashKind } from '../types/flizow';
+import type { AccessRole, JobTitle, JobTitleKind, Member, TrashEntry, TrashKind, WorkspaceMembership } from '../types/flizow';
 import { initialsOf } from '../utils/avatar';
 import { ConfirmDangerDialog } from './ConfirmDangerDialog';
 import { useMemberProfile } from '../contexts/MemberProfileContext';
@@ -29,6 +29,7 @@ import { currentVacationPeriod } from '../utils/memberProfile';
 import {
   ACCESS_ROLE_LABEL,
   ACCESS_ROLE_DESCRIPTION,
+  can,
 } from '../utils/access';
 
 /**
@@ -57,7 +58,23 @@ import {
  *   • Timezone-driven date formatting — future pass
  */
 
-type Section = 'profile' | 'workspace' | 'preferences' | 'notifications' | 'timeoff' | 'members' | 'trash' | 'signin';
+type Section =
+  | 'profile' | 'preferences' | 'notifications' | 'timeoff'        // My account
+  | 'workspace' | 'members' | 'jobtitles' | 'trash'                // Workspace
+  | 'signin';                                                       // Account-level
+
+/** Visual + structural grouping for the sidebar. The first group
+ *  is "My account" — personal stuff that every signed-in user sees.
+ *  The second is "Workspace" — admin-only catalogs and lists; only
+ *  rendered when `can(role, 'manage:workspace')`. The third bucket
+ *  ("Account-level") holds anything that doesn't fit either group
+ *  (today: just sign-in / sessions). Section ids are flat — the
+ *  group headings are presentational. */
+const SIDEBAR_GROUPS = {
+  myAccount: ['profile', 'preferences', 'notifications', 'timeoff'] as const,
+  workspace: ['workspace', 'members', 'jobtitles', 'trash'] as const,
+  account:   ['signin'] as const,
+};
 
 const AVATAR_COLORS = [
   { id: 'indigo', hex: '#5e5ce6', label: 'Indigo' },
@@ -81,7 +98,27 @@ export default function FlizowAccountModal({ onClose }: Props) {
   // See setAppearance + the dirty-detection block below for the full
   // policy. (System mode resolves to the OS preference at click time.)
 
+  // Read the signed-in user's access role from the agency-roster
+  // mirror so the sidebar can hide the Workspace group from members
+  // who can't open any of those screens. Falls back to undefined for
+  // the dev-bypass / pre-auth case — `can()` denies undefined.
+  const ownAccessRole = user?.uid
+    ? data.members.find((m) => m.id === user.uid)?.accessLevel
+    : undefined;
+  const canManageWorkspace = can(ownAccessRole, 'manage:workspace');
+
   const [section, setSection] = useState<Section>('profile');
+  // If a non-admin somehow lands on a Workspace section (stale local
+  // state, deep link from before they were demoted), bounce them to
+  // Profile. Cheap, idempotent, and the alternative — silently
+  // showing an empty panel — is worse UX. Runs once on mount AND any
+  // time the role changes (admin loses rights mid-session).
+  useEffect(() => {
+    const isWorkspaceSection = (SIDEBAR_GROUPS.workspace as ReadonlyArray<string>).includes(section);
+    if (isWorkspaceSection && !canManageWorkspace) {
+      setSection('profile');
+    }
+  }, [canManageWorkspace, section]);
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
   const modalRef = useRef<HTMLDivElement | null>(null);
 
@@ -435,18 +472,10 @@ export default function FlizowAccountModal({ onClose }: Props) {
 
         <div className="acct-body">
           <nav className="acct-nav" role="tablist" aria-label="Settings sections" aria-orientation="vertical">
+            {/* MY ACCOUNT — personal, every signed-in user sees these. */}
+            <div className="acct-nav-group-label" aria-hidden="true">My account</div>
             <NavItem section="profile" label="Profile" active={section === 'profile'} onClick={() => setSection('profile')}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
-            </NavItem>
-            <NavItem section="workspace" label="Workspace" active={section === 'workspace'} onClick={() => setSection('workspace')}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 21h18" />
-                <path d="M5 21V7l8-4v18" />
-                <path d="M19 21V11l-6-4" />
-                <line x1="9" y1="9" x2="9" y2="9.01" />
-                <line x1="9" y1="13" x2="9" y2="13.01" />
-                <line x1="9" y1="17" x2="9" y2="17.01" />
-              </svg>
             </NavItem>
             <NavItem section="preferences" label="Preferences" active={section === 'preferences'} onClick={() => setSection('preferences')}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-9-9"/><path d="M12 3v4"/><path d="M12 17v4"/><path d="M3 12h4"/><path d="M17 12h4"/></svg>
@@ -454,14 +483,8 @@ export default function FlizowAccountModal({ onClose }: Props) {
             <NavItem section="notifications" label="Notifications" active={section === 'notifications'} onClick={() => setSection('notifications')}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
             </NavItem>
-            {/* Time off — personal vacation / out-of-office config.
-                Sits next to Notifications because both are personal
-                preferences ("how I operate"); Members + Trash that
-                follow are workspace-level. The profile panel reads
-                each member's timeOff to render the "🌴 On vacation"
-                pill, but the editing surface for YOUR own time off
-                lives here so it doesn't collide with the panel's
-                identity-only edit form. */}
+            {/* Time off — personal vacation config. Phase 4 will rework
+                this into a request-flow with status. */}
             <NavItem section="timeoff" label="Time off" active={section === 'timeoff'} onClick={() => setSection('timeoff')}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M2 22a8 8 0 0 1 16 0" />
@@ -470,30 +493,58 @@ export default function FlizowAccountModal({ onClose }: Props) {
                 <circle cx="12" cy="5" r="2" />
               </svg>
             </NavItem>
-            <NavItem section="members" label="Members" active={section === 'members'} onClick={() => setSection('members')}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-              </svg>
-            </NavItem>
-            {/* Trash — recovery surface for soft-deleted items. Lives
-                between Members and Sign-in so the flow reads
-                "your stuff (Profile) → workspace stuff (Workspace,
-                Preferences, Notifications, Members, Trash) →
-                account-level (Sign-in)." Recovery is rare so it
-                doesn't merit top-nav real estate, but it's still a
-                first-class section here. */}
-            <NavItem section="trash" label="Trash" active={section === 'trash'} onClick={() => setSection('trash')}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="3 6 5 6 21 6" />
-                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                <path d="M10 11v6" />
-                <path d="M14 11v6" />
-                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-              </svg>
-            </NavItem>
+
+            {/* WORKSPACE — admin-only. Hidden entirely for Member/Viewer
+                so the sidebar doesn't show entries they can't open. */}
+            {canManageWorkspace && (
+              <>
+                <div className="acct-nav-group-label" aria-hidden="true">Workspace</div>
+                <NavItem section="workspace" label="Workspace" active={section === 'workspace'} onClick={() => setSection('workspace')}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 21h18" />
+                    <path d="M5 21V7l8-4v18" />
+                    <path d="M19 21V11l-6-4" />
+                    <line x1="9" y1="9" x2="9" y2="9.01" />
+                    <line x1="9" y1="13" x2="9" y2="13.01" />
+                    <line x1="9" y1="17" x2="9" y2="17.01" />
+                  </svg>
+                </NavItem>
+                <NavItem section="members" label="Members" active={section === 'members'} onClick={() => setSection('members')}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                </NavItem>
+                {/* Job titles — workspace-curated catalog of role labels
+                    for member profiles + (later) coverage rule targeting.
+                    Five defaults seed automatically; admin curates the
+                    rest. Sits next to Members because both manage
+                    "the people working here." */}
+                <NavItem section="jobtitles" label="Job titles" active={section === 'jobtitles'} onClick={() => setSection('jobtitles')}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="6" width="18" height="14" rx="2" />
+                    <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
+                    <line x1="3" y1="13" x2="21" y2="13" />
+                  </svg>
+                </NavItem>
+                <NavItem section="trash" label="Trash" active={section === 'trash'} onClick={() => setSection('trash')}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                    <path d="M10 11v6" />
+                    <path d="M14 11v6" />
+                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                  </svg>
+                </NavItem>
+              </>
+            )}
+
+            {/* ACCOUNT — sign-in, sessions. Bottom of the list because
+                it's an account-level operation rather than personal
+                config or workspace administration. */}
+            <div className="acct-nav-group-label" aria-hidden="true">Account</div>
             <NavItem section="signin" label="Sign-in" active={section === 'signin'} onClick={() => setSection('signin')}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </NavItem>
@@ -790,6 +841,11 @@ export default function FlizowAccountModal({ onClose }: Props) {
               <MembersSection />
             )}
 
+            {/* ── Job titles ─────────────────────────────────────── */}
+            {section === 'jobtitles' && (
+              <JobTitlesSection />
+            )}
+
             {/* ── Trash ──────────────────────────────────────────── */}
             {section === 'trash' && (
               <TrashSection />
@@ -1037,6 +1093,18 @@ function MembersSection() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [pendingMemberOp, setPendingMemberOp] = useState<string | null>(null);
 
+  // List controls — search / sort / group-by / role filter. Defaults
+  // mirror what a fresh workspace expects to see: alphabetical by
+  // name, no grouping, no filter applied. Persisting these across
+  // sessions is overkill for now; if power users ask for it later
+  // we lift to localStorage.
+  type SortKey = 'name' | 'jobTitle' | 'role' | 'joined';
+  type GroupKey = 'none' | 'jobTitle' | 'role';
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<SortKey>('name');
+  const [groupBy, setGroupBy] = useState<GroupKey>('none');
+  const [roleFilter, setRoleFilter] = useState<Set<AccessRole>>(new Set());
+
   if (!meta) {
     return (
       <section
@@ -1268,109 +1336,370 @@ function MembersSection() {
 
       {/* Active members list. */}
       <div className="mbrs-group">
-        <div className="mbrs-eyebrow">Members · {memberCount}</div>
-        <div className="mbrs-list">
-          {meta.members.map((m) => {
-            const isThisOwner = m.uid === meta.ownerUid;
-            const isMe = m.uid === ownUid;
-            const initials = (m.displayName || m.email || 'U')
-              .split(/\s+|@/)[0]
-              .slice(0, 2)
-              .toUpperCase();
-            const showSelect = isOwner && !isThisOwner;
-            const showRemove = isOwner && !isThisOwner;
-            // Resolve the data-side member record for cap editing.
-            // workspace.members carries auth/role; data.members carries
-            // the assignable record (caps, color, type, etc.). The two
-            // are linked by uid === id for any member who has signed in.
-            const dataMember = data.members.find(dm => dm.id === m.uid);
-            // Hide the profile-open click on members who have no
-            // data.member record yet (invitees who haven't signed in).
-            // The panel reads from data.members and would render a
-            // blank shell otherwise — better to leave the avatar as a
-            // plain visual until they have a profile to view.
-            const canOpenProfile = !!dataMember;
+        <MembersListControls
+          search={search}
+          setSearch={setSearch}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+          groupBy={groupBy}
+          setGroupBy={setGroupBy}
+          roleFilter={roleFilter}
+          setRoleFilter={setRoleFilter}
+          memberCount={memberCount}
+          jobTitles={data.jobTitles}
+        />
+
+        {/* Filter / sort / group pipeline runs over the workspace
+            members. Each row also pulls its data.members[] mirror
+            for caps + jobTitleId lookup. We compute the projection
+            inline so the dependency on jobTitles + filter state is
+            visible in one read instead of split across hooks. */}
+        {(() => {
+          const groups = projectMembers(
+            meta.members,
+            data.members,
+            data.jobTitles,
+            { search, sortBy, groupBy, roleFilter },
+          );
+
+          if (groups.length === 0 || groups.every((g) => g.rows.length === 0)) {
             return (
-              <div key={m.uid} className="mbrs-row">
-                {canOpenProfile ? (
-                  <button
-                    type="button"
-                    className="mbrs-avatar mbrs-avatar--clickable"
-                    onClick={() => profile.open(m.uid)}
-                    aria-label={`Open profile for ${m.displayName || m.email || 'this member'}`}
-                  >
-                    {initials}
-                  </button>
-                ) : (
-                  <div className="mbrs-avatar" aria-hidden="true">{initials}</div>
-                )}
-                <div className="mbrs-identity">
-                  <div className="mbrs-name">
-                    <span className="mbrs-name-text">{m.displayName || m.email || 'Unnamed'}</span>
-                    {isMe && <span className="mbrs-tag">You</span>}
-                    {isThisOwner && <span className="mbrs-tag mbrs-tag--owner">Owner</span>}
-                  </div>
-                  <div className="mbrs-sub">
-                    {m.email || '—'} · joined {formatRelativeShort(m.joinedAt)}
-                  </div>
-                </div>
-                {showSelect ? (
-                  <select
-                    className="acct-input mbrs-role-select mbrs-role-select--inline"
-                    value={m.role}
-                    disabled={pendingMemberOp === m.uid}
-                    onChange={(e) => handleRoleChange(m.uid, e.target.value as AccessRole)}
-                    aria-label={`${m.displayName || m.email}'s access role`}
-                    title={ACCESS_ROLE_DESCRIPTION[m.role]}
-                  >
-                    {/* Owner intentionally not an option here — promoting
-                        to Owner is the ownership-transfer flow, distinct
-                        from "change this member's role." Renders as a
-                        read-only pill below for the owner row. */}
-                    <option value="viewer">{ACCESS_ROLE_LABEL.viewer}</option>
-                    <option value="member">{ACCESS_ROLE_LABEL.member}</option>
-                    <option value="admin">{ACCESS_ROLE_LABEL.admin}</option>
-                  </select>
-                ) : (
-                  <span
-                    className={`access-pill access-pill--${m.role}`}
-                    title={ACCESS_ROLE_DESCRIPTION[m.role]}
-                  >
-                    {ACCESS_ROLE_LABEL[m.role]}
-                  </span>
-                )}
-                {showRemove && (
-                  <button
-                    type="button"
-                    onClick={() => handleRemove(m.uid, m.displayName || m.email || 'this member')}
-                    disabled={pendingMemberOp === m.uid}
-                    className="mbrs-action-btn mbrs-action-btn--danger"
-                    aria-label={`Remove ${m.displayName || m.email}`}
-                    title="Remove member"
-                  >
-                    Remove
-                  </button>
-                )}
-                {/* Daily cap inputs — soft / max. Owner-only edit: every
-                    member has caps, but only the owner manages them
-                    centrally. Empty input commits as `undefined` so the
-                    capacity helpers fall back to the 6/8 defaults.
-                    Placed at the end of the row so non-owner rows
-                    (which don't render this) still flow cleanly through
-                    the grid columns without leaving an empty middle. */}
-                {isOwner && dataMember && (
-                  <CapInputs
-                    member={dataMember}
-                    onChange={(patch) => store.updateMember(m.uid, patch)}
-                  />
-                )}
+              <div className="mbrs-empty" role="status">
+                No members match the current filters.
               </div>
             );
-          })}
-        </div>
+          }
+
+          return groups.map((group) => (
+            <div key={group.key} className="mbrs-list-group">
+              {group.label && (
+                <div className="mbrs-group-label">{group.label}</div>
+              )}
+              <div className="mbrs-list">
+                {group.rows.map(({ membership: m, member: dataMember }) => {
+                  const isThisOwner = m.uid === meta.ownerUid;
+                  const isMe = m.uid === ownUid;
+                  const initials = (m.displayName || m.email || 'U')
+                    .split(/\s+|@/)[0]
+                    .slice(0, 2)
+                    .toUpperCase();
+                  const showSelect = isOwner && !isThisOwner;
+                  const showRemove = isOwner && !isThisOwner;
+                  const canOpenProfile = !!dataMember;
+                  // Resolve the displayed job title once per row.
+                  // Falls back to a quiet em-dash so the row stays
+                  // visually balanced when a member hasn't been
+                  // tagged yet.
+                  const jt = dataMember?.jobTitleId
+                    ? data.jobTitles.find((t) => t.id === dataMember.jobTitleId)
+                    : undefined;
+                  return (
+                    <div key={m.uid} className="mbrs-row">
+                      {canOpenProfile ? (
+                        <button
+                          type="button"
+                          className="mbrs-avatar mbrs-avatar--clickable"
+                          onClick={() => profile.open(m.uid)}
+                          aria-label={`Open profile for ${m.displayName || m.email || 'this member'}`}
+                        >
+                          {initials}
+                        </button>
+                      ) : (
+                        <div className="mbrs-avatar" aria-hidden="true">{initials}</div>
+                      )}
+                      <div className="mbrs-identity">
+                        <div className="mbrs-name">
+                          <span className="mbrs-name-text">{m.displayName || m.email || 'Unnamed'}</span>
+                          {isMe && <span className="mbrs-tag">You</span>}
+                          {isThisOwner && <span className="mbrs-tag mbrs-tag--owner">Owner</span>}
+                          {jt && (
+                            <span
+                              className="mbrs-tag mbrs-tag--jt"
+                              style={{ background: jt.color || 'var(--bg-soft)', color: '#fff' }}
+                              title={`Job title: ${jt.label}`}
+                            >
+                              {jt.label}
+                            </span>
+                          )}
+                        </div>
+                        <div className="mbrs-sub">
+                          {m.email || '—'} · joined {formatRelativeShort(m.joinedAt)}
+                        </div>
+                      </div>
+                      {showSelect ? (
+                        <select
+                          className="acct-input mbrs-role-select mbrs-role-select--inline"
+                          value={m.role}
+                          disabled={pendingMemberOp === m.uid}
+                          onChange={(e) => handleRoleChange(m.uid, e.target.value as AccessRole)}
+                          aria-label={`${m.displayName || m.email}'s access role`}
+                          title={ACCESS_ROLE_DESCRIPTION[m.role]}
+                        >
+                          {/* Owner intentionally not an option here — promoting
+                              to Owner is the ownership-transfer flow, distinct
+                              from "change this member's role." Renders as a
+                              read-only pill below for the owner row. */}
+                          <option value="viewer">{ACCESS_ROLE_LABEL.viewer}</option>
+                          <option value="member">{ACCESS_ROLE_LABEL.member}</option>
+                          <option value="admin">{ACCESS_ROLE_LABEL.admin}</option>
+                        </select>
+                      ) : (
+                        <span
+                          className={`access-pill access-pill--${m.role}`}
+                          title={ACCESS_ROLE_DESCRIPTION[m.role]}
+                        >
+                          {ACCESS_ROLE_LABEL[m.role]}
+                        </span>
+                      )}
+                      {showRemove && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemove(m.uid, m.displayName || m.email || 'this member')}
+                          disabled={pendingMemberOp === m.uid}
+                          className="mbrs-action-btn mbrs-action-btn--danger"
+                          aria-label={`Remove ${m.displayName || m.email}`}
+                          title="Remove member"
+                        >
+                          Remove
+                        </button>
+                      )}
+                      {isOwner && dataMember && (
+                        <CapInputs
+                          member={dataMember}
+                          onChange={(patch) => store.updateMember(m.uid, patch)}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ));
+        })()}
       </div>
     </section>
   );
+}
+
+// ──────────────────────────────────────────────────────────────────
+// Members list controls — search + sort + group-by + filter chips.
+//
+// Lifted out of MembersSection so the section's primary path (render
+// the list) reads top-to-bottom without 60 lines of toolbar JSX.
+// ──────────────────────────────────────────────────────────────────
+
+function MembersListControls({
+  search, setSearch,
+  sortBy, setSortBy,
+  groupBy, setGroupBy,
+  roleFilter, setRoleFilter,
+  memberCount,
+  jobTitles,
+}: {
+  search: string;
+  setSearch: (v: string) => void;
+  sortBy: 'name' | 'jobTitle' | 'role' | 'joined';
+  setSortBy: (v: 'name' | 'jobTitle' | 'role' | 'joined') => void;
+  groupBy: 'none' | 'jobTitle' | 'role';
+  setGroupBy: (v: 'none' | 'jobTitle' | 'role') => void;
+  roleFilter: Set<AccessRole>;
+  setRoleFilter: (v: Set<AccessRole>) => void;
+  memberCount: number;
+  jobTitles: ReadonlyArray<JobTitle>;
+}) {
+  const ROLES: AccessRole[] = ['owner', 'admin', 'member', 'viewer'];
+
+  function toggleRole(r: AccessRole) {
+    const next = new Set(roleFilter);
+    if (next.has(r)) next.delete(r);
+    else next.add(r);
+    setRoleFilter(next);
+  }
+
+  return (
+    <div className="mbrs-controls">
+      <div className="mbrs-controls-row">
+        <div className="mbrs-search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            className="acct-input mbrs-search-input"
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={`Search ${memberCount} member${memberCount === 1 ? '' : 's'}…`}
+            aria-label="Search members"
+          />
+        </div>
+        <select
+          className="acct-input mbrs-control-select"
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+          aria-label="Sort members by"
+        >
+          <option value="name">Sort: Name</option>
+          <option value="jobTitle">Sort: Job title</option>
+          <option value="role">Sort: Access role</option>
+          <option value="joined">Sort: Joined date</option>
+        </select>
+        <select
+          className="acct-input mbrs-control-select"
+          value={groupBy}
+          onChange={(e) => setGroupBy(e.target.value as typeof groupBy)}
+          aria-label="Group members by"
+        >
+          <option value="none">Group: None</option>
+          <option value="jobTitle">Group: Job title</option>
+          <option value="role">Group: Access role</option>
+        </select>
+      </div>
+      {/* Role filter chips — toggleable. None pressed = show all
+          (the common case); pressing one or more narrows. The
+          "x match" count below the chips is implicit in the list
+          itself, so we don't render a count here. */}
+      <div className="mbrs-controls-row mbrs-chip-row" role="group" aria-label="Filter by access role">
+        {ROLES.map((r) => (
+          <button
+            key={r}
+            type="button"
+            className={`mbrs-chip ${roleFilter.has(r) ? 'mbrs-chip--on' : ''}`}
+            onClick={() => toggleRole(r)}
+            aria-pressed={roleFilter.has(r)}
+          >
+            {ACCESS_ROLE_LABEL[r]}
+          </button>
+        ))}
+        {roleFilter.size > 0 && (
+          <button
+            type="button"
+            className="mbrs-chip mbrs-chip--clear"
+            onClick={() => setRoleFilter(new Set())}
+            title="Clear all filters"
+          >
+            Clear
+          </button>
+        )}
+        {/* Hint chip when any filter is active so the count of
+            shown members is contextually clear without a second
+            label row. */}
+        {jobTitles.length > 0 && groupBy === 'jobTitle' && (
+          <span className="mbrs-chip mbrs-chip--hint" aria-hidden="true">
+            Grouped by {jobTitles.filter((t) => t.active).length} active titles
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Pure projection: filter → sort → group. Returns an array of
+ *  groups so the renderer can iterate without knowing how the
+ *  shaping was decided. */
+type ListRow = { membership: WorkspaceMembership; member: Member | undefined };
+
+function projectMembers(
+  memberships: ReadonlyArray<WorkspaceMembership>,
+  members: ReadonlyArray<Member>,
+  jobTitles: ReadonlyArray<JobTitle>,
+  opts: {
+    search: string;
+    sortBy: 'name' | 'jobTitle' | 'role' | 'joined';
+    groupBy: 'none' | 'jobTitle' | 'role';
+    roleFilter: Set<AccessRole>;
+  },
+): Array<{ key: string; label: string; rows: ListRow[] }> {
+  const memberById = new Map(members.map((m) => [m.id, m]));
+  const titleById = new Map(jobTitles.map((t) => [t.id, t]));
+
+  // 1. Pair memberships with their data.member mirror.
+  const paired: ListRow[] = memberships.map((mm) => ({
+    membership: mm,
+    member: memberById.get(mm.uid),
+  }));
+
+  // 2. Filter — search + role chips.
+  const q = opts.search.trim().toLowerCase();
+  const filtered = paired.filter(({ membership: mm, member: dm }) => {
+    if (opts.roleFilter.size > 0 && !opts.roleFilter.has(mm.role)) {
+      return false;
+    }
+    if (!q) return true;
+    const titleLabel = dm?.jobTitleId
+      ? titleById.get(dm.jobTitleId)?.label ?? ''
+      : (dm?.role ?? '');
+    return (
+      (mm.displayName ?? '').toLowerCase().includes(q) ||
+      (mm.email ?? '').toLowerCase().includes(q) ||
+      titleLabel.toLowerCase().includes(q)
+    );
+  });
+
+  // 3. Sort — pure compare functions per key.
+  const ROLE_ORDER: Record<AccessRole, number> = {
+    owner: 0, admin: 1, member: 2, viewer: 3,
+  };
+  filtered.sort((a, b) => {
+    switch (opts.sortBy) {
+      case 'role':
+        return ROLE_ORDER[a.membership.role] - ROLE_ORDER[b.membership.role];
+      case 'joined':
+        return (a.membership.joinedAt ?? '').localeCompare(b.membership.joinedAt ?? '');
+      case 'jobTitle': {
+        const ta = a.member?.jobTitleId ? titleById.get(a.member.jobTitleId)?.label ?? '' : '';
+        const tb = b.member?.jobTitleId ? titleById.get(b.member.jobTitleId)?.label ?? '' : '';
+        if (ta && tb) return ta.localeCompare(tb);
+        if (ta) return -1;
+        if (tb) return 1;
+        return (a.membership.displayName ?? '').localeCompare(b.membership.displayName ?? '');
+      }
+      case 'name':
+      default:
+        return (a.membership.displayName ?? a.membership.email ?? '')
+          .localeCompare(b.membership.displayName ?? b.membership.email ?? '');
+    }
+  });
+
+  // 4. Group.
+  if (opts.groupBy === 'none') {
+    return [{ key: 'all', label: '', rows: filtered }];
+  }
+  if (opts.groupBy === 'role') {
+    const groups: Record<AccessRole, ListRow[]> = {
+      owner: [], admin: [], member: [], viewer: [],
+    };
+    for (const row of filtered) groups[row.membership.role].push(row);
+    return (['owner', 'admin', 'member', 'viewer'] as AccessRole[])
+      .filter((r) => groups[r].length > 0)
+      .map((r) => ({
+        key: `role-${r}`,
+        label: `${ACCESS_ROLE_LABEL[r]} · ${groups[r].length}`,
+        rows: groups[r],
+      }));
+  }
+  // groupBy === 'jobTitle'
+  const byTitle = new Map<string, { label: string; rows: ListRow[] }>();
+  const untagged: ListRow[] = [];
+  for (const row of filtered) {
+    const id = row.member?.jobTitleId;
+    const t = id ? titleById.get(id) : undefined;
+    if (!t) {
+      untagged.push(row);
+      continue;
+    }
+    const bucket = byTitle.get(t.id) ?? { label: t.label, rows: [] };
+    bucket.rows.push(row);
+    byTitle.set(t.id, bucket);
+  }
+  const out: Array<{ key: string; label: string; rows: ListRow[] }> = [];
+  for (const [id, b] of byTitle.entries()) {
+    out.push({ key: `jt-${id}`, label: `${b.label} · ${b.rows.length}`, rows: b.rows });
+  }
+  if (untagged.length > 0) {
+    out.push({ key: 'jt-none', label: `No job title · ${untagged.length}`, rows: untagged });
+  }
+  return out;
 }
 
 // ── Workspace tab ──────────────────────────────────────────────────────
@@ -1825,6 +2154,329 @@ function isoOffsetDays(iso: string, deltaDays: number): string {
   const m = String(base.getMonth() + 1).padStart(2, '0');
   const d = String(base.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
+}
+
+// ──────────────────────────────────────────────────────────────────
+// Job titles section
+//
+// Workspace-curated list of role labels that members can be tagged
+// with. Phase-2 additions: CRUD on the catalog, color picker per
+// title, AM-vs-operator kind toggle, archive/restore.
+//
+// Why this lives in its own section (not folded into Members):
+//   - The list grows independently of the member roster (workspace
+//     might have 4 titles but 40 members)
+//   - The kind toggle decides who's eligible for the AM column on a
+//     client — that's a workspace-level decision, not a per-member
+//     one
+//   - Phase-6 coverage rules will target by title; the title catalog
+//     deserves its own surface so those rules have something stable
+//     to point at
+// ──────────────────────────────────────────────────────────────────
+
+function JobTitlesSection() {
+  const { data, store } = useFlizow();
+  const titles = data.jobTitles;
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [draftLabel, setDraftLabel] = useState('');
+  const [draftKind, setDraftKind] = useState<JobTitleKind>('operator');
+  const [draftColor, setDraftColor] = useState<string>('#5e5ce6');
+  const [adding, setAdding] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Member counts per title — drives the "delete safety" check and
+  // shows "5 members" alongside each row so the admin knows what
+  // they're touching. Small N; recomputed inline.
+  const countsByTitle = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const m of data.members) {
+      if (m.jobTitleId) map[m.jobTitleId] = (map[m.jobTitleId] ?? 0) + 1;
+    }
+    return map;
+  }, [data.members]);
+
+  function startEdit(jt: JobTitle) {
+    setEditingId(jt.id);
+    setDraftLabel(jt.label);
+    setDraftKind(jt.kind);
+    setDraftColor(jt.color || '#5e5ce6');
+    setAdding(false);
+    setError(null);
+  }
+
+  function startAdd() {
+    setEditingId(null);
+    setAdding(true);
+    setDraftLabel('');
+    setDraftKind('operator');
+    setDraftColor('#5e5ce6');
+    setError(null);
+  }
+
+  function cancelDraft() {
+    setEditingId(null);
+    setAdding(false);
+    setError(null);
+  }
+
+  function commitDraft() {
+    const label = draftLabel.trim();
+    if (!label) {
+      setError('Title label is required.');
+      return;
+    }
+    // Block duplicates by label (case-insensitive). Avoids two
+    // "Designer" entries that look identical and confuse filters.
+    const dup = titles.find(
+      (t) =>
+        t.id !== editingId &&
+        t.label.toLowerCase() === label.toLowerCase(),
+    );
+    if (dup) {
+      setError('That label already exists.');
+      return;
+    }
+    if (editingId) {
+      store.updateJobTitle(editingId, {
+        label,
+        kind: draftKind,
+        color: draftColor,
+      });
+    } else {
+      const id = `jt-${Math.random().toString(36).slice(2, 10)}`;
+      store.addJobTitle({
+        id,
+        label,
+        kind: draftKind,
+        color: draftColor,
+        active: true,
+      });
+    }
+    cancelDraft();
+  }
+
+  function handleArchive(id: string) {
+    store.archiveJobTitle(id);
+  }
+  function handleRestore(id: string) {
+    store.updateJobTitle(id, { active: true });
+  }
+  function handleDelete(id: string, label: string) {
+    const count = countsByTitle[id] ?? 0;
+    const msg = count > 0
+      ? `Delete "${label}"? ${count} member${count === 1 ? '' : 's'} will lose this title and fall back to plain text.`
+      : `Delete "${label}"? This can't be undone.`;
+    if (!window.confirm(msg)) return;
+    store.deleteJobTitle(id);
+  }
+
+  return (
+    <section
+      className="acct-section"
+      role="tabpanel"
+      id="acct-panel-jobtitles"
+      aria-labelledby="acct-tab-jobtitles"
+      tabIndex={0}
+      data-active="true"
+    >
+      <div className="acct-section-header">
+        <h3 className="acct-section-title">Job titles</h3>
+        <p className="acct-section-sub">
+          Labels you tag members with. Drives the profile pill, AM filtering, and (later) coverage rules.
+        </p>
+      </div>
+
+      {error && (
+        <div className="mbrs-error" role="alert">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span>{error}</span>
+        </div>
+      )}
+
+      <div className="jt-list">
+        {titles.map((jt) => {
+          const isEditing = editingId === jt.id;
+          const count = countsByTitle[jt.id] ?? 0;
+          if (isEditing) {
+            return (
+              <JobTitleEditorRow
+                key={jt.id}
+                draftLabel={draftLabel}
+                setDraftLabel={setDraftLabel}
+                draftKind={draftKind}
+                setDraftKind={setDraftKind}
+                draftColor={draftColor}
+                setDraftColor={setDraftColor}
+                onCancel={cancelDraft}
+                onSave={commitDraft}
+              />
+            );
+          }
+          return (
+            <div
+              key={jt.id}
+              className={`jt-row ${jt.active ? '' : 'jt-row--archived'}`}
+            >
+              <span
+                className="jt-swatch"
+                style={{ background: jt.color || 'var(--bg-soft)' }}
+                aria-hidden="true"
+              />
+              <div className="jt-row-text">
+                <div className="jt-row-label">{jt.label}</div>
+                <div className="jt-row-meta">
+                  {jt.kind === 'account-manager' ? 'Account manager' : 'Operator'}
+                  {' · '}
+                  {count} {count === 1 ? 'member' : 'members'}
+                  {!jt.active && ' · Archived'}
+                </div>
+              </div>
+              <button
+                type="button"
+                className="mbrs-action-btn"
+                onClick={() => startEdit(jt)}
+                aria-label={`Edit ${jt.label}`}
+              >
+                Edit
+              </button>
+              {jt.active ? (
+                <button
+                  type="button"
+                  className="mbrs-action-btn"
+                  onClick={() => handleArchive(jt.id)}
+                  aria-label={`Archive ${jt.label}`}
+                  title="Archive — hides from new pickers but existing members keep the title"
+                >
+                  Archive
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="mbrs-action-btn"
+                  onClick={() => handleRestore(jt.id)}
+                  aria-label={`Restore ${jt.label}`}
+                >
+                  Restore
+                </button>
+              )}
+              <button
+                type="button"
+                className="mbrs-action-btn mbrs-action-btn--danger"
+                onClick={() => handleDelete(jt.id, jt.label)}
+                aria-label={`Delete ${jt.label}`}
+              >
+                Delete
+              </button>
+            </div>
+          );
+        })}
+
+        {adding && (
+          <JobTitleEditorRow
+            draftLabel={draftLabel}
+            setDraftLabel={setDraftLabel}
+            draftKind={draftKind}
+            setDraftKind={setDraftKind}
+            draftColor={draftColor}
+            setDraftColor={setDraftColor}
+            onCancel={cancelDraft}
+            onSave={commitDraft}
+          />
+        )}
+      </div>
+
+      {!adding && !editingId && (
+        <button
+          type="button"
+          className="acct-btn acct-btn--primary"
+          onClick={startAdd}
+          style={{ marginTop: 'var(--sp-md)' }}
+        >
+          Add job title
+        </button>
+      )}
+    </section>
+  );
+}
+
+/** Inline form row shared by add + edit. Lives next to the
+ *  JobTitlesSection so reading either end is one scroll. */
+function JobTitleEditorRow({
+  draftLabel, setDraftLabel,
+  draftKind, setDraftKind,
+  draftColor, setDraftColor,
+  onCancel, onSave,
+}: {
+  draftLabel: string;
+  setDraftLabel: (v: string) => void;
+  draftKind: JobTitleKind;
+  setDraftKind: (v: JobTitleKind) => void;
+  draftColor: string;
+  setDraftColor: (v: string) => void;
+  onCancel: () => void;
+  onSave: () => void;
+}) {
+  return (
+    <div className="jt-row jt-row--editing">
+      <span
+        className="jt-swatch"
+        style={{ background: draftColor }}
+        aria-hidden="true"
+      />
+      <div className="jt-row-text">
+        <input
+          className="acct-input"
+          value={draftLabel}
+          onChange={(e) => setDraftLabel(e.target.value)}
+          placeholder="e.g. Senior Designer"
+          aria-label="Job title label"
+          autoFocus
+        />
+        <div className="jt-edit-controls">
+          <select
+            className="acct-input"
+            value={draftKind}
+            onChange={(e) => setDraftKind(e.target.value as JobTitleKind)}
+            aria-label="Job title kind"
+          >
+            <option value="account-manager">Account manager</option>
+            <option value="operator">Operator</option>
+          </select>
+          <div className="jt-color-picker" role="radiogroup" aria-label="Color">
+            {AVATAR_COLORS.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                role="radio"
+                aria-checked={draftColor === c.hex}
+                aria-label={c.label}
+                className="jt-color-dot"
+                onClick={() => setDraftColor(c.hex)}
+                style={{
+                  background: c.hex,
+                  boxShadow: draftColor === c.hex ? '0 0 0 2px var(--bg-elev), 0 0 0 4px var(--highlight)' : 'none',
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+      <button
+        type="button"
+        className="mbrs-action-btn"
+        onClick={onCancel}
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        className="acct-btn acct-btn--primary"
+        onClick={onSave}
+      >
+        Save
+      </button>
+    </div>
+  );
 }
 
 function WorkspaceSection({

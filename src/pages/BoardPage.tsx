@@ -19,6 +19,7 @@ import { useFlizow } from '../store/useFlizow';
 import { flizowStore } from '../store/flizowStore';
 import type { ColumnId, Priority, Task, Client, Service, Member, TaskComment } from '../types/flizow';
 import { daysBetween, formatMonthDay } from '../utils/dateFormat';
+import { avatarStyle } from '../utils/avatar';
 import FlizowCardModal from '../components/FlizowCardModal';
 import { BoardFilters, applyFilters, EMPTY_FILTERS, type BoardFilterState, type GroupBy } from '../components/BoardFilters';
 import { BriefModal } from '../components/BriefModal';
@@ -207,8 +208,7 @@ function computeLanes(
               aria-hidden
               style={{
                 width: 20, height: 20, borderRadius: '50%',
-                background: m.type === 'operator' ? (m.bg ?? 'var(--bg-soft)') : m.color,
-                color: m.type === 'operator' ? m.color : '#fff',
+                ...avatarStyle(m),
                 fontSize: 10, fontWeight: 700,
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
               }}
@@ -2029,10 +2029,7 @@ function ArchivedCardRow({
         <span
           aria-hidden
           className="archived-card-avatar has-owner"
-          style={{
-            background: primary.type === 'operator' ? primary.bg : primary.color,
-            color: primary.type === 'operator' ? primary.color : '#fff',
-          }}
+          style={avatarStyle(primary)}
           title={primary.name}
         >
           {primary.initials}
