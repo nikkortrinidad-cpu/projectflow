@@ -36,13 +36,13 @@ import { ConfirmDangerDialog } from './ConfirmDangerDialog';
 type Section = 'profile' | 'workspace' | 'preferences' | 'notifications' | 'members' | 'signin';
 
 const AVATAR_COLORS = [
-  { id: 'indigo', hex: '#5e5ce6' },
-  { id: 'blue',   hex: '#0a84ff' },
-  { id: 'green',  hex: '#30d158' },
-  { id: 'orange', hex: '#ff9f0a' },
-  { id: 'red',    hex: '#ff375f' },
-  { id: 'purple', hex: '#bf5af2' },
-  { id: 'cyan',   hex: '#64d2ff' },
+  { id: 'indigo', hex: '#5e5ce6', label: 'Indigo' },
+  { id: 'blue',   hex: '#0a84ff', label: 'Blue'   },
+  { id: 'green',  hex: '#30d158', label: 'Green'  },
+  { id: 'orange', hex: '#ff9f0a', label: 'Orange' },
+  { id: 'red',    hex: '#ff375f', label: 'Red'    },
+  { id: 'purple', hex: '#bf5af2', label: 'Purple' },
+  { id: 'cyan',   hex: '#64d2ff', label: 'Cyan'   },
 ];
 
 interface Props {
@@ -471,7 +471,8 @@ export default function FlizowAccountModal({ onClose }: Props) {
                           type="button"
                           className="acct-avatar-color"
                           style={{ background: c.hex }}
-                          aria-label={c.id}
+                          aria-label={c.label}
+                          title={c.label}
                           aria-pressed={avatarHex === c.hex}
                           onClick={() => setAvatarHex(c.hex)}
                         />
@@ -1408,7 +1409,8 @@ function WorkspaceSection({
                     type="button"
                     className="acct-avatar-color"
                     style={{ background: c.hex }}
-                    aria-label={c.id}
+                    aria-label={c.label}
+                    title={c.label}
                     aria-pressed={colorDraft === c.hex}
                     onClick={() => setColorDraft(c.hex)}
                   />

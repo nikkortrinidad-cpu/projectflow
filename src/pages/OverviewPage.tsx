@@ -667,6 +667,12 @@ export function OverviewPage() {
                   href={`#board/${service.id}`}
                   data-status={client.status}
                   aria-label={`Open ${service.name} board for ${client.name}`}
+                  // Mirror the screen-reader name onto a hover hint so
+                  // mouse users get the same disambiguator. The chip's
+                  // visible text already shows the service + client, but
+                  // when service names truncate the title clarifies which
+                  // board the click opens. Audit: overview LOW.
+                  title={`Open ${service.name} board for ${client.name}`}
                 >
                   <div className={`board-chip-logo ${client.logoClass}`}>{client.initials}</div>
                   <div className="board-chip-body">

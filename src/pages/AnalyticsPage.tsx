@@ -354,7 +354,7 @@ function FiltersBar({ filters, onChange, members, services, clients }: {
         hidden={!dirty}
         onClick={() => { onChange(DEFAULT_FILTERS); setOpen(null); }}
       >
-        Reset
+        Reset filters
       </button>
     </div>
   );
