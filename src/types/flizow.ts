@@ -577,6 +577,12 @@ export interface Member {
    *  initials + color avatar if absent or the URL fails to load.
    *  Initials are the default — photos are opt-in. */
   photoUrl?: string;
+  /** Country tag for holiday observation. Drives which holidays
+   *  show on this member's row in the schedules calendar (PH-tagged
+   *  members see PH holidays, AU-tagged see AU). Optional —
+   *  undefined defaults to 'Other' which observes none of the
+   *  pre-seeded sets. Audit: time-off Phase 6B. */
+  country?: MemberCountry;
   /** IANA time zone identifier, e.g. 'America/Los_Angeles'. Distinct
    *  from the legacy `timezone` slug which is being phased out — the
    *  legacy slug stays for back-compat with the existing tz dropdown
@@ -621,6 +627,70 @@ export interface Member {
  *  Phase 6 builds the approval queue.
  */
 export type TimeOffStatus = 'pending' | 'approved' | 'denied' | 'cancelled';
+
+/** Country for holiday assignment + display. The agency operates
+ *  across PH and AU, so members carry a country tag and the
+ *  schedules calendar shows their relevant holidays only. 'Other'
+ *  is the catch-all for any future expansion (US clients, EU
+ *  contractors, etc.) and renders no holidays — they just observe
+ *  whatever their member-side time-off requests cover. */
+export type MemberCountry = 'PH' | 'AU' | 'Other';
+
+/** Holiday region tag. PH/AU mirror MemberCountry; 'global' covers
+ *  things every workspace observes regardless of country (e.g. New
+ *  Year's Day on the Gregorian calendar). Phase-6B doesn't seed any
+ *  globals — kept on the type for future-proofing. */
+export type HolidayCountry = 'PH' | 'AU' | 'global';
+
+/** PH-specific distinction: regular public holidays (Labor Day,
+ *  Independence Day, etc.) are paid even if worked; special non-
+ *  working days (EDSA, All Souls' Day) are tracked separately for
+ *  payroll. The OM might want to show one and not the other on the
+ *  calendar, so the field stays even though Phase-6B renders both
+ *  equally. */
+export type HolidayType = 'public' | 'special';
+
+/** Default observation status for everyone in the holiday's
+ *  country. The OM can override per-member later (Phase 6C); this
+ *  is what the workspace enforces by default.
+ *    'observed' → office closed, members in this country are off
+ *    'worked'   → office open; members earn a transfer credit later
+ *  Phase 6B treats 'observed' as the default everywhere — full
+ *  override + credit accounting lands in 6C. */
+export type HolidayObservationDefault = 'observed' | 'worked';
+
+/**
+ * One holiday entry on the workspace catalog. Pre-seeded with the
+ * 2026 + 2027 lists for PH and AU on first load; the OM curates
+ * the list afterwards (add custom dates, archive ones the agency
+ * doesn't observe, edit names/types).
+ *
+ *  - id: stable string. Seeded entries use slug-style ids
+ *    ('hol-ph-labor-day-2026') so re-running the migration is
+ *    idempotent.
+ *  - name: display label.
+ *  - date: ISO YYYY-MM-DD. One day per entry — multi-day stretches
+ *    (e.g. Easter weekend) split into separate entries so each
+ *    gets its own per-member observation override later.
+ *  - country: which country this belongs to.
+ *  - type: PH-specific public/special distinction (AU uses 'public'
+ *    by convention).
+ *  - states: AU only — which state(s) observe this. Empty / absent
+ *    means national. Stored as ISO-style codes (NSW, VIC, etc.).
+ *  - defaultObservation: workspace default observation status.
+ *  - active: soft-disable. Inactive holidays don't render on the
+ *    calendar but stay in the catalog so the OM can flip them back.
+ */
+export interface Holiday {
+  id: string;
+  name: string;
+  date: string;
+  country: HolidayCountry;
+  type: HolidayType;
+  states?: string[];
+  defaultObservation: HolidayObservationDefault;
+  active: boolean;
+}
 
 /**
  * Coverage rule — workspace-curated constraint that the time-off
@@ -1262,6 +1332,13 @@ export interface FlizowData {
    *  Phase-6 builder UI. The evaluator (utils/coverageRules) reads
    *  this list. Audit: time-off rules Phase 5. */
   coverageRules: CoverageRule[];
+  /** Workspace holiday catalog. Pre-seeded with 2026 + 2027 PH
+   *  (public + special) and AU (national + major-state) holidays
+   *  on first load; the OM edits / adds / archives via Settings →
+   *  Holidays. The schedules calendar (Ops → Time off Schedules)
+   *  reads this list to render holiday ribbons on each affected
+   *  date. Audit: time-off Phase 6B. */
+  holidays: Holiday[];
   /** Light vs dark mode. Used to be owned by the legacy BoardStore;
    *  moved here so we can retire that store. App.tsx reads this and
    *  syncs to `document.documentElement` (class + data-theme attr).

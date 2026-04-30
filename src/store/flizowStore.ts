@@ -11,6 +11,7 @@ import type {
   TrashEntry, TrashKind, TrashPayload,
   JobTitle, TimeOffRequest, TimeOffStatus,
   CoverageRule,
+  Holiday,
 } from '../types/flizow';
 import { ONBOARDING_TEMPLATES } from '../data/onboardingTemplates';
 import { TASK_POOLS } from '../data/taskPools';
@@ -19,6 +20,7 @@ import { OPS_TEAM_MEMBERS, OPS_TASK_SEED } from '../data/opsSeed';
 import { migrateAccessRole } from '../utils/access';
 import { DEFAULT_JOB_TITLES, pickMigratedJobTitleId } from '../utils/jobTitles';
 import { makeTimeOffRequest, migrateLegacyTimeOff } from '../utils/timeOff';
+import { DEFAULT_HOLIDAYS } from '../data/holidaySeed';
 
 /**
  * FlizowStore — central data container.
@@ -104,6 +106,11 @@ function emptyData(): FlizowData {
     // defaults so silently-running coverage checks aren't a
     // surprise on first load.
     coverageRules: [],
+    // Pre-seeded holiday catalog covers PH (public + special) +
+    // AU (national + major-state) for 2026 and 2027. The OM
+    // edits / adds / archives via Settings → Holidays. Ids are
+    // stable so re-running migrate is idempotent.
+    holidays: DEFAULT_HOLIDAYS.map((h) => ({ ...h })),
   };
 }
 
@@ -295,6 +302,15 @@ function migrate(parsed: Partial<FlizowData>): FlizowData {
     coverageRules: Array.isArray(parsed.coverageRules)
       ? parsed.coverageRules
       : base.coverageRules,
+    // Holiday catalog — backfill with the seeded list for any doc
+    // that predates Phase 6B. Pre-existing entries with different
+    // ids are preserved; the seed only fills in the array when it
+    // doesn't exist at all. (Idempotency at the entry level lives
+    // in mergeHolidaySeed below — used when extending an existing
+    // catalog with a fresh year of seed data.)
+    holidays: Array.isArray(parsed.holidays)
+      ? parsed.holidays
+      : base.holidays,
   };
 }
 
@@ -3072,6 +3088,48 @@ class FlizowStore {
       (x) => x.id !== id,
     );
     if (this.data.coverageRules.length === before) return;
+    this.save();
+  }
+
+  // ── Holidays ────────────────────────────────────────────────────────
+  //
+  // Workspace holiday catalog. Pre-seeded with PH + AU 2026/27 on
+  // first load (utils/holidaySeed.DEFAULT_HOLIDAYS); the OM edits
+  // via Settings → Holidays. Phase 6B is display-only — the
+  // schedules calendar paints holidays on relevant dates. Phase 6C
+  // adds per-member observation overrides + transfer credits.
+
+  /** Append a custom holiday. The Settings UI generates an id
+   *  ('hol-custom-{random}') so seeded entries don't collide.
+   *  No-op on duplicate id. */
+  addHoliday(holiday: Holiday): void {
+    if (this.data.holidays.some((h) => h.id === holiday.id)) return;
+    this.data.holidays.push(holiday);
+    this.save();
+  }
+
+  /** Patch a holiday in place. id immutable. No-op on unknown id. */
+  updateHoliday(id: string, patch: Partial<Holiday>): void {
+    const h = this.data.holidays.find((x) => x.id === id);
+    if (!h) return;
+    const { id: _ignored, ...safe } = patch;
+    Object.assign(h, safe);
+    this.save();
+  }
+
+  /** Soft-disable. Inactive holidays don't paint on the calendar
+   *  but stay in the catalog. Reversible. */
+  archiveHoliday(id: string): void {
+    this.updateHoliday(id, { active: false });
+  }
+
+  /** Hard-delete a holiday. Useful when the OM finds a duplicate
+   *  or a date the agency genuinely doesn't observe. Prefer
+   *  `archiveHoliday` for the reversible path. */
+  deleteHoliday(id: string): void {
+    const before = this.data.holidays.length;
+    this.data.holidays = this.data.holidays.filter((x) => x.id !== id);
+    if (this.data.holidays.length === before) return;
     this.save();
   }
 

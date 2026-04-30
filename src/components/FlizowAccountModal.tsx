@@ -21,7 +21,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useFlizow } from '../store/useFlizow';
 import { flizowStore } from '../store/flizowStore';
-import type { AccessRole, JobTitle, JobTitleKind, Member, TimeOffRequest, TrashEntry, TrashKind, WorkspaceMembership } from '../types/flizow';
+import type { AccessRole, Holiday, HolidayCountry, HolidayObservationDefault, JobTitle, JobTitleKind, Member, TimeOffRequest, TrashEntry, TrashKind, WorkspaceMembership } from '../types/flizow';
 import { initialsOf } from '../utils/avatar';
 import { ConfirmDangerDialog } from './ConfirmDangerDialog';
 import { useMemberProfile } from '../contexts/MemberProfileContext';
@@ -59,9 +59,9 @@ import {
  */
 
 type Section =
-  | 'profile' | 'preferences' | 'notifications' | 'timeoff'        // My account
-  | 'workspace' | 'members' | 'jobtitles' | 'trash'                // Workspace
-  | 'signin';                                                       // Account-level
+  | 'profile' | 'preferences' | 'notifications' | 'timeoff'                // My account
+  | 'workspace' | 'members' | 'jobtitles' | 'holidays' | 'trash'           // Workspace
+  | 'signin';                                                               // Account-level
 
 /** Visual + structural grouping for the sidebar. The first group
  *  is "My account" — personal stuff that every signed-in user sees.
@@ -72,7 +72,7 @@ type Section =
  *  group headings are presentational. */
 const SIDEBAR_GROUPS = {
   myAccount: ['profile', 'preferences', 'notifications', 'timeoff'] as const,
-  workspace: ['workspace', 'members', 'jobtitles', 'trash'] as const,
+  workspace: ['workspace', 'members', 'jobtitles', 'holidays', 'trash'] as const,
   account:   ['signin'] as const,
 };
 
@@ -529,6 +529,19 @@ export default function FlizowAccountModal({ onClose }: Props) {
                     <line x1="3" y1="13" x2="21" y2="13" />
                   </svg>
                 </NavItem>
+                {/* Holidays — workspace catalog of public + special
+                    non-working days. Pre-seeded with PH + AU 2026/27;
+                    OM curates after that. Drives the holiday ribbon
+                    on the schedules calendar. */}
+                <NavItem section="holidays" label="Holidays" active={section === 'holidays'} onClick={() => setSection('holidays')}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                    <circle cx="12" cy="15" r="2"/>
+                  </svg>
+                </NavItem>
                 <NavItem section="trash" label="Trash" active={section === 'trash'} onClick={() => setSection('trash')}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="3 6 5 6 21 6" />
@@ -844,6 +857,11 @@ export default function FlizowAccountModal({ onClose }: Props) {
             {/* ── Job titles ─────────────────────────────────────── */}
             {section === 'jobtitles' && (
               <JobTitlesSection />
+            )}
+
+            {/* ── Holidays ───────────────────────────────────────── */}
+            {section === 'holidays' && (
+              <HolidaysSection />
             )}
 
             {/* ── Trash ──────────────────────────────────────────── */}
@@ -2699,6 +2717,362 @@ function JobTitleEditorRow({
       </button>
     </div>
   );
+}
+
+// ──────────────────────────────────────────────────────────────────
+// Holidays section (Phase 6B)
+//
+// Workspace-curated holiday catalog. Pre-seeded with PH + AU
+// 2026/27 on first load (data/holidaySeed.ts); the OM edits / adds
+// / archives here. The schedules calendar (Ops → Time off
+// Schedules) reads this list to render holiday ribbons on each
+// affected date.
+//
+// Phase 6B is display-only — the OM picks which dates count as
+// holidays + their default observation status. Phase 6C will add
+// per-member observation overrides + transfer credits.
+// ──────────────────────────────────────────────────────────────────
+
+function HolidaysSection() {
+  const { data, store } = useFlizow();
+  const [yearFilter, setYearFilter] = useState<number | 'all'>(() =>
+    new Date().getFullYear(),
+  );
+  const [countryFilter, setCountryFilter] = useState<'all' | 'PH' | 'AU' | 'global'>('all');
+  const [editingId, setEditingId] = useState<string | 'new' | null>(null);
+
+  // Years present in the catalog — drives the filter dropdown so
+  // the OM doesn't see options for years they have no entries for.
+  const availableYears = useMemo(() => {
+    const years = new Set<number>();
+    for (const h of data.holidays) {
+      const y = parseInt(h.date.slice(0, 4), 10);
+      if (!Number.isNaN(y)) years.add(y);
+    }
+    return Array.from(years).sort();
+  }, [data.holidays]);
+
+  const visible = useMemo(() => {
+    return data.holidays
+      .filter((h) => {
+        if (countryFilter !== 'all' && h.country !== countryFilter) return false;
+        if (yearFilter !== 'all') {
+          const y = parseInt(h.date.slice(0, 4), 10);
+          if (y !== yearFilter) return false;
+        }
+        return true;
+      })
+      .slice()
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }, [data.holidays, countryFilter, yearFilter]);
+
+  function handleArchive(id: string) {
+    store.archiveHoliday(id);
+  }
+  function handleRestore(id: string) {
+    store.updateHoliday(id, { active: true });
+  }
+  function handleDelete(id: string, name: string) {
+    if (!window.confirm(`Delete "${name}"? This can't be undone — prefer Archive if you might want it back.`)) return;
+    store.deleteHoliday(id);
+  }
+
+  if (editingId) {
+    const existing = editingId === 'new' ? null : data.holidays.find((h) => h.id === editingId) ?? null;
+    return (
+      <HolidayEditor
+        existing={existing}
+        onCancel={() => setEditingId(null)}
+        onSave={() => setEditingId(null)}
+      />
+    );
+  }
+
+  return (
+    <section
+      className="acct-section"
+      role="tabpanel"
+      id="acct-panel-holidays"
+      aria-labelledby="acct-tab-holidays"
+      tabIndex={0}
+      data-active="true"
+    >
+      <div className="acct-section-header">
+        <h3 className="acct-section-title">Holidays</h3>
+        <p className="acct-section-sub">
+          Public holidays your workspace observes. Members tagged with a country see their relevant holidays on the schedules calendar.
+          Pre-seeded with Philippines and Australia 2026 + 2027 — edit, archive, or add custom dates.
+        </p>
+      </div>
+
+      <div className="holidays-toolbar">
+        <select
+          className="acct-input holidays-filter"
+          value={String(yearFilter)}
+          onChange={(e) =>
+            setYearFilter(e.target.value === 'all' ? 'all' : parseInt(e.target.value, 10))
+          }
+          aria-label="Filter by year"
+        >
+          <option value="all">All years</option>
+          {availableYears.map((y) => (
+            <option key={y} value={y}>{y}</option>
+          ))}
+        </select>
+        <select
+          className="acct-input holidays-filter"
+          value={countryFilter}
+          onChange={(e) => setCountryFilter(e.target.value as typeof countryFilter)}
+          aria-label="Filter by country"
+        >
+          <option value="all">All countries</option>
+          <option value="PH">Philippines</option>
+          <option value="AU">Australia</option>
+          <option value="global">Global</option>
+        </select>
+        <button
+          type="button"
+          className="acct-btn acct-btn--primary holidays-add-btn"
+          onClick={() => setEditingId('new')}
+        >
+          + Add holiday
+        </button>
+      </div>
+
+      {visible.length === 0 ? (
+        <div className="holidays-empty">No holidays match the current filters.</div>
+      ) : (
+        <ul className="holidays-list">
+          {visible.map((h) => (
+            <li
+              key={h.id}
+              className={`holidays-row${h.active ? '' : ' holidays-row--archived'}`}
+            >
+              <span className={`holidays-country holidays-country--${h.country}`}>
+                {h.country === 'global' ? 'Global' : h.country}
+              </span>
+              <div className="holidays-row-text">
+                <div className="holidays-row-name">{h.name}</div>
+                <div className="holidays-row-meta">
+                  {formatHolidayDate(h.date)}
+                  {' · '}
+                  {h.type === 'special' ? 'Special non-working' : 'Public'}
+                  {h.states && h.states.length > 0 && (
+                    <> · {h.states.join(', ')}</>
+                  )}
+                  {!h.active && ' · Archived'}
+                </div>
+              </div>
+              <button
+                type="button"
+                className="mbrs-action-btn"
+                onClick={() => setEditingId(h.id)}
+              >
+                Edit
+              </button>
+              {h.active ? (
+                <button
+                  type="button"
+                  className="mbrs-action-btn"
+                  onClick={() => handleArchive(h.id)}
+                >
+                  Archive
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="mbrs-action-btn"
+                  onClick={() => handleRestore(h.id)}
+                >
+                  Restore
+                </button>
+              )}
+              <button
+                type="button"
+                className="mbrs-action-btn mbrs-action-btn--danger"
+                onClick={() => handleDelete(h.id, h.name)}
+              >
+                Delete
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+/** Inline editor for a single holiday — covers the add + edit flow.
+ *  Mirrors the JobTitleEditor pattern: inputs at top, two action
+ *  buttons at the bottom. */
+function HolidayEditor({
+  existing,
+  onCancel,
+  onSave,
+}: {
+  existing: Holiday | null;
+  onCancel: () => void;
+  onSave: () => void;
+}) {
+  const { store } = useFlizow();
+  const [name, setName] = useState(existing?.name ?? '');
+  const [date, setDate] = useState(existing?.date ?? '');
+  const [country, setCountry] = useState<HolidayCountry>(existing?.country ?? 'PH');
+  const [type, setType] = useState<'public' | 'special'>(existing?.type ?? 'public');
+  const [states, setStates] = useState<string>(
+    existing?.states?.join(', ') ?? '',
+  );
+  const [defaultObservation, setDefaultObservation] = useState<HolidayObservationDefault>(
+    existing?.defaultObservation ?? 'observed',
+  );
+  const [error, setError] = useState<string | null>(null);
+
+  function handleSave() {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setError('Name is required.');
+      return;
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      setError('Pick a date.');
+      return;
+    }
+    const stateList = states
+      .split(',')
+      .map((s) => s.trim().toUpperCase())
+      .filter((s) => s.length > 0);
+    const payload: Holiday = {
+      id: existing?.id ?? `hol-custom-${Math.random().toString(36).slice(2, 11)}`,
+      name: trimmedName,
+      date,
+      country,
+      type,
+      states: country === 'AU' && stateList.length > 0 ? stateList : undefined,
+      defaultObservation,
+      active: existing?.active ?? true,
+    };
+    if (existing) {
+      store.updateHoliday(existing.id, payload);
+    } else {
+      store.addHoliday(payload);
+    }
+    onSave();
+  }
+
+  return (
+    <section
+      className="acct-section"
+      role="tabpanel"
+      tabIndex={0}
+      data-active="true"
+    >
+      <div className="acct-section-header">
+        <h3 className="acct-section-title">{existing ? 'Edit holiday' : 'Add holiday'}</h3>
+      </div>
+      {error && (
+        <div className="mbrs-error" role="alert">
+          <span>{error}</span>
+        </div>
+      )}
+      <div className="holidays-editor">
+        <label className="member-profile-field">
+          <span className="member-profile-field-label">Name</span>
+          <input
+            className="acct-input"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Agency anniversary"
+            autoFocus
+          />
+        </label>
+        <div className="holidays-editor-row">
+          <label className="member-profile-field">
+            <span className="member-profile-field-label">Date</span>
+            <input
+              type="date"
+              className="acct-input"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
+          </label>
+          <label className="member-profile-field">
+            <span className="member-profile-field-label">Country</span>
+            <select
+              className="acct-input"
+              value={country}
+              onChange={(e) => setCountry(e.target.value as HolidayCountry)}
+            >
+              <option value="PH">Philippines</option>
+              <option value="AU">Australia</option>
+              <option value="global">Global (everyone)</option>
+            </select>
+          </label>
+        </div>
+        <div className="holidays-editor-row">
+          <label className="member-profile-field">
+            <span className="member-profile-field-label">Type</span>
+            <select
+              className="acct-input"
+              value={type}
+              onChange={(e) => setType(e.target.value as 'public' | 'special')}
+            >
+              <option value="public">Public holiday</option>
+              <option value="special">Special non-working</option>
+            </select>
+          </label>
+          <label className="member-profile-field">
+            <span className="member-profile-field-label">Default observation</span>
+            <select
+              className="acct-input"
+              value={defaultObservation}
+              onChange={(e) => setDefaultObservation(e.target.value as HolidayObservationDefault)}
+            >
+              <option value="observed">Office closed (observed)</option>
+              <option value="worked">Working through (worked)</option>
+            </select>
+          </label>
+        </div>
+        {country === 'AU' && (
+          <label className="member-profile-field">
+            <span className="member-profile-field-label">
+              State(s) <span className="member-profile-field-hint">(optional, comma-separated, e.g. NSW, VIC)</span>
+            </span>
+            <input
+              className="acct-input"
+              value={states}
+              onChange={(e) => setStates(e.target.value)}
+              placeholder="Leave blank for national"
+            />
+          </label>
+        )}
+      </div>
+      <div className="holidays-editor-actions">
+        <button
+          type="button"
+          className="mbrs-action-btn"
+          onClick={onCancel}
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          className="acct-btn acct-btn--primary"
+          onClick={handleSave}
+        >
+          {existing ? 'Save changes' : 'Add holiday'}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+/** ISO YYYY-MM-DD → "Wed, May 13, 2026" for the catalog list. */
+function formatHolidayDate(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number);
+  if (!y || !m || !d) return iso;
+  return new Date(y, m - 1, d).toLocaleDateString(undefined, {
+    weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
+  });
 }
 
 function WorkspaceSection({

@@ -10,6 +10,7 @@ import { OPS_TASK_SEED } from './opsSeed';
 import { ONBOARDING_TEMPLATES, slugifyLabel } from './onboardingTemplates';
 import { TASK_POOLS as SHARED_TASK_POOLS } from './taskPools';
 import { DEFAULT_JOB_TITLES } from '../utils/jobTitles';
+import { DEFAULT_HOLIDAYS } from './holidaySeed';
 
 /**
  * Port of the mockup's window.FLIZOW_DATA generator
@@ -1135,5 +1136,9 @@ export function generateDemoData(): FlizowData {
     // shouldn't ship pre-baked coverage logic the user didn't
     // choose.
     coverageRules: [],
+    // Bundle the default holiday catalog with the demo so demo
+    // workspaces show holidays on the schedules calendar without
+    // waiting for migrate(). Same 80-entry PH+AU 2026/27 list.
+    holidays: DEFAULT_HOLIDAYS.map((h) => ({ ...h })),
   };
 }

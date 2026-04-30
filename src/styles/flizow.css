@@ -8889,6 +8889,140 @@
     border-left: 2px solid #ff453a;
   }
 
+  /* ── Holidays (Phase 6B) ─────────────────────────────────────────
+     Calendar ribbon — small label inside each day cell when a
+     holiday lands on that date. Sits between the day number and
+     the avatar stack. Keeps the total cell height stable; long
+     holiday names get truncated by the component (16-char cap +
+     ellipsis). */
+  .schedules-day-holiday {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 4px;
+    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.18);
+    color: var(--text);
+    line-height: 1.3;
+    align-self: flex-start;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+  /* Day-popover holiday country pill — smaller, no text shadow,
+     sits inline with the holiday's name + meta line. */
+  .schedules-popover-country-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--text);
+    flex-shrink: 0;
+  }
+
+  /* Settings → Holidays tab — list + toolbar + inline editor.
+     Mirrors the .jt-row pattern from the Job titles tab so the
+     two workspace catalogs share visual language. */
+  .holidays-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-sm);
+    align-items: center;
+    margin: var(--sp-md) 0;
+  }
+  .holidays-filter {
+    flex: 0 0 auto;
+    min-width: 120px;
+  }
+  .holidays-add-btn {
+    margin-left: auto;
+  }
+  .holidays-empty {
+    padding: var(--sp-lg) var(--sp-md);
+    text-align: center;
+    color: var(--text-muted);
+    background: var(--bg-soft);
+    border-radius: 8px;
+    border: 1px dashed var(--hairline);
+  }
+  .holidays-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-xs);
+  }
+  .holidays-row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-sm);
+    padding: var(--sp-sm) var(--sp-md);
+    border-radius: 8px;
+    border: 1px solid var(--hairline-soft);
+    background: var(--bg-elev);
+  }
+  .holidays-row--archived { opacity: 0.55; }
+  .holidays-country {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    padding: 4px 6px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .holidays-country--PH {
+    background: rgba(241, 90, 36, 0.16);
+    color: var(--highlight);
+  }
+  .holidays-country--AU {
+    background: rgba(48, 209, 88, 0.18);
+    color: #30d158;
+  }
+  .holidays-country--global {
+    background: rgba(94, 92, 230, 0.18);
+    color: #5e5ce6;
+  }
+  .holidays-row-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .holidays-row-name {
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--text);
+  }
+  .holidays-row-meta {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+  }
+  .holidays-editor {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-md);
+  }
+  .holidays-editor-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-sm);
+  }
+  .holidays-editor-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--sp-sm);
+    margin-top: var(--sp-md);
+  }
+
   .capacity-strip-empty {
     padding: 24px 0;
     color: var(--text-soft);

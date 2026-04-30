@@ -23,7 +23,7 @@ import {
   formatTimeZone,
   formatWorkingHoursLine,
 } from '../utils/memberProfile';
-import type { Member } from '../types/flizow';
+import type { Member, MemberCountry } from '../types/flizow';
 
 /**
  * MemberProfilePanel — the side-panel sheet that slides in from the
@@ -208,6 +208,7 @@ function ProfileBody({ member, onClose }: { member: Member; onClose: () => void 
       name: drafts.name.trim() || member.name, // never blank a name
       role: emptyToUndefined(drafts.role),
       jobTitleId: drafts.jobTitleId, // empty-string select binds to undefined
+      country: drafts.country === 'Other' ? undefined : drafts.country,
       email: emptyToUndefined(drafts.email),
       phone: emptyToUndefined(drafts.phone),
       pronouns: emptyToUndefined(drafts.pronouns),
@@ -506,6 +507,13 @@ function ProfileDisplay({
                 value={formatTimeZone(member.ianaTimeZone)}
               />
             )}
+            {member.country && member.country !== 'Other' && (
+              <ContactRow
+                Icon={GlobeAmericasIcon}
+                label="Country"
+                value={member.country === 'PH' ? 'Philippines' : 'Australia'}
+              />
+            )}
             {workingHoursLine && (
               <ContactRow
                 Icon={BriefcaseIcon}
@@ -645,6 +653,21 @@ function ProfileEditForm({
               {COMMON_TIME_ZONES.map(tz => (
                 <option key={tz.iana} value={tz.iana}>{tz.label}</option>
               ))}
+            </select>
+          </FieldGroup>
+          <FieldGroup label="Country">
+            {/* Country tag drives which holidays show on the
+                schedules calendar for this member. 'Other' means
+                "doesn't observe PH or AU holidays" — they manage
+                time off via individual requests. */}
+            <select
+              className="member-profile-input"
+              value={drafts.country}
+              onChange={(e) => set('country', e.target.value as MemberCountry)}
+            >
+              <option value="Other">Other</option>
+              <option value="PH">Philippines</option>
+              <option value="AU">Australia</option>
             </select>
           </FieldGroup>
           <FieldGroup label="Pronouns">
@@ -880,6 +903,9 @@ interface EditableDrafts {
   pronouns: string;
   bio: string;
   ianaTimeZone: string;
+  /** Country tag (Phase 6B). Drives holiday visibility on the
+   *  schedules calendar. */
+  country: MemberCountry;
   workingHoursStart: string;
   workingHoursEnd: string;
   workingDays: number[];
@@ -897,6 +923,7 @@ function draftsFromMember(member: Member): EditableDrafts {
     pronouns: member.pronouns ?? '',
     bio: member.bio ?? '',
     ianaTimeZone: member.ianaTimeZone ?? '',
+    country: member.country ?? 'Other',
     workingHoursStart: member.workingHoursStart ?? '',
     workingHoursEnd: member.workingHoursEnd ?? '',
     workingDays: member.workingDays ?? [1, 2, 3, 4, 5],

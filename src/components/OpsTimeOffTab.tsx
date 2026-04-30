@@ -46,6 +46,7 @@ import {
   makeCoverageRule,
 } from '../utils/coverageRules';
 import { ACCESS_ROLE_LABEL } from '../utils/access';
+import { visibleHolidays, countryShortLabel, countryTint } from '../utils/holidays';
 import type {
   CoverageRule,
   CoverageRuleConstraint,
@@ -54,6 +55,7 @@ import type {
   RuleConflict,
   TimeOffRequest,
   AccessRole,
+  Holiday,
   JobTitle,
 } from '../types/flizow';
 
@@ -189,6 +191,20 @@ export function OpsTimeOffTab() {
   );
   const conflictsByDate = useMemo(() => groupConflictsByDate(conflicts), [conflicts]);
 
+  // Holidays bucketed by date for the calendar ribbon. Filtered by
+  // the workspace's actual member country mix — a PH-only workspace
+  // doesn't see AU dates even though they live in the catalog.
+  const holidaysByDate = useMemo(() => {
+    const visible = visibleHolidays(data.holidays, data.members);
+    const map = new Map<string, Holiday[]>();
+    for (const h of visible) {
+      const bucket = map.get(h.date) ?? [];
+      bucket.push(h);
+      map.set(h.date, bucket);
+    }
+    return map;
+  }, [data.holidays, data.members]);
+
   // Pending requests for the approval queue (only those whose start
   // is still ahead, OR currently-active — past-only pending makes no
   // sense in practice but we don't filter aggressively in case a
@@ -251,6 +267,7 @@ export function OpsTimeOffTab() {
           today={today}
           requests={calendarRequests}
           conflictsByDate={conflictsByDate}
+          holidaysByDate={holidaysByDate}
           members={data.members}
           onSelectDate={setSelectedDate}
         />
@@ -288,6 +305,7 @@ export function OpsTimeOffTab() {
           members={data.members}
           jobTitles={data.jobTitles}
           conflicts={conflictsByDate.get(selectedDate) ?? []}
+          holidays={holidaysByDate.get(selectedDate) ?? []}
           onClose={() => setSelectedDate(null)}
         />
       )}
@@ -380,6 +398,7 @@ function SchedulesCalendar({
   today,
   requests,
   conflictsByDate,
+  holidaysByDate,
   members,
   onSelectDate,
 }: {
@@ -388,6 +407,7 @@ function SchedulesCalendar({
   today: string;
   requests: ReadonlyArray<TimeOffRequest>;
   conflictsByDate: Map<string, RuleConflict[]>;
+  holidaysByDate: Map<string, Holiday[]>;
   members: ReadonlyArray<Member>;
   onSelectDate: (iso: string) => void;
 }) {
@@ -426,6 +446,7 @@ function SchedulesCalendar({
         {cells.map((cell) => {
           const off = offByDate.get(cell.iso) ?? [];
           const conflicts = conflictsByDate.get(cell.iso) ?? [];
+          const holidays = holidaysByDate.get(cell.iso) ?? [];
           const isToday = cell.iso === today;
           return (
             <CalendarDayCell
@@ -434,6 +455,7 @@ function SchedulesCalendar({
               inMonth={cell.inMonth && new Date(cell.iso.slice(0, 4) + '-' + cell.iso.slice(5, 7) + '-01').getMonth() === monthIdx}
               isToday={isToday}
               off={off}
+              holidays={holidays}
               hasConflict={conflicts.length > 0}
               conflictCount={conflicts.length}
               onClick={() => onSelectDate(cell.iso)}
@@ -450,6 +472,7 @@ function CalendarDayCell({
   inMonth,
   isToday,
   off,
+  holidays,
   hasConflict,
   conflictCount,
   onClick,
@@ -458,6 +481,7 @@ function CalendarDayCell({
   inMonth: boolean;
   isToday: boolean;
   off: ReadonlyArray<Member>;
+  holidays: ReadonlyArray<Holiday>;
   hasConflict: boolean;
   conflictCount: number;
   onClick: () => void;
@@ -465,6 +489,10 @@ function CalendarDayCell({
   const day = parseInt(iso.slice(8, 10), 10);
   const visible = off.slice(0, 3);
   const overflow = off.length - visible.length;
+  // Pick the first holiday for the per-cell tint. Multiple holidays
+  // on one date is rare (PH overlaps); the popover shows the full
+  // list. The ribbon just signals "something's happening here."
+  const primaryHoliday = holidays[0];
 
   const className = [
     'schedules-day',
@@ -472,6 +500,7 @@ function CalendarDayCell({
     isToday ? 'schedules-day--today' : '',
     hasConflict ? 'schedules-day--conflict' : '',
     off.length > 0 ? 'schedules-day--has-off' : '',
+    primaryHoliday ? 'schedules-day--holiday' : '',
   ].filter(Boolean).join(' ');
 
   return (
@@ -480,9 +509,31 @@ function CalendarDayCell({
       role="gridcell"
       className={className}
       onClick={onClick}
-      aria-label={`${formatLong(iso)} — ${off.length} off, ${conflictCount} conflicts`}
+      aria-label={`${formatLong(iso)} — ${off.length} off, ${conflictCount} conflicts${holidays.length > 0 ? `, ${holidays.length} holiday(s)` : ''}`}
+      style={
+        primaryHoliday
+          ? { background: countryTint(primaryHoliday.country) }
+          : undefined
+      }
     >
       <span className="schedules-day-num">{day}</span>
+      {primaryHoliday && (
+        <span
+          className="schedules-day-holiday"
+          aria-hidden="true"
+          title={
+            holidays.length > 1
+              ? `${holidays.length} holidays — ${holidays.map((h) => h.name).join(', ')}`
+              : primaryHoliday.name
+          }
+        >
+          {countryShortLabel(primaryHoliday.country)}
+          {' '}
+          {primaryHoliday.name.length > 18
+            ? primaryHoliday.name.slice(0, 16) + '…'
+            : primaryHoliday.name}
+        </span>
+      )}
       {hasConflict && (
         <span
           className="schedules-day-conflict-dot"
@@ -1108,6 +1159,7 @@ function DayPopover({
   members,
   jobTitles,
   conflicts,
+  holidays,
   onClose,
 }: {
   date: string;
@@ -1115,6 +1167,7 @@ function DayPopover({
   members: ReadonlyArray<Member>;
   jobTitles: ReadonlyArray<JobTitle>;
   conflicts: ReadonlyArray<RuleConflict>;
+  holidays: ReadonlyArray<Holiday>;
   onClose: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -1158,6 +1211,32 @@ function DayPopover({
           </button>
         </header>
         <div className="schedules-popover-body">
+          {holidays.length > 0 && (
+            <div className="schedules-popover-section">
+              <div className="schedules-popover-eyebrow">
+                {holidays.length === 1 ? 'Holiday' : `Holidays · ${holidays.length}`}
+              </div>
+              <ul className="schedules-popover-list">
+                {holidays.map((h) => (
+                  <li key={h.id} className="schedules-popover-row">
+                    <span
+                      className="schedules-popover-country-pill"
+                      style={{ background: countryTint(h.country) }}
+                    >
+                      {countryShortLabel(h.country)}
+                    </span>
+                    <div>
+                      <div className="schedules-popover-name">{h.name}</div>
+                      <div className="schedules-popover-sub">
+                        {h.type === 'special' ? 'Special non-working' : 'Public holiday'}
+                        {h.states && h.states.length > 0 && <> · {h.states.join(', ')}</>}
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           <div className="schedules-popover-section">
             <div className="schedules-popover-eyebrow">Off this day · {off.length}</div>
             {off.length === 0 ? (
