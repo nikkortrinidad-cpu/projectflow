@@ -9027,6 +9027,187 @@
     margin-top: var(--sp-md);
   }
 
+  /* ── Holiday transfer credits (Phase 6C) ─────────────────────────
+     Settings → Holidays credit-policy panel. Sits above the year +
+     country filter row so the policy reads as a workspace-wide
+     setting, not per-row config. */
+  .holidays-credit-policy {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-md);
+    padding: var(--sp-md);
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 10px;
+    margin-bottom: var(--sp-md);
+    flex-wrap: wrap;
+  }
+  .holidays-credit-policy-text { flex: 1; min-width: 240px; }
+  .holidays-credit-policy-title {
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .holidays-credit-policy-sub {
+    font-size: var(--fs-sm);
+    color: var(--text-soft);
+    line-height: 1.4;
+    max-width: 60ch;
+  }
+  .holidays-credit-policy-field { min-width: 220px; flex-shrink: 0; }
+
+  /* Account → Time off — credit summary block. Sits between the
+     status banner and the request CTA. Renders only when the
+     member has anything in their ledger (earned, spent, or
+     non-zero balance). */
+  .timeoff-credits {
+    padding: var(--sp-md);
+    background: rgba(241, 90, 36, 0.10);
+    border: 1px solid var(--highlight-line, rgba(241, 90, 36, 0.35));
+    border-radius: 10px;
+    margin-bottom: var(--sp-md);
+  }
+  .timeoff-credits-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-md);
+    flex-wrap: wrap;
+  }
+  .timeoff-credits-balance {
+    font-size: var(--fs-md);
+    font-weight: 700;
+    color: var(--highlight);
+  }
+  .timeoff-credits-sub {
+    font-size: var(--fs-sm);
+    color: var(--text-soft);
+    margin-top: 2px;
+  }
+  .timeoff-credits-ledger {
+    list-style: none;
+    margin: var(--sp-md) 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-xs);
+    border-top: 1px solid var(--hairline-soft);
+    padding-top: var(--sp-md);
+  }
+  .timeoff-credits-row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-sm);
+    padding: var(--sp-xs) 0;
+  }
+  .timeoff-credits-row--expired { opacity: 0.55; }
+  .timeoff-credits-delta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .timeoff-credits-delta--earned {
+    background: rgba(48, 209, 88, 0.18);
+    color: #30d158;
+  }
+  .timeoff-credits-delta--spent {
+    background: rgba(255, 159, 10, 0.18);
+    color: #ff9f0a;
+  }
+  .timeoff-credits-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: var(--fs-sm);
+    color: var(--text);
+  }
+  .timeoff-credits-meta {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+  }
+
+  /* "Use credit" checkbox row in the time-off submit modal.
+     Sits below the reason textarea, in a tinted card so it reads
+     as a meaningful affirmation rather than a buried form field. */
+  .timeoff-credit-row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-sm);
+    padding: var(--sp-md);
+    margin-top: var(--sp-md);
+    background: rgba(48, 209, 88, 0.08);
+    border: 1px solid rgba(48, 209, 88, 0.30);
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .timeoff-credit-row input[type="checkbox"] {
+    margin-top: 2px;
+    cursor: pointer;
+  }
+  .timeoff-credit-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .timeoff-credit-title {
+    font-weight: 600;
+    color: var(--text);
+    font-size: var(--fs-sm);
+  }
+  .timeoff-credit-sub {
+    font-size: var(--fs-xs);
+    color: var(--text-soft);
+    line-height: 1.4;
+  }
+
+  /* Day popover — per-member observation override row. Adds an
+     inline list under each holiday section showing each in-scope
+     member with their current observation status as a select. */
+  .schedules-popover-list--members {
+    margin-top: var(--sp-sm);
+    padding-top: var(--sp-sm);
+    border-top: 1px dashed var(--hairline-soft);
+    gap: var(--sp-xs);
+  }
+  .schedules-popover-member-row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-sm);
+  }
+  .schedules-popover-member-avatar {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .schedules-popover-member-name {
+    flex: 1;
+    font-size: var(--fs-sm);
+    color: var(--text);
+    font-weight: 500;
+  }
+  .schedules-popover-member-status {
+    font-size: var(--fs-xs);
+    padding: 4px 6px;
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+    background: var(--bg-elev);
+    color: var(--text);
+    cursor: pointer;
+  }
+
   .capacity-strip-empty {
     padding: 24px 0;
     color: var(--text-soft);

@@ -693,6 +693,41 @@ export interface Holiday {
 }
 
 /**
+ * Per-member observation override on a single holiday. The Holiday
+ * record carries the workspace default (defaultObservation); when a
+ * member's status differs from that default, an entry lands here.
+ *
+ *  - 'observed' = took the day off (default for most holidays)
+ *  - 'worked'   = worked through it; earns +1 transfer credit
+ *
+ * Only overrides are stored, not every (holiday × member) pair —
+ * keeps the array small. The credit math (utils/holidayCredits)
+ * combines this list with the holiday catalog to compute each
+ * member's earned credits.
+ *
+ * Phase 6C of the time-off system.
+ */
+export interface HolidayObservation {
+  id: string;
+  holidayId: string;
+  memberId: string;
+  status: 'observed' | 'worked';
+  /** ISO timestamp the override was set. */
+  decidedAt: string;
+  /** Member uid that set the override (audit trail). */
+  decidedBy: string;
+}
+
+/** Credit expiry policy — when do unused holiday-transfer credits
+ *  zero out? Default 'end-of-year' matches the agency norm; the
+ *  Owner can pick a longer window through Settings → Holidays. */
+export type CreditExpiryPolicy =
+  | 'end-of-year'
+  | 'six-months'
+  | 'twelve-months'
+  | 'never';
+
+/**
  * Coverage rule — workspace-curated constraint that the time-off
  * engine checks every day. The OM (or admin) writes one declarative
  * rule like "Always need 1 Account Manager present every weekday";
@@ -803,6 +838,12 @@ export interface TimeOffRequest {
   decidedAt?: string;
   decidedBy?: string;
   decisionNote?: string;
+  /** Phase 6C: when true, this request consumes a holiday transfer
+   *  credit (earned by working through a holiday). The request
+   *  flows through normal approval; on approval the credit
+   *  deducts from the requester's balance. Computed live — the
+   *  ledger view filters approved requests with this flag set. */
+  useTransferCredit?: boolean;
 }
 
 /**
@@ -1344,6 +1385,16 @@ export interface FlizowData {
    *  reads this list to render holiday ribbons on each affected
    *  date. Audit: time-off Phase 6B. */
   holidays: Holiday[];
+  /** Per-member overrides on holiday observation. Sparse — only
+   *  members whose status differs from the holiday's default land
+   *  here. Drives the transfer-credit ledger: any 'worked'
+   *  override on a holiday earns the member +1 credit. Audit:
+   *  time-off Phase 6C. */
+  holidayObservations: HolidayObservation[];
+  /** Credit-expiry policy for holiday transfer credits. Defaults
+   *  to 'end-of-year'. Editable in Settings → Holidays. Audit:
+   *  time-off Phase 6C. */
+  creditExpiryPolicy: CreditExpiryPolicy;
   /** Light vs dark mode. Used to be owned by the legacy BoardStore;
    *  moved here so we can retire that store. App.tsx reads this and
    *  syncs to `document.documentElement` (class + data-theme attr).

@@ -11,7 +11,7 @@ import type {
   TrashEntry, TrashKind, TrashPayload,
   JobTitle, TimeOffRequest, TimeOffStatus,
   CoverageRule,
-  Holiday,
+  Holiday, CreditExpiryPolicy,
 } from '../types/flizow';
 import { ONBOARDING_TEMPLATES } from '../data/onboardingTemplates';
 import { TASK_POOLS } from '../data/taskPools';
@@ -21,6 +21,7 @@ import { migrateAccessRole } from '../utils/access';
 import { DEFAULT_JOB_TITLES, pickMigratedJobTitleId } from '../utils/jobTitles';
 import { makeTimeOffRequest, migrateLegacyTimeOff } from '../utils/timeOff';
 import { DEFAULT_HOLIDAYS } from '../data/holidaySeed';
+import { makeHolidayObservation } from '../utils/holidayCredits';
 
 /**
  * FlizowStore — central data container.
@@ -111,6 +112,14 @@ function emptyData(): FlizowData {
     // edits / adds / archives via Settings → Holidays. Ids are
     // stable so re-running migrate is idempotent.
     holidays: DEFAULT_HOLIDAYS.map((h) => ({ ...h })),
+    // No per-member observation overrides on a fresh workspace.
+    // Sparse list — only members whose status differs from the
+    // holiday default land here.
+    holidayObservations: [],
+    // Default credit-expiry policy. Owner can change in
+    // Settings → Holidays. End-of-year matches agency norms
+    // for accrued time off.
+    creditExpiryPolicy: 'end-of-year',
   };
 }
 
@@ -311,6 +320,11 @@ function migrate(parsed: Partial<FlizowData>): FlizowData {
     holidays: Array.isArray(parsed.holidays)
       ? parsed.holidays
       : base.holidays,
+    // Phase 6C: holiday observation overrides + credit policy.
+    holidayObservations: Array.isArray(parsed.holidayObservations)
+      ? parsed.holidayObservations
+      : base.holidayObservations,
+    creditExpiryPolicy: parsed.creditExpiryPolicy ?? base.creditExpiryPolicy,
   };
 }
 
@@ -2935,6 +2949,10 @@ class FlizowStore {
     reason?: string;
     status?: TimeOffStatus;
     decidedBy?: string;
+    /** Phase 6C — when true, this request consumes one holiday
+     *  transfer credit on approval. Stored verbatim on the request
+     *  so the ledger view (utils/holidayCredits) can subtract it. */
+    useTransferCredit?: boolean;
   }): TimeOffRequest {
     const status = input.status ?? 'pending';
     const now = new Date().toISOString();
@@ -2947,15 +2965,18 @@ class FlizowStore {
           decidedBy: input.decidedBy ?? this.userId ?? undefined,
         }
       : {};
-    const req = makeTimeOffRequest({
-      memberId: input.memberId,
-      start: input.start,
-      end: input.end,
-      reason: input.reason,
-      status,
-      requestedAt: now,
-      ...decidedFields,
-    });
+    const req: TimeOffRequest = {
+      ...makeTimeOffRequest({
+        memberId: input.memberId,
+        start: input.start,
+        end: input.end,
+        reason: input.reason,
+        status,
+        requestedAt: now,
+        ...decidedFields,
+      }),
+      useTransferCredit: input.useTransferCredit,
+    };
     this.data.timeOffRequests = [...this.data.timeOffRequests, req];
     this.save();
     return req;
@@ -3017,13 +3038,13 @@ class FlizowStore {
     this.save();
   }
 
-  /** Patch a request's editable fields (start, end, reason). Status
-   *  changes go through the dedicated approve / deny / cancel
-   *  methods so audit fields stay honest — `updateTimeOffRequest`
-   *  intentionally rejects status changes. */
+  /** Patch a request's editable fields (start, end, reason,
+   *  useTransferCredit). Status changes go through the dedicated
+   *  approve / deny / cancel methods so audit fields stay honest
+   *  — `updateTimeOffRequest` intentionally excludes status. */
   updateTimeOffRequest(
     id: string,
-    patch: Partial<Pick<TimeOffRequest, 'start' | 'end' | 'reason'>>,
+    patch: Partial<Pick<TimeOffRequest, 'start' | 'end' | 'reason' | 'useTransferCredit'>>,
   ): void {
     const r = this.data.timeOffRequests.find((x) => x.id === id);
     if (!r) return;
@@ -3130,6 +3151,72 @@ class FlizowStore {
     const before = this.data.holidays.length;
     this.data.holidays = this.data.holidays.filter((x) => x.id !== id);
     if (this.data.holidays.length === before) return;
+    this.save();
+  }
+
+  // ── Holiday observation overrides + credit policy (Phase 6C) ────────
+
+  /** Upsert a per-member observation override. When the chosen
+   *  status matches the holiday's default, we clear the override
+   *  instead — keeps the array sparse + the audit trail honest
+   *  (no stored "I confirmed the default" rows that look like
+   *  decisions but aren't). */
+  setHolidayObservation(input: {
+    holidayId: string;
+    memberId: string;
+    status: 'observed' | 'worked';
+  }): void {
+    const holiday = this.data.holidays.find((h) => h.id === input.holidayId);
+    if (!holiday) return;
+    const decidedBy = this.userId ?? '';
+    // If the desired status matches the holiday's default, treat
+    // as "remove override" — we never persist a confirmation of
+    // the default.
+    if (input.status === holiday.defaultObservation) {
+      this.clearHolidayObservation(input.holidayId, input.memberId);
+      return;
+    }
+    const existing = this.data.holidayObservations.find(
+      (o) => o.holidayId === input.holidayId && o.memberId === input.memberId,
+    );
+    const next = makeHolidayObservation({
+      holidayId: input.holidayId,
+      memberId: input.memberId,
+      status: input.status,
+      decidedBy,
+    });
+    if (existing) {
+      this.data.holidayObservations = this.data.holidayObservations.map((o) =>
+        o.holidayId === input.holidayId && o.memberId === input.memberId
+          ? next
+          : o,
+      );
+    } else {
+      this.data.holidayObservations.push(next);
+    }
+    this.save();
+  }
+
+  /** Remove an override — the member reverts to the holiday's
+   *  workspace default. No-op when no entry exists. */
+  clearHolidayObservation(holidayId: string, memberId: string): void {
+    const before = this.data.holidayObservations.length;
+    this.data.holidayObservations = this.data.holidayObservations.filter(
+      (o) => !(o.holidayId === holidayId && o.memberId === memberId),
+    );
+    if (this.data.holidayObservations.length === before) return;
+    this.save();
+  }
+
+  /** Owner-only setting. Edited via Settings → Holidays. The
+   *  policy is read at compute time, not at credit-creation time
+   *  (see utils/holidayCredits.creditExpiryFor) — so flipping
+   *  this affects every credit, past + future. The simpler model:
+   *  a workspace's "current rule" is what the policy says today.
+   *  Past credits adopt the new validThrough on the next read. */
+  setCreditExpiryPolicy(policy: CreditExpiryPolicy): void {
+    if (this.data.creditExpiryPolicy === policy) return;
+    this.data.creditExpiryPolicy = policy;
     this.save();
   }
 

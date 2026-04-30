@@ -21,7 +21,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useFlizow } from '../store/useFlizow';
 import { flizowStore } from '../store/flizowStore';
-import type { AccessRole, Holiday, HolidayCountry, HolidayObservationDefault, JobTitle, JobTitleKind, Member, TimeOffRequest, TrashEntry, TrashKind, WorkspaceMembership } from '../types/flizow';
+import type { AccessRole, CreditExpiryPolicy, Holiday, HolidayCountry, HolidayObservationDefault, JobTitle, JobTitleKind, Member, TimeOffRequest, TrashEntry, TrashKind, WorkspaceMembership } from '../types/flizow';
 import { initialsOf } from '../utils/avatar';
 import { ConfirmDangerDialog } from './ConfirmDangerDialog';
 import { useMemberProfile } from '../contexts/MemberProfileContext';
@@ -31,6 +31,10 @@ import {
   ACCESS_ROLE_DESCRIPTION,
   can,
 } from '../utils/access';
+import {
+  creditBalanceFor as computeCreditBalance,
+  memberCreditLedger,
+} from '../utils/holidayCredits';
 
 /**
  * FlizowAccountModal — the Account Settings overlay reachable from the
@@ -1777,6 +1781,23 @@ function TimeOffSection() {
   const meId = me.id;
   const today = data.today;
 
+  // Phase-6C — current holiday transfer credit balance for the
+  // requester. Drives the "Use credit" checkbox in the submit
+  // modal + the small balance label that surfaces on this section
+  // when there's anything to claim.
+  const creditBalance = useMemo(
+    () =>
+      computeCreditBalance(
+        me,
+        data.holidays,
+        data.holidayObservations,
+        data.timeOffRequests,
+        data.creditExpiryPolicy,
+        today,
+      ),
+    [me, data.holidays, data.holidayObservations, data.timeOffRequests, data.creditExpiryPolicy, today],
+  );
+
   // Phase-4 read: every status the requester needs to see, bucketed.
   // Cancelled requests stay out of view (cancellation is the
   // requester's own action — re-surfacing them clutters the list).
@@ -1859,7 +1880,7 @@ function TimeOffSection() {
     store.updateTimeOffRequest(activeRequest.id, { end: safeEnd });
   }
 
-  function handleSave(period: { start: string; end: string; reason?: string }) {
+  function handleSave(period: { start: string; end: string; reason?: string; useTransferCredit?: boolean }) {
     if (!modalOpen) return;
     if (!modalOpen.requestId) {
       // New submission: 'pending' by default (Phase-4 flip from
@@ -1870,6 +1891,7 @@ function TimeOffSection() {
         start: period.start,
         end: period.end,
         reason: period.reason,
+        useTransferCredit: period.useTransferCredit,
       });
     } else {
       // Edit-in-place. Phase 6 may revisit this — editing an
@@ -1880,6 +1902,7 @@ function TimeOffSection() {
         start: period.start,
         end: period.end,
         reason: period.reason,
+        useTransferCredit: period.useTransferCredit,
       });
     }
     setModalOpen(null);
@@ -1942,6 +1965,19 @@ function TimeOffSection() {
           )}
         </div>
       )}
+
+      {/* Phase 6C — credit balance summary. Surfaces only when the
+          requester has anything in their ledger (earned, spent, or
+          a non-zero balance). Click "View ledger" expands the full
+          history below. */}
+      <CreditSummary
+        member={me}
+        holidays={data.holidays}
+        observations={data.holidayObservations}
+        requests={data.timeOffRequests}
+        policy={data.creditExpiryPolicy}
+        today={today}
+      />
 
       {/* Primary CTA — always present so the path to "request time
           off" is one click regardless of which sections render below. */}
@@ -2042,12 +2078,114 @@ function TimeOffSection() {
           initialStart={editingRequest?.start ?? today}
           initialEnd={editingRequest?.end ?? isoOffsetDays(today, 1)}
           initialReason={editingRequest?.reason}
+          initialUseCredit={editingRequest?.useTransferCredit}
+          creditsAvailable={creditBalance}
           isEditing={!!editingRequest}
           onSave={handleSave}
           onClose={() => setModalOpen(null)}
         />
       )}
     </section>
+  );
+}
+
+/** Phase 6C — Holiday transfer credit summary.
+ *
+ *  Renders nothing when the member has no ledger history. Otherwise
+ *  shows their current available balance + an expandable list of
+ *  earned/spent entries. Click "View ledger" to expand inline.
+ *
+ *  Why inline (not a separate route): the ledger is small enough
+ *  (a few entries per year) that an accordion-style reveal under
+ *  the section header keeps the user in flow. They came here to
+ *  manage time off; the ledger is context, not a destination. */
+function CreditSummary({
+  member,
+  holidays,
+  observations,
+  requests,
+  policy,
+  today,
+}: {
+  member: Member;
+  holidays: ReadonlyArray<Holiday>;
+  observations: ReadonlyArray<{ holidayId: string; memberId: string; status: 'observed' | 'worked'; decidedAt: string; decidedBy: string; id: string }>;
+  requests: ReadonlyArray<TimeOffRequest>;
+  policy: CreditExpiryPolicy;
+  today: string;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const ledger = useMemo(
+    () => memberCreditLedger(member, holidays, observations, requests, policy, today),
+    [member, holidays, observations, requests, policy, today],
+  );
+  const balance = useMemo(
+    () => computeCreditBalance(member, holidays, observations, requests, policy, today),
+    [member, holidays, observations, requests, policy, today],
+  );
+
+  if (ledger.length === 0) return null;
+
+  return (
+    <div className="timeoff-credits">
+      <div className="timeoff-credits-head">
+        <div>
+          <div className="timeoff-credits-balance">
+            {balance} {balance === 1 ? 'credit' : 'credits'} available
+          </div>
+          <div className="timeoff-credits-sub">
+            Earned by working through holidays · Use on a time-off request below.
+          </div>
+        </div>
+        <button
+          type="button"
+          className="acct-btn-text"
+          onClick={() => setExpanded((v) => !v)}
+        >
+          {expanded ? 'Hide ledger' : 'View ledger'}
+        </button>
+      </div>
+      {expanded && (
+        <ul className="timeoff-credits-ledger">
+          {ledger.map((entry) => {
+            if (entry.kind === 'earned') {
+              return (
+                <li
+                  key={entry.credit.id}
+                  className={`timeoff-credits-row${entry.isExpired ? ' timeoff-credits-row--expired' : ''}`}
+                >
+                  <span className="timeoff-credits-delta timeoff-credits-delta--earned">+1</span>
+                  <span className="timeoff-credits-text">
+                    <strong>{entry.credit.holidayName}</strong>
+                    <span className="timeoff-credits-meta">
+                      {formatDateLong(entry.credit.date)}
+                      {' · '}
+                      {entry.isExpired
+                        ? `Expired ${formatDateLong(entry.credit.validThrough)}`
+                        : `Valid through ${formatDateLong(entry.credit.validThrough)}`}
+                    </span>
+                  </span>
+                </li>
+              );
+            }
+            return (
+              <li key={entry.credit.id} className="timeoff-credits-row">
+                <span className="timeoff-credits-delta timeoff-credits-delta--spent">−1</span>
+                <span className="timeoff-credits-text">
+                  <strong>Used for time off</strong>
+                  <span className="timeoff-credits-meta">
+                    {formatDateLong(entry.credit.start)}
+                    {entry.credit.start !== entry.credit.end && (
+                      <> – {formatDateLong(entry.credit.end)}</>
+                    )}
+                  </span>
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
   );
 }
 
@@ -2173,11 +2311,15 @@ function TimeOffStatusBadge({ status }: { status: TimeOffRequest['status'] }) {
  *  browser pops a date grid on click without us shipping a third-
  *  party library. Phase-4 additions: optional reason textarea
  *  alongside the date inputs, footer copy clarifies that the OM
- *  reviews before approval. */
+ *  reviews before approval. Phase 6C adds the "Use credit"
+ *  checkbox when the requester has any holiday transfer credits
+ *  available. */
 function TimeOffPeriodModal({
   initialStart,
   initialEnd,
   initialReason,
+  initialUseCredit,
+  creditsAvailable,
   isEditing,
   onSave,
   onClose,
@@ -2185,13 +2327,19 @@ function TimeOffPeriodModal({
   initialStart: string;
   initialEnd: string;
   initialReason?: string;
+  initialUseCredit?: boolean;
+  /** Number of holiday transfer credits the requester has on hand
+   *  right now. Drives whether the checkbox renders + whether it's
+   *  enabled. */
+  creditsAvailable: number;
   isEditing: boolean;
-  onSave: (period: { start: string; end: string; reason?: string }) => void;
+  onSave: (period: { start: string; end: string; reason?: string; useTransferCredit?: boolean }) => void;
   onClose: () => void;
 }) {
   const [start, setStart] = useState(initialStart);
   const [end, setEnd] = useState(initialEnd);
   const [reason, setReason] = useState(initialReason ?? '');
+  const [useCredit, setUseCredit] = useState<boolean>(initialUseCredit ?? false);
   const dialogRef = useRef<HTMLDivElement>(null);
 
   // Esc closes; same convention as the other modals in the app.
@@ -2215,6 +2363,13 @@ function TimeOffPeriodModal({
       start,
       end,
       reason: trimmed.length > 0 ? trimmed : undefined,
+      // Only flag the credit when the user explicitly ticked it
+      // AND credits are actually available. Defensive against a
+      // stale state where the user opens the modal, the OM
+      // approves another request that drains them, and they then
+      // try to submit. The submit path may still over-draw on
+      // approval; that's surfaced in the workspace ledger.
+      useTransferCredit: useCredit && creditsAvailable > 0 ? true : undefined,
     });
   }
 
@@ -2299,6 +2454,27 @@ function TimeOffPeriodModal({
               maxLength={280}
             />
           </label>
+          {/* Phase 6C — "Use holiday transfer credit" checkbox. Only
+              renders when the user has at least one credit on the
+              ledger. Subtitle clarifies what happens on approval. */}
+          {creditsAvailable > 0 && (
+            <label className="timeoff-credit-row">
+              <input
+                type="checkbox"
+                checked={useCredit}
+                onChange={(e) => setUseCredit(e.target.checked)}
+              />
+              <span className="timeoff-credit-text">
+                <span className="timeoff-credit-title">
+                  Use 1 holiday transfer credit for this request
+                </span>
+                <span className="timeoff-credit-sub">
+                  You have {creditsAvailable} {creditsAvailable === 1 ? 'credit' : 'credits'} available.
+                  Earned by working through holidays.
+                </span>
+              </span>
+            </label>
+          )}
           {!valid && (
             <p className="acct-section-sub" style={{
               color: 'var(--accent)',
@@ -2803,6 +2979,35 @@ function HolidaysSection() {
           Public holidays your workspace observes. Members tagged with a country see their relevant holidays on the schedules calendar.
           Pre-seeded with Philippines and Australia 2026 + 2027 — edit, archive, or add custom dates.
         </p>
+      </div>
+
+      {/* Phase 6C — Credit policy. Sets the rule for how long a
+          holiday transfer credit stays valid after it's earned.
+          Owner-only edit; the rest of the workspace just observes
+          the policy through their own ledger. */}
+      <div className="holidays-credit-policy">
+        <div className="holidays-credit-policy-text">
+          <div className="holidays-credit-policy-title">Holiday transfer credits</div>
+          <div className="holidays-credit-policy-sub">
+            When a member works through a holiday they would have observed, they earn a transfer credit they can spend on a future time-off request.
+          </div>
+        </div>
+        <label className="member-profile-field holidays-credit-policy-field">
+          <span className="member-profile-field-label">Credits expire</span>
+          <select
+            className="acct-input"
+            value={data.creditExpiryPolicy}
+            onChange={(e) =>
+              store.setCreditExpiryPolicy(e.target.value as CreditExpiryPolicy)
+            }
+            aria-label="Credit expiry policy"
+          >
+            <option value="end-of-year">End of calendar year</option>
+            <option value="six-months">Six months after earned</option>
+            <option value="twelve-months">Twelve months after earned</option>
+            <option value="never">Never (no expiry)</option>
+          </select>
+        </label>
       </div>
 
       <div className="holidays-toolbar">

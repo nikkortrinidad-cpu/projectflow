@@ -1140,5 +1140,8 @@ export function generateDemoData(): FlizowData {
     // workspaces show holidays on the schedules calendar without
     // waiting for migrate(). Same 80-entry PH+AU 2026/27 list.
     holidays: DEFAULT_HOLIDAYS.map((h) => ({ ...h })),
+    // Phase 6C — empty overrides + default policy on demo loads.
+    holidayObservations: [],
+    creditExpiryPolicy: 'end-of-year',
   };
 }

@@ -46,7 +46,8 @@ import {
   makeCoverageRule,
 } from '../utils/coverageRules';
 import { ACCESS_ROLE_LABEL } from '../utils/access';
-import { visibleHolidays, countryShortLabel, countryTint } from '../utils/holidays';
+import { visibleHolidays, countryShortLabel, countryTint, holidayAppliesToCountry } from '../utils/holidays';
+import { memberObservationFor } from '../utils/holidayCredits';
 import type {
   CoverageRule,
   CoverageRuleConstraint,
@@ -56,6 +57,7 @@ import type {
   TimeOffRequest,
   AccessRole,
   Holiday,
+  HolidayObservation,
   JobTitle,
 } from '../types/flizow';
 
@@ -306,6 +308,7 @@ export function OpsTimeOffTab() {
           jobTitles={data.jobTitles}
           conflicts={conflictsByDate.get(selectedDate) ?? []}
           holidays={holidaysByDate.get(selectedDate) ?? []}
+          observations={data.holidayObservations}
           onClose={() => setSelectedDate(null)}
         />
       )}
@@ -1160,6 +1163,7 @@ function DayPopover({
   jobTitles,
   conflicts,
   holidays,
+  observations,
   onClose,
 }: {
   date: string;
@@ -1168,6 +1172,7 @@ function DayPopover({
   jobTitles: ReadonlyArray<JobTitle>;
   conflicts: ReadonlyArray<RuleConflict>;
   holidays: ReadonlyArray<Holiday>;
+  observations: ReadonlyArray<HolidayObservation>;
   onClose: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -1211,32 +1216,78 @@ function DayPopover({
           </button>
         </header>
         <div className="schedules-popover-body">
-          {holidays.length > 0 && (
-            <div className="schedules-popover-section">
-              <div className="schedules-popover-eyebrow">
-                {holidays.length === 1 ? 'Holiday' : `Holidays · ${holidays.length}`}
-              </div>
-              <ul className="schedules-popover-list">
-                {holidays.map((h) => (
-                  <li key={h.id} className="schedules-popover-row">
-                    <span
-                      className="schedules-popover-country-pill"
-                      style={{ background: countryTint(h.country) }}
-                    >
-                      {countryShortLabel(h.country)}
-                    </span>
-                    <div>
-                      <div className="schedules-popover-name">{h.name}</div>
-                      <div className="schedules-popover-sub">
-                        {h.type === 'special' ? 'Special non-working' : 'Public holiday'}
-                        {h.states && h.states.length > 0 && <> · {h.states.join(', ')}</>}
-                      </div>
+          {holidays.map((h) => {
+            // Members in scope for this holiday's country — these
+            // are the ones the OM might want to override (e.g.
+            // "Sarah worked through PH Labor Day").
+            const inScope = members.filter((m) => holidayAppliesToCountry(h, m.country));
+            return (
+              <div key={h.id} className="schedules-popover-section">
+                <div className="schedules-popover-eyebrow">
+                  Holiday · {countryShortLabel(h.country)}
+                </div>
+                <div className="schedules-popover-row">
+                  <span
+                    className="schedules-popover-country-pill"
+                    style={{ background: countryTint(h.country) }}
+                  >
+                    {countryShortLabel(h.country)}
+                  </span>
+                  <div>
+                    <div className="schedules-popover-name">{h.name}</div>
+                    <div className="schedules-popover-sub">
+                      {h.type === 'special' ? 'Special non-working' : 'Public holiday'}
+                      {h.states && h.states.length > 0 && <> · {h.states.join(', ')}</>}
+                      {' · Default: '}
+                      {h.defaultObservation === 'observed' ? 'observed' : 'worked'}
                     </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+                  </div>
+                </div>
+                {/* Per-member observation list — lets the OM flip
+                    a member's status to "Worked" so a transfer
+                    credit accrues, or back to "Observed" to revert.
+                    Only shown when there's anyone in the holiday's
+                    country to override. */}
+                {inScope.length > 0 && (
+                  <ul className="schedules-popover-list schedules-popover-list--members">
+                    {inScope.map((m) => {
+                      const status = memberObservationFor(m, h, observations);
+                      return (
+                        <li key={`${h.id}-${m.id}`} className="schedules-popover-member-row">
+                          <span
+                            className="schedules-popover-member-avatar"
+                            style={
+                              m.bg
+                                ? { background: m.bg, color: m.color }
+                                : { background: m.color, color: '#fff' }
+                            }
+                          >
+                            {m.initials}
+                          </span>
+                          <span className="schedules-popover-member-name">{m.name}</span>
+                          <select
+                            className="schedules-popover-member-status"
+                            value={status}
+                            onChange={(e) =>
+                              flizowStore.setHolidayObservation({
+                                holidayId: h.id,
+                                memberId: m.id,
+                                status: e.target.value as 'observed' | 'worked',
+                              })
+                            }
+                            aria-label={`${m.name}'s status for ${h.name}`}
+                          >
+                            <option value="observed">Observed</option>
+                            <option value="worked">Worked (+1 credit)</option>
+                          </select>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
           <div className="schedules-popover-section">
             <div className="schedules-popover-eyebrow">Off this day · {off.length}</div>
             {off.length === 0 ? (
