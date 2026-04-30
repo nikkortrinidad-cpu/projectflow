@@ -16,6 +16,12 @@ import { useMemberProfile } from '../contexts/MemberProfileContext';
 import { useFlizow } from '../store/useFlizow';
 import { flizowStore } from '../store/flizowStore';
 import { loadFor, effectiveCapFor, zoneFor, type CapacityTask } from '../utils/capacity';
+import {
+  currentVacationPeriod,
+  formatReturnDate,
+  formatTimeZone,
+  formatWorkingHoursLine,
+} from '../utils/memberProfile';
 import type { Member } from '../types/flizow';
 
 /**
@@ -161,18 +167,13 @@ function ProfileBody({ member, onClose }: { member: Member; onClose: () => void 
     return { load, caps, zone: zoneFor(load, caps) };
   }, [data.tasks, data.opsTasks, data.members, data.memberDayOverrides, data.today, member.id]);
 
-  // Vacation status. Walk the timeOff array for any period where
-  // `today` falls between start and end (inclusive on both sides).
-  // Returns the period's end date so the pill can show "back May 15".
-  const onVacation = useMemo(() => {
-    if (!member.timeOff || member.timeOff.length === 0) return null;
-    for (const period of member.timeOff) {
-      if (data.today >= period.start && data.today <= period.end) {
-        return period;
-      }
-    }
-    return null;
-  }, [member.timeOff, data.today]);
+  // Vacation status — pure function from utils/memberProfile so it's
+  // unit-tested separately. Returns the matching {start, end} period
+  // (so the pill can show "back May 15") or null when not on vacation.
+  const onVacation = useMemo(
+    () => currentVacationPeriod(member, data.today),
+    [member, data.today],
+  );
 
   // Working hours line — built from structured fields. Falls back to
   // null (section hidden) when none of the components are set, so
@@ -882,103 +883,8 @@ const COMMON_TIME_ZONES: Array<{ iana: string; label: string }> = [
   { iana: 'Pacific/Auckland',     label: 'Auckland' },
 ];
 
-// ── Format helpers ───────────────────────────────────────────────────────
-
-/** "09:00" → "9:00 AM". Returns the input untouched if it doesn't
- *  match the HH:mm shape (defensive — older data or hand-typed values
- *  shouldn't crash the panel). */
-function formatTime12h(hhmm: string | undefined): string | null {
-  if (!hhmm) return null;
-  const m = /^(\d{1,2}):(\d{2})$/.exec(hhmm);
-  if (!m) return null;
-  const h = parseInt(m[1], 10);
-  const min = m[2];
-  if (h < 0 || h > 23) return null;
-  const period = h >= 12 ? 'PM' : 'AM';
-  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
-  return `${h12}:${min} ${period}`;
-}
-
-const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-/** Format a working-days array as a human label.
- *    [1,2,3,4,5] → "Mon–Fri" (single contiguous span)
- *    [1,2,3,4]   → "Mon–Thu"
- *    [1,3,5]     → "Mon · Wed · Fri" (non-contiguous → bullet list)
- *    [0,1,2,3,4,5,6] → "Every day"
- *    [] → "No working days set"
- *    undefined → defaults to weekdays (per the type doc)
- *  Defensive: dedupes and sorts. */
-function formatWorkingDays(days: number[] | undefined): string {
-  const list = days ?? [1, 2, 3, 4, 5];
-  if (list.length === 0) return 'No working days set';
-  if (list.length === 7) return 'Every day';
-  const sorted = Array.from(new Set(list)).sort((a, b) => a - b);
-  // Detect a single contiguous run.
-  let isContiguous = true;
-  for (let i = 1; i < sorted.length; i++) {
-    if (sorted[i] !== sorted[i - 1] + 1) {
-      isContiguous = false;
-      break;
-    }
-  }
-  if (isContiguous && sorted.length >= 2) {
-    return `${DAY_NAMES[sorted[0]]}–${DAY_NAMES[sorted[sorted.length - 1]]}`;
-  }
-  return sorted.map(d => DAY_NAMES[d]).join(' · ');
-}
-
-/** Build the full "Mon–Fri, 9:00 AM – 6:00 PM PT" line. Returns null
- *  when none of the structured fields are set so the section hides
- *  cleanly. The TZ abbreviation is intentionally short ("PT") rather
- *  than a city name — matches how working-hours are spoken. */
-function formatWorkingHoursLine(member: Member): string | null {
-  const start = formatTime12h(member.workingHoursStart);
-  const end = formatTime12h(member.workingHoursEnd);
-  const days = member.workingDays;
-  // If no times AND no days override, nothing to show.
-  if (!start && !end && !days) return null;
-  const dayPart = formatWorkingDays(days);
-  const timePart = start && end ? `${start} – ${end}` : start || end;
-  if (!timePart) return dayPart;
-  const tzPart = member.ianaTimeZone ? ` ${formatTimeZoneShort(member.ianaTimeZone)}` : '';
-  return `${dayPart}, ${timePart}${tzPart}`;
-}
-
-/** "America/Los_Angeles" → "Los Angeles" (city only). Used in the
- *  Contact section as a clear, full-city display. */
-function formatTimeZone(iana: string): string {
-  const slash = iana.lastIndexOf('/');
-  const city = slash >= 0 ? iana.slice(slash + 1) : iana;
-  return city.replace(/_/g, ' ');
-}
-
-/** Short tz abbreviation for the working-hours line: tries to derive
- *  via Intl, with hand-picked fallbacks for the common ones. We don't
- *  want a 12-character region name eating the line. */
-function formatTimeZoneShort(iana: string): string {
-  // Intl can produce a "short" timezone name for the formatToParts
-  // path. Wrap in try/catch — older browsers + invalid IANA strings
-  // shouldn't crash the panel.
-  try {
-    const dtf = new Intl.DateTimeFormat('en-US', {
-      timeZone: iana,
-      timeZoneName: 'short',
-    });
-    const parts = dtf.formatToParts(new Date());
-    const tzPart = parts.find(p => p.type === 'timeZoneName');
-    if (tzPart) return tzPart.value;
-  } catch {
-    // fall through
-  }
-  // Fallback — the city name from the IANA string.
-  return formatTimeZone(iana);
-}
-
-/** ISO date "2026-05-15" → "May 15". Used in the vacation pill so
- *  the user reads "back May 15" not "back 2026-05-15". */
-function formatReturnDate(iso: string): string {
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-}
+// Format helpers (formatTime12h, formatWorkingDays, formatTimeZone,
+// formatTimeZoneShort, formatWorkingHoursLine, formatReturnDate, plus
+// the vacation status reader currentVacationPeriod) live in
+// utils/memberProfile.ts so the deterministic pieces have unit-test
+// coverage. Imported at the top of this file.

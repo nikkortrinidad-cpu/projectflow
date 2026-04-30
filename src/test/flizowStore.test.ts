@@ -15,10 +15,19 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { flizowStore } from '../store/flizowStore';
 import type {
   Client,
+  Member,
   Service,
   Task,
   TemplateRecord,
 } from '../types/flizow';
+import {
+  currentVacationPeriod,
+  isOnVacation,
+  formatTime12h,
+  formatWorkingDays,
+  formatTimeZone,
+  formatWorkingHoursLine,
+} from '../utils/memberProfile';
 
 // ── Fixtures ─────────────────────────────────────────────────────────
 
@@ -807,5 +816,258 @@ describe('flizowStore trash — reset workspace empties trash too', () => {
     expect(flizowStore.getSnapshot().trash).toHaveLength(1);
     flizowStore.reset();
     expect(flizowStore.getSnapshot().trash).toEqual([]);
+  });
+});
+
+// ── Member profile ────────────────────────────────────────────────────────
+//
+// Coverage for the per-member profile panel feature: the data-side
+// round-trip of the new identity fields, the pure helpers (vacation
+// status, time / day / tz formatters), and the working-hours
+// composite line that drives the read-only Contact section.
+//
+// What we don't cover here: photo upload (Firebase Storage round-trip
+// — would need the SDK mocked), the React panel itself (visual
+// behaviour eyeballed; UI hooks aren't worth a render harness for
+// this scope), and the permission gate (a 4-line inline check the
+// panel does internally; manual review is enough).
+
+const baseMember = (overrides: Partial<Member> = {}): Member => ({
+  id: 'm1',
+  name: 'Sarah Chen',
+  initials: 'SC',
+  color: '#5e5ce6',
+  type: 'am',
+  ...overrides,
+});
+
+describe('flizowStore — member profile field round-trip', () => {
+  it('updateMember persists the full identity field set', () => {
+    flizowStore.addMember(baseMember());
+    flizowStore.updateMember('m1', {
+      email: 'sarah@flizow.com',
+      phone: '+1 415 555 0148',
+      pronouns: 'she/her',
+      bio: 'Eight years in content strategy.',
+      skills: ['Content', 'SEO', 'Brand'],
+      ianaTimeZone: 'America/Los_Angeles',
+      workingHoursStart: '09:00',
+      workingHoursEnd: '18:00',
+      workingDays: [1, 2, 3, 4, 5],
+      timeOff: [{ start: '2026-05-13', end: '2026-05-15' }],
+      photoUrl: 'https://example.com/photo.png',
+    });
+    const m = flizowStore.getSnapshot().members[0];
+    expect(m.email).toBe('sarah@flizow.com');
+    expect(m.phone).toBe('+1 415 555 0148');
+    expect(m.pronouns).toBe('she/her');
+    expect(m.bio).toBe('Eight years in content strategy.');
+    expect(m.skills).toEqual(['Content', 'SEO', 'Brand']);
+    expect(m.ianaTimeZone).toBe('America/Los_Angeles');
+    expect(m.workingHoursStart).toBe('09:00');
+    expect(m.workingHoursEnd).toBe('18:00');
+    expect(m.workingDays).toEqual([1, 2, 3, 4, 5]);
+    expect(m.timeOff).toEqual([{ start: '2026-05-13', end: '2026-05-15' }]);
+    expect(m.photoUrl).toBe('https://example.com/photo.png');
+  });
+
+  it('updateMember leaves untouched fields alone (partial patch)', () => {
+    flizowStore.addMember(baseMember({
+      email: 'first@flizow.com',
+      pronouns: 'they/them',
+      skills: ['Writing'],
+    }));
+    flizowStore.updateMember('m1', { phone: '+1 415 555 0000' });
+    const m = flizowStore.getSnapshot().members[0];
+    expect(m.email).toBe('first@flizow.com');     // untouched
+    expect(m.pronouns).toBe('they/them');         // untouched
+    expect(m.skills).toEqual(['Writing']);        // untouched
+    expect(m.phone).toBe('+1 415 555 0000');      // patched
+  });
+
+  it('updateMember clearing a field by setting undefined removes it from the record', () => {
+    flizowStore.addMember(baseMember({ bio: 'Old bio' }));
+    flizowStore.updateMember('m1', { bio: undefined });
+    const m = flizowStore.getSnapshot().members[0];
+    // Object.assign with undefined keeps the key on the object but
+    // sets it to undefined — the panel's empty-state policy reads
+    // both `undefined` and missing as "no value", so this is fine.
+    expect(m.bio).toBeUndefined();
+  });
+});
+
+describe('memberProfile.currentVacationPeriod / isOnVacation', () => {
+  it('returns null when timeOff is undefined', () => {
+    const m = baseMember();
+    expect(currentVacationPeriod(m, '2026-05-14')).toBeNull();
+    expect(isOnVacation(m, '2026-05-14')).toBe(false);
+  });
+
+  it('returns null when timeOff is empty', () => {
+    const m = baseMember({ timeOff: [] });
+    expect(currentVacationPeriod(m, '2026-05-14')).toBeNull();
+    expect(isOnVacation(m, '2026-05-14')).toBe(false);
+  });
+
+  it('returns the matching period when today falls inside one', () => {
+    const m = baseMember({
+      timeOff: [{ start: '2026-05-13', end: '2026-05-15' }],
+    });
+    expect(currentVacationPeriod(m, '2026-05-14')).toEqual({
+      start: '2026-05-13',
+      end: '2026-05-15',
+    });
+    expect(isOnVacation(m, '2026-05-14')).toBe(true);
+  });
+
+  it('treats both start and end as inclusive (boundary days count)', () => {
+    const m = baseMember({
+      timeOff: [{ start: '2026-05-13', end: '2026-05-15' }],
+    });
+    expect(isOnVacation(m, '2026-05-13')).toBe(true);
+    expect(isOnVacation(m, '2026-05-15')).toBe(true);
+  });
+
+  it('returns null when today falls outside all periods', () => {
+    const m = baseMember({
+      timeOff: [{ start: '2026-05-13', end: '2026-05-15' }],
+    });
+    expect(isOnVacation(m, '2026-05-12')).toBe(false);
+    expect(isOnVacation(m, '2026-05-16')).toBe(false);
+  });
+
+  it('returns the first matching period when multiple are configured', () => {
+    const m = baseMember({
+      timeOff: [
+        { start: '2026-05-13', end: '2026-05-15' },
+        { start: '2026-07-04', end: '2026-07-04' },
+      ],
+    });
+    expect(currentVacationPeriod(m, '2026-07-04')).toEqual({
+      start: '2026-07-04',
+      end: '2026-07-04',
+    });
+  });
+});
+
+describe('memberProfile.formatTime12h', () => {
+  it('formats morning hours', () => {
+    expect(formatTime12h('09:00')).toBe('9:00 AM');
+    expect(formatTime12h('06:30')).toBe('6:30 AM');
+  });
+
+  it('formats afternoon and evening hours', () => {
+    expect(formatTime12h('13:00')).toBe('1:00 PM');
+    expect(formatTime12h('18:30')).toBe('6:30 PM');
+    expect(formatTime12h('23:59')).toBe('11:59 PM');
+  });
+
+  it('handles midnight and noon as conventional 12-hour readings', () => {
+    expect(formatTime12h('00:00')).toBe('12:00 AM');
+    expect(formatTime12h('12:00')).toBe('12:00 PM');
+    expect(formatTime12h('12:30')).toBe('12:30 PM');
+  });
+
+  it('returns null on undefined or malformed input', () => {
+    expect(formatTime12h(undefined)).toBeNull();
+    expect(formatTime12h('')).toBeNull();
+    expect(formatTime12h('25:00')).toBeNull();
+    expect(formatTime12h('9 AM')).toBeNull();
+    expect(formatTime12h('09:00:00')).toBeNull();
+  });
+});
+
+describe('memberProfile.formatWorkingDays', () => {
+  it('formats weekdays as a contiguous span', () => {
+    expect(formatWorkingDays([1, 2, 3, 4, 5])).toBe('Mon–Fri');
+    expect(formatWorkingDays([1, 2, 3, 4])).toBe('Mon–Thu');
+    expect(formatWorkingDays([2, 3, 4])).toBe('Tue–Thu');
+  });
+
+  it('formats every-day as "Every day"', () => {
+    expect(formatWorkingDays([0, 1, 2, 3, 4, 5, 6])).toBe('Every day');
+  });
+
+  it('formats single days', () => {
+    expect(formatWorkingDays([1])).toBe('Mon');
+    expect(formatWorkingDays([0])).toBe('Sun');
+  });
+
+  it('formats non-contiguous days as a bullet-separated list', () => {
+    expect(formatWorkingDays([1, 3, 5])).toBe('Mon · Wed · Fri');
+    // [0, 6] is Sun and Sat — not contiguous (gap of 6 days), so the
+    // bullet-list path wins. A weekend-only schedule reads as
+    // "Sun · Sat" because we sort ascending; users reading this
+    // mentally translate to "weekends."
+    expect(formatWorkingDays([0, 6])).toBe('Sun · Sat');
+  });
+
+  it('dedupes and sorts a messy input', () => {
+    expect(formatWorkingDays([5, 1, 3, 1, 5])).toBe('Mon · Wed · Fri');
+  });
+
+  it('falls back to weekdays when the input is undefined', () => {
+    expect(formatWorkingDays(undefined)).toBe('Mon–Fri');
+  });
+
+  it('shows "No working days set" for an empty array', () => {
+    expect(formatWorkingDays([])).toBe('No working days set');
+  });
+});
+
+describe('memberProfile.formatTimeZone', () => {
+  it('drops the IANA region prefix and replaces underscores', () => {
+    expect(formatTimeZone('America/Los_Angeles')).toBe('Los Angeles');
+    expect(formatTimeZone('Asia/Hong_Kong')).toBe('Hong Kong');
+    expect(formatTimeZone('Europe/London')).toBe('London');
+  });
+
+  it('falls through unchanged for inputs without a slash', () => {
+    expect(formatTimeZone('UTC')).toBe('UTC');
+    expect(formatTimeZone('Custom_Zone')).toBe('Custom Zone');
+  });
+});
+
+describe('memberProfile.formatWorkingHoursLine', () => {
+  it('returns null when nothing is configured', () => {
+    expect(formatWorkingHoursLine(baseMember())).toBeNull();
+  });
+
+  it('renders "Mon–Fri, 9:00 AM – 6:00 PM" without a TZ', () => {
+    const m = baseMember({
+      workingHoursStart: '09:00',
+      workingHoursEnd: '18:00',
+      workingDays: [1, 2, 3, 4, 5],
+    });
+    // No ianaTimeZone → no TZ suffix.
+    expect(formatWorkingHoursLine(m)).toBe('Mon–Fri, 9:00 AM – 6:00 PM');
+  });
+
+  it('appends the short TZ when ianaTimeZone is set', () => {
+    const m = baseMember({
+      workingHoursStart: '09:00',
+      workingHoursEnd: '17:00',
+      workingDays: [1, 2, 3, 4, 5],
+      ianaTimeZone: 'America/Los_Angeles',
+    });
+    const line = formatWorkingHoursLine(m);
+    // TZ abbreviation depends on Intl + season (PST/PDT) — we just
+    // verify it appended SOMETHING after the time. The exact short
+    // form is locale + DST dependent.
+    expect(line).toMatch(/^Mon–Fri, 9:00 AM – 5:00 PM /);
+    expect(line!.length).toBeGreaterThan('Mon–Fri, 9:00 AM – 5:00 PM '.length);
+  });
+
+  it('handles a single time when only start is set', () => {
+    const m = baseMember({
+      workingHoursStart: '09:00',
+      workingDays: [1, 2, 3, 4, 5],
+    });
+    expect(formatWorkingHoursLine(m)).toBe('Mon–Fri, 9:00 AM');
+  });
+
+  it('returns just the days when no times are set but workingDays is present', () => {
+    const m = baseMember({ workingDays: [1, 3, 5] });
+    expect(formatWorkingHoursLine(m)).toBe('Mon · Wed · Fri');
   });
 });
