@@ -208,7 +208,12 @@ function NoteListItem({ note, active, onSelect }: {
 
 function EmptyEditor({ hasNotes, onNew }: { hasNotes: boolean; onNew: () => void }) {
   return (
-    <div className="notes-empty">
+    // role="status" + aria-live="polite" so screen reader users
+    // landing on an empty Notes tab hear "No notes yet — Add your
+    // first note to start" instead of silence. Mirrors the
+    // .list-empty-state pattern on the Clients page. Audit:
+    // notes-empty MED (silent empty state).
+    <div className="notes-empty" role="status" aria-live="polite">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M12 20h9" />
         <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4z" />

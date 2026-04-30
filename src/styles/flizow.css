@@ -12046,7 +12046,12 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: var(--sp-xs);
+    /* Empty states want air, not density. Gap was 4px which compressed
+       the icon → title → sub → CTA stack into a tight cluster that
+       read as cramped on a wide notes pane. 12px gives the eye room
+       between the four anchors so each one lands as its own beat.
+       Audit: notes-empty MED (cluster spacing). */
+    gap: var(--sp-md);
     padding: 40px 32px;
     text-align: center;
     color: var(--text-soft);
@@ -12064,7 +12069,13 @@
     margin-bottom: 6px;
   }
   .notes-empty-title {
-    font-size: var(--fs-base);
+    /* Was --fs-base (14px) — only one pixel above the sub line below
+       it (--fs-md = 13px), so the title-vs-sub hierarchy was a shrug.
+       Bumped to --fs-lg (16px) to land a real step. The empty-state
+       title is the eye's first anchor on this surface; size has to
+       carry the hierarchy because there's no other content to lean
+       on. Audit: notes-empty MED (typography hierarchy). */
+    font-size: var(--fs-lg);
     font-weight: 600;
     color: var(--text);
     letter-spacing: -0.01em;
