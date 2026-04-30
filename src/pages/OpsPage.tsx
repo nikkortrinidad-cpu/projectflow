@@ -306,6 +306,13 @@ export function OpsPage() {
               clientId={OPS_NOTES_CLIENT_ID}
               notes={data.notes}
               store={flizowStore}
+              // The Ops tab is already labeled "Notes" — a second
+              // "Notes" title inside the section header reads as
+              // redundant on this surface specifically (it's the
+              // only thing on the tab). Client Detail leaves this
+              // off so the title anchors the section in its longer
+              // scrolling page.
+              hideSectionTitle
             />
           </div>
         </section>

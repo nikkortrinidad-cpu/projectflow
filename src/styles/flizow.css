@@ -11881,6 +11881,17 @@
     border: none;
     margin-left: 4px;
   }
+  /* The base .notes-new-btn carries `margin-left: auto` to push it
+     to the right edge of the section header. Inside the centered
+     empty-editor column we want the opposite — the button sits
+     directly under the prompt copy, centered with the rest of the
+     stack. Reset the auto-margin and add a small top gap so the
+     CTA reads as a deliberate next-step button rather than crashing
+     into the sub line. */
+  .notes-empty .notes-new-btn {
+    margin-left: 0;
+    margin-top: var(--sp-sm);
+  }
 
   .kbd-hint {
     display: inline-flex;

@@ -31,9 +31,17 @@ interface Props {
   clientId: string;
   notes: Note[];
   store: FlizowStore;
+  /** When true, the "Notes" title in the section header is hidden —
+   *  the "+ New note" button still renders, just right-aligned with
+   *  the title slot empty. Used by the Ops page where the tab itself
+   *  is already labeled "Notes," so an extra title underneath reads
+   *  as redundant. Client Detail leaves this off so the section
+   *  anchors itself within the longer scrolling page where Notes is
+   *  one of several stacked sections. Audit: ops MED. */
+  hideSectionTitle?: boolean;
 }
 
-export function NotesTab({ clientId, notes, store }: Props) {
+export function NotesTab({ clientId, notes, store, hideSectionTitle = false }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
 
@@ -79,7 +87,7 @@ export function NotesTab({ clientId, notes, store }: Props) {
   return (
     <div className="detail-section notes-section" data-tab="notes">
       <div className="detail-section-header">
-        <div className="detail-section-title">Notes</div>
+        {!hideSectionTitle && <div className="detail-section-title">Notes</div>}
         <button type="button" className="notes-new-btn" onClick={handleNew}>
           <PlusIcon aria-hidden="true" />
           New note
@@ -211,16 +219,26 @@ function EmptyEditor({ hasNotes, onNew }: { hasNotes: boolean; onNew: () => void
       <div className="notes-empty-sub">
         {hasNotes
           ? 'Choose one from the list on the left.'
-          : (
-            <>
-              Press <button type="button" className="notes-new-btn" onClick={onNew} style={{ verticalAlign: 'middle' }}>
-                <PlusIcon aria-hidden="true" />
-                New note
-              </button> to start one.
-            </>
-          )
-        }
+          : 'Add your first note to start.'}
       </div>
+      {/* Inline CTA only shows on the truly-empty state (no notes
+          anywhere). When the user has notes but hasn't picked one,
+          the sub copy already nudges them to the list — adding a
+          second action would compete with that. Previously the
+          button was inlined inside the prose ("Press [+ New note]
+          to start one") which rendered the full primary-CTA button
+          mid-sentence at full size. It looked broken because it
+          basically was. Promoted to a proper standalone CTA. */}
+      {!hasNotes && (
+        <button
+          type="button"
+          className="notes-new-btn"
+          onClick={onNew}
+        >
+          <PlusIcon aria-hidden="true" />
+          New note
+        </button>
+      )}
     </div>
   );
 }
