@@ -1,4 +1,5 @@
-import { useMemo, useState, type ReactElement } from 'react';
+import { useEffect, useMemo, useState, type ReactElement } from 'react';
+import { useRoute } from '../router';
 import {
   ChartBarIcon,
   DocumentTextIcon,
@@ -99,7 +100,36 @@ export function OpsPage() {
   // planning surface, accessible via tab. Local state is fine — no
   // url routing yet; if direct linking matters later, lift to the
   // hash router and read params.tab.
-  const [tab, setTab] = useState<OpsTab>('board');
+  // Phase 7C — sync the active sub-tab with the URL hash so deep-
+  // linked notifications can land on a specific tab. `#ops/timeoff`
+  // → tab='timeoff' on mount. Local state still backs the picker
+  // for in-page clicks; the route-watching effect reconciles when
+  // the hash changes (incoming notification click). Unknown sub-
+  // tabs fall back to 'board'.
+  const route = useRoute();
+  const initialTab: OpsTab = (() => {
+    const raw = route.params.tab;
+    if (raw === 'brief' || raw === 'capacity' || raw === 'timeoff' || raw === 'board') {
+      return raw;
+    }
+    return 'board';
+  })();
+  const [tab, setTab] = useState<OpsTab>(initialTab);
+  // Keep the tab in sync when the route changes (notification click
+  // while already on the page). Re-validate the value too so a
+  // typo in the hash doesn't leave us stranded.
+  useEffect(() => {
+    const raw = route.params.tab;
+    const valid: OpsTab =
+      raw === 'brief' || raw === 'capacity' || raw === 'timeoff' || raw === 'board'
+        ? raw
+        : 'board';
+    setTab(valid);
+  }, [route.params.tab]);
+  // Focus id for the timeoff sub-tab (carries through to the
+  // approval queue / popover). Read here so OpsTimeOffTab can
+  // pull it via prop.
+  const opsFocusId = route.params.focus;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -373,7 +403,7 @@ export function OpsPage() {
       )}
 
       {tab === 'timeoff' && canManageSchedules && (
-        <OpsTimeOffTab />
+        <OpsTimeOffTab focusId={opsFocusId} />
       )}
 
       {selectedId && (

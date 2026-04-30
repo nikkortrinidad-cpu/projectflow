@@ -92,9 +92,17 @@ const AVATAR_COLORS = [
 
 interface Props {
   onClose: () => void;
+  /** Phase 7C — when the modal opens via deep-link (notification
+   *  click → `#account/timeoff`), this preselects the section.
+   *  Falls back to 'profile' when undefined. */
+  initialSection?: string;
+  /** Phase 7C — optional row id to scroll + highlight once the
+   *  modal mounts (used by decided-time-off notifications to pop
+   *  the requester directly to their newly-decided request). */
+  initialFocusId?: string;
 }
 
-export default function FlizowAccountModal({ onClose }: Props) {
+export default function FlizowAccountModal({ onClose, initialSection, initialFocusId }: Props) {
   const { user, logout } = useAuth();
   const { data, store } = useFlizow();
   // The Light/Dark segment buttons read `data.theme` directly and
@@ -111,7 +119,23 @@ export default function FlizowAccountModal({ onClose }: Props) {
     : undefined;
   const canManageWorkspace = can(ownAccessRole, 'manage:workspace');
 
-  const [section, setSection] = useState<Section>('profile');
+  // Phase 7C — initialSection narrows + casts the deep-link string
+  // to the modal's Section union. Anything unrecognised falls back
+  // to 'profile' so a typo'd hash doesn't dead-end. Workspace-side
+  // sections also gate on canManageWorkspace below in the existing
+  // bounce effect.
+  const initialSectionResolved: Section = (() => {
+    if (!initialSection) return 'profile';
+    const all: Section[] = [
+      'profile', 'preferences', 'notifications', 'timeoff',
+      'workspace', 'members', 'jobtitles', 'holidays', 'trash',
+      'signin',
+    ];
+    return (all as string[]).includes(initialSection)
+      ? (initialSection as Section)
+      : 'profile';
+  })();
+  const [section, setSection] = useState<Section>(initialSectionResolved);
   // If a non-admin somehow lands on a Workspace section (stale local
   // state, deep link from before they were demoted), bounce them to
   // Profile. Cheap, idempotent, and the alternative — silently
@@ -850,7 +874,7 @@ export default function FlizowAccountModal({ onClose }: Props) {
 
             {/* ── Time off ────────────────────────────────────────── */}
             {section === 'timeoff' && (
-              <TimeOffSection />
+              <TimeOffSection focusId={initialFocusId} />
             )}
 
             {/* ── Members ────────────────────────────────────────── */}
@@ -1747,10 +1771,29 @@ function projectMembers(
 // render the "🌴 On vacation" pill — pending requests don't show
 // the pill (no false signals about who's actually out).
 
-function TimeOffSection() {
+function TimeOffSection({ focusId }: { focusId?: string } = {}) {
   const { data, store } = useFlizow();
   const currentId = store.getCurrentMemberId();
   const me = currentId ? data.members.find(m => m.id === currentId) ?? null : null;
+
+  // Phase 7C — one-shot focus highlight for deep-linked
+  // notifications. Same shape as the Ops approval queue: scroll
+  // into view + apply data-focused for ~1.5s, then clear so
+  // re-renders don't lock the highlight on. The matching row
+  // carries a data-focus-id attribute below.
+  const [focusedNow, setFocusedNow] = useState<string | null>(focusId ?? null);
+  useEffect(() => {
+    if (!focusId) return;
+    setFocusedNow(focusId);
+    requestAnimationFrame(() => {
+      const el = document.querySelector<HTMLElement>(
+        `[data-focus-id="${focusId}"]`,
+      );
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    const timer = setTimeout(() => setFocusedNow(null), 1800);
+    return () => clearTimeout(timer);
+  }, [focusId]);
 
   // Modal state — null when closed; `requestId: null` means "submit
   // a new request," a string id means "edit that one." Drafts live
@@ -2013,6 +2056,7 @@ function TimeOffSection() {
                 isActive={false}
                 onEdit={() => handleEdit(r.id)}
                 onCancel={() => handleCancel(r.id)}
+                focused={focusedNow === r.id}
               />
             ))}
           </ul>
@@ -2031,6 +2075,7 @@ function TimeOffSection() {
                 isActive={!!activePeriod && r.start === activePeriod.start && r.end === activePeriod.end}
                 onEdit={() => handleEdit(r.id)}
                 onCancel={() => handleCancel(r.id)}
+                focused={focusedNow === r.id}
               />
             ))}
           </ul>
@@ -2050,6 +2095,7 @@ function TimeOffSection() {
                 request={r}
                 isActive={false}
                 onResubmit={() => handleResubmit(r)}
+                focused={focusedNow === r.id}
               />
             ))}
           </ul>
@@ -2067,6 +2113,7 @@ function TimeOffSection() {
                 request={r}
                 isActive={false}
                 muted
+                focused={focusedNow === r.id}
               />
             ))}
           </ul>
@@ -2207,6 +2254,7 @@ function TimeOffRow({
   onCancel,
   onResubmit,
   muted,
+  focused,
 }: {
   request: TimeOffRequest;
   isActive: boolean;
@@ -2214,10 +2262,17 @@ function TimeOffRow({
   onCancel?: () => void;
   onResubmit?: () => void;
   muted?: boolean;
+  /** Phase 7C — when true, the wrapper li gets data-focused for the
+   *  CSS pulse animation. Parent owns the timing. */
+  focused?: boolean;
 }) {
   const dateLabel = formatPeriodLabel(request.start, request.end);
   return (
-    <li className={`timeoff-row${muted ? ' timeoff-row--muted' : ''}`}>
+    <li
+      className={`timeoff-row${muted ? ' timeoff-row--muted' : ''}`}
+      data-focus-id={request.id}
+      data-focused={focused ? 'true' : undefined}
+    >
       <div className="timeoff-row-main">
         <div className="timeoff-row-headline">
           <span className="timeoff-row-dates">{dateLabel}</span>

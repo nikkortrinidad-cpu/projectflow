@@ -171,7 +171,9 @@ export function deriveNotifications(
         ago: relativeAgo(r.requestedAt, todayStr),
         text: `<strong>${escapeHTML(requester?.name ?? 'A teammate')}</strong> requested time off ${escapeHTML(formatRange(r.start, r.end))}`,
         context: 'Time off · Pending review',
-        href: '#ops',
+        // Phase 7C deep-link: lands on Ops → Time off Schedules
+        // with this specific request scrolled-into-view + pulsed.
+        href: `#ops/timeoff?focus=${encodeURIComponent(r.id)}`,
       });
     }
   }
@@ -204,11 +206,11 @@ export function deriveNotifications(
         ago: r.decidedAt ? relativeAgo(r.decidedAt.slice(0, 10), todayStr) : '',
         text: `Your time off ${escapeHTML(formatRange(r.start, r.end))} was <strong>${verb}</strong>`,
         context: note,
-        // Account modal isn't routable yet, so home is the most
-        // useful destination — the user opens the Account modal
-        // manually to see the full list. Phase 7C may add a
-        // hash-driven open hook for the modal.
-        href: '#overview',
+        // Phase 7C deep-link: opens the Account modal at the
+        // Time off section with this request scrolled-into-view
+        // + pulsed. The App-level hash-watcher catches the
+        // 'account' route, opens the modal, and clears the hash.
+        href: `#account/timeoff?focus=${encodeURIComponent(r.id)}`,
       });
     }
   }

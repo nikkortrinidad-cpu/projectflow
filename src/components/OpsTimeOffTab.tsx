@@ -120,7 +120,7 @@ function formatWeekdayShort(iso: string): string {
 
 type RailTab = 'approvals' | 'rules' | 'conflicts';
 
-export function OpsTimeOffTab() {
+export function OpsTimeOffTab({ focusId }: { focusId?: string } = {}) {
   const { data } = useFlizow();
   const today = data.today;
 
@@ -281,6 +281,7 @@ export function OpsTimeOffTab() {
               members={data.members}
               rules={data.coverageRules}
               approvedRequests={approvedRequests}
+              focusId={focusId}
             />
           )}
           {railTab === 'rules' && (
@@ -617,14 +618,39 @@ function ApprovalQueue({
   members,
   rules,
   approvedRequests,
+  focusId,
 }: {
   requests: ReadonlyArray<TimeOffRequest>;
   members: ReadonlyArray<Member>;
   rules: ReadonlyArray<CoverageRule>;
   approvedRequests: ReadonlyArray<TimeOffRequest>;
+  focusId?: string;
 }) {
   const [decisionNotes, setDecisionNotes] = useState<Record<string, string>>({});
   const [pending, setPending] = useState<string | null>(null);
+  // One-shot focus highlight when a deep-link points at a request.
+  // Scrolls into view + applies a `data-focused` attribute that the
+  // CSS pulses for ~1.5s. Tracking the id across renders so the
+  // attribute clears once the highlight has played, avoiding a
+  // permanent ring on the row.
+  const [focusedNow, setFocusedNow] = useState<string | null>(focusId ?? null);
+  useEffect(() => {
+    if (!focusId) return;
+    setFocusedNow(focusId);
+    // Wait one frame so the row mounts, then scroll. requestAnimationFrame
+    // keeps this readable + avoids the brief flash of an unscrolled
+    // first paint.
+    requestAnimationFrame(() => {
+      const el = document.querySelector<HTMLElement>(
+        `[data-focus-id="${focusId}"]`,
+      );
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    // Clear the highlight after the CSS animation completes so a
+    // re-render doesn't snap it back on indefinitely.
+    const timer = setTimeout(() => setFocusedNow(null), 1800);
+    return () => clearTimeout(timer);
+  }, [focusId]);
 
   if (requests.length === 0) {
     return <div className="schedules-rail-empty">No pending requests.</div>;
@@ -683,7 +709,12 @@ function ApprovalQueue({
         );
 
         return (
-          <li key={r.id} className="schedules-request">
+          <li
+            key={r.id}
+            className="schedules-request"
+            data-focus-id={r.id}
+            data-focused={focusedNow === r.id ? 'true' : undefined}
+          >
             <div className="schedules-request-head">
               {m && (
                 <span

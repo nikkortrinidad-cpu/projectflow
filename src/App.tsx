@@ -6,6 +6,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { useAuth } from './contexts/AuthContext';
 import { flizowStore, stashPendingJoin } from './store/flizowStore';
 import { useFlizow } from './store/useFlizow';
+import { useRoute, navigate } from './router';
 
 // Lazy-load top-level modals. Account settings opens rarely (once a
 // session at most) and the command palette opens on-demand via ⌘K —
@@ -101,6 +102,28 @@ function AppShell() {
   const [accountOpen, setAccountOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [cmdkOpen, setCmdkOpen] = useState(false);
+  // Phase 7C — when the Account modal opens via deep-link
+  // (notification click → `#account/timeoff`), these tell the
+  // modal which section + which row id to land on. Reset on
+  // close so the next manual open lands on the default section
+  // (Profile).
+  const [accountSection, setAccountSection] = useState<string | undefined>(undefined);
+  const [accountFocusId, setAccountFocusId] = useState<string | undefined>(undefined);
+  const route = useRoute();
+
+  // Watch the route for the synthetic 'account' name. The Account
+  // modal isn't a real page (it's a callback-driven overlay), so
+  // we catch the route here, open the modal with the requested
+  // section/focus, and navigate back to overview to clear the
+  // hash. Without the navigate-back, the modal would re-open on
+  // every render where the route still says 'account'.
+  useEffect(() => {
+    if (route.name !== 'account') return;
+    setAccountSection(route.params.section);
+    setAccountFocusId(route.params.focus);
+    setAccountOpen(true);
+    navigate('overview');
+  }, [route.name, route.params.section, route.params.focus]);
 
   // ⌘K / Ctrl+K toggles the command palette from anywhere. We swallow
   // the keystroke so the browser's own "Search bookmarks" / Quick Find
@@ -142,7 +165,15 @@ function AppShell() {
       {accountOpen && (
         <ErrorBoundary scope="modal">
           <Suspense fallback={null}>
-            <FlizowAccountModal onClose={() => setAccountOpen(false)} />
+            <FlizowAccountModal
+              onClose={() => {
+                setAccountOpen(false);
+                setAccountSection(undefined);
+                setAccountFocusId(undefined);
+              }}
+              initialSection={accountSection}
+              initialFocusId={accountFocusId}
+            />
           </Suspense>
         </ErrorBoundary>
       )}
