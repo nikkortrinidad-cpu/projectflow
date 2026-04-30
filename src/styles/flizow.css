@@ -7007,115 +7007,19 @@
   .assignee-option.is-selected .assignee-option-check { opacity: 1; }
   .assignee-empty { padding: var(--sp-lg) var(--sp-md); text-align: center; color: var(--text-faint); font-size: var(--fs-sm); }
 
-  /* ───── Tooltips ───── */
-  [data-tip] { position: relative; }
-  [data-tip]::after {
-    content: attr(data-tip);
-    position: absolute;
-    left: 50%;
-    bottom: calc(100% + 6px);
-    transform: translateX(-50%) translateY(2px);
-    padding: 6px 10px;
-    background: rgba(18, 18, 20, 0.96);
-    color: #fff;
-    font-size: var(--fs-xs);
-    font-weight: 500;
-    line-height: 1.35;
-    letter-spacing: -0.005em;
-    /* Tooltip must ignore parent typography — uppercase severity labels and
-       tight tracking should not leak into the hint itself. */
-    text-transform: none;
-    font-variant: normal;
-    border-radius: 6px;
-    /* Short tooltips stay on one line; long ones wrap within a sane cap so
-       nothing spills past a button or viewport edge. */
-    white-space: normal;
-    max-width: 260px;
-    width: max-content;
-    text-align: center;
-    pointer-events: none;
-    opacity: 0;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
-    transition: opacity 0.12s ease 0.45s, transform 0.12s ease 0.45s;
-    /* Sticky header sits at z-index 100; modals at 1000+. Tooltips need to
-       clear the header but stay under modal chrome. */
-    z-index: 1050;
-  }
-  :root[data-theme="light"] [data-tip]::after {
-    background: rgba(28, 28, 30, 0.96);
-  }
-  [data-tip]:hover::after,
-  [data-tip]:focus-visible::after {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-  [data-tip][data-tip-pos="below"]::after {
-    bottom: auto;
-    top: calc(100% + 6px);
-    transform: translateX(-50%) translateY(-2px);
-  }
-  [data-tip][data-tip-pos="below"]:hover::after,
-  [data-tip][data-tip-pos="below"]:focus-visible::after {
-    transform: translateX(-50%) translateY(0);
-  }
-  /* right-aligned variants for elements near the viewport edge */
-  [data-tip][data-tip-pos="below-end"]::after,
-  [data-tip][data-tip-pos="above-end"]::after {
-    left: auto; right: 0;
-    transform: translateY(2px);
-  }
-  [data-tip][data-tip-pos="below-end"]::after {
-    bottom: auto;
-    top: calc(100% + 6px);
-    transform: translateY(-2px);
-  }
-  [data-tip][data-tip-pos="below-end"]:hover::after,
-  [data-tip][data-tip-pos="below-end"]:focus-visible::after,
-  [data-tip][data-tip-pos="above-end"]:hover::after,
-  [data-tip][data-tip-pos="above-end"]:focus-visible::after {
-    transform: translateY(0);
-  }
-  /* left-aligned variants for elements near the left edge */
-  [data-tip][data-tip-pos="below-start"]::after,
-  [data-tip][data-tip-pos="above-start"]::after {
-    left: 0; right: auto;
-    transform: translateY(2px);
-  }
-  [data-tip][data-tip-pos="below-start"]::after {
-    bottom: auto;
-    top: calc(100% + 6px);
-    transform: translateY(-2px);
-  }
-  [data-tip][data-tip-pos="below-start"]:hover::after,
-  [data-tip][data-tip-pos="below-start"]:focus-visible::after,
-  [data-tip][data-tip-pos="above-start"]:hover::after,
-  [data-tip][data-tip-pos="above-start"]:focus-visible::after {
-    transform: translateY(0);
-  }
-  [data-tip][data-tip-pos="left"]::after {
-    bottom: 50%; left: auto;
-    right: calc(100% + 6px);
-    transform: translate(2px, 50%);
-  }
-  [data-tip][data-tip-pos="left"]:hover::after,
-  [data-tip][data-tip-pos="left"]:focus-visible::after {
-    transform: translate(0, 50%);
-  }
-  [data-tip][data-tip-pos="right"]::after {
-    bottom: 50%; left: calc(100% + 6px);
-    transform: translate(-2px, 50%);
-  }
-  [data-tip][data-tip-pos="right"]:hover::after,
-  [data-tip][data-tip-pos="right"]:focus-visible::after {
-    transform: translate(0, 50%);
-  }
-  @media (prefers-reduced-motion: reduce) {
-    [data-tip]::after { transition: opacity 0.12s ease 0.45s; transform: translateX(-50%); }
-    [data-tip][data-tip-pos="left"]::after,
-    [data-tip][data-tip-pos="right"]::after { transform: translateY(50%); }
-    [data-tip][data-tip-pos="below-end"]::after,
-    [data-tip][data-tip-pos="above-end"]::after { transform: none; }
-  }
+  /* The custom [data-tip] CSS-only tooltip system was deleted here.
+     It was ~110 lines of styled positioning variants (above/below/
+     left/right/start/end) for a system zero React components ever
+     used — every actual tooltip in the app uses the native title=
+     attribute. The dead CSS also had a z-index bug (1050 sat between
+     --z-modal-backdrop 1000 and --z-modal 1100, so tooltips would
+     have rendered between a modal's backdrop and its content if
+     anyone tried to use it).
+     Native title= is fine for desktop. If we ever genuinely need
+     custom tooltips (rich content, mobile-aware popovers), the
+     right shape is a JSX <Tooltip> component, not a CSS-only data
+     attribute system. The --z-tooltip: 100 token is left in place
+     as a layer concept for that future work. */
 
   /* ═══════════════════════════════════════════════════════════
      SHARE MODAL — invite people + link access (Apple-HIG tuned)
@@ -8144,10 +8048,11 @@
     opacity: 0.4;
   }
 
-  /* Tooltip */
-  .attn-btn {
-    position: relative;
-  }
+  /* The duplicate `.attn-btn { position: relative }` rule that sat
+     here used to anchor the now-deleted [data-tip] tooltip system's
+     ::after pseudo. The primary .attn-btn rule above already provides
+     positioning context where it's needed; this one carried no
+     additional purpose once the tooltip CSS was removed. */
 
   /* --- BLOCK 3: THIS WEEK (5-column board with week tabs) --- */
   .week-tabs {
@@ -8520,8 +8425,11 @@
   .attention-list.expanded .attn-hidden {
     opacity: 1;
     max-height: 220px;
-    /* Let tooltips inside expanded cards escape the card box once the reveal
-       animation finishes. Small delay keeps the max-height transition clean. */
+    /* overflow: visible after the reveal animation so focus rings,
+       dropdowns, and any other positioned descendants inside the
+       expanded cards aren't clipped by the row's animation box.
+       The 0.4s delay holds overflow: hidden during the height
+       animation so cards clip cleanly while sliding in. */
     overflow: visible;
     transition: opacity 0.3s ease, max-height 0.4s ease, padding 0.3s ease, margin 0.3s ease, overflow 0s linear 0.4s;
     padding-top: 22px; padding-bottom: 22px;
