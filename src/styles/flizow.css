@@ -12052,7 +12052,13 @@
     color: var(--text-soft);
   }
   .notes-empty[hidden] { display: none !important; }
-  .notes-empty svg {
+  /* Direct-child only — the rule was sized for the standalone
+     empty-state pencil icon at the top of the column. After the
+     empty state grew a "+ New note" CTA, the unscoped selector
+     reached into the button and blew that PlusIcon up to 36×36
+     too (same selector specificity as .notes-new-btn svg, declared
+     later, wins). The `>` keeps it on the marker SVG only. */
+  .notes-empty > svg {
     width: 36px; height: 36px;
     opacity: 0.5;
     margin-bottom: 6px;
