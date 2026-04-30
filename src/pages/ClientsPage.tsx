@@ -80,21 +80,8 @@ export function ClientsPage() {
   }, [viewFromRoute]);
   const [search, setSearch] = useState('');
   const [showAddClient, setShowAddClient] = useState(false);
-  // Demo loader sits in the empty state so a first-time user lands on
-  // something to do, not a stale message. Tracked locally so the button
-  // can show a loading spinner while the dynamic import resolves.
-  const [loadingDemo, setLoadingDemo] = useState(false);
 
   const currentMemberId = store.getCurrentMemberId();
-
-  const handleLoadDemo = async () => {
-    setLoadingDemo(true);
-    try {
-      await store.loadDemoData();
-    } finally {
-      setLoadingDemo(false);
-    }
-  };
 
   // Compute filtered rows + per-view counts in one pass so the chip labels
   // stay in lockstep with the list and we don't walk the client list
@@ -216,10 +203,15 @@ export function ClientsPage() {
         {filtered.length === 0 ? (
           <div className="list-empty-state" role="status" aria-live="polite" style={{ display: 'flex' }}>
             {data.clients.length === 0 ? (
-              // Fresh workspace — offer both a demo loader (low-friction
-              // poke-around) and a direct "Add client" entry. The demo
-              // button leads so a first-time user has a one-click path
-              // to seeing the product full of realistic data.
+              // Fresh workspace — single CTA. The previous version
+              // paired "Add client" with a louder "Load demo data"
+              // button, which subtly nudged first-time users away from
+              // their actual onboarding (the demo button read as the
+              // primary because it was filled solid orange). One door
+              // forward: add your first real client. Demo data still
+              // loads from Account modal → Workspace data for users
+              // who want to poke around the seeded mockup. Audit:
+              // clients MED.
               <>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -227,37 +219,15 @@ export function ClientsPage() {
                 </svg>
                 <div className="list-empty-title">No clients yet</div>
                 <div className="list-empty-sub">
-                  Load a demo workspace to explore Flizow, or add your first client.
+                  Add your first client to get started.
                 </div>
-                {/* Button order + spacing per audit clients.md M4/M5:
-                    "Load demo data" sits on the right so the cursor
-                    lands on the lower-friction first-time path (Fitts'
-                    Law on LTR layouts reads the rightmost button as
-                    primary). gap/marginTop now on the 4-grid. */}
-                <div style={{ display: 'flex', gap: 12, marginTop: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
-                  <button
-                    type="button"
-                    className="list-empty-clear"
-                    onClick={() => setShowAddClient(true)}
-                  >
-                    Add client
-                  </button>
-                  <button
-                    type="button"
-                    className="list-empty-clear"
-                    onClick={handleLoadDemo}
-                    disabled={loadingDemo}
-                    style={{
-                      background: 'var(--accent)',
-                      color: '#fff',
-                      borderColor: 'var(--accent)',
-                      opacity: loadingDemo ? 0.7 : 1,
-                      cursor: loadingDemo ? 'progress' : 'pointer',
-                    }}
-                  >
-                    {loadingDemo ? 'Loading demo…' : 'Load demo data'}
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  className="list-empty-clear"
+                  onClick={() => setShowAddClient(true)}
+                >
+                  Add client
+                </button>
               </>
             ) : (
               // Workspace has clients, but the current filter/search
