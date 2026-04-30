@@ -157,7 +157,7 @@
     ──────────────────────────────────────────────────────────────── */
 
     .text-block {
-      max-width: 9in;
+      max-width: 7.2in; /* ~70 cpl at 16pt */
     }
     .text-block p {
       margin: 0 0 14pt;
@@ -225,40 +225,43 @@
 
     /* ────────────────────────────────────────────────────────────────
        Slide 4 — What's built (6 feature cards in 3×2 grid)
+       Sized for 7.5"-tall slide minus the head; cards must fit
+       within ~4.9" of remaining vertical room without clipping.
+       Body text capped at 3 lines per card.
     ──────────────────────────────────────────────────────────────── */
 
     .features-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 14pt;
+      gap: 10pt;
     }
     .feature-card {
       background: var(--bg-elev);
       border: 1px solid var(--hairline);
       border-radius: 10pt;
-      padding: 18pt 20pt;
+      padding: 14pt 18pt;
       display: flex;
       flex-direction: column;
-      gap: 8pt;
+      gap: 5pt;
     }
     .feature-icon {
-      width: 36pt;
-      height: 36pt;
-      border-radius: 8pt;
+      width: 28pt;
+      height: 28pt;
+      border-radius: 7pt;
       background: var(--highlight-soft);
       display: inline-flex;
       align-items: center;
       justify-content: center;
       color: var(--highlight);
-      margin-bottom: 4pt;
+      margin-bottom: 2pt;
     }
     .feature-icon svg {
-      width: 18pt;
-      height: 18pt;
+      width: 15pt;
+      height: 15pt;
     }
     .feature-title {
-      margin: 0;
-      font-size: 14pt;
+      margin: 0 0 2pt;
+      font-size: 13pt;
       font-weight: 700;
       color: var(--text);
       letter-spacing: -0.005em;
@@ -266,9 +269,9 @@
     }
     .feature-body {
       margin: 0;
-      font-size: 11pt;
+      font-size: 10.5pt;
       color: var(--text-soft);
-      line-height: 1.5;
+      line-height: 1.4;
     }
 
     /* ────────────────────────────────────────────────────────────────
@@ -307,7 +310,7 @@
       word-break: break-all;
     }
     .live-ps {
-      max-width: 9in;
+      max-width: 7.4in; /* ~70 cpl at 12pt body */
       padding: 16pt 20pt;
       background: var(--bg-soft);
       border: 1px solid var(--hairline-soft);
@@ -590,7 +593,7 @@
     ──────────────────────────────────────────────────────────────── */
 
     .close-block {
-      max-width: 9.5in;
+      max-width: 7.4in; /* ~70 cpl at 14pt body */
     }
     .close-block .lead {
       font-size: 24pt;
@@ -721,7 +724,7 @@
           </svg>
         </div>
         <h3 class="feature-title">Client home</h3>
-        <p class="feature-body">Every client in one place. Status at a glance. Six tabs per client (overview, onboarding, about, stats, notes, touchpoints) so account managers stop digging through Drive folders to find what they need.</p>
+        <p class="feature-body">Every client in one place. Six tabs per client so account managers stop digging through Drive folders to find what they need.</p>
       </div>
       <!-- 2 Per-service kanban -->
       <div class="feature-card">
@@ -733,7 +736,7 @@
           </svg>
         </div>
         <h3 class="feature-title">Per-service kanban</h3>
-        <p class="feature-body">A working kanban board per client service. Drag-and-drop, work-in-progress limits, and capacity-aware booking so we stop assigning Sarah eight cards on a day she's already at capacity.</p>
+        <p class="feature-body">A working kanban per client service. WIP limits and capacity-aware booking so we stop assigning Sarah eight cards on a full day.</p>
       </div>
       <!-- 3 Weekly WIP -->
       <div class="feature-card">
@@ -745,7 +748,7 @@
           </svg>
         </div>
         <h3 class="feature-title">Weekly WIP</h3>
-        <p class="feature-body">The whole weekly meeting flow in one surface. Auto-built agenda, live-meeting timer, captured notes / decisions / actions. The meeting ends and the follow-ups are already in the system.</p>
+        <p class="feature-body">The whole weekly meeting in one surface. Auto-built agenda, live timer, captured decisions and actions. Follow-ups land as the meeting ends.</p>
       </div>
       <!-- 4 Capacity model -->
       <div class="feature-card">
@@ -757,7 +760,7 @@
           </svg>
         </div>
         <h3 class="feature-title">Capacity heatmap</h3>
-        <p class="feature-body">Workspace-wide view of who's slammed this week and who has room. Green / amber / red zones across ten weekdays. Booking against soft and hard caps so overbooking gets flagged before it ships.</p>
+        <p class="feature-body">Workspace-wide view of who's slammed and who has room. Green, amber, red across the next two weeks. Overbooking gets flagged before it ships.</p>
       </div>
       <!-- 5 Templates -->
       <div class="feature-card">
@@ -769,7 +772,7 @@
           </svg>
         </div>
         <h3 class="feature-title">Service templates</h3>
-        <p class="feature-body">Reusable blueprints for every kind of work the agency does. Spinning up a new service inherits onboarding, brief, and phase cards in one click. Setup that used to take an hour takes a minute.</p>
+        <p class="feature-body">Reusable blueprints for every kind of work the agency does. A new service inherits its onboarding, brief, and phase cards in one click.</p>
       </div>
       <!-- 6 Trash + undo -->
       <div class="feature-card">
@@ -781,7 +784,7 @@
           </svg>
         </div>
         <h3 class="feature-title">Safety net</h3>
-        <p class="feature-body">Every delete is recoverable. Five-second undo on any action, then 90 days in the trash bin. Nobody has to live in fear of misclicking. Nothing is gone for good unless we mean it.</p>
+        <p class="feature-body">Every delete is recoverable. Five-second undo on any action, then 90 days in the trash. Nothing is gone for good unless we mean it.</p>
       </div>
     </div>
 
