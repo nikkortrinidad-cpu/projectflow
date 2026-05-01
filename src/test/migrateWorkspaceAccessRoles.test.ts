@@ -149,6 +149,41 @@ describe('migrateWorkspaceAccessRoles — memberRoles backfill', () => {
     expect(out.changed).toBe(true);
     expect(Object.keys(out.ws.memberRoles).length).toBe(2);
   });
+
+  it('repairs an empty memberUids array on a stuck legacy workspace', () => {
+    // Edge case: a write went sideways and memberUids ended up
+    // empty on the doc. Without this backfill, every member-tier
+    // write would fail (uid not in [], rule denies).
+    const ws = workspace({
+      members: [
+        { uid: 'owner-uid', role: 'owner', joinedAt: '2026-01-01T00:00:00Z' },
+        { uid: 'sarah-uid', role: 'admin', joinedAt: '2026-02-01T00:00:00Z' },
+      ],
+      memberUids: [],
+      memberRoles: {
+        'owner-uid': 'owner',
+        'sarah-uid': 'admin',
+      },
+    });
+    const out = migrateWorkspaceAccessRoles(ws);
+    expect(out.changed).toBe(true);
+    expect(out.ws.memberUids).toEqual(['owner-uid', 'sarah-uid']);
+  });
+
+  it('repairs missing memberUids field entirely', () => {
+    const ws = workspace({
+      members: [
+        { uid: 'owner-uid', role: 'owner', joinedAt: '2026-01-01T00:00:00Z' },
+      ],
+      // memberUids omitted on the workspace fixture's defaults.
+      memberRoles: { 'owner-uid': 'owner' },
+    });
+    // Force memberUids to be absent (undefined) by direct assignment.
+    delete (ws as { memberUids?: string[] }).memberUids;
+    const out = migrateWorkspaceAccessRoles(ws);
+    expect(out.changed).toBe(true);
+    expect(out.ws.memberUids).toEqual(['owner-uid']);
+  });
 });
 
 // ── Phase 8 — workspace.countries backfill ──────────────────────────

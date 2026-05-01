@@ -471,6 +471,19 @@ export function migrateWorkspaceAccessRoles(ws: WorkspaceDoc): {
       );
   if (memberRolesDrift) changed = true;
 
+  // 4b. memberUids — same drift check. Legacy workspaces stuck
+  //     without memberUids would lock everyone out of the member-
+  //     tier write rule. Recompute from the migrated members and
+  //     flag drift so persistMigratedRoles writes the fixed value
+  //     back. (Owner-tier writes already work via ownerUid; this
+  //     repairs the path for everyone else.)
+  const expectedMemberUids = nextMembers.map((m) => m.uid).sort();
+  const existingMemberUids = (ws.memberUids ?? []).slice().sort();
+  const memberUidsDrift =
+    expectedMemberUids.length !== existingMemberUids.length
+    || expectedMemberUids.some((uid, i) => uid !== existingMemberUids[i]);
+  if (memberUidsDrift) changed = true;
+
   // 5. Phase-8 — backfill the workspace.countries list when it's
   //    missing or empty AND the existing data has signal about
   //    which countries the workspace observes (legacy PH + AU
@@ -509,6 +522,7 @@ export function migrateWorkspaceAccessRoles(ws: WorkspaceDoc): {
     ws: {
       ...ws,
       members: nextMembers,
+      memberUids: nextMembers.map((m) => m.uid),
       memberRoles: expectedMemberRoles,
       pendingInvites: nextInvites,
       countries: nextCountries,
@@ -1195,8 +1209,20 @@ class FlizowStore {
   private async persistMigratedRoles(ws: WorkspaceDoc): Promise<void> {
     if (!this.workspaceId) return;
     const wsRef = doc(db, WORKSPACES_COLLECTION, this.workspaceId);
+    // Echo guard — migration writes are big and the snapshot echo
+    // would otherwise trip the listener into re-processing the doc
+    // we just wrote, which has no useful effect but burns a render.
+    this.pendingWriteEchoes++;
+    try {
     await setDoc(wsRef, {
       members: ws.members,
+      // memberUids derived from members so a legacy doc with an
+      // empty/missing memberUids field gets backfilled on the same
+      // migration sweep. Without this, the owner-via-memberRoles
+      // path would still work via ownerUid, but member-tier writes
+      // (which check `uid in memberUids`) would keep failing for
+      // everyone else.
+      memberUids: ws.members.map((m) => m.uid),
       // memberRoles backfilled by the migration. Firestore-rule
       // role checks read this map, so getting it onto the doc is
       // what unlocks the tightened rules for legacy workspaces.
@@ -1208,6 +1234,10 @@ class FlizowStore {
       data: ws.data,
       updatedAt: new Date().toISOString(),
     }, { merge: true });
+    } catch (err) {
+      this.pendingWriteEchoes = Math.max(0, this.pendingWriteEchoes - 1);
+      throw err;
+    }
   }
 
   // ── Workspace logo (Firebase Storage) ─────────────────────────────────

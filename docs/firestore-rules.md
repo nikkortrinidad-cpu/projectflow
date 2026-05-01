@@ -4,6 +4,8 @@
 
 > **Heads-up (May 1, 2026):** rules tightened to enforce roles at the storage layer. Previously a Viewer who knew the wsId could write to the workspace via direct Firestore call. The new rules reject that — only Owner/Admin can change members, settings, billing, and data; Member writes are limited to their own time-off requests + the agency-side data they're allowed to edit. **Re-paste the rules block below in the Firebase console after you ship this update.** Old rules keep working but don't enforce the new role boundaries.
 
+> **Heads-up (May 1, 2026 — fix shipped same day):** the original tightening relied on a `memberRoles` map to identify the owner. Legacy workspaces created before the tightening don't have that map, and the migration that's supposed to backfill it gets blocked by the same rule. Catch-22. Fixed by checking `ownerUid` (immutable from creation) instead of `memberRoles` for the owner-identity path. Admin checks still use `memberRoles`. **Re-paste the rules block again** — old rules from earlier today work but lock legacy workspaces out.
+
 ## How to paste them
 
 1. Open https://console.firebase.google.com/
@@ -24,11 +26,19 @@ service cloud.firestore {
 
     // ── Helpers ──────────────────────────────────────────────────
     //
-    // Role lookup reads the denormalized `memberRoles` map keyed by
-    // uid. members[] also carries the role on each row, but Firestore
-    // rules can't iterate arrays to find one by uid — hence the map.
-    // The store keeps both in sync on every mutation; the migration
-    // backfills the map for any pre-2026-05-01 workspace doc.
+    // Owner identity is verified by the immutable `ownerUid` field,
+    // set at workspace creation and never changed. Admin status uses
+    // the denormalized `memberRoles` map keyed by uid. Splitting
+    // these two lookups means a legacy workspace missing
+    // `memberRoles` still has a working owner-identity path — the
+    // owner can sign in and trigger the migration that backfills
+    // `memberRoles`, instead of being locked out by a chicken-and-
+    // egg rule check.
+    function isOwner(workspace) {
+      return request.auth != null
+        && request.auth.uid == workspace.data.ownerUid;
+    }
+
     function memberRole(workspace) {
       return workspace.data.memberRoles[request.auth.uid];
     }
@@ -38,14 +48,11 @@ service cloud.firestore {
         && request.auth.uid in workspace.data.memberUids;
     }
 
+    // Owner OR admin. Owner via the ownerUid path (always works);
+    // admin via the memberRoles map (requires migration to have run).
     function isOwnerOrAdmin(workspace) {
-      return isMember(workspace)
-        && memberRole(workspace) in ['owner', 'admin'];
-    }
-
-    function isOwner(workspace) {
-      return isMember(workspace)
-        && memberRole(workspace) == 'owner';
+      return isOwner(workspace)
+        || (isMember(workspace) && memberRole(workspace) == 'admin');
     }
 
     // Which top-level keys on the workspace doc only Owner/Admin can
@@ -155,12 +162,18 @@ service cloud.firestore {
 
 ## Migration note (for the previous version)
 
-Workspaces created before May 1, 2026 don't have a `memberRoles` map on their doc. The store's snapshot handler runs `migrateWorkspaceAccessRoles` on first load, which now also backfills the map from `members[].role`. The owner-only persist path writes the map back on the same migration sweep. So:
+Workspaces created before May 1, 2026 don't have a `memberRoles` map on their doc. The store's snapshot handler runs `migrateWorkspaceAccessRoles` on first load, which backfills the map from `members[].role`. The owner-only persist path writes the map back on the same migration sweep. So:
 
 1. **Owner signs in once** → migration runs → `memberRoles` lands on the doc.
 2. **Members + viewers sign in after that** → role checks work.
 
 If a teammate hits a "permission denied" error after this update, ask the workspace owner to sign in once to trigger the backfill.
+
+### The catch-22 fix (May 1, 2026 same day)
+
+The original tightening verified the owner via `memberRoles[uid] == 'owner'`. On a legacy workspace that doesn't have `memberRoles` populated yet, this returns null — the owner fails the check and gets "Missing or insufficient permissions" on every write. The migration that's supposed to add `memberRoles` is itself a write that needs to pass the same check. Locked out.
+
+The current rules check the owner via the immutable `ownerUid` field instead. Since `ownerUid` is set at workspace creation and never changes, the legitimate owner always passes. The migration runs, `memberRoles` lands on the doc, and from then on all role checks (including admin) work normally.
 
 ## What to do if a teammate gets stuck
 
