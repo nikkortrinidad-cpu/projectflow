@@ -17,6 +17,7 @@ import { useFlizow } from '../store/useFlizow';
 import { flizowStore } from '../store/flizowStore';
 import { loadFor, effectiveCapFor, zoneFor, type CapacityTask } from '../utils/capacity';
 import { bestTextColor } from '../utils/avatar';
+import { COUNTRIES, countryName } from '../data/countries';
 import { can } from '../utils/access';
 import {
   currentVacationPeriod,
@@ -515,7 +516,7 @@ function ProfileDisplay({
               <ContactRow
                 Icon={GlobeAmericasIcon}
                 label="Country"
-                value={member.country === 'PH' ? 'Philippines' : 'Australia'}
+                value={countryName(member.country)}
               />
             )}
             {workingHoursLine && (
@@ -661,17 +662,25 @@ function ProfileEditForm({
           </FieldGroup>
           <FieldGroup label="Country">
             {/* Country tag drives which holidays show on the
-                schedules calendar for this member. 'Other' means
-                "doesn't observe PH or AU holidays" — they manage
-                time off via individual requests. */}
+                schedules calendar for this member. ISO 3166-1
+                alpha-2 codes; 'Other' (the legacy catch-all)
+                still selectable as a "no country" option that
+                renders no holidays. Phase 8 widened from a
+                fixed 3-option set to the full ISO list. Browsers
+                support typeahead on selects (typing a letter
+                jumps to that option), which keeps the picker
+                usable without a custom search component. */}
             <select
               className="member-profile-input"
               value={drafts.country}
               onChange={(e) => set('country', e.target.value as MemberCountry)}
             >
-              <option value="Other">Other</option>
-              <option value="PH">Philippines</option>
-              <option value="AU">Australia</option>
+              <option value="Other">Other (no country)</option>
+              {COUNTRIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.name}
+                </option>
+              ))}
             </select>
           </FieldGroup>
           <FieldGroup label="Pronouns">

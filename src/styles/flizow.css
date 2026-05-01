@@ -9086,13 +9086,14 @@
     font-weight: 700;
     flex-shrink: 0;
   }
-  .holidays-country--PH {
-    background: rgba(241, 90, 36, 0.16);
-    color: var(--highlight);
-  }
-  .holidays-country--AU {
-    background: rgba(48, 209, 88, 0.18);
-    color: #30d158;
+  /* Phase 8 — single neutral style for any ISO country code. The
+     old PH-orange / AU-green pair didn't scale to 100+ countries
+     and signalled nothing meaningful (the code itself reads
+     fine). 'global' keeps a distinct indigo tint because it has
+     a special semantic ("everyone observes this"). */
+  .holidays-country--iso {
+    background: var(--bg-soft);
+    color: var(--text);
   }
   .holidays-country--global {
     background: rgba(94, 92, 230, 0.18);
@@ -9130,6 +9131,134 @@
     gap: var(--sp-sm);
     margin-top: var(--sp-md);
   }
+
+  /* ── Holiday API integration (Phase 8) ──────────────────────────
+     Workspace-countries panel that sits above the credit-policy
+     block in Settings → Holidays. Owner picks ISO codes, hits
+     "Sync" per country to pull from date.nager.at. */
+  .holidays-countries {
+    padding: var(--sp-md);
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 10px;
+    margin-bottom: var(--sp-md);
+  }
+  .holidays-countries-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--sp-md);
+    margin-bottom: var(--sp-md);
+    flex-wrap: wrap;
+  }
+  .holidays-countries-title {
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .holidays-countries-sub {
+    font-size: var(--fs-sm);
+    color: var(--text-soft);
+    line-height: 1.4;
+    max-width: 60ch;
+  }
+  .holidays-countries-sub a {
+    color: var(--highlight);
+    text-decoration: underline;
+  }
+  .holidays-countries-empty {
+    padding: var(--sp-md);
+    text-align: center;
+    color: var(--text-muted);
+    background: var(--bg-elev);
+    border: 1px dashed var(--hairline);
+    border-radius: 8px;
+    font-size: var(--fs-sm);
+    margin-bottom: var(--sp-md);
+  }
+  .holidays-countries-list {
+    list-style: none;
+    margin: 0 0 var(--sp-md);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-xs);
+  }
+  .holidays-country-row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-sm);
+    padding: var(--sp-sm) var(--sp-md);
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 8px;
+  }
+  .holidays-country-row-code {
+    font-family: 'SF Mono', Monaco, monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    background: var(--bg-soft);
+    padding: 3px 7px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .holidays-country-row-name {
+    flex: 1;
+    font-size: var(--fs-sm);
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .holidays-country-row-tag {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    background: var(--bg-soft);
+    padding: 2px 6px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .holidays-countries-add {
+    display: flex;
+    gap: var(--sp-sm);
+    align-items: center;
+  }
+  .holidays-countries-add select {
+    flex: 1;
+  }
+  /* Sync result banner — appears under the picker after a sync
+     finishes. Three tones for ok / warn / error. Auto-dismisses
+     never; the OM closes the panel or runs another sync. */
+  .holidays-sync-result {
+    margin-top: var(--sp-md);
+    padding: var(--sp-sm) var(--sp-md);
+    border-radius: 6px;
+    font-size: var(--fs-sm);
+    line-height: 1.4;
+  }
+  .holidays-sync-result--ok {
+    background: rgba(48, 209, 88, 0.12);
+    color: #0c7a35;
+    border-left: 3px solid #30d158;
+  }
+  :root[data-theme="dark"] .holidays-sync-result--ok { color: #30d158; }
+  .holidays-sync-result--warn {
+    background: rgba(255, 159, 10, 0.12);
+    color: #8b5a00;
+    border-left: 3px solid #ff9f0a;
+  }
+  :root[data-theme="dark"] .holidays-sync-result--warn { color: #ff9f0a; }
+  .holidays-sync-result--error {
+    background: rgba(255, 69, 58, 0.12);
+    color: #b71c14;
+    border-left: 3px solid #ff453a;
+  }
+  :root[data-theme="dark"] .holidays-sync-result--error { color: #ff6961; }
 
   /* ── Holiday transfer credits (Phase 6C) ─────────────────────────
      Settings → Holidays credit-policy panel. Sits above the year +

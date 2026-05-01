@@ -189,9 +189,20 @@ describe('countryShortLabel() / countryTint()', () => {
   });
 
   it('returns a CSS color value for every country', () => {
-    expect(countryTint('PH')).toMatch(/^rgba/);
-    expect(countryTint('AU')).toMatch(/^rgba/);
+    // Phase 8 — global keeps its assigned indigo (rgba); ISO codes
+    // hash to deterministic HSL pastels via djb2 so any country
+    // works without curating 100+ palette entries.
     expect(countryTint('global')).toMatch(/^rgba/);
+    expect(countryTint('PH')).toMatch(/^hsl/);
+    expect(countryTint('AU')).toMatch(/^hsl/);
+    expect(countryTint('US')).toMatch(/^hsl/);
+  });
+
+  it('hashes the same country code to the same tint deterministically', () => {
+    // Stability matters — a country re-rendered across sessions
+    // should keep its colour. djb2 is content-stable.
+    expect(countryTint('US')).toBe(countryTint('US'));
+    expect(countryTint('PH')).toBe(countryTint('PH'));
   });
 });
 

@@ -20,7 +20,9 @@ import { OPS_TEAM_MEMBERS, OPS_TASK_SEED } from '../data/opsSeed';
 import { migrateAccessRole } from '../utils/access';
 import { DEFAULT_JOB_TITLES, pickMigratedJobTitleId } from '../utils/jobTitles';
 import { makeTimeOffRequest, migrateLegacyTimeOff } from '../utils/timeOff';
-import { DEFAULT_HOLIDAYS } from '../data/holidaySeed';
+// DEFAULT_HOLIDAYS no longer seeds new workspaces (Phase 8 — empty
+// by default; owner syncs from public calendar). Still imported by
+// data/demoData.ts so the demo path feels populated.
 import { makeHolidayObservation } from '../utils/holidayCredits';
 
 /**
@@ -107,11 +109,14 @@ function emptyData(): FlizowData {
     // defaults so silently-running coverage checks aren't a
     // surprise on first load.
     coverageRules: [],
-    // Pre-seeded holiday catalog covers PH (public + special) +
-    // AU (national + major-state) for 2026 and 2027. The OM
-    // edits / adds / archives via Settings → Holidays. Ids are
-    // stable so re-running migrate is idempotent.
-    holidays: DEFAULT_HOLIDAYS.map((h) => ({ ...h })),
+    // Phase 8 — empty holiday catalog for new workspaces. Owner
+    // picks countries through Settings → Holidays + hits "Sync
+    // from public calendar" to pull from date.nager.at. The
+    // hardcoded PH + AU 2026/27 seed (DEFAULT_HOLIDAYS) is still
+    // bundled with the demo so demo loads feel populated; it's
+    // also available as a manual import for users who want a
+    // quick-start without the API call.
+    holidays: [],
     // No per-member observation overrides on a fresh workspace.
     // Sparse list — only members whose status differs from the
     // holiday default land here.
@@ -465,6 +470,38 @@ export function migrateWorkspaceAccessRoles(ws: WorkspaceDoc): {
       );
   if (memberRolesDrift) changed = true;
 
+  // 5. Phase-8 — backfill the workspace.countries list when it's
+  //    missing or empty AND the existing data has signal about
+  //    which countries the workspace observes (legacy PH + AU
+  //    workspaces). Uses members' country tags + holidays'
+  //    country fields as evidence. The owner can edit afterwards;
+  //    this is just a sane initial state so existing workspaces
+  //    don't show "no countries set up" with their PH+AU data
+  //    still in place.
+  let nextCountries = ws.countries;
+  const noCountries = !ws.countries || ws.countries.length === 0;
+  if (noCountries) {
+    const fromMembers = new Set<string>();
+    for (const m of ws.data?.members ?? []) {
+      // Treat 'Other' (the legacy catch-all from before Phase 8)
+      // as no signal — only carry forward concrete ISO codes.
+      if (m.country && m.country !== 'Other' && m.country !== 'global') {
+        fromMembers.add(m.country.toUpperCase());
+      }
+    }
+    const fromHolidays = new Set<string>();
+    for (const h of ws.data?.holidays ?? []) {
+      if (h.country && h.country !== 'global') {
+        fromHolidays.add(h.country.toUpperCase());
+      }
+    }
+    const union = Array.from(new Set([...fromMembers, ...fromHolidays])).sort();
+    if (union.length > 0) {
+      nextCountries = union;
+      changed = true;
+    }
+  }
+
   if (!changed) return { ws, changed: false };
 
   return {
@@ -473,6 +510,7 @@ export function migrateWorkspaceAccessRoles(ws: WorkspaceDoc): {
       members: nextMembers,
       memberRoles: expectedMemberRoles,
       pendingInvites: nextInvites,
+      countries: nextCountries,
       data: { ...ws.data, members: nextDataMembers },
     },
     changed: true,
@@ -537,6 +575,10 @@ class FlizowStore {
     logoUrl?: string;
     members: WorkspaceMembership[];
     pendingInvites: PendingInvite[];
+    /** ISO 3166-1 alpha-2 codes the owner has picked for holiday
+     *  syncing. Phase 8 — empty array means "no countries set up
+     *  yet"; the Holidays settings tab shows the picker prompt. */
+    countries: string[];
     createdAt: string;
   } | null = null;
   private workspaceListeners: Set<Listener> = new Set();
@@ -738,6 +780,7 @@ class FlizowStore {
         logoUrl: ws.logoUrl || undefined,
         members: ws.members ?? [],
         pendingInvites: ws.pendingInvites ?? [],
+        countries: Array.isArray(ws.countries) ? ws.countries : [],
         createdAt: ws.createdAt || new Date().toISOString(),
       };
       // If the cloud doc was missing identity fields, push the
@@ -856,6 +899,10 @@ class FlizowStore {
       // in sync with members[] on every mutation below.
       memberRoles: { [uid]: 'owner' },
       pendingInvites: [],
+      // Phase 8 — owner picks countries through Settings →
+      // Holidays after workspace creation. Empty default = no
+      // public-holiday sync until they explicitly choose.
+      countries: [],
       data: legacyData ?? emptyData(),
       createdAt: now,
       updatedAt: now,
@@ -1101,6 +1148,9 @@ class FlizowStore {
       // what unlocks the tightened rules for legacy workspaces.
       memberRoles: ws.memberRoles ?? {},
       pendingInvites: ws.pendingInvites,
+      // Phase 8 — persist the countries backfill so the next read
+      // doesn't have to re-derive from members + holidays.
+      countries: ws.countries ?? [],
       data: ws.data,
       updatedAt: new Date().toISOString(),
     }, { merge: true });
@@ -3192,6 +3242,58 @@ class FlizowStore {
     this.data.holidays = this.data.holidays.filter((x) => x.id !== id);
     if (this.data.holidays.length === before) return;
     this.save();
+  }
+
+  // ── Workspace countries (Phase 8) ──────────────────────────────────
+  //
+  // The ISO 3166-1 alpha-2 codes the owner has picked for holiday
+  // syncing. Members' personal country tags filter visibility on the
+  // schedules calendar; this list drives the "Sync from public
+  // calendar" path in Settings → Holidays.
+
+  /** Replace the workspace's country list with the provided ISO
+   *  codes. Owner-only edit (UI gates this; rules enforce it).
+   *  Stored on the workspace doc (not under `data`) so the
+   *  setting reads/writes via the workspace meta path. */
+  async setWorkspaceCountries(codes: ReadonlyArray<string>): Promise<void> {
+    if (!this.workspaceId || !this.workspaceMeta) return;
+    const dedupe = Array.from(new Set(codes.map((c) => c.toUpperCase())));
+    this.workspaceMeta = { ...this.workspaceMeta, countries: dedupe };
+    this.notifyWorkspace();
+    const wsRef = doc(db, WORKSPACES_COLLECTION, this.workspaceId);
+    await setDoc(wsRef, {
+      countries: dedupe,
+      updatedAt: new Date().toISOString(),
+    }, { merge: true });
+  }
+
+  /** Bulk-import a synced batch of holidays. Used by the Settings →
+   *  Holidays "Sync from public calendar" flow.
+   *
+   *  Dedupe rule: an incoming entry whose id already exists in the
+   *  catalog is skipped (the sync helper uses stable ids derived
+   *  from country + date + name slug, so re-syncing the same year
+   *  is a no-op). Returns counts so the UI can show "Added 12,
+   *  skipped 4 already in your catalog." */
+  importHolidays(incoming: ReadonlyArray<Holiday>): { added: number; skipped: number } {
+    const existingIds = new Set(this.data.holidays.map((h) => h.id));
+    let added = 0;
+    let skipped = 0;
+    const toAdd: Holiday[] = [];
+    for (const h of incoming) {
+      if (existingIds.has(h.id)) {
+        skipped++;
+        continue;
+      }
+      toAdd.push(h);
+      existingIds.add(h.id);
+      added++;
+    }
+    if (added > 0) {
+      this.data.holidays = [...this.data.holidays, ...toAdd];
+      this.save();
+    }
+    return { added, skipped };
   }
 
   // ── Holiday observation overrides + credit policy (Phase 6C) ────────

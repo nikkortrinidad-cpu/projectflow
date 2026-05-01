@@ -150,3 +150,110 @@ describe('migrateWorkspaceAccessRoles — memberRoles backfill', () => {
     expect(Object.keys(out.ws.memberRoles).length).toBe(2);
   });
 });
+
+// ── Phase 8 — workspace.countries backfill ──────────────────────────
+
+describe('migrateWorkspaceAccessRoles — countries backfill', () => {
+  it('backfills countries from member country tags when missing', () => {
+    const ws = workspace({
+      members: [
+        { uid: 'owner-uid', role: 'owner', joinedAt: '2026-01-01T00:00:00Z' },
+      ],
+      memberUids: ['owner-uid'],
+      memberRoles: { 'owner-uid': 'owner' },
+      // legacy: no countries field at all
+      countries: undefined,
+      data: {
+        ...emptyData(),
+        members: [
+          { id: 'm1', initials: 'M1', name: 'A', color: '#000', type: 'operator', country: 'PH' },
+          { id: 'm2', initials: 'M2', name: 'B', color: '#000', type: 'operator', country: 'AU' },
+        ],
+      },
+    });
+    const out = migrateWorkspaceAccessRoles(ws);
+    expect(out.changed).toBe(true);
+    expect(out.ws.countries).toEqual(['AU', 'PH']);
+  });
+
+  it("backfills countries from holiday country tags when members don't have them", () => {
+    const ws = workspace({
+      members: [
+        { uid: 'owner-uid', role: 'owner', joinedAt: '2026-01-01T00:00:00Z' },
+      ],
+      memberUids: ['owner-uid'],
+      memberRoles: { 'owner-uid': 'owner' },
+      countries: undefined,
+      data: {
+        ...emptyData(),
+        holidays: [
+          { id: 'h1', name: 'Labor Day', date: '2026-05-01', country: 'PH', type: 'public', defaultObservation: 'observed', active: true },
+          { id: 'h2', name: 'Anzac Day', date: '2026-04-25', country: 'AU', type: 'public', defaultObservation: 'observed', active: true },
+          { id: 'h3', name: 'NYD',       date: '2026-01-01', country: 'global', type: 'public', defaultObservation: 'observed', active: true },
+        ],
+      },
+    });
+    const out = migrateWorkspaceAccessRoles(ws);
+    expect(out.changed).toBe(true);
+    // 'global' is excluded from countries[] — it's a marker, not
+    // an ISO code. PH + AU come through.
+    expect(out.ws.countries).toEqual(['AU', 'PH']);
+  });
+
+  it("ignores legacy 'Other' country tags during backfill", () => {
+    const ws = workspace({
+      members: [
+        { uid: 'owner-uid', role: 'owner', joinedAt: '2026-01-01T00:00:00Z' },
+      ],
+      memberUids: ['owner-uid'],
+      memberRoles: { 'owner-uid': 'owner' },
+      countries: undefined,
+      data: {
+        ...emptyData(),
+        members: [
+          { id: 'm1', initials: 'M1', name: 'A', color: '#000', type: 'operator', country: 'Other' },
+          { id: 'm2', initials: 'M2', name: 'B', color: '#000', type: 'operator', country: 'PH' },
+        ],
+      },
+    });
+    const out = migrateWorkspaceAccessRoles(ws);
+    expect(out.ws.countries).toEqual(['PH']);
+  });
+
+  it("doesn't touch a workspace that already has countries populated", () => {
+    const ws = workspace({
+      members: [
+        { uid: 'owner-uid', role: 'owner', joinedAt: '2026-01-01T00:00:00Z' },
+      ],
+      memberUids: ['owner-uid'],
+      memberRoles: { 'owner-uid': 'owner' },
+      countries: ['US', 'CA'], // owner already picked these
+      data: {
+        ...emptyData(),
+        members: [
+          { id: 'm1', initials: 'M1', name: 'A', color: '#000', type: 'operator', country: 'PH' },
+        ],
+      },
+    });
+    const out = migrateWorkspaceAccessRoles(ws);
+    // No drift on the rest of the doc, no countries change either.
+    expect(out.changed).toBe(false);
+  });
+
+  it("leaves countries empty when there's no legacy signal", () => {
+    const ws = workspace({
+      members: [
+        { uid: 'owner-uid', role: 'owner', joinedAt: '2026-01-01T00:00:00Z' },
+      ],
+      memberUids: ['owner-uid'],
+      memberRoles: { 'owner-uid': 'owner' },
+      countries: undefined,
+      // No member country tags + no holidays = nothing to derive.
+    });
+    const out = migrateWorkspaceAccessRoles(ws);
+    // The function returns changed=false because nothing actually
+    // needs to change. New workspaces stay empty until the owner
+    // picks via Settings → Holidays.
+    expect(out.changed).toBe(false);
+  });
+});

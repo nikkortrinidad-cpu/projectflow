@@ -120,25 +120,30 @@ export function visibleHolidays(
 
 // ── Display ────────────────────────────────────────────────────────
 
-/** Two-letter country flag for display in the calendar ribbon.
- *  Plain text, not emoji — keeps the visual language consistent
- *  with the rest of the app's chrome. */
+/** Short label for the calendar ribbon. ISO codes display as-is
+ *  (already 2 chars); 'global' gets a globe glyph. Phase 8 — the
+ *  country space is now any ISO 3166-1 alpha-2 code, not the old
+ *  fixed PH/AU pair. */
 export function countryShortLabel(country: HolidayCountry): string {
-  switch (country) {
-    case 'PH': return 'PH';
-    case 'AU': return 'AU';
-    case 'global': return '🌐';
-  }
+  if (country === 'global') return '🌐';
+  return country;
 }
 
-/** Choose a tint for the holiday ribbon. Different tints per
- *  country so a calendar with mixed PH/AU members reads at a
- *  glance which country is observing. Soft pastels — these run
- *  alongside conflict highlights, so they shouldn't shout. */
+/** Choose a tint for the holiday ribbon. Picks a deterministic
+ *  pastel from the country code so every country gets a stable,
+ *  distinct shade — without us hand-curating 100+ palette entries.
+ *  Two ISO codes hash to two different hues; the same code always
+ *  returns the same tint across renders + sessions. 'global' keeps
+ *  its existing indigo (assigned semantic, not derived). */
 export function countryTint(country: HolidayCountry): string {
-  switch (country) {
-    case 'PH': return 'rgba(241, 90, 36, 0.18)';   // brand orange tint
-    case 'AU': return 'rgba(48, 209, 88, 0.18)';   // green tint
-    case 'global': return 'rgba(94, 92, 230, 0.18)'; // indigo tint
+  if (country === 'global') return 'rgba(94, 92, 230, 0.18)';
+  // djb2 hash of the ISO code → 360 hue bins. Consistent with
+  // utils/avatar.avatarColor (same algorithm) so a country tinted
+  // alongside a same-color member feels intentional.
+  let h = 0;
+  for (let i = 0; i < country.length; i++) {
+    h = ((h << 5) - h + country.charCodeAt(i)) | 0;
   }
+  const hue = Math.abs(h) % 360;
+  return `hsl(${hue} 70% 50% / 0.18)`;
 }

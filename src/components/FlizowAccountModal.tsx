@@ -35,6 +35,8 @@ import {
   creditBalanceFor as computeCreditBalance,
   memberCreditLedger,
 } from '../utils/holidayCredits';
+import { fetchHolidaysForRange } from '../utils/holidaySync';
+import { COUNTRIES, countryName, isSupportedByNager } from '../data/countries';
 
 /**
  * FlizowAccountModal — the Account Settings overlay reachable from the
@@ -2980,11 +2982,23 @@ function JobTitleEditorRow({
 
 function HolidaysSection() {
   const { data, store } = useFlizow();
+  // Phase 8 — read the workspace's owner-picked country list from
+  // the meta observable, not from data. Drives the sync UI + the
+  // chip filter at the bottom.
+  const meta = useSyncExternalStore(store.subscribeWorkspace, store.getWorkspaceMeta);
+  const workspaceCountries = meta?.countries ?? [];
   const [yearFilter, setYearFilter] = useState<number | 'all'>(() =>
     new Date().getFullYear(),
   );
-  const [countryFilter, setCountryFilter] = useState<'all' | 'PH' | 'AU' | 'global'>('all');
+  const [countryFilter, setCountryFilter] = useState<string>('all');
   const [editingId, setEditingId] = useState<string | 'new' | null>(null);
+  // Sync UI state — null when idle, otherwise tracks the in-flight
+  // country + a result message after completion.
+  const [syncing, setSyncing] = useState<string | null>(null);
+  const [syncResult, setSyncResult] = useState<{ countryCode: string; message: string; tone: 'ok' | 'warn' | 'error' } | null>(null);
+  // Add-country picker state. The owner picks an ISO code from the
+  // dropdown + clicks "Add" to push it onto workspace.countries.
+  const [pickerCode, setPickerCode] = useState<string>('');
 
   // Years present in the catalog — drives the filter dropdown so
   // the OM doesn't see options for years they have no entries for.
@@ -3018,8 +3032,64 @@ function HolidaysSection() {
     store.updateHoliday(id, { active: true });
   }
   function handleDelete(id: string, name: string) {
-    if (!window.confirm(`Delete "${name}"? This can't be undone — prefer Archive if you might want it back.`)) return;
+    if (!window.confirm(`Delete "${name}"? This can't be undone. Prefer Archive if you might want it back.`)) return;
     store.deleteHoliday(id);
+  }
+
+  // ── Phase 8 — country list + sync handlers ───────────────────────
+
+  async function handleAddCountry() {
+    if (!pickerCode) return;
+    const next = Array.from(new Set([...workspaceCountries, pickerCode.toUpperCase()]));
+    await store.setWorkspaceCountries(next);
+    setPickerCode('');
+  }
+
+  async function handleRemoveCountry(code: string) {
+    const next = workspaceCountries.filter((c) => c !== code);
+    await store.setWorkspaceCountries(next);
+  }
+
+  async function handleSyncCountry(code: string) {
+    setSyncing(code);
+    setSyncResult(null);
+    const thisYear = new Date().getFullYear();
+    const result = await fetchHolidaysForRange(code, [thisYear, thisYear + 1]);
+    if (result.holidays.length === 0) {
+      // Either the country isn't covered by Nager, or both years
+      // returned empty. Surface that distinctly so the OM knows
+      // to add manually rather than waiting on the API.
+      const wasUnsupported = result.errors.some((e) => e.kind === 'unsupported');
+      const networkErrors = result.errors.filter((e) => e.kind === 'network-error');
+      if (networkErrors.length > 0) {
+        setSyncResult({
+          countryCode: code,
+          message: `Couldn't reach the public calendar for ${countryName(code)} — check your connection and try again.`,
+          tone: 'error',
+        });
+      } else if (wasUnsupported) {
+        setSyncResult({
+          countryCode: code,
+          message: `${countryName(code)} isn't covered by the public calendar yet. You can add holidays manually with "+ Add holiday".`,
+          tone: 'warn',
+        });
+      } else {
+        setSyncResult({
+          countryCode: code,
+          message: `No public holidays found for ${countryName(code)}.`,
+          tone: 'warn',
+        });
+      }
+      setSyncing(null);
+      return;
+    }
+    const { added, skipped } = store.importHolidays(result.holidays);
+    setSyncResult({
+      countryCode: code,
+      message: `Synced ${countryName(code)}: added ${added}, ${skipped} already in your catalog.`,
+      tone: 'ok',
+    });
+    setSyncing(null);
   }
 
   if (editingId) {
@@ -3045,9 +3115,94 @@ function HolidaysSection() {
       <div className="acct-section-header">
         <h3 className="acct-section-title">Holidays</h3>
         <p className="acct-section-sub">
-          Public holidays your workspace observes. Members tagged with a country see their relevant holidays on the schedules calendar.
-          Pre-seeded with Philippines and Australia 2026 + 2027 — edit, archive, or add custom dates.
+          Public holidays your workspace observes. Pick the countries your team operates in, sync from the public calendar, then edit + archive + add custom dates as needed.
         </p>
+      </div>
+
+      {/* Phase 8 — Workspace countries. Owner picks ISO codes + hits
+          "Sync" per country. Sync hits date.nager.at for the
+          current + next year, dedupes against existing entries,
+          adds the new ones to the catalog. */}
+      <div className="holidays-countries">
+        <div className="holidays-countries-head">
+          <div>
+            <div className="holidays-countries-title">Workspace countries</div>
+            <div className="holidays-countries-sub">
+              Choose the countries you operate in. Click "Sync" to pull this year + next year's public holidays from <a href="https://date.nager.at" target="_blank" rel="noreferrer">date.nager.at</a> — a free open-source calendar covering ~110 countries.
+            </div>
+          </div>
+        </div>
+
+        {workspaceCountries.length === 0 ? (
+          <div className="holidays-countries-empty">
+            No countries set up yet. Add one below to get started.
+          </div>
+        ) : (
+          <ul className="holidays-countries-list">
+            {workspaceCountries.map((code) => {
+              const supported = isSupportedByNager(code);
+              const isSyncing = syncing === code;
+              return (
+                <li key={code} className="holidays-country-row">
+                  <span className="holidays-country-row-code">{code}</span>
+                  <span className="holidays-country-row-name">{countryName(code)}</span>
+                  {!supported && (
+                    <span className="holidays-country-row-tag" title="The public calendar doesn't cover this country yet — add holidays manually below.">
+                      Manual
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    className="mbrs-action-btn"
+                    onClick={() => handleSyncCountry(code)}
+                    disabled={isSyncing || !supported}
+                    title={supported ? 'Pull this year + next year from the public calendar' : 'Not covered by the public calendar — add manually below'}
+                  >
+                    {isSyncing ? 'Syncing…' : 'Sync'}
+                  </button>
+                  <button
+                    type="button"
+                    className="mbrs-action-btn mbrs-action-btn--danger"
+                    onClick={() => handleRemoveCountry(code)}
+                    aria-label={`Remove ${countryName(code)}`}
+                  >
+                    Remove
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+
+        <div className="holidays-countries-add">
+          <select
+            className="acct-input"
+            value={pickerCode}
+            onChange={(e) => setPickerCode(e.target.value)}
+            aria-label="Pick a country to add"
+          >
+            <option value="">Pick a country…</option>
+            {COUNTRIES.filter((c) => !workspaceCountries.includes(c.code)).map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.name}{isSupportedByNager(c.code) ? '' : ' (manual entry only)'}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            className="acct-btn acct-btn--primary"
+            onClick={handleAddCountry}
+            disabled={!pickerCode}
+          >
+            Add
+          </button>
+        </div>
+
+        {syncResult && (
+          <div className={`holidays-sync-result holidays-sync-result--${syncResult.tone}`} role="status">
+            {syncResult.message}
+          </div>
+        )}
       </div>
 
       {/* Phase 6C — Credit policy. Sets the rule for how long a
@@ -3095,21 +3250,31 @@ function HolidaysSection() {
             <option key={y} value={y}>{y}</option>
           ))}
         </select>
-        {/* Country filter — chips, matching the Members + Schedules
-            tabs. Fixed small set (PH / AU / Global), so chips read
-            faster than a dropdown. */}
+        {/* Country filter — chips for every workspace country plus
+            All + Global. Built dynamically from the catalog so a
+            US-only workspace sees "All / US / Global", not the
+            old PH/AU hardcoded set. */}
         <div className="holidays-country-chips" role="group" aria-label="Filter by country">
-          {(['all', 'PH', 'AU', 'global'] as const).map((c) => (
-            <button
-              key={c}
-              type="button"
-              className={`mbrs-chip${countryFilter === c ? ' mbrs-chip--on' : ''}`}
-              onClick={() => setCountryFilter(c)}
-              aria-pressed={countryFilter === c}
-            >
-              {c === 'all' ? 'All' : c === 'global' ? 'Global' : c}
-            </button>
-          ))}
+          {(() => {
+            const codes = ['all', ...workspaceCountries, 'global'];
+            const seen = new Set<string>();
+            const unique = codes.filter((c) => {
+              if (seen.has(c)) return false;
+              seen.add(c);
+              return true;
+            });
+            return unique.map((c) => (
+              <button
+                key={c}
+                type="button"
+                className={`mbrs-chip${countryFilter === c ? ' mbrs-chip--on' : ''}`}
+                onClick={() => setCountryFilter(c)}
+                aria-pressed={countryFilter === c}
+              >
+                {c === 'all' ? 'All' : c === 'global' ? 'Global' : c}
+              </button>
+            ));
+          })()}
         </div>
         <button
           type="button"
@@ -3129,7 +3294,7 @@ function HolidaysSection() {
               key={h.id}
               className={`holidays-row${h.active ? '' : ' holidays-row--archived'}`}
             >
-              <span className={`holidays-country holidays-country--${h.country}`}>
+              <span className={`holidays-country holidays-country--${h.country === 'global' ? 'global' : 'iso'}`}>
                 {h.country === 'global' ? 'Global' : h.country}
               </span>
               <div className="holidays-row-text">
@@ -3283,9 +3448,12 @@ function HolidayEditor({
               value={country}
               onChange={(e) => setCountry(e.target.value as HolidayCountry)}
             >
-              <option value="PH">Philippines</option>
-              <option value="AU">Australia</option>
               <option value="global">Global (everyone)</option>
+              {COUNTRIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.name}
+                </option>
+              ))}
             </select>
           </label>
         </div>

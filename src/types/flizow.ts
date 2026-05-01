@@ -180,6 +180,12 @@ export interface WorkspaceDoc {
   memberRoles: { [uid: string]: AccessRole };
   /** Outstanding invites — one entry per generated link. */
   pendingInvites: PendingInvite[];
+  /** ISO 3166-1 alpha-2 codes the workspace observes holidays for.
+   *  Owner-picked through Settings → Holidays. The "Sync from
+   *  public calendar" button fetches public holidays for every
+   *  code in this list. Members tag their own country to filter
+   *  visibility on the schedules calendar. Phase 8 (May 2026). */
+  countries?: string[];
   /** The actual workspace data. Same shape that used to live at
    *  `flizow/{uid}.data` in the single-user model. */
   data: FlizowData;
@@ -635,19 +641,23 @@ export interface Member {
  */
 export type TimeOffStatus = 'pending' | 'approved' | 'denied' | 'cancelled';
 
-/** Country for holiday assignment + display. The agency operates
- *  across PH and AU, so members carry a country tag and the
- *  schedules calendar shows their relevant holidays only. 'Other'
- *  is the catch-all for any future expansion (US clients, EU
- *  contractors, etc.) and renders no holidays — they just observe
- *  whatever their member-side time-off requests cover. */
-export type MemberCountry = 'PH' | 'AU' | 'Other';
+/** Country for holiday assignment + display. ISO 3166-1 alpha-2
+ *  codes (e.g. 'US', 'PH', 'AU', 'GB', 'JP'). Phase 8 (May 2026)
+ *  opened this from a fixed union to a plain string so workspaces
+ *  in any country can use the system. The picker UI restricts to
+ *  the curated list in `data/countries.ts`; the type is permissive
+ *  so legacy tags ('PH', 'AU') round-trip cleanly through the
+ *  type system. Empty / undefined means "no country" (the
+ *  agency-roster Member doesn't observe a country's holidays). */
+export type MemberCountry = string;
 
-/** Holiday region tag. PH/AU mirror MemberCountry; 'global' covers
- *  things every workspace observes regardless of country (e.g. New
- *  Year's Day on the Gregorian calendar). Phase-6B doesn't seed any
- *  globals — kept on the type for future-proofing. */
-export type HolidayCountry = 'PH' | 'AU' | 'global';
+/** Holiday region tag. ISO 3166-1 alpha-2 codes for country-
+ *  specific holidays. The reserved value `'global'` covers
+ *  holidays everyone observes regardless of country (e.g.
+ *  workspace-wide office closures). Phase 8 widened this from
+ *  a fixed union to a string for the same reason as
+ *  MemberCountry. */
+export type HolidayCountry = string;
 
 /** PH-specific distinction: regular public holidays (Labor Day,
  *  Independence Day, etc.) are paid even if worked; special non-
