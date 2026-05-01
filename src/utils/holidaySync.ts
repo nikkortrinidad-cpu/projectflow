@@ -176,6 +176,33 @@ export async function fetchHolidaysForRange(
   return { countryCode: countryCode.toUpperCase(), holidays, errors };
 }
 
+// ── Auto-sync stale check (Phase 9) ────────────────────────────────
+
+/** How long a country can go without a successful sync before the
+ *  yearly auto-sync re-fetches it. 30 days is friendly to government-
+ *  revised calendars (Bank Holidays, Malacañang proclamations) without
+ *  hammering Nager — ~12 fetches per country per year. */
+export const HOLIDAY_SYNC_STALE_MS = 30 * 24 * 60 * 60 * 1000;
+
+/** Filter a list of country codes down to the ones whose last sync
+ *  is missing, unparseable, or older than the stale threshold. Pure
+ *  function so the store path can stay thin and the rule is unit-
+ *  testable without spinning up Firestore. */
+export function staleCountriesForSync(
+  countries: ReadonlyArray<string>,
+  lastSync: { readonly [country: string]: string | undefined },
+  nowMs: number = Date.now(),
+  staleMs: number = HOLIDAY_SYNC_STALE_MS,
+): string[] {
+  return countries.filter((code) => {
+    const stamp = lastSync[code];
+    if (!stamp) return true;
+    const t = Date.parse(stamp);
+    if (Number.isNaN(t)) return true;
+    return nowMs - t > staleMs;
+  });
+}
+
 // ── Mapping ────────────────────────────────────────────────────────
 
 /** Convert a Nager API entry to a Flizow Holiday. Returns null

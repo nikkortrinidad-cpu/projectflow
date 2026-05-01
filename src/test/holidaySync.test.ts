@@ -12,7 +12,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { mapNagerEntry } from '../utils/holidaySync';
+import { mapNagerEntry, staleCountriesForSync, HOLIDAY_SYNC_STALE_MS } from '../utils/holidaySync';
 
 describe('mapNagerEntry()', () => {
   it('maps a typical Public holiday to a Flizow Holiday', () => {
@@ -138,5 +138,68 @@ describe('mapNagerEntry()', () => {
     // The slug part is capped at 32 chars; the id stays bounded.
     expect(out!.id.length).toBeLessThan(80);
     expect(out!.id).toContain('hol-sync-US-2026-09-01-');
+  });
+});
+
+// ── Phase 9 — auto-sync stale check ─────────────────────────────────
+
+describe('staleCountriesForSync()', () => {
+  // Anchor "now" at a known time so the threshold math is stable.
+  const NOW = Date.parse('2026-05-01T12:00:00Z');
+  const fresh = '2026-04-25T12:00:00Z'; //  ~6 days ago — fresh
+  const stale = '2026-03-01T12:00:00Z'; // ~61 days ago — stale
+
+  it('flags countries with no timestamp', () => {
+    const out = staleCountriesForSync(['PH', 'AU'], {}, NOW);
+    expect(out).toEqual(['PH', 'AU']);
+  });
+
+  it("flags countries whose last sync is older than 30 days", () => {
+    const out = staleCountriesForSync(
+      ['PH', 'AU'],
+      { PH: fresh, AU: stale },
+      NOW,
+    );
+    expect(out).toEqual(['AU']);
+  });
+
+  it('skips countries that synced inside the threshold', () => {
+    const out = staleCountriesForSync(
+      ['PH', 'AU'],
+      { PH: fresh, AU: fresh },
+      NOW,
+    );
+    expect(out).toEqual([]);
+  });
+
+  it('treats unparseable timestamps as stale', () => {
+    const out = staleCountriesForSync(
+      ['PH'],
+      { PH: 'not a date' },
+      NOW,
+    );
+    expect(out).toEqual(['PH']);
+  });
+
+  it('boundary — exactly at the threshold counts as fresh', () => {
+    // The function uses `now - t > stale`, so equality stays fresh.
+    const exact = new Date(NOW - HOLIDAY_SYNC_STALE_MS).toISOString();
+    const out = staleCountriesForSync(['PH'], { PH: exact }, NOW);
+    expect(out).toEqual([]);
+  });
+
+  it('returns an empty array for an empty country list', () => {
+    expect(staleCountriesForSync([], {}, NOW)).toEqual([]);
+  });
+
+  it('honors a custom stale threshold', () => {
+    // Tighten to 1 day; the "fresh" 6-day timestamp now reads stale.
+    const out = staleCountriesForSync(
+      ['PH'],
+      { PH: fresh },
+      NOW,
+      24 * 60 * 60 * 1000,
+    );
+    expect(out).toEqual(['PH']);
   });
 });

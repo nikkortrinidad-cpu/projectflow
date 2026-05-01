@@ -186,6 +186,12 @@ export interface WorkspaceDoc {
    *  code in this list. Members tag their own country to filter
    *  visibility on the schedules calendar. Phase 8 (May 2026). */
   countries?: string[];
+  /** Per-country ISO timestamps of the last successful Nager sync.
+   *  Drives the yearly auto-sync stale-check — countries whose
+   *  timestamp is missing or older than 30 days re-sync silently
+   *  on the next owner workspace load. Manual syncs through the
+   *  Settings → Holidays UI also stamp this map. Phase 9. */
+  lastHolidaySync?: { [country: string]: string };
   /** The actual workspace data. Same shape that used to live at
    *  `flizow/{uid}.data` in the single-user model. */
   data: FlizowData;

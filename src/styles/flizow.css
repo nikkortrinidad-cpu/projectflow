@@ -9223,6 +9223,18 @@
     border-radius: 4px;
     flex-shrink: 0;
   }
+  /* Phase 9 — last-synced timestamp text. Sits between the name and
+     the Sync button, muted so it reads as metadata rather than
+     content. Hidden on narrow widths to keep the row compact. */
+  .holidays-country-row-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  @media (max-width: 600px) {
+    .holidays-country-row-meta { display: none; }
+  }
   .holidays-countries-add {
     display: flex;
     gap: var(--sp-sm);

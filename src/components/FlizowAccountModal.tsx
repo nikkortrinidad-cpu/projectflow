@@ -2630,6 +2630,30 @@ function parseLocalISO(iso: string): Date | null {
   return new Date(y, m - 1, d);
 }
 
+/** Phase 9 — relative "X ago" formatter for the per-country
+ *  Last-synced label in Settings → Holidays. Shows "Never" for a
+ *  missing or unparseable timestamp so the OM can tell at a glance
+ *  whether auto-sync has touched a country yet. */
+function formatLastSync(iso: string | undefined): string {
+  if (!iso) return 'Never synced';
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return 'Never synced';
+  const diff = Date.now() - t;
+  if (diff < 0) return 'Just now'; // future stamp (clock drift) — round to now
+  const min = Math.floor(diff / 60_000);
+  if (min < 1) return 'Just now';
+  if (min < 60) return `Synced ${min}m ago`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `Synced ${hr}h ago`;
+  const day = Math.floor(hr / 24);
+  if (day === 1) return 'Synced yesterday';
+  if (day < 30) return `Synced ${day}d ago`;
+  const mo = Math.floor(day / 30);
+  if (mo < 12) return `Synced ${mo}mo ago`;
+  const yr = Math.floor(day / 365);
+  return yr === 1 ? 'Synced 1y ago' : `Synced ${yr}y ago`;
+}
+
 /** Add (or subtract) days from a YYYY-MM-DD ISO date, returning a new
  *  ISO string in the same format. Used for "tomorrow" / "yesterday"
  *  defaulting in the toggle + modal flows. */
@@ -2987,6 +3011,7 @@ function HolidaysSection() {
   // chip filter at the bottom.
   const meta = useSyncExternalStore(store.subscribeWorkspace, store.getWorkspaceMeta);
   const workspaceCountries = meta?.countries ?? [];
+  const lastSyncMap = meta?.lastHolidaySync ?? {};
   const [yearFilter, setYearFilter] = useState<number | 'all'>(() =>
     new Date().getFullYear(),
   );
@@ -3084,6 +3109,15 @@ function HolidaysSection() {
       return;
     }
     const { added, skipped } = store.importHolidays(result.holidays);
+    // Stamp the manual sync so the auto-sync stale-check knows this
+    // country was just freshened — otherwise hitting Sync manually
+    // wouldn't reset the 30-day clock and the next session would
+    // re-fetch the same data.
+    try {
+      await store.setHolidaySyncTimestamps({ [code]: new Date().toISOString() });
+    } catch {
+      // Stamp write failure is non-fatal; the import already landed.
+    }
     setSyncResult({
       countryCode: code,
       message: `Synced ${countryName(code)}: added ${added}, ${skipped} already in your catalog.`,
@@ -3142,6 +3176,8 @@ function HolidaysSection() {
             {workspaceCountries.map((code) => {
               const supported = isSupportedByNager(code);
               const isSyncing = syncing === code;
+              const lastSyncIso = lastSyncMap[code];
+              const lastSyncText = formatLastSync(lastSyncIso);
               return (
                 <li key={code} className="holidays-country-row">
                   <span className="holidays-country-row-code">{code}</span>
@@ -3149,6 +3185,14 @@ function HolidaysSection() {
                   {!supported && (
                     <span className="holidays-country-row-tag" title="The public calendar doesn't cover this country yet — add holidays manually below.">
                       Manual
+                    </span>
+                  )}
+                  {supported && (
+                    <span
+                      className="holidays-country-row-meta"
+                      title={lastSyncIso ? `Last sync: ${new Date(lastSyncIso).toLocaleString()}` : 'Auto-syncs in the background once a month, on owner sign-in.'}
+                    >
+                      {lastSyncText}
                     </span>
                   )}
                   <button

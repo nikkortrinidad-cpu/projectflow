@@ -24,6 +24,7 @@ import { makeTimeOffRequest, migrateLegacyTimeOff } from '../utils/timeOff';
 // by default; owner syncs from public calendar). Still imported by
 // data/demoData.ts so the demo path feels populated.
 import { makeHolidayObservation } from '../utils/holidayCredits';
+import { fetchHolidaysForRange, staleCountriesForSync } from '../utils/holidaySync';
 
 /**
  * FlizowStore — central data container.
@@ -579,8 +580,16 @@ class FlizowStore {
      *  syncing. Phase 8 — empty array means "no countries set up
      *  yet"; the Holidays settings tab shows the picker prompt. */
     countries: string[];
+    /** Per-country ISO timestamp of the last successful Nager sync.
+     *  Stale entries (>30 days or missing) trigger background
+     *  auto-sync on the next owner load. Phase 9. */
+    lastHolidaySync: { [country: string]: string };
     createdAt: string;
   } | null = null;
+  /** Per-session guard so background auto-sync runs at most once
+   *  per page load, even if the snapshot listener re-fires while
+   *  the workspace is mounted. Phase 9. */
+  private autoSyncRanThisSession = false;
   private workspaceListeners: Set<Listener> = new Set();
   private firestoreUnsub: Unsubscribe | null = null;
   private saveTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -681,6 +690,7 @@ class FlizowStore {
       this.data = emptyData();
       this.workspaceMeta = null;
       this.workspaceId = null;
+      this.autoSyncRanThisSession = false;
     }
 
     this.userId = userId;
@@ -688,6 +698,7 @@ class FlizowStore {
     if (!userId) {
       this.workspaceId = null;
       this.workspaceMeta = null;
+      this.autoSyncRanThisSession = false;
       this.notify();
       this.notifyWorkspace();
       return;
@@ -781,6 +792,10 @@ class FlizowStore {
         members: ws.members ?? [],
         pendingInvites: ws.pendingInvites ?? [],
         countries: Array.isArray(ws.countries) ? ws.countries : [],
+        lastHolidaySync:
+          ws.lastHolidaySync && typeof ws.lastHolidaySync === 'object'
+            ? { ...ws.lastHolidaySync }
+            : {},
         createdAt: ws.createdAt || new Date().toISOString(),
       };
       // If the cloud doc was missing identity fields, push the
@@ -811,6 +826,22 @@ class FlizowStore {
       this.safeSetItem(STORAGE_KEY, JSON.stringify(this.data));
       this.notify();
       this.notifyWorkspace();
+      // Phase 9 — yearly holiday auto-sync. Owner-only (member rules
+      // can't write the workspace.lastHolidaySync field anyway), and
+      // gated to once per session via autoSyncRanThisSession so the
+      // snapshot listener firing repeatedly doesn't re-trigger. Fires
+      // after notify() so the UI shows current state first; the
+      // refreshed holidays land via the next save() round-trip.
+      if (this.userId === ws.ownerUid && !this.autoSyncRanThisSession) {
+        this.autoSyncRanThisSession = true;
+        this.runStaleHolidaySync().catch(() => {
+          // Auto-sync is silent — failures don't surface to the user
+          // since they can always hit the manual Sync button. Logged
+          // for owner debugging.
+          // eslint-disable-next-line no-console
+          console.warn('[flizowStore] background holiday auto-sync failed');
+        });
+      }
     });
   }
 
@@ -3294,6 +3325,81 @@ class FlizowStore {
       this.save();
     }
     return { added, skipped };
+  }
+
+  // ── Phase 9 — yearly auto-sync ──────────────────────────────────────
+  //
+  // The codebase is client-only (no Firebase Functions), so "yearly"
+  // sync is a stale-check at workspace-load time rather than a server
+  // cron. The owner's lastHolidaySync map carries one ISO timestamp
+  // per country; on snapshot, we look for missing or 30+ day-old
+  // entries and re-sync them in the background. Net effect:
+  //   - New country added → syncs on the very next page load
+  //   - Existing country goes 30 days without a sync → refreshes
+  //   - Multiple owner sessions same day → only the first runs
+  //     (autoSyncRanThisSession + the 30-day stale check)
+  // The 30-day cadence is friendly to government-revised calendars
+  // (Malacañang proclamations, last-minute Bank Holidays) without
+  // hammering Nager: ~12 fetches per country per year.
+
+  /** Stamp last-sync timestamps for one or more countries.
+   *  Owner+Admin path — non-owners can't write workspace.lastHolidaySync.
+   *  Used by both manual sync (Settings → Holidays) and the silent
+   *  background auto-sync. */
+  async setHolidaySyncTimestamps(map: { [country: string]: string }): Promise<void> {
+    if (!this.workspaceId || !this.workspaceMeta) return;
+    const next = { ...this.workspaceMeta.lastHolidaySync, ...map };
+    this.workspaceMeta = { ...this.workspaceMeta, lastHolidaySync: next };
+    this.notifyWorkspace();
+    const wsRef = doc(db, WORKSPACES_COLLECTION, this.workspaceId);
+    await setDoc(wsRef, {
+      lastHolidaySync: next,
+      updatedAt: new Date().toISOString(),
+    }, { merge: true });
+  }
+
+  /** Find every workspace country whose last sync is missing or
+   *  30+ days old, fetch fresh data, import, and stamp the
+   *  timestamp. Sequential to be polite to Nager (no rate limit
+   *  but a thoughtful client doesn't fan out). Silent on failure
+   *  per country — partial success is fine. */
+  private async runStaleHolidaySync(): Promise<void> {
+    if (!this.workspaceMeta) return;
+    const countries = this.workspaceMeta.countries;
+    if (!countries || countries.length === 0) return;
+    const stale = staleCountriesForSync(
+      countries,
+      this.workspaceMeta.lastHolidaySync,
+    );
+    if (stale.length === 0) return;
+    const thisYear = new Date().getFullYear();
+    const stamps: { [country: string]: string } = {};
+    for (const code of stale) {
+      try {
+        const result = await fetchHolidaysForRange(code, [thisYear, thisYear + 1]);
+        if (result.holidays.length > 0) {
+          this.importHolidays(result.holidays);
+        }
+        // Stamp regardless of holiday count — an unsupported country
+        // returning zero is still a valid "we tried" answer; without
+        // a stamp we'd retry every page load. The OM can drop
+        // unsupported countries from the workspace if they're noise.
+        stamps[code] = new Date().toISOString();
+      } catch {
+        // Network errors leave the timestamp unchanged → next session
+        // retries naturally. Logged for owner debugging.
+        // eslint-disable-next-line no-console
+        console.warn(`[flizowStore] auto-sync failed for ${code}`);
+      }
+    }
+    if (Object.keys(stamps).length > 0) {
+      try {
+        await this.setHolidaySyncTimestamps(stamps);
+      } catch {
+        // Stamp write failures are non-fatal — the data still
+        // imported, we just couldn't record the timestamp.
+      }
+    }
   }
 
   // ── Holiday observation overrides + credit policy (Phase 6C) ────────

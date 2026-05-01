@@ -36,7 +36,7 @@
  */
 
 import {
-  useEffect, useMemo, useRef, useState,
+  useEffect, useMemo, useRef, useState, useSyncExternalStore,
 } from 'react';
 import {
   ChevronLeftIcon,
@@ -145,6 +145,22 @@ export function OpsTimeOffTab({ focusId }: { focusId?: string } = {}) {
   // common case). Pressing chips narrows to specific titles.
   const [jobTitleFilter, setJobTitleFilter] = useState<Set<string>>(new Set());
 
+  // Phase 9 — country filter. Empty set = show every country in
+  // the workspace's mix (the common case). Press a chip to narrow
+  // the calendar's holiday ribbon to a single country (or several).
+  // Chips only render when the workspace has 2+ countries — a
+  // single-country agency doesn't need a filter that does nothing.
+  const [countryFilter, setCountryFilter] = useState<Set<string>>(new Set());
+
+  // Read workspace.countries off the meta observable so the chip
+  // list updates when the owner adds or removes a country in
+  // Settings → Holidays.
+  const meta = useSyncExternalStore(flizowStore.subscribeWorkspace, flizowStore.getWorkspaceMeta);
+  const workspaceCountries = useMemo(
+    () => (meta?.countries ?? []).slice().sort(),
+    [meta?.countries],
+  );
+
   // Right-rail sub-tab. Default to Approvals because that's the
   // primary OM workflow on this surface; Rules + Conflicts are
   // configuration / audit views.
@@ -201,16 +217,22 @@ export function OpsTimeOffTab({ focusId }: { focusId?: string } = {}) {
   // Holidays bucketed by date for the calendar ribbon. Filtered by
   // the workspace's actual member country mix — a PH-only workspace
   // doesn't see AU dates even though they live in the catalog.
+  // Phase 9 — when the OM has narrowed via the country chip strip,
+  // only entries whose country is in the chip set survive (plus
+  // 'global' entries, which apply to every country).
   const holidaysByDate = useMemo(() => {
     const visible = visibleHolidays(data.holidays, data.members);
+    const filtered = countryFilter.size === 0
+      ? visible
+      : visible.filter((h) => h.country === 'global' || countryFilter.has(h.country));
     const map = new Map<string, Holiday[]>();
-    for (const h of visible) {
+    for (const h of filtered) {
       const bucket = map.get(h.date) ?? [];
       bucket.push(h);
       map.set(h.date, bucket);
     }
     return map;
-  }, [data.holidays, data.members]);
+  }, [data.holidays, data.members, countryFilter]);
 
   // Pending requests for the approval queue (only those whose start
   // is still ahead, OR currently-active — past-only pending makes no
@@ -241,6 +263,14 @@ export function OpsTimeOffTab({ focusId }: { focusId?: string } = {}) {
       return next;
     });
   }
+  function toggleCountry(code: string) {
+    setCountryFilter((prev) => {
+      const next = new Set(prev);
+      if (next.has(code)) next.delete(code);
+      else next.add(code);
+      return next;
+    });
+  }
 
   return (
     <section
@@ -264,6 +294,10 @@ export function OpsTimeOffTab({ focusId }: { focusId?: string } = {}) {
           jobTitleFilter={jobTitleFilter}
           onToggleJobTitle={toggleJobTitle}
           onClearFilter={() => setJobTitleFilter(new Set())}
+          countries={workspaceCountries}
+          countryFilter={countryFilter}
+          onToggleCountry={toggleCountry}
+          onClearCountryFilter={() => setCountryFilter(new Set())}
         />
       </div>
 
@@ -332,6 +366,10 @@ function SchedulesToolbar({
   jobTitleFilter,
   onToggleJobTitle,
   onClearFilter,
+  countries,
+  countryFilter,
+  onToggleCountry,
+  onClearCountryFilter,
 }: {
   cursor: Date;
   onStepMonth: (delta: number) => void;
@@ -340,6 +378,10 @@ function SchedulesToolbar({
   jobTitleFilter: ReadonlySet<string>;
   onToggleJobTitle: (id: string) => void;
   onClearFilter: () => void;
+  countries: ReadonlyArray<string>;
+  countryFilter: ReadonlySet<string>;
+  onToggleCountry: (code: string) => void;
+  onClearCountryFilter: () => void;
 }) {
   const monthLabel = cursor.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
   return (
@@ -389,6 +431,37 @@ function SchedulesToolbar({
               type="button"
               className="schedules-chip schedules-chip--clear"
               onClick={onClearFilter}
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      )}
+      {/* Phase 9 — country chip strip. Only renders when the workspace
+          has 2+ countries; a single-country agency doesn't need a
+          filter that does nothing. The dot uses the deterministic
+          per-country tint (utils/holidays.countryTint) so chip color
+          matches the calendar ribbon. */}
+      {countries.length >= 2 && (
+        <div className="schedules-filter-chips" role="group" aria-label="Filter holidays by country">
+          {countries.map((code) => (
+            <button
+              key={code}
+              type="button"
+              className={`schedules-chip${countryFilter.has(code) ? ' schedules-chip--on' : ''}`}
+              onClick={() => onToggleCountry(code)}
+              aria-pressed={countryFilter.has(code)}
+              title={`Show only ${code} holidays`}
+            >
+              <span className="schedules-chip-dot" style={{ background: countryTint(code) }} aria-hidden="true" />
+              {countryShortLabel(code)}
+            </button>
+          ))}
+          {countryFilter.size > 0 && (
+            <button
+              type="button"
+              className="schedules-chip schedules-chip--clear"
+              onClick={onClearCountryFilter}
             >
               Clear
             </button>
