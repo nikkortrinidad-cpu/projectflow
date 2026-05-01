@@ -593,9 +593,18 @@ class FlizowStore {
   private workspaceListeners: Set<Listener> = new Set();
   private firestoreUnsub: Unsubscribe | null = null;
   private saveTimeout: ReturnType<typeof setTimeout> | null = null;
-  /** When we write to Firestore, the snapshot listener would fire right
-   *  back with the same payload — this flag swallows that echo. */
-  private ignoreNextSnapshot = false;
+  /** Counter of in-flight writes whose snapshot echoes haven't yet
+   *  arrived. Each write increments this before setDoc; the snapshot
+   *  listener decrements it when an echo lands and skips processing.
+   *
+   *  Why a counter instead of a boolean: phase 9 added two new
+   *  setDoc paths (setHolidaySyncTimestamps + auto-sync) that fire
+   *  outside the debounced saveToFirestore loop. With a single
+   *  flag, two writes overlapping meant the second echo bypassed
+   *  the guard and the listener overwrote local state — flipping
+   *  the user's optimistic theme click back to the server value.
+   *  A counter handles arbitrary write concurrency. */
+  private pendingWriteEchoes = 0;
   /** User-facing sync error. null when everything is healthy. Set when
    *  localStorage quota is hit, when Firestore writes fail, when the
    *  user is offline. App.tsx renders a banner reading this. Cleared
@@ -726,8 +735,12 @@ class FlizowStore {
     // current data, then on every server-side change.
     const wsRef = doc(db, WORKSPACES_COLLECTION, wsId);
     this.firestoreUnsub = onSnapshot(wsRef, (snap) => {
-      if (this.ignoreNextSnapshot) {
-        this.ignoreNextSnapshot = false;
+      // Skip our own write echoes — each successful write increments
+      // pendingWriteEchoes, and the corresponding snapshot decrements
+      // it. Real server-side changes (other devices, other users)
+      // arrive when the counter is 0 and get processed normally.
+      if (this.pendingWriteEchoes > 0) {
+        this.pendingWriteEchoes--;
         return;
       }
       if (!snap.exists()) {
@@ -1081,8 +1094,8 @@ class FlizowStore {
     if (!this.userId || !this.workspaceId || !this.workspaceMeta) return;
     if (this.saveTimeout) clearTimeout(this.saveTimeout);
     this.saveTimeout = setTimeout(async () => {
+      this.pendingWriteEchoes++;
       try {
-        this.ignoreNextSnapshot = true;
         const wsRef = doc(db, WORKSPACES_COLLECTION, this.workspaceId!);
         // Write the full workspace doc shape — data + the metadata we
         // already have in memory. Workspace metadata changes (members,
@@ -1101,7 +1114,9 @@ class FlizowStore {
       } catch (err) {
         // eslint-disable-next-line no-console
         console.error('Failed to save Flizow state to Firestore:', err);
-        this.ignoreNextSnapshot = false;
+        // Failed writes don't echo — drop the counter back so a later
+        // legitimate snapshot doesn't get spuriously swallowed.
+        this.pendingWriteEchoes = Math.max(0, this.pendingWriteEchoes - 1);
         const code = (err as { code?: string } | null)?.code ?? '';
         let msg: string;
         if (code === 'permission-denied') {
@@ -3292,10 +3307,20 @@ class FlizowStore {
     this.workspaceMeta = { ...this.workspaceMeta, countries: dedupe };
     this.notifyWorkspace();
     const wsRef = doc(db, WORKSPACES_COLLECTION, this.workspaceId);
-    await setDoc(wsRef, {
-      countries: dedupe,
-      updatedAt: new Date().toISOString(),
-    }, { merge: true });
+    // Increment the echo counter so the snapshot fired by this
+    // write doesn't bounce back into the listener and overwrite
+    // any local state (e.g., a theme click made between the write
+    // and the echo's arrival).
+    this.pendingWriteEchoes++;
+    try {
+      await setDoc(wsRef, {
+        countries: dedupe,
+        updatedAt: new Date().toISOString(),
+      }, { merge: true });
+    } catch (err) {
+      this.pendingWriteEchoes = Math.max(0, this.pendingWriteEchoes - 1);
+      throw err;
+    }
   }
 
   /** Bulk-import a synced batch of holidays. Used by the Settings →
@@ -3352,10 +3377,20 @@ class FlizowStore {
     this.workspaceMeta = { ...this.workspaceMeta, lastHolidaySync: next };
     this.notifyWorkspace();
     const wsRef = doc(db, WORKSPACES_COLLECTION, this.workspaceId);
-    await setDoc(wsRef, {
-      lastHolidaySync: next,
-      updatedAt: new Date().toISOString(),
-    }, { merge: true });
+    // Echo guard — same as setWorkspaceCountries above. Auto-sync
+    // calls this in the background while the user might be doing
+    // other things; without the guard, the snapshot fired by this
+    // write would overwrite their optimistic theme click, etc.
+    this.pendingWriteEchoes++;
+    try {
+      await setDoc(wsRef, {
+        lastHolidaySync: next,
+        updatedAt: new Date().toISOString(),
+      }, { merge: true });
+    } catch (err) {
+      this.pendingWriteEchoes = Math.max(0, this.pendingWriteEchoes - 1);
+      throw err;
+    }
   }
 
   /** Find every workspace country whose last sync is missing or
