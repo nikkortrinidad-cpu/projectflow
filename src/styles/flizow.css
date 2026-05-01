@@ -9302,6 +9302,42 @@
   }
   .holidays-credit-policy-field { min-width: 220px; flex-shrink: 0; }
 
+  /* ── Holiday backup + portability (Phase 9.5) ────────────────────
+     Export / Import row. Same shell as credit-policy so the two
+     workspace-wide blocks read consistently. Sits beneath the
+     workspace-countries panel so the OM sees country-level
+     actions first, then the broader catalog tools. */
+  .holidays-portability {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-md);
+    padding: var(--sp-md);
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 10px;
+    margin-bottom: var(--sp-md);
+    flex-wrap: wrap;
+  }
+  .holidays-portability-text { flex: 1; min-width: 240px; }
+  .holidays-portability-title {
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .holidays-portability-sub {
+    font-size: var(--fs-sm);
+    color: var(--text-soft);
+    line-height: 1.4;
+    max-width: 60ch;
+  }
+  .holidays-portability-actions {
+    display: flex;
+    gap: var(--sp-sm);
+    align-items: center;
+    flex-shrink: 0;
+  }
+
   /* Account → Time off — credit summary block. Sits between the
      status banner and the request CTA. Renders only when the
      member has anything in their ledger (earned, spent, or

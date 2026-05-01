@@ -37,6 +37,8 @@ import {
 } from '../utils/holidayCredits';
 import { fetchHolidaysForRange } from '../utils/holidaySync';
 import { COUNTRIES, countryName, isSupportedByNager } from '../data/countries';
+import { getHolidayPack } from '../data/holidayPacks';
+import { buildHolidayExport, exportFilename, parseHolidayImport } from '../utils/holidayExport';
 
 /**
  * FlizowAccountModal — the Account Settings overlay reachable from the
@@ -3024,6 +3026,10 @@ function HolidaysSection() {
   // Add-country picker state. The owner picks an ISO code from the
   // dropdown + clicks "Add" to push it onto workspace.countries.
   const [pickerCode, setPickerCode] = useState<string>('');
+  // Phase 9.5 — hidden file input ref for the Import button. The
+  // visible button proxies to .click() so the OM sees a regular
+  // primary button instead of the browser's bare input chrome.
+  const importInputRef = useRef<HTMLInputElement | null>(null);
 
   // Years present in the catalog — drives the filter dropdown so
   // the OM doesn't see options for years they have no entries for.
@@ -3126,6 +3132,87 @@ function HolidaysSection() {
     setSyncing(null);
   }
 
+  // ── Phase 9.5 — built-in specials packs ──────────────────────────
+
+  function handleAddPack(code: string) {
+    const pack = getHolidayPack(code);
+    if (!pack) return;
+    const { added, skipped } = store.importHolidays(pack.holidays);
+    setSyncResult({
+      countryCode: code,
+      message:
+        added > 0
+          ? `Added ${pack.label}: ${added} new entries (${skipped} were already there).`
+          : `${pack.label} is already in your catalog — nothing new to add.`,
+      tone: 'ok',
+    });
+  }
+
+  // ── Phase 9.5 — export / import ──────────────────────────────────
+
+  function handleExport() {
+    const payload = buildHolidayExport(data.holidays, meta?.name);
+    const filename = exportFilename(meta?.name);
+    // Browser-side download via Blob + temporary anchor click.
+    // Pretty-printed for human inspection — the file is meant to
+    // be read + edited by hand in a pinch.
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setSyncResult({
+      countryCode: '',
+      message: `Exported ${data.holidays.length} holidays to ${filename}.`,
+      tone: 'ok',
+    });
+  }
+
+  async function handleImportFile(file: File) {
+    const text = await file.text();
+    const result = parseHolidayImport(text);
+    if (result.kind === 'invalid-json') {
+      setSyncResult({
+        countryCode: '',
+        message: `Couldn't read that file as JSON: ${result.message}`,
+        tone: 'error',
+      });
+      return;
+    }
+    if (result.kind === 'wrong-shape') {
+      setSyncResult({
+        countryCode: '',
+        message: `That file doesn't look like a Flizow holiday export: ${result.message}`,
+        tone: 'error',
+      });
+      return;
+    }
+    if (result.kind === 'unsupported-version') {
+      setSyncResult({
+        countryCode: '',
+        message: `Unsupported export version (${String(result.version)}). Re-export from a newer Flizow build.`,
+        tone: 'error',
+      });
+      return;
+    }
+    const { added, skipped } = store.importHolidays(result.holidays);
+    const fromPart = result.workspaceName ? ` from "${result.workspaceName}"` : '';
+    setSyncResult({
+      countryCode: '',
+      message:
+        added > 0
+          ? `Imported${fromPart}: added ${added}, ${skipped} were already in your catalog.`
+          : `Nothing new to import${fromPart} — all ${result.total} entries were already there.`,
+      tone: added > 0 ? 'ok' : 'warn',
+    });
+  }
+
   if (editingId) {
     const existing = editingId === 'new' ? null : data.holidays.find((h) => h.id === editingId) ?? null;
     return (
@@ -3178,6 +3265,7 @@ function HolidaysSection() {
               const isSyncing = syncing === code;
               const lastSyncIso = lastSyncMap[code];
               const lastSyncText = formatLastSync(lastSyncIso);
+              const pack = getHolidayPack(code);
               return (
                 <li key={code} className="holidays-country-row">
                   <span className="holidays-country-row-code">{code}</span>
@@ -3204,6 +3292,16 @@ function HolidaysSection() {
                   >
                     {isSyncing ? 'Syncing…' : 'Sync'}
                   </button>
+                  {pack && (
+                    <button
+                      type="button"
+                      className="mbrs-action-btn"
+                      onClick={() => handleAddPack(code)}
+                      title={pack.description}
+                    >
+                      + Add {pack.label}
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="mbrs-action-btn mbrs-action-btn--danger"
@@ -3247,6 +3345,61 @@ function HolidaysSection() {
             {syncResult.message}
           </div>
         )}
+      </div>
+
+      {/* Phase 9.5 — backup + portability. Export gives the OM a
+          JSON file with the entire holiday catalog (incl. custom
+          entries + applied packs); Import reads one back in via
+          the same dedup path. Sized as a quiet utility row,
+          not a primary action — most owners never touch it. */}
+      <div className="holidays-portability">
+        <div className="holidays-portability-text">
+          <div className="holidays-portability-title">Backup + portability</div>
+          <div className="holidays-portability-sub">
+            Export your holiday catalog to a JSON file you can keep, share with another agency, or import into a new workspace. Re-importing on a workspace that already has the same entries is a no-op.
+          </div>
+        </div>
+        <div className="holidays-portability-actions">
+          <button
+            type="button"
+            className="mbrs-action-btn"
+            onClick={handleExport}
+            disabled={data.holidays.length === 0}
+            title={data.holidays.length === 0 ? 'Nothing to export — your catalog is empty.' : `Download all ${data.holidays.length} entries as JSON`}
+          >
+            Export
+          </button>
+          <button
+            type="button"
+            className="mbrs-action-btn"
+            onClick={() => importInputRef.current?.click()}
+            title="Import holidays from a previously-exported JSON file"
+          >
+            Import
+          </button>
+          {/* Hidden file input — the visible button proxies to it
+              so the OM doesn't see the bare browser input chrome. */}
+          <input
+            ref={importInputRef}
+            type="file"
+            accept="application/json,.json"
+            style={{ display: 'none' }}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                handleImportFile(file).catch(() => {
+                  setSyncResult({
+                    countryCode: '',
+                    message: "Couldn't read that file. Double-check it's a Flizow holiday export.",
+                    tone: 'error',
+                  });
+                });
+              }
+              // Reset so the same file can be picked twice in a row.
+              e.target.value = '';
+            }}
+          />
+        </div>
       </div>
 
       {/* Phase 6C — Credit policy. Sets the rule for how long a
