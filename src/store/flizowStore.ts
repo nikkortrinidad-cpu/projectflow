@@ -1097,16 +1097,24 @@ class FlizowStore {
       this.pendingWriteEchoes++;
       try {
         const wsRef = doc(db, WORKSPACES_COLLECTION, this.workspaceId!);
-        // Write the full workspace doc shape — data + the metadata we
-        // already have in memory. Workspace metadata changes (members,
-        // invites) go through dedicated methods that also write the
-        // workspace doc; this is the data-only path that fires after
-        // every store mutation.
+        // Write ONLY the data field + updatedAt timestamp.
+        //
+        // Why not include ownerUid/members/memberUids/pendingInvites?
+        // - Those are admin-only keys per the Firestore rules.
+        // - Each one already has its own dedicated write path
+        //   (changeMemberRole, removeWorkspaceMember, createInvite,
+        //   revokeInvite, acceptPendingJoin), so they're never stale
+        //   on the server unless something failed midway.
+        // - Writing them here on every save was triggering rule
+        //   rejections on legacy workspaces missing memberRoles —
+        //   the diff check would catch one of those keys as
+        //   "changed" (even when the value was equal, certain
+        //   array reference flips look like changes to Firestore)
+        //   and the member-rule's no-admin-keys gate would fail.
+        // Now: every save is a clean data-field write that any
+        // member can make. Admin-only writes go through their
+        // explicit paths.
         await setDoc(wsRef, {
-          ownerUid: this.workspaceMeta!.ownerUid,
-          members: this.workspaceMeta!.members,
-          memberUids: this.workspaceMeta!.members.map((m) => m.uid),
-          pendingInvites: this.workspaceMeta!.pendingInvites,
           data: this.data,
           updatedAt: new Date().toISOString(),
         }, { merge: true });
