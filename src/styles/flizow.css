@@ -296,9 +296,11 @@
     flex-shrink: 0;
   }
   .header-wordmark {
-    /* The text inherits color + font-size from .header-logo; this
-       class exists so future styling can target it independently
-       without unsettling the parent's hit-target rules. */
+    /* Wordmark color overrides the brand-accent inheritance from
+       .header-logo. var(--text) reads black in light mode and white
+       in dark mode, keeping the wordmark neutral against the brand
+       blue, which lives on hover + focus states. */
+    color: var(--text);
     line-height: 1;
   }
   .header-logo:hover { background: var(--hover-tint, rgba(10, 132, 255, 0.08)); }

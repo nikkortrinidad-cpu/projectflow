@@ -146,12 +146,12 @@ export function TopNav({
   return (
     <div className="header">
       <div className="header-left">
-        {/* Brand wordmark. Image mark hidden during the 121 Group
-            rebrand — only the wordmark renders for now. The text is
-            plain HTML so it inherits the app's Inter font + the brand
-            blue via CSS. */}
-        <a href="#overview" className="header-logo" aria-label="121 Group home">
-          <span className="header-wordmark">121 Group</span>
+        {/* Wordmark. Image mark hidden during the rebrand. The text
+            uses var(--text) so it reads black in light mode and
+            white in dark mode, deliberately neutral against the
+            brand-blue accent that lives on hover + focus states. */}
+        <a href="#overview" className="header-logo" aria-label="Home">
+          <span className="header-wordmark">Projects</span>
         </a>
         <nav className="header-nav">
           {visibleNav.map((item) => (
