@@ -23,7 +23,6 @@ import { avatarStyle } from '../utils/avatar';
 import FlizowCardModal from '../components/FlizowCardModal';
 import { BoardFilters, applyFilters, EMPTY_FILTERS, type BoardFilterState, type GroupBy } from '../components/BoardFilters';
 import { BriefModal } from '../components/BriefModal';
-import { BriefStrip } from '../components/BriefStrip';
 import { EditServiceModal } from '../components/EditServiceModal';
 import { ConfirmDangerDialog } from '../components/ConfirmDangerDialog';
 import { labelById } from '../constants/labels';
@@ -580,6 +579,7 @@ function BoardBody({
         taskCount={taskCount}
         archivedTasks={archivedTasks}
         onOpenCardFromArchive={setSelectedTaskId}
+        onOpenBrief={() => setBriefOpen(true)}
       />
       <FiltersBar
         search={search}
@@ -589,14 +589,6 @@ function BoardBody({
         members={members}
         groupBy={groupBy}
         onGroupByChange={(next) => flizowStore.updateService(service.id, { groupBy: next })}
-      />
-
-      <BriefStrip
-        label="Project Brief"
-        brief={service.brief}
-        briefUpdatedAt={service.briefUpdatedAt}
-        todayISO={todayISO}
-        onOpen={() => setBriefOpen(true)}
       />
 
       <DndContext
@@ -731,6 +723,7 @@ function Breadcrumb({
   taskCount,
   archivedTasks,
   onOpenCardFromArchive,
+  onOpenBrief,
 }: {
   client: Client;
   service: Service;
@@ -743,6 +736,10 @@ function Breadcrumb({
   /** Opens a card in BoardBody's detail modal. Used when the user
    *  clicks an archived card row in the archived-cards modal. */
   onOpenCardFromArchive: (taskId: string) => void;
+  /** Opens the project-brief modal. Lifted to BoardBody so this
+   *  component stays presentational; brief state lives with the
+   *  rest of the board's modal toggles. */
+  onOpenBrief: () => void;
 }) {
   // Inline rename on the current-page crumb. Same pattern as the client
   // hero rename: cursor:text + hover tint + ring on focus, no pencil icon.
@@ -910,6 +907,19 @@ function Breadcrumb({
           onClick={() => flizowStore.toggleServiceFavorite(service.id)}
         >
           <StarIcon filled={isFavorite} />
+        </button>
+        {/* Project brief used to live in a full-width strip above the
+            board (BriefStrip). Demoted to a peer button alongside
+            Board Settings so the board surface stays focused on the
+            cards and the brief is one click away when needed. */}
+        <button
+          type="button"
+          className="btn-sm"
+          onClick={onOpenBrief}
+          title="Open the project brief"
+        >
+          <BriefIcon />
+          Project Brief
         </button>
         <div ref={settingsWrapRef} className="board-settings-wrap">
           <button
@@ -1717,6 +1727,17 @@ function SettingsIcon() {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <circle cx="12" cy="12" r="3" />
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  );
+}
+function BriefIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+      <line x1="16" y1="13" x2="8" y2="13" />
+      <line x1="16" y1="17" x2="8" y2="17" />
+      <line x1="10" y1="9" x2="8" y2="9" />
     </svg>
   );
 }
