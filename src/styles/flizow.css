@@ -2033,19 +2033,27 @@
      focus, no pencil icon. House rule: editable fields signal their own
      editability through behavior, not decoration. */
   .breadcrumb-rename {
+    /* The rename span used to carry margin: 0 -6px to optically align
+       its TEXT with the breadcrumb's natural baseline by canceling
+       its own padding. Side effect: chevron-to-text spacing was 6px
+       tighter on the current-page crumb than the rest, so "› Brand
+       Refresh Q2" read flush to the chevron while "Clients › Acme"
+       had proper breathing room. Dropping the negative margin lets
+       the gap + padding stack the same way the link crumbs do. */
     color: var(--text); font-weight: 500; letter-spacing: -0.005em;
     padding: 3px 6px;
-    margin: 0 -6px;
     border-radius: 6px;
     cursor: text;
     transition: background var(--dur-fast);
   }
   .breadcrumb-rename:hover { background: color-mix(in srgb, var(--highlight) 8%, transparent); }
   .breadcrumb-rename-input {
+    /* Same alignment fix as .breadcrumb-rename above — kept in sync
+       so swapping between read mode (span) and edit mode (input)
+       doesn't shift the text horizontally. */
     color: var(--text); font-weight: 500; letter-spacing: -0.005em;
     font-size: inherit; font-family: inherit;
     padding: 3px 6px;
-    margin: 0 -6px;
     border-radius: 6px;
     border: none;
     background: color-mix(in srgb, var(--highlight) 6%, transparent);
