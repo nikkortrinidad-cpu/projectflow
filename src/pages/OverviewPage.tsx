@@ -310,13 +310,13 @@ export function OverviewPage() {
             but uses tinted card styling so it reads as a hint, not
             a takeover. Audit: first-run B5. */}
         {showWelcome && (
-          <section className="welcome-banner" role="region" aria-label="Welcome to Flizow">
+          <section className="welcome-banner" role="region" aria-label="Welcome to 121 Group">
             <div className="welcome-banner-text">
               <h2 className="welcome-banner-title">
-                Welcome to Flizow, {firstNameOf(user?.displayName)}.
+                Welcome, {firstNameOf(user?.displayName)}.
               </h2>
               <p className="welcome-banner-sub">
-                Your workspace is empty. Try the demo to see what Flizow looks like with sample clients,
+                Your workspace is empty. Try the demo to see the tool with sample clients,
                 or jump in by adding your first one.
               </p>
             </div>

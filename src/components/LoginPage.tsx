@@ -128,9 +128,9 @@ export function LoginPage() {
             {/* Brand pair — title + subtitle are one Gestalt unit (4px gap).
                 Variant: when arriving from an invite link with a workspace
                 name, the title becomes "Join {name}" and the sub-copy
-                explains the action — Flizow brand demoted to a meta line
-                below since the user's mental model right now is "join
-                Acme Marketing," not "discover Flizow." */}
+                explains the action. Brand demoted to a meta line below
+                since the user's mental model right now is "join Acme
+                Marketing," not "discover the platform." */}
             {inviteName ? (
               <>
                 <p
@@ -168,7 +168,7 @@ export function LoginPage() {
                     lineHeight: 1.4,
                   }}
                 >
-                  Sign in with Google to accept · Flizow
+                  Sign in with Google to accept · 121 Group
                 </p>
               </>
             ) : (
@@ -183,7 +183,7 @@ export function LoginPage() {
                     lineHeight: 1.15,
                   }}
                 >
-                  Flizow
+                  121 Group
                 </h1>
                 <p
                   style={{

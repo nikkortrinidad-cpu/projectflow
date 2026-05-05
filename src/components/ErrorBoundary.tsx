@@ -180,7 +180,7 @@ function StaleChunkFallback() {
             animation: 'spin 0.8s linear infinite',
           }}
         />
-        <span>Flizow was updated. Reloading…</span>
+        <span>The app was updated. Reloading…</span>
       </div>
     </div>
   );
@@ -285,7 +285,7 @@ function DefaultFallback({
           style={{
             padding: '8px 14px',
             borderRadius: 8,
-            background: '#F15A24',
+            background: '#0077C8',
             color: '#fff',
             border: 'none',
             fontSize: 'var(--fs-md)', fontWeight: 600,

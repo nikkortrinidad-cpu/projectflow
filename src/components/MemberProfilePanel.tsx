@@ -636,7 +636,7 @@ function ProfileEditForm({
               className="member-profile-input"
               value={drafts.email}
               onChange={(e) => set('email', e.target.value)}
-              placeholder="name@flizow.com"
+              placeholder="name@121group.io"
             />
           </FieldGroup>
           <FieldGroup label="Phone">

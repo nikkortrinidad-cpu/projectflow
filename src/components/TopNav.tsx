@@ -146,18 +146,12 @@ export function TopNav({
   return (
     <div className="header">
       <div className="header-left">
-        {/* Brand mark + wordmark. The PNG ships from public/ and gets
-            prefixed with Vite's base path so the same JSX works in dev
-            (/) and prod (/flizow/). The "Flizow" text is HTML so it
-            inherits the app's Inter font + the brand orange via CSS. */}
-        <a href="#overview" className="header-logo" aria-label="Flizow home">
-          <img
-            className="header-mark"
-            src={`${import.meta.env.BASE_URL}Flizow_Mark_v1.png`}
-            alt=""
-            aria-hidden="true"
-          />
-          <span className="header-wordmark">Flizow</span>
+        {/* Brand wordmark. Image mark hidden during the 121 Group
+            rebrand — only the wordmark renders for now. The text is
+            plain HTML so it inherits the app's Inter font + the brand
+            blue via CSS. */}
+        <a href="#overview" className="header-logo" aria-label="121 Group home">
+          <span className="header-wordmark">121 Group</span>
         </a>
         <nav className="header-nav">
           {visibleNav.map((item) => (
