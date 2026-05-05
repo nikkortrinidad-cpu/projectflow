@@ -609,7 +609,7 @@ export default function FlizowAccountModal({ onClose, initialSection, initialFoc
               >
                 <div className="acct-section-header">
                   <h3 className="acct-section-title">Profile</h3>
-                  <p className="acct-section-sub">How you appear across Flizow — visible to your team and clients you share work with.</p>
+                  <p className="acct-section-sub">How you appear in the workspace, visible to your team and clients you share work with.</p>
                 </div>
 
                 <div className="acct-avatar-block">
