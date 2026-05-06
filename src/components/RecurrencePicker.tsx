@@ -236,11 +236,19 @@ function CustomEditor({ rule, onChange }: {
 function RuleExtras({ rule, onChange }: {
   rule: Recurrence; onChange: (r: Recurrence) => void;
 }) {
+  // Two toggle rows on a 3-column grid: [checkbox][label][value].
+  // Grid (not flex-wrap) keeps the date input aligned in its own
+  // column, so the End by row stays on one line whether the date
+  // picker is visible or not. Hint copy ("Keeps the rule…") moves
+  // out of the click target into a subtle subtitle row below the
+  // toggle — labels stay short and scannable, the explanation is
+  // there for the user who needs it without hijacking the row.
   return (
     <div className="recurrence-extras">
-      <label className="recurrence-row recurrence-row-checkbox">
+      <label className="recurrence-extras-row">
         <input
           type="checkbox"
+          className="recurrence-extras-check"
           checked={!!rule.endsAt}
           onChange={(e) => {
             if (e.target.checked) {
@@ -253,28 +261,37 @@ function RuleExtras({ rule, onChange }: {
             }
           }}
         />
-        <span className="recurrence-row-label">End by</span>
-        {rule.endsAt && (
+        <span className="recurrence-extras-label">End by</span>
+        {rule.endsAt ? (
           <input
             type="date"
-            className="recurrence-date"
+            className="recurrence-date recurrence-extras-value"
             value={rule.endsAt}
             onChange={(e) => onChange({ ...rule, endsAt: e.target.value || undefined })}
             aria-label="End date"
+            // Don't toggle the parent label's checkbox when the user
+            // clicks INTO the date input — they're picking a date,
+            // not turning the rule off.
+            onClick={(e) => e.preventDefault()}
           />
+        ) : (
+          <span className="recurrence-extras-value-empty" aria-hidden />
         )}
       </label>
 
-      <label className="recurrence-row recurrence-row-checkbox">
+      <label className="recurrence-extras-row">
         <input
           type="checkbox"
+          className="recurrence-extras-check"
           checked={!!rule.paused}
           onChange={(e) => onChange({ ...rule, paused: e.target.checked })}
         />
-        <span className="recurrence-row-label">
-          Pause (keeps the rule but stops spawning new cards)
-        </span>
+        <span className="recurrence-extras-label">Pause</span>
+        <span className="recurrence-extras-value-empty" aria-hidden />
       </label>
+      <p className="recurrence-extras-hint">
+        Keeps the rule but stops spawning new cards.
+      </p>
     </div>
   );
 }

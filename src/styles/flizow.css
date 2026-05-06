@@ -19131,12 +19131,64 @@
   }
   .recurrence-extras {
     margin-top: 2px;
-    padding: 6px 10px 8px;
+    padding: var(--sp-sm) var(--sp-md) var(--sp-md);
     border-top: 1px solid var(--hairline);
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr;
     gap: var(--sp-xs);
   }
+
+  /* End by + Pause rows. Three-column grid: [checkbox][label][value].
+     Grid keeps the value column right-aligned and the label width
+     consistent across both rows so the date picker on End by lines up
+     with the empty slot on Pause. align-items: center (not baseline)
+     so the checkbox sits true-center on the row's line-height; the
+     date input has its own internal padding that handles its own
+     visual centring. */
+  .recurrence-extras-row {
+    display: grid;
+    grid-template-columns: 18px auto 1fr;
+    align-items: center;
+    column-gap: var(--sp-sm);
+    font-size: var(--fs-md);
+    color: var(--text);
+    cursor: pointer;
+    min-height: 28px;
+  }
+  .recurrence-extras-check {
+    margin: 0;
+    width: 14px;
+    height: 14px;
+  }
+  .recurrence-extras-label {
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .recurrence-extras-value {
+    justify-self: end;
+    /* Date input keeps its own padding (.recurrence-date above) so
+       no extra rules needed here — this class just lives on the
+       grid cell for layout. */
+  }
+  .recurrence-extras-value-empty {
+    /* Holds the third grid column open so the two toggle rows align
+       even when one has no value widget. Zero visual weight. */
+    display: block;
+  }
+  .recurrence-extras-hint {
+    margin: 0;
+    /* Indent under the label column so the hint sits visually as a
+       subtitle of the toggle above, not a new top-level paragraph.
+       18px (checkbox column) + var(--sp-sm) (column gap) = 26px. */
+    padding-left: 26px;
+    color: var(--text-faint);
+    font-size: var(--fs-sm);
+    line-height: 1.4;
+  }
+
+  /* Custom-editor rows (the Every / On / On day controls) keep their
+     own row pattern — they're explicit form controls, not toggles,
+     and they actually want flex-wrap so the day chips can flow. */
   .recurrence-row {
     display: flex;
     align-items: center;
@@ -19145,8 +19197,6 @@
     font-size: var(--fs-md);
     color: var(--text);
   }
-  .recurrence-row-checkbox { cursor: pointer; }
-  .recurrence-row-checkbox input { margin-right: 2px; }
   .recurrence-row-label { color: var(--text-soft); }
   .recurrence-row-hint { color: var(--text-faint); font-size: var(--fs-sm); }
 
