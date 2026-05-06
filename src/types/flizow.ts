@@ -431,6 +431,39 @@ export interface TaskChecklistItem {
   assigneeId: string | null;
 }
 
+/** Recurrence rule attached to a Task or OpsTask. When the card lands in
+ *  `done` the store spawns a fresh copy back into `todo` with a
+ *  recomputed dueDate (see `nextDueDate` in utils/recurrence.ts) and
+ *  re-attaches the same rule. The original card stays in Done as
+ *  history. Edits to one instance don't propagate; the rule lives on
+ *  the card the user edits.
+ *
+ *  v1 deliberately keeps the shape small. No "this and future" edit
+ *  semantics, no mid-month skip, no holiday auto-shift. Holidays show a
+ *  warning at setup time but the user picks how to handle them. */
+export interface Recurrence {
+  /** Cycle unit. */
+  pattern: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  /** Every N <pattern>. Defaults treated as 1 in math. Always >= 1. */
+  interval: number;
+  /** Day-of-week mask for `weekly`. 0=Sun, 1=Mon, ..., 6=Sat. Empty or
+   *  absent on non-weekly rules. When weekly with empty `byDay`, the
+   *  next occurrence falls on the same weekday as the last dueDate. */
+  byDay?: number[];
+  /** Day-of-month for `monthly`. 1-31. Falls back to the last day of
+   *  the target month when the month is shorter (e.g. day 31 in
+   *  February resolves to the 28th/29th). Empty / absent on non-monthly
+   *  rules — the next occurrence falls on the same day-of-month as the
+   *  last dueDate. */
+  byMonthDay?: number;
+  /** Optional ISO end date (YYYY-MM-DD). When the next computed dueDate
+   *  is strictly after this, the rule has ended and no spawn happens. */
+  endsAt?: string;
+  /** Pause without deleting the rule. While true the spawn-on-Done
+   *  hook does nothing for this card. Flip back to false to resume. */
+  paused?: boolean;
+}
+
 export interface Task {
   id: string;
   serviceId: string;
@@ -497,6 +530,12 @@ export interface Task {
    *  finished cards drop off the agenda automatically so the WIP
    *  doesn't fill with closed work nobody needs to discuss. */
   flaggedForWip?: boolean;
+  /** Recurrence rule. When set, moving this card into `done` triggers
+   *  the store to spawn a fresh copy back in `todo` with a recomputed
+   *  dueDate. The original card stays Done as history. Manual
+   *  duplication (duplicateTask) drops this field — a manual copy is
+   *  one-off; only the auto-spawn carries the rule forward. */
+  recurrence?: Recurrence;
 }
 
 export interface Member {
@@ -1041,6 +1080,9 @@ export interface OpsTask {
   slots?: number;
   /** Same shape as Task.weightStatus. */
   weightStatus?: 'estimated' | 'confirmed';
+  /** Same recurrence semantics as Task.recurrence. Spawn-on-Done fires
+   *  for both Task and OpsTask through their respective update methods. */
+  recurrence?: Recurrence;
 }
 
 // ── Notifications ────────────────────────────────────────────────────────

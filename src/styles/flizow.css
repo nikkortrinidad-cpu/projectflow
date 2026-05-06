@@ -19019,3 +19019,196 @@
     .anlx-wl-bar,
     .anlx-wl-head-cell:nth-child(2) { display: none; }
   }
+
+  /* ── Recurrence picker (card modal "Repeat" meta-row) ────────────
+     Sits inside .meta-value as a single button (collapsed) that
+     expands into an inline popover. The popover floats below the
+     button, scoped to the modal so it doesn't escape.
+
+     Styling notes:
+       • The picker reuses the modal's existing color tokens — no
+         new variables. It feels like a peer to the date inputs and
+         label pills sitting above and below it.
+       • The summary button looks like a plain text affordance with
+         a chevron — same direct-edit pattern used by other inline
+         editors. Hover deepens the bg slightly to signal interactive.
+       • Active preset shows a tiny dot in the radio slot. Inactive
+         presets leave the slot empty, not "○", so the rows look
+         calmer.
+  */
+  .recurrence-picker {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    min-width: 220px;
+  }
+  .recurrence-summary {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-xs);
+    padding: 6px 8px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    font-size: var(--fs-md);
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+  }
+  .recurrence-summary:hover {
+    background: var(--bg-soft);
+    border-color: var(--hairline);
+  }
+  .recurrence-summary[aria-expanded="true"] {
+    background: var(--bg-soft);
+    border-color: var(--hairline);
+  }
+  .recurrence-summary-text { flex: 1; }
+  .recurrence-summary-text.faint { color: var(--text-faint); }
+
+  .recurrence-popover {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 50;
+    min-width: 280px;
+    max-width: 360px;
+    padding: 6px;
+    background: var(--bg);
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  :root[data-theme="dark"] .recurrence-popover {
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+  }
+
+  .recurrence-preset {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-sm);
+    padding: 8px 10px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    font-size: var(--fs-md);
+    text-align: left;
+    cursor: pointer;
+    width: 100%;
+  }
+  .recurrence-preset:hover { background: var(--bg-soft); }
+  .recurrence-preset-active { background: var(--bg-soft); }
+  .recurrence-preset-radio {
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid var(--text-faint);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--highlight);
+  }
+  .recurrence-preset-active .recurrence-preset-radio {
+    border-color: var(--highlight);
+  }
+  .recurrence-preset-label { flex: 1; }
+
+  .recurrence-custom {
+    margin-top: 4px;
+    padding: 8px 10px;
+    border-top: 1px solid var(--hairline);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-sm);
+  }
+  .recurrence-extras {
+    margin-top: 2px;
+    padding: 6px 10px 8px;
+    border-top: 1px solid var(--hairline);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-xs);
+  }
+  .recurrence-row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-xs);
+    flex-wrap: wrap;
+    font-size: var(--fs-md);
+    color: var(--text);
+  }
+  .recurrence-row-checkbox { cursor: pointer; }
+  .recurrence-row-checkbox input { margin-right: 2px; }
+  .recurrence-row-label { color: var(--text-soft); }
+  .recurrence-row-hint { color: var(--text-faint); font-size: var(--fs-sm); }
+
+  .recurrence-num {
+    width: 56px;
+    padding: 4px 6px;
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+    font-size: var(--fs-md);
+  }
+  .recurrence-select {
+    padding: 4px 6px;
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+    font-size: var(--fs-md);
+  }
+  .recurrence-date {
+    padding: 4px 6px;
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+    font-size: var(--fs-md);
+  }
+
+  .recurrence-day-chips {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .recurrence-day-chip {
+    padding: 3px 8px;
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    background: var(--bg);
+    color: var(--text-soft);
+    font: inherit;
+    font-size: var(--fs-sm);
+    cursor: pointer;
+  }
+  .recurrence-day-chip:hover { background: var(--bg-soft); }
+  .recurrence-day-chip.is-active {
+    background: color-mix(in srgb, var(--highlight) 14%, transparent);
+    border-color: var(--highlight);
+    color: var(--highlight);
+  }
+
+  /* Tiny loop badge that appears on the kanban card tile when the
+     card has a recurrence rule. Sits in the bottom row alongside
+     comment/attachment counts. Two-pixel spacing left/right keeps
+     it from crashing into adjacent icons. */
+  .card-recurrence-badge {
+    display: inline-flex;
+    align-items: center;
+    color: var(--text-faint);
+    margin: 0 2px;
+  }
+  .card-recurrence-badge svg { width: 14px; height: 14px; }

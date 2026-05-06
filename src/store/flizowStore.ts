@@ -25,6 +25,7 @@ import { makeTimeOffRequest, migrateLegacyTimeOff } from '../utils/timeOff';
 // data/demoData.ts so the demo path feels populated.
 import { makeHolidayObservation } from '../utils/holidayCredits';
 import { fetchHolidaysForRange, staleCountriesForSync } from '../utils/holidaySync';
+import { nextDueDate } from '../utils/recurrence';
 
 /**
  * FlizowStore — central data container.
@@ -2254,7 +2255,73 @@ class FlizowStore {
       if (!afterL.has(lid)) this.logActivity(id, 'label', `removed label ${labelText(lid)}`);
     }
 
+    // Recurrence: when the card transitions INTO done and carries a
+    // non-paused rule, spawn the next instance back into todo. Trigger
+    // is the entry into done — not the column it came from — so a
+    // jump from In Progress (or anywhere else) all spawn the same way.
+    // The check sits after the activity diff so the move-to-done log
+    // entry is recorded BEFORE the spawn's "created" entry, which keeps
+    // the activity feed legible.
+    if (
+      before.columnId !== 'done'
+      && after.columnId === 'done'
+      && updated.recurrence
+      && !updated.recurrence.paused
+    ) {
+      this.spawnRecurringTask(updated);
+    }
+
     this.save();
+  }
+
+  /** Spawn the next instance of a recurring Task. Called from updateTask
+   *  when a card transitions into done. The original card stays Done as
+   *  history; the new card lands in todo with a recomputed dueDate and
+   *  the same recurrence rule attached. Comments and activity DO NOT
+   *  carry across — each cycle starts with a clean thread. Checklist
+   *  items DO carry across with fresh ids and reset progress (so a
+   *  monthly report's "draft → review → send" subtasks come back fresh
+   *  each month).
+   *
+   *  Skips silently when the rule has ended (nextDueDate returns null).
+   *  No activity log on the source card for the spawn — the new card
+   *  gets its own "created" entry, which is enough trail. */
+  private spawnRecurringTask(source: Task): void {
+    const rule = source.recurrence;
+    if (!rule) return;
+    const anchor = source.dueDate;
+    if (!anchor) return;
+    const next = nextDueDate(rule, anchor);
+    if (!next) return;
+    const now = new Date().toISOString();
+    const newId = `t-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+    const spawn: Task = {
+      ...source,
+      id: newId,
+      columnId: 'todo',
+      dueDate: next,
+      createdAt: now,
+      // History stays on the source. Reset state that would otherwise
+      // make the new card look "in flight" the moment it spawns.
+      blockerReason: undefined,
+      flaggedForWip: false,
+      archived: false,
+      archivedAt: undefined,
+      checklist: source.checklist
+        ? source.checklist.map(item => ({
+            id: `ck-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+            text: item.text,
+            done: false,
+            assigneeId: item.assigneeId,
+          }))
+        : undefined,
+    };
+    this.data.tasks.push(spawn);
+    const service = this.data.services.find(s => s.id === spawn.serviceId);
+    if (service && !service.taskIds.includes(newId)) {
+      service.taskIds.push(newId);
+    }
+    this.logActivity(newId, 'created', `spawned by recurrence from "${source.title}"`);
   }
 
   /** Shorthand for the most common mutation — dragging a card across
@@ -2334,6 +2401,10 @@ class FlizowStore {
           }))
         : undefined,
       assigneeIds: src.assigneeIds ? [...src.assigneeIds] : undefined,
+      // Manual duplicate is one-off. The user copying a card wants this
+      // specific card content, not another loop of the same series. If
+      // they want recurrence on the copy, they set it themselves.
+      recurrence: undefined,
     };
     this.data.tasks.push(copy);
     const service = this.data.services.find(s => s.id === copy.serviceId);
@@ -2530,7 +2601,58 @@ class FlizowStore {
       if (!afterL.has(lid)) this.logActivity(id, 'label', `removed label ${labelText(lid)}`);
     }
 
+    // Recurrence: same spawn-on-Done behaviour as updateTask.
+    if (
+      before.columnId !== 'done'
+      && after.columnId === 'done'
+      && updated.recurrence
+      && !updated.recurrence.paused
+    ) {
+      this.spawnRecurringOpsTask(updated);
+    }
+
     this.save();
+  }
+
+  /** Spawn the next instance of a recurring OpsTask. Mirrors
+   *  spawnRecurringTask() against the ops table. Ops cards may have no
+   *  dueDate (the type allows it); when that's the case the rule has
+   *  nothing to anchor against and the spawn is skipped. The user can
+   *  set a date and the next cycle will spawn normally on the next
+   *  move-to-done. */
+  private spawnRecurringOpsTask(source: OpsTask): void {
+    const rule = source.recurrence;
+    if (!rule) return;
+    const anchor = source.dueDate;
+    if (!anchor) return;
+    const next = nextDueDate(rule, anchor);
+    if (!next) return;
+    const now = new Date().toISOString();
+    const newId = `op-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+    const spawn: OpsTask = {
+      ...source,
+      id: newId,
+      columnId: 'todo',
+      dueDate: next,
+      createdAt: now,
+      // Reset display overrides — the new card hasn't been waiting or
+      // blocked yet, even if the source claimed it had been.
+      enteredDaysAgo: undefined,
+      overrideMod: undefined,
+      overrideLabel: undefined,
+      archived: false,
+      archivedAt: undefined,
+      checklist: source.checklist
+        ? source.checklist.map(item => ({
+            id: `ck-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+            text: item.text,
+            done: false,
+            assigneeId: item.assigneeId,
+          }))
+        : undefined,
+    };
+    this.data.opsTasks = [...this.data.opsTasks, spawn];
+    this.logActivity(newId, 'created', `spawned by recurrence from "${source.title}"`);
   }
 
   moveOpsTask(id: string, columnId: ColumnId) {
@@ -2586,6 +2708,8 @@ class FlizowStore {
           }))
         : undefined,
       archived: false,
+      // Manual duplicate is one-off — same reasoning as duplicateTask.
+      recurrence: undefined,
     };
     this.data.opsTasks = [...this.data.opsTasks, copy];
     this.logActivity(newId, 'created', `duplicated from "${src.title}"`);

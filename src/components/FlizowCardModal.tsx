@@ -28,6 +28,7 @@ import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
 import { useUndoToast } from '../contexts/UndoToastContext';
 import { navigateForceReparse } from '../router';
 import { SearchablePicker } from './shared/SearchablePicker';
+import RecurrencePicker from './RecurrencePicker';
 
 /** The modal supports two card "kinds": client tasks (the default) and
  *  internal Ops board tasks. Ops cards skip the client/service header,
@@ -888,6 +889,32 @@ export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDupl
                       aria-label="Start date"
                       value={task.startDate ?? ''}
                       onChange={(e) => patchCard(task.id, { startDate: e.target.value || undefined })}
+                    />
+                  </div>
+                </div>
+
+                {/* Repeat field. The picker handles its own open/closed
+                    state and the inline summary/expand pattern; the
+                    modal just hands it the current rule + an anchor and
+                    pipes changes back through patchCard. Anchor falls
+                    back to today when the card has no due date so the
+                    weekly/monthly preset labels still show something
+                    useful ("Weekly on Tue", not "Weekly on "). */}
+                <div className="meta-row">
+                  <div className="meta-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="17 1 21 5 17 9" />
+                      <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                      <polyline points="7 23 3 19 7 15" />
+                      <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+                    </svg>
+                    Repeat
+                  </div>
+                  <div className="meta-value">
+                    <RecurrencePicker
+                      rule={task.recurrence}
+                      anchorISO={task.dueDate || new Date().toISOString().slice(0, 10)}
+                      onChange={(next) => patchCard(task.id, { recurrence: next })}
                     />
                   </div>
                 </div>

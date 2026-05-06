@@ -704,6 +704,16 @@ function CardTile({
               {task.attachments}
             </span>
           )}
+          {/* Recurrence loop icon. Mirrors BoardPage card tile. */}
+          {task.recurrence && (
+            <span
+              className="card-recurrence-badge"
+              title={task.recurrence.paused ? 'Recurring (paused)' : 'Recurring'}
+              aria-label="Recurring task"
+            >
+              <RecurrenceIcon />
+            </span>
+          )}
         </div>
         {assignee ? (
           <button
@@ -797,6 +807,19 @@ function AttachIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+    </svg>
+  );
+}
+function RecurrenceIcon() {
+  // Two-arrow loop, sized to match the icons next to it (14x14 via the
+  // .card-recurrence-badge svg rule). Stroked, no fill, dimmed via the
+  // text-faint colour on the badge wrapper.
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <polyline points="17 1 21 5 17 9" />
+      <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+      <polyline points="7 23 3 19 7 15" />
+      <path d="M21 13v2a4 4 0 0 1-4 4H3" />
     </svg>
   );
 }
