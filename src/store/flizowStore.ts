@@ -1761,10 +1761,14 @@ class FlizowStore {
       // titles from TASK_POOLS deterministically — same ids the
       // pre-2026-04-27 implementation produced, so reloads of older
       // services don't shift card identity.
-      const pool = TASK_POOLS[service.templateKey] ?? [];
+      // Cast to a wide-key record because Service.templateKey is now a
+      // free string (legacy TemplateKey union AND user-template ids).
+      // Missing keys hit the `?? []` fallback the same way they always
+      // did at runtime.
+      const pool = (TASK_POOLS as Record<string, string[]>)[service.templateKey] ?? [];
       const starterTitles = pool.slice(0, 3);
       const dueISO = new Date(Date.now() + 7 * 86_400_000).toISOString().slice(0, 10);
-      seededTasks = starterTitles.map((title, idx) => ({
+      seededTasks = starterTitles.map((title: string, idx: number) => ({
         id: `${service.id}-starter-${idx}`,
         serviceId: service.id,
         clientId: service.clientId,
@@ -1813,17 +1817,23 @@ class FlizowStore {
     // tab has real work the moment the service exists. Everything starts
     // undone — the user just created this, there's no ground truth for
     // what's already in progress.
-    const tmpl = ONBOARDING_TEMPLATES[service.templateKey];
+    // Same wide-key cast as above — Service.templateKey is now a free
+    // string and ONBOARDING_TEMPLATES is keyed on the narrow legacy
+    // union. The `if (tmpl)` guard below handles the user-template case
+    // where the lookup misses; we fall back to the live TemplateRecord's
+    // own onboarding declaration further down via the seedOnboarding
+    // path on the templates page (out of scope here).
+    const tmpl = (ONBOARDING_TEMPLATES as Record<string, typeof ONBOARDING_TEMPLATES[keyof typeof ONBOARDING_TEMPLATES]>)[service.templateKey];
     if (tmpl) {
       const seeded: OnboardingItem[] = [
-        ...tmpl.client.map(label => ({
+        ...tmpl.client.map((label: string) => ({
           id: `${service.id}-${slugLabel(label)}`,
           serviceId: service.id,
           group: 'client' as const,
           label,
           done: false,
         })),
-        ...tmpl.us.map(label => ({
+        ...tmpl.us.map((label: string) => ({
           id: `${service.id}-${slugLabel(label)}`,
           serviceId: service.id,
           group: 'us' as const,

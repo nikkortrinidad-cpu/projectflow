@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { FolderIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import type { ServiceType, TemplateKey } from '../../types/flizow';
-import { TEMPLATE_OPTIONS } from '../../data/serviceTemplateOptions';
+import type { ServiceType } from '../../types/flizow';
+import { templateOptionsFor } from '../../data/serviceTemplateOptions';
+import { useFlizow } from '../../store/useFlizow';
 import { useModalAutofocus } from '../../hooks/useModalAutofocus';
 import { useModalFocusTrap } from '../../hooks/useModalFocusTrap';
 import { useModalKeyboard } from '../../hooks/useModalKeyboard';
@@ -32,7 +33,9 @@ import { useModalKeyboard } from '../../hooks/useModalKeyboard';
 export type ServiceFormValues = {
   name: string;
   type: ServiceType;
-  templateKey: TemplateKey;
+  /** Live template id from the workspace. Wide string to fit both
+   *  built-in ids and user-created template ids. */
+  templateKey: string;
   progress: number;
   /** YYYY-MM-DD (what `<input type="date">` emits). Caller is responsible
    *  for re-ISO-ing on the store write if it wants a full timestamp. */
@@ -54,7 +57,7 @@ interface Props {
   submitLabel?: string;
   /** For `mode === 'edit'` only — used to decide whether to show the
    *  "template changed, this is a relabel" note. */
-  originalTemplateKey?: TemplateKey;
+  originalTemplateKey?: string;
 }
 
 export function ServiceMetadataForm({
@@ -66,9 +69,10 @@ export function ServiceMetadataForm({
   submitLabel,
   originalTemplateKey,
 }: Props) {
+  const { data } = useFlizow();
   const [name, setName] = useState(initial.name);
   const [type, setType] = useState<ServiceType>(initial.type);
-  const [templateKey, setTemplateKey] = useState<TemplateKey>(initial.templateKey);
+  const [templateKey, setTemplateKey] = useState<string>(initial.templateKey);
   const [progress, setProgress] = useState<number>(
     Math.max(0, Math.min(100, Math.round(initial.progress))),
   );
@@ -84,13 +88,16 @@ export function ServiceMetadataForm({
   const modalRef = useRef<HTMLDivElement>(null);
   useModalFocusTrap(modalRef);
 
-  // Only show templates allowed for the selected type. If the user
-  // switches to a type that disallows the current template, snap to
-  // the first allowed option rather than letting the user save a
-  // mismatch.
+  // Live picker options. Reads through `resolveTemplates` so user-
+  // created templates from the Templates page show up here without
+  // any further wiring. Filtered by the current service type so
+  // retainer-only templates don't appear when project is selected.
+  // If the user switches type and the current template no longer
+  // fits, snap to the first allowed option rather than let the user
+  // save a mismatch.
   const visibleTemplates = useMemo(
-    () => TEMPLATE_OPTIONS.filter(t => t.allowed.includes(type)),
-    [type],
+    () => templateOptionsFor(data.templateOverrides, type),
+    [data.templateOverrides, type],
   );
   useEffect(() => {
     if (!visibleTemplates.some(t => t.value === templateKey) && visibleTemplates.length) {
@@ -238,7 +245,7 @@ export function ServiceMetadataForm({
             <select
               className="wip-field-input"
               value={templateKey}
-              onChange={(e) => setTemplateKey(e.target.value as TemplateKey)}
+              onChange={(e) => setTemplateKey(e.target.value)}
             >
               {visibleTemplates.map(t => (
                 <option key={t.value} value={t.value}>{t.label}</option>

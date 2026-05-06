@@ -34,6 +34,9 @@ export const BUILT_IN_TEMPLATES: TemplateRecord[] = [
     userCreated: false,
     archived: false,
     editedAt: null,
+    // Web Design is a one-off engagement: scope, build, ship, done.
+    // No retainer flavour for v1.
+    allowed: ['project'],
   },
   {
     id: 'seo-retainer-monthly',
@@ -57,6 +60,8 @@ export const BUILT_IN_TEMPLATES: TemplateRecord[] = [
     userCreated: false,
     archived: false,
     editedAt: null,
+    // SEO Retainer loops monthly — pairs with retainer-type services.
+    allowed: ['retainer'],
   },
   {
     id: 'content-8-articles',
@@ -81,6 +86,8 @@ export const BUILT_IN_TEMPLATES: TemplateRecord[] = [
     userCreated: false,
     archived: false,
     editedAt: null,
+    // Content programmes run on a monthly batch cadence — retainer.
+    allowed: ['retainer'],
   },
   {
     id: 'brand-refresh',
@@ -104,6 +111,8 @@ export const BUILT_IN_TEMPLATES: TemplateRecord[] = [
     userCreated: false,
     archived: false,
     editedAt: null,
+    // Brand Refresh is a one-time engagement (8-12 weeks per phasesSub).
+    allowed: ['project'],
   },
   {
     id: 'paid-media',
@@ -127,6 +136,8 @@ export const BUILT_IN_TEMPLATES: TemplateRecord[] = [
     userCreated: false,
     archived: false,
     editedAt: null,
+    // Paid Media has a launch + ongoing optimize cadence — retainer.
+    allowed: ['retainer'],
   },
 ];
 

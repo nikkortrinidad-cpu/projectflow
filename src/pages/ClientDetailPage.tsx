@@ -33,7 +33,7 @@ import { NotesTab } from '../components/NotesTab';
 // import { TouchpointsTab } from '../components/TouchpointsTab';
 import { StatsTab } from '../components/StatsTab';
 import { ConfirmDangerDialog } from '../components/ConfirmDangerDialog';
-import { defaultNextDeliverableAt } from '../data/serviceTemplateOptions';
+import { defaultNextDeliverableAt, defaultTemplateKey } from '../data/serviceTemplateOptions';
 import { ServiceMetadataForm } from '../components/shared/ServiceMetadataForm';
 import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
 import { useModalAutofocus } from '../hooks/useModalAutofocus';
@@ -2368,13 +2368,20 @@ function AddServiceModal({ clientId, onClose }: {
   // Thin wrapper over the shared form. This file used to carry ~190
   // lines of form JSX copy-pasted from EditServiceModal; both are now
   // ~20-line shells that only differ in their submit handler.
+  const { data } = useFlizow();
+  // Seed the picker with the first live template that pairs with
+  // 'retainer' (the default type for a fresh service). Used to pass a
+  // hard-coded legacy key here, which the resolver couldn't find — the
+  // dropdown opened on a phantom value and the user's new template
+  // wasn't in the list.
+  const initialTemplateKey = defaultTemplateKey(data.templateOverrides, 'retainer');
   return (
     <ServiceMetadataForm
       mode="add"
       initial={{
         name: '',
         type: 'retainer',
-        templateKey: 'demandgen',
+        templateKey: initialTemplateKey,
         progress: 0,
         nextDeliverableAt: defaultNextDeliverableAt(),
       }}

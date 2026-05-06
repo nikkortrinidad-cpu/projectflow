@@ -280,6 +280,13 @@ export interface TemplateRecord {
    *  which drives the "Read-only" badge presence on the Templates
    *  hero. */
   editedAt: string | null;
+  /** Which service types this template can pair with. Built-in
+   *  templates declare their fit (e.g. Brand Refresh = project-only,
+   *  SEO Retainer = retainer-only). User-created templates default to
+   *  both when the field is unset, so creators don't have to think
+   *  about it unless they want to. The Add Service / Edit Service
+   *  template picker filters by the currently-selected type. */
+  allowed?: ServiceType[];
 }
 
 export type IndustryCategory =
@@ -378,7 +385,11 @@ export interface Service {
   clientId: string;
   name: string;
   type: ServiceType;
-  templateKey: TemplateKey;
+  /** Template id this service was created from. Wide string (not the
+   *  TemplateKey union) because user-created templates have arbitrary
+   *  ids that aren't part of the built-in enum. The TemplateKey union
+   *  still exists for legacy demo seeds; we don't narrow at write time. */
+  templateKey: string;
   /** 0–100. Drives the progress bar on the service card. */
   progress: number;
   /** ISO date. Next milestone or recurring deliverable. */
