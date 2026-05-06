@@ -236,59 +236,54 @@ function CustomEditor({ rule, onChange }: {
 function RuleExtras({ rule, onChange }: {
   rule: Recurrence; onChange: (r: Recurrence) => void;
 }) {
-  // Two toggle rows on a 3-column grid: [checkbox][label][value].
-  // Grid (not flex-wrap) keeps the date input aligned in its own
-  // column, so the End by row stays on one line whether the date
-  // picker is visible or not. Hint copy ("Keeps the rule…") moves
-  // out of the click target into a subtle subtitle row below the
-  // toggle — labels stay short and scannable, the explanation is
-  // there for the user who needs it without hijacking the row.
+  // Two toggle rows. Each row is a grid container; the <label>
+  // wraps ONLY the checkbox + text so the click target matches the
+  // visible affordance. The third grid column (the value slot)
+  // sits outside the label, so hovering empty space doesn't show a
+  // pointer cursor or trigger the toggle on click.
   return (
     <div className="recurrence-extras">
-      <label className="recurrence-extras-row">
-        <input
-          type="checkbox"
-          className="recurrence-extras-check"
-          checked={!!rule.endsAt}
-          onChange={(e) => {
-            if (e.target.checked) {
-              // Default end to 3 months from today; user can adjust.
-              const d = new Date();
-              d.setMonth(d.getMonth() + 3);
-              onChange({ ...rule, endsAt: d.toISOString().slice(0, 10) });
-            } else {
-              onChange({ ...rule, endsAt: undefined });
-            }
-          }}
-        />
-        <span className="recurrence-extras-label">End by</span>
-        {rule.endsAt ? (
+      <div className="recurrence-extras-row">
+        <label className="recurrence-extras-toggle">
+          <input
+            type="checkbox"
+            className="recurrence-extras-check"
+            checked={!!rule.endsAt}
+            onChange={(e) => {
+              if (e.target.checked) {
+                // Default end to 3 months from today; user can adjust.
+                const d = new Date();
+                d.setMonth(d.getMonth() + 3);
+                onChange({ ...rule, endsAt: d.toISOString().slice(0, 10) });
+              } else {
+                onChange({ ...rule, endsAt: undefined });
+              }
+            }}
+          />
+          <span className="recurrence-extras-label">End by</span>
+        </label>
+        {rule.endsAt && (
           <input
             type="date"
             className="recurrence-date recurrence-extras-value"
             value={rule.endsAt}
             onChange={(e) => onChange({ ...rule, endsAt: e.target.value || undefined })}
             aria-label="End date"
-            // Don't toggle the parent label's checkbox when the user
-            // clicks INTO the date input — they're picking a date,
-            // not turning the rule off.
-            onClick={(e) => e.preventDefault()}
           />
-        ) : (
-          <span className="recurrence-extras-value-empty" aria-hidden />
         )}
-      </label>
+      </div>
 
-      <label className="recurrence-extras-row">
-        <input
-          type="checkbox"
-          className="recurrence-extras-check"
-          checked={!!rule.paused}
-          onChange={(e) => onChange({ ...rule, paused: e.target.checked })}
-        />
-        <span className="recurrence-extras-label">Pause</span>
-        <span className="recurrence-extras-value-empty" aria-hidden />
-      </label>
+      <div className="recurrence-extras-row">
+        <label className="recurrence-extras-toggle">
+          <input
+            type="checkbox"
+            className="recurrence-extras-check"
+            checked={!!rule.paused}
+            onChange={(e) => onChange({ ...rule, paused: e.target.checked })}
+          />
+          <span className="recurrence-extras-label">Pause</span>
+        </label>
+      </div>
       <p className="recurrence-extras-hint">
         Keeps the rule but stops spawning new cards.
       </p>

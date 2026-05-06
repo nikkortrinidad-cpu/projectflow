@@ -19138,22 +19138,29 @@
     gap: var(--sp-xs);
   }
 
-  /* End by + Pause rows. Three-column grid: [checkbox][label][value].
-     Grid keeps the value column right-aligned and the label width
-     consistent across both rows so the date picker on End by lines up
-     with the empty slot on Pause. align-items: center (not baseline)
-     so the checkbox sits true-center on the row's line-height; the
-     date input has its own internal padding that handles its own
-     visual centring. */
+  /* End by + Pause rows. Each row is a 2-column grid:
+     [toggle (checkbox+label)][value].
+     The <label> only wraps the toggle cluster, so the click target
+     matches the visible affordance — hovering or clicking the empty
+     space to the right of the label doesn't toggle the checkbox or
+     change the cursor. */
   .recurrence-extras-row {
     display: grid;
-    grid-template-columns: 18px auto 1fr;
+    grid-template-columns: auto 1fr;
     align-items: center;
     column-gap: var(--sp-sm);
     font-size: var(--fs-md);
     color: var(--text);
-    cursor: pointer;
     min-height: 28px;
+  }
+  .recurrence-extras-toggle {
+    display: inline-flex;
+    align-items: center;
+    column-gap: var(--sp-sm);
+    cursor: pointer;
+    /* Width: hugs the checkbox + label so the empty third column
+       isn't part of the click target. */
+    width: max-content;
   }
   .recurrence-extras-check {
     margin: 0;
@@ -19165,15 +19172,9 @@
     line-height: 1.2;
   }
   .recurrence-extras-value {
+    /* Sits in the 1fr column, right-aligned. Date input keeps its
+       own padding from .recurrence-date above. */
     justify-self: end;
-    /* Date input keeps its own padding (.recurrence-date above) so
-       no extra rules needed here — this class just lives on the
-       grid cell for layout. */
-  }
-  .recurrence-extras-value-empty {
-    /* Holds the third grid column open so the two toggle rows align
-       even when one has no value widget. Zero visual weight. */
-    display: block;
   }
   .recurrence-extras-hint {
     margin: 0;
