@@ -291,8 +291,9 @@ The codebase uses values that aren't strictly on a 4/8 grid (10, 14, 18, 22, 26)
 
 ### Typography
 
-- Body font: Inter, system-ui, -apple-system
-- Mono: SF Mono, Monaco
+- Body font: system stack — `-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Segoe UI', sans-serif`. Set on the body selector; everything inherits. Resolves to SF Pro on macOS/iOS, Segoe UI on Windows. Deliberate: feels native on each OS, no FOUT, no extra HTTP request before first paint.
+- Mono: `'SF Mono', Monaco, monospace`. Used for ID badges, kbd shortcuts, code blocks, inline code in markdown notes.
+- Inter: loaded via Google Fonts in `index.html` (weights 400/500/600/700) but reserved for specific surfaces — currently only the testers session UI (sign-in gate, identity widget). Available everywhere if a surface needs cross-OS consistency, but don't swap it onto body without a reason.
 - Type scale: `--fs-xs` / `--fs-sm` / `--fs-md` / `--fs-lg` / `--fs-xl` / `--fs-2xl` / `--fs-3xl`
 - Body line-height: 1.5×; headlines: 1.2×
 
