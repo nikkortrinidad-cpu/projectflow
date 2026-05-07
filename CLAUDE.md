@@ -265,13 +265,13 @@ The Flizow design language is defined inline in `src/styles/flizow.css`. Three t
 
 ### Color tokens
 
-The brand color is **orange `#F15A24`** (`--highlight`), not Apple-default indigo. The design language doc references blue tiers but Flizow uses orange tiers throughout.
+The brand color is **121 Group blue `#0077C8`** (`--highlight`). The agency rebrand brought this in; the legacy Flizow orange was retired.
 
 **Four-tier highlight hierarchy:**
-1. **Solid orange (CTA)** — one per surface. "Request time off," "Approve," "Save."
-2. **Orange ring (secondary)** — used when two actions are close in weight.
-3. **Orange tint (active state)** — current tab, selected row, currently-on-vacation banner.
-4. **Orange text (inline)** — links inside prose.
+1. **Solid blue (CTA)** — one per surface. "Request time off," "Approve," "Save."
+2. **Blue ring (secondary)** — used when two actions are close in weight.
+3. **Blue tint (active state)** — current tab, selected row, currently-on-vacation banner.
+4. **Blue text (inline)** — links inside prose.
 
 Other semantic colors (red for danger, green for success, amber for warning) match standard web conventions.
 

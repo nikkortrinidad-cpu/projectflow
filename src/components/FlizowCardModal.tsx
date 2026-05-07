@@ -439,7 +439,7 @@ export default function FlizowCardModal({ taskId, onClose, kind = 'task', onDupl
           <div className="titlebar-actions">
             {/* Pin to next Weekly WIP. Promoted out of the kebab menu
                 so the user can pin/unpin in one click and see the
-                state without opening a menu. Filled bookmark + orange
+                state without opening a menu. Filled bookmark + blue
                 tint when pinned, outline when not. Client tasks only —
                 ops cards live in their own kanban surface. */}
             {!isOps && (

@@ -6,7 +6,7 @@
  *   │  Month calendar (Mon–Sun grid)   │  Right rail          │
  *   │  - avatar stack per day          │  - sub-tabs:         │
  *   │  - red border on conflict days   │    Approvals (default│
- *   │  - "today" highlighted in orange │     for Owner/Admin) │
+ *   │  - "today" highlighted in blue   │     for Owner/Admin) │
  *   │  - click cell → day popover      │    Rules             │
  *   │                                  │    Conflicts         │
  *   └──────────────────────────────────┴──────────────────────┘

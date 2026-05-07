@@ -21,11 +21,11 @@
     --kbd-border: #d2d2d7;
     --nav-bg: rgba(255,255,255,0.72);
     --btn-bg: #ffffff;
-    /* Brand interactive accent — Flizow orange. The variable names
-       still read `--hover-blue` etc. for back-compat; the value
-       behind them is the brand color, currently var(--highlight). Keep this
-       block in sync with the dark-mode counterparts below — they
-       use the same RGB with higher alphas for visibility on dark. */
+    /* Brand interactive accent — 121 Group blue (#0077C8). The
+       variable names already read `--hover-blue` etc. so they stay
+       in sync with the value. Keep this block in sync with the
+       dark-mode counterparts below: same hex, higher alphas on the
+       soft tints for visibility against the darker bg. */
     --btn-bg-hover: rgba(0,119,200,0.08);
     --hover-tint: rgba(0,119,200,0.08);
     --hover-tint-strong: rgba(0,119,200,0.14);
@@ -214,9 +214,8 @@
     --nav-bg: rgba(0,0,0,0.72);
     --btn-bg: #1c1c1e;
     /* Dark-mode counterparts of the brand interactive accent. Same
-       hex as light mode (var(--highlight)) — orange holds up on black without
-       needing the brightness bump Apple's blue gets. Higher alphas
-       on the soft tints for visibility against the darker bg. */
+       hex as light mode (var(--highlight)). Higher alphas on the
+       soft tints for visibility against the darker bg. */
     --btn-bg-hover: rgba(0,119,200,0.18);
     --hover-tint: rgba(0,119,200,0.16);
     --hover-tint-strong: rgba(0,119,200,0.24);
@@ -275,7 +274,7 @@
   .header-left { display: flex; align-items: center; gap: var(--sp-3xl); }
   .header-logo {
     /* Compound logo: F-mark (img) + "Flizow" wordmark (text). Both
-       inherit the brand orange; flex keeps them on the same baseline. */
+       inherit the brand blue; flex keeps them on the same baseline. */
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -496,7 +495,7 @@
     flex-shrink: 0;
     line-height: 1.4;
   }
-  /* Owner — brand orange, the strongest signal in the four-tier
+  /* Owner — brand blue, the strongest signal in the four-tier
      hierarchy. Communicates "this is the workspace owner" at a
      glance without needing the word. */
   .access-pill--owner {
@@ -727,7 +726,7 @@
   .notif-icon--overdue { background: rgba(255, 69, 58, 0.16);  color: #c92a1e; }
   .notif-icon--status  { background: rgba(191, 90, 242, 0.16); color: #9333ea; }
   .notif-icon--system  { background: var(--bg-soft);            color: var(--text-muted); }
-  /* Time off — brand-orange tint so pending requests pop in the
+  /* Time off — brand-blue tint so pending requests pop in the
      bell list. Matches the highlight tier used for "currently
      active" pills elsewhere in the app. */
   .notif-icon--time_off { background: var(--highlight-soft);    color: var(--highlight); }
@@ -1392,7 +1391,7 @@
     font-weight: 600;
     color: var(--text);
   }
-  /* Active-period pill — soft orange tint matching the profile
+  /* Active-period pill — soft blue tint matching the profile
      panel's vacation pill so the visual signal is consistent
      across both surfaces. */
   .timeoff-row-active-pill {
@@ -1482,7 +1481,7 @@
   /* End-early — secondary tier (ring) button. The action mutates
      an already-approved request, so the prominence sits between a
      casual link and a primary CTA. White background + brand
-     border so it pops against the orange-tinted banner. */
+     border so it pops against the blue-tinted banner. */
   .timeoff-active-banner-end {
     flex-shrink: 0;
     padding: 6px 14px;
@@ -1524,7 +1523,7 @@
 
   /* Status badges — three colors mirror the four-tier blue-highlight
      hierarchy used elsewhere in the app:
-       pending  → orange (primary attention)
+       pending  → blue (primary attention)
        approved → green (settled positive)
        denied   → red (blocking signal) */
   .timeoff-status {
@@ -2741,11 +2740,11 @@
     transform: translateY(-1px);
     box-shadow: 0 4px 14px rgba(0,119,200,0.10);
   }
-  /* Pinned-for-WIP marker — small orange flag in the top-right of
+  /* Pinned-for-WIP marker — small blue flag in the top-right of
      the card. Sits above .card content via z-index but pointer-
      events:none so it doesn't intercept clicks meant for the card.
-     The brand-orange (var(--highlight)) ties pinning to the user's intent +
-     the Flizow identity — distinct from the red urgency rail. */
+     The brand-blue (var(--highlight)) ties pinning to the user's intent
+     and the 121 Group identity, distinct from the red urgency rail. */
   .card.is-pinned {
     border-color: color-mix(in srgb, var(--highlight) 35%, var(--hairline-soft));
   }
@@ -3240,7 +3239,7 @@
   }
   .tb-btn:hover { background: var(--hover-tint); color: var(--hover-blue); }
   .tb-btn svg { width: 16px; height: 16px; }
-  /* Active "pinned for next WIP" state — orange-tinted shell + filled
+  /* Active "pinned for next WIP" state — blue-tinted shell + filled
      bookmark color, ties to the same var(--highlight) used by the kanban tile
      pin badge and the WIP agenda's Pinned group. Toggle reads as "on"
      at a glance without opening the kebab. */
@@ -6918,9 +6917,9 @@
     border-radius: 12px;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
     animation: undo-toast-in var(--dur-med, 200ms) var(--ease-out, ease-out);
-    /* Slight orange-tinted left border so the eye lands on the
+    /* Slight blue-tinted left border so the eye lands on the
        message before reading. Keeps the toast feeling like a
-       deliberate "you did something — here's the undo" moment
+       deliberate "you did something, here's the undo" moment
        rather than generic chrome. */
     border-left: 3px solid var(--highlight);
   }
@@ -6936,9 +6935,9 @@
     justify-content: center;
   }
   .undo-toast-undo {
-    /* Solid orange CTA — tier 1 in the blue/orange highlight
-       hierarchy. The whole purpose of the toast is the Undo
-       action, so it gets the loudest treatment. */
+    /* Solid blue CTA — tier 1 in the blue highlight hierarchy.
+       The whole purpose of the toast is the Undo action, so it
+       gets the loudest treatment. */
     padding: var(--sp-xs) var(--sp-lg);
     background: var(--highlight);
     color: #fff;
@@ -7142,7 +7141,7 @@
   .member-profile-role-edit {
     width: 100%;
   }
-  /* Vacation pill — sits under the role line. Warm orange tint so
+  /* Vacation pill — sits under the role line. Soft blue tint so
      it's clearly a status callout, not chrome. The 🌴 emoji is the
      one place we use emoji per the design language exception ("only
      when the user explicitly requests it" — the user did, in spec). */
@@ -8542,7 +8541,7 @@
     background: var(--bg-soft);
     opacity: 0.55;
   }
-  /* Today — orange accent matches the rest of the brand language. */
+  /* Today — blue accent matches the rest of the brand language. */
   .schedules-day--today .schedules-day-num {
     background: var(--highlight);
     color: #fff;
@@ -18557,7 +18556,7 @@
      Bottom-left mirror of the admin chip. Every signed-in tester sees it:
      avatar + first name + sync-status dot. Click opens a panel with full
      identity + sync status text + sign-out. Hidden in read-only view mode
-     (the orange banner carries the message there). */
+     (the blue banner carries the message there). */
   #testersSession {
     position: fixed;
     bottom: 24px; left: 24px;

@@ -2345,7 +2345,7 @@ function TimeOffRow({
 }
 
 /** Status pill for time-off rows. Color tier maps to the four-tier
- *  blue-highlight system in flizow.css: orange = primary attention
+ *  blue-highlight system in flizow.css: blue = primary attention
  *  (pending review), green = settled positive (approved), red =
  *  blocking signal (denied). Cancelled requests don't surface to
  *  the requester so we don't render a pill for them. */
