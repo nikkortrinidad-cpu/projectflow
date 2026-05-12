@@ -53,7 +53,7 @@ cross-referenced so nothing duplicates.
 
 ### Portfolio Health rollup (Home top cards)
 
-Original: count clients where `status === 'fire' | 'risk' | 'track'`,
+Our rule: count clients where `status === 'fire' | 'risk' | 'track'`,
 plus `active = total − paused`. Reconciles with the Clients filter
 chip counts.
 
@@ -67,7 +67,7 @@ Filter chip sum also reconciles: All 140 = 0 (fire) + 1 (risk) + 47
 
 ### Subtitle below the greeting
 
-Original: adaptive copy — "X clients need you now." when fire > 0,
+Our rule: adaptive copy — "X clients need you now." when fire > 0,
 time-of-day fallback otherwise.
 
 **Portal:** **MATCH.** With fire = 0, portal renders "Steady
@@ -75,7 +75,7 @@ morning ahead." which is the right zero-fire copy.
 
 ### Client list row — right-hand metric
 
-Original: `clientMetric()` produces a status-aware sentence:
+Our rule: `clientMetric()` produces a status-aware sentence:
 - fire → "{n} overdue" or "Needs attention"
 - risk → "{n} at risk" or "At risk"
 - onboard → "{N}% setup"
@@ -93,7 +93,7 @@ tag chips, before the activity timestamp.
 
 ### Industry classification line
 
-Original: render `categoryLabel(client.industry)` under each client
+Our rule: render `categoryLabel(client.industry)` under each client
 name. Source: `src/utils/clientDerived.ts:10` (`CATEGORY_LABELS`
 map: saas → "SaaS / Tech", ecommerce → "E-commerce / Retail", etc.).
 
@@ -107,7 +107,7 @@ Add Client dropdown).
 
 ### Last-activity timestamp
 
-Original: most recent `createdAt` across the client's tasks (demo)
+Our rule: most recent `createdAt` across the client's tasks (demo)
 or a proper `updatedAt` field on the client record (production).
 Format: "Xm ago" / "Xh ago" / "Xd ago" / weekday name / short date,
 anchored on the store's `today` value.
@@ -127,7 +127,7 @@ blank — if no activity ever, fall back to `createdAt`.
 
 ### Service type
 
-Original: stored on `service.type` as `'project'` or `'retainer'`.
+Our rule: stored on `service.type` as `'project'` or `'retainer'`.
 
 **Portal:** **MATCH.** Visible in the ACTIVE SERVICES rows ("Project")
 and the Add Service modal (Project / Retainer radio cards).
@@ -138,7 +138,7 @@ Covered in §1 above. Pill style mismatch is the only divergence.
 
 ### Service progress
 
-Original: stored on `service.progress` as 0–100, manually managed
+Our rule: stored on `service.progress` as 0–100, manually managed
 by the service owner.
 
 **Portal:** **MATCH.** Numbers visible on each service row
@@ -147,7 +147,7 @@ but the values render and update — same shape.
 
 ### ACTIVE SERVICES eyebrow
 
-Original:
+Our rule:
 ```
 total = services.length
 projects = services.filter(s => s.type === 'project').length
@@ -164,7 +164,7 @@ now so the shape matches.
 
 ### Service row subtitle
 
-Original: `"Template: <template name> · Due <next deliverable date>"`.
+Our rule: `"Template: <template name> · Due <next deliverable date>"`.
 
 **Portal:** **DIVERGENT.** Renders `"Project · 73/117 tasks"` —
 service-type prefix + raw task count, no template, no due date.
@@ -176,7 +176,7 @@ from `service.templateKey` (resolved to display name) and
 
 ### Service progress label ("Progress" vs "This month")
 
-Original:
+Our rule:
 - `project` → "Progress N%"
 - `retainer` → "This month N%"
 
@@ -192,7 +192,7 @@ regardless of service type. (QA round 5 finding — same section.)
 
 ### Overdue
 
-Original: `dueDate < today AND !archived AND columnId !== 'done'`.
+Our rule: `dueDate < today AND !archived AND columnId !== 'done'`.
 
 **Portal:** **NOT VERIFIABLE** (no on-fire data in the
 current portal account to inspect a populated card). But the
@@ -202,13 +202,13 @@ matches.
 
 ### Blocked
 
-Original: `task.columnId === 'blocked'`.
+Our rule: `task.columnId === 'blocked'`.
 
 **Portal:** **NOT VERIFIABLE** at this level of audit.
 
 ### Severity (`warning` / `critical`)
 
-Original: manually-set field on each task. Drives service-health
+Our rule: manually-set field on each task. Drives service-health
 derivation.
 
 **Portal:** Likely matches based on the observable service-health
@@ -219,7 +219,7 @@ visible.
 
 ## 5. MY TASKS card aggregation (Home)
 
-Original: one card per fire-or-risk client, with title, blocking
+Our rule: one card per fire-or-risk client, with title, blocking
 reason, days-overdue stamp, Delegate + Review buttons.
 
 **Portal:** **NOT VERIFIABLE** — portal account has 0
@@ -243,7 +243,7 @@ checks:
 
 ## 6. NEEDS ATTENTION (client detail Overview)
 
-Original: two cards — past-due (count of `critical` or `blocked`
+Our rule: two cards — past-due (count of `critical` or `blocked`
 tasks) + at-risk (count of `warning` tasks). Timestamp "As of this
 morning".
 
@@ -263,7 +263,7 @@ each bucket. (QA round 5 finding #6.)
 
 ## 7. Onboarding rollup (client detail Onboarding tab)
 
-Original:
+Our rule:
 ```
 totalItems = items.length
 doneItems = items.filter(i => i.done).length
@@ -299,7 +299,7 @@ finding under Onboarding tab.)
 
 ## 8. Capacity / daily slot load
 
-Original:
+Our rule:
 - `load = sum of (task.slots ?? 1)` for open tasks where assigneeId
  matches and dueDate matches
 - `effectiveCapFor()` resolves override → standing → defaults (6/8)
@@ -327,7 +327,7 @@ workspace defaults (6/8). Three-zone color logic on the badge.
 
 ## 9. Service tag chips on the client list row
 
-Original: resolve `client.serviceIds` to service records in order,
+Our rule: resolve `client.serviceIds` to service records in order,
 show first 3 names, render "+N more" for overflow.
 
 **Portal:** **MATCH.** Chips show actual service names ("Account
@@ -339,7 +339,7 @@ about ad-platform chips is now closed.
 
 ## 10. Notifications
 
-Original: six categories, all computed live from store state via
+Our rule: six categories, all computed live from store state via
 `deriveNotifications(data, memberId)`. Stable ids so read/dismissed
 state persists.
 
@@ -355,7 +355,7 @@ read/dismissed state persists.
 
 ## 11. External integrations (Stats tab)
 
-Original: Ad Spend, Leads, Blended CPL, Email Engagement pulled
+Our rule: Ad Spend, Leads, Blended CPL, Email Engagement pulled
 fresh from third-party APIs. Live indicator shows freshness.
 
 **Portal:** **LOOKS BUILT.** Stats tab renders with "Live ·
