@@ -1684,6 +1684,230 @@
     color: var(--accent);
   }
 
+  /* Annual quota balance card — Account → Time off, above the
+     Request CTA. Renders the two annual buckets (sick + shared)
+     with their progress strips, or a probationary banner when the
+     member isn't entitled to paid leave yet. */
+  .timeoff-quota {
+    padding: var(--sp-md) var(--sp-lg);
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    margin-bottom: var(--sp-md);
+  }
+  .timeoff-quota--probationary {
+    /* Lighter weight than the regular card — this state isn't a
+       win, it's an informational gate. */
+    background: var(--bg-soft);
+    border-style: dashed;
+  }
+  .timeoff-quota-banner-title {
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--text);
+  }
+  .timeoff-quota-banner-sub {
+    margin: var(--sp-xs) 0 0;
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .timeoff-quota-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: var(--sp-sm);
+  }
+  .timeoff-quota-title {
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--text);
+  }
+  .timeoff-quota-window {
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+  }
+  .timeoff-quota-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-sm);
+  }
+  .timeoff-quota-row-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+  .timeoff-quota-row-label {
+    font-size: var(--fs-sm);
+    color: var(--text);
+  }
+  .timeoff-quota-row-meta {
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+  }
+  .timeoff-quota-row-meta strong {
+    color: var(--text);
+  }
+  .timeoff-quota-row-track {
+    height: 6px;
+    background: var(--bg);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .timeoff-quota-row-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.2s ease-out;
+  }
+  .timeoff-quota-row--sick .timeoff-quota-row-fill { background: #f43f5e; }
+  .timeoff-quota-row--shared .timeoff-quota-row-fill { background: var(--highlight); }
+
+  /* Approval-card leave-type chip — same pill family as the
+     severity pills used on the QA findings, but with leave-type
+     colour mapping. Rendered to the right of the requester's
+     name/date row so the approver can scan the queue by type
+     before opening individual rows. */
+  .schedules-request-type {
+    margin-left: auto;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    line-height: 1.4;
+  }
+  .schedules-request-type--sick {
+    background: rgba(244, 63, 94, 0.16);
+    color: #f43f5e;
+  }
+  .schedules-request-type--emergency {
+    background: rgba(245, 158, 11, 0.16);
+    color: #f59e0b;
+  }
+  .schedules-request-type--casual {
+    background: var(--highlight-soft);
+    color: var(--highlight);
+  }
+
+  /* Approval-card inline paid/unpaid preview. One total + a row of
+     coloured pills that match the breakdown preview in the
+     Request modal. */
+  .schedules-request-breakdown {
+    margin-top: var(--sp-xs);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-xs);
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+  }
+  .schedules-request-breakdown-total {
+    color: var(--text);
+    font-weight: 500;
+  }
+  .schedules-request-breakdown-sep {
+    color: var(--text-faint);
+  }
+  .schedules-request-breakdown-pill {
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .schedules-request-breakdown-pill--credit {
+    background: var(--highlight-soft);
+    color: var(--highlight);
+  }
+  .schedules-request-breakdown-pill--paid {
+    background: rgba(34, 197, 94, 0.16);
+    color: #22c55e;
+  }
+  .schedules-request-breakdown-pill--unpaid {
+    background: var(--bg-soft);
+    color: var(--text-faint);
+  }
+
+  /* Approval-card attachment list — supporting documents the
+     requester uploaded. Plain link list, no thumbnails (keeps the
+     card scannable). */
+  .schedules-request-attachments {
+    margin-top: var(--sp-xs);
+    padding: var(--sp-xs) var(--sp-sm);
+    background: var(--bg-soft);
+    border-radius: 8px;
+    font-size: var(--fs-sm);
+  }
+  .schedules-request-attachments-label {
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .schedules-request-attachments-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .schedules-request-attachments-list a {
+    color: var(--highlight);
+    text-decoration: none;
+  }
+  .schedules-request-attachments-list a:hover {
+    text-decoration: underline;
+  }
+
+  /* Ops Guidelines sub-tab — TipTap rich-text editor for the
+     workspace-wide leave guidelines. Owner/Admin write here; the
+     read surface in the Request modal renders the resulting HTML
+     in .timeoff-guidelines-content. */
+  .guidelines-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-md);
+  }
+  .guidelines-editor-wrap {
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    background: var(--bg-elev);
+    padding: var(--sp-md);
+    min-height: 280px;
+  }
+  .guidelines-editor {
+    outline: none;
+    min-height: 240px;
+    font-size: var(--fs-md);
+    line-height: 1.55;
+    color: var(--text);
+  }
+  .guidelines-editor h1,
+  .guidelines-editor h2,
+  .guidelines-editor h3 {
+    margin: var(--sp-md) 0 var(--sp-xs);
+  }
+  .guidelines-editor p { margin: 0 0 var(--sp-md); }
+  .guidelines-editor ul,
+  .guidelines-editor ol { padding-left: var(--sp-3xl); margin: 0 0 var(--sp-md); }
+  .guidelines-editor p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    color: var(--text-faint);
+    pointer-events: none;
+    height: 0;
+  }
+  .guidelines-foot {
+    display: flex;
+    justify-content: flex-end;
+    font-size: var(--fs-sm);
+    color: var(--text-faint);
+  }
+  .guidelines-saved {
+    font-variant-numeric: tabular-nums;
+  }
+
   /* Breakdown preview — three colored rows showing where the days
      get drawn from. Lives below the form so the user sees the math
      before clicking Submit. */
@@ -6230,6 +6454,41 @@
     color: var(--text-faint);
     font-size: var(--fs-sm);
     line-height: 1;
+  }
+
+  /* Employment status + regularization-date inline editor. Sits
+     alongside CapInputs in the Members row; same compact treatment
+     so the row doesn't overflow. */
+  .mbrs-employment {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .mbrs-employment-status {
+    padding: 4px 8px;
+    font-size: var(--fs-sm);
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+  }
+  .mbrs-employment-status:focus {
+    outline: none;
+    border-color: var(--highlight);
+    box-shadow: 0 0 0 3px var(--highlight-soft);
+  }
+  .mbrs-employment-date {
+    padding: 4px 6px;
+    font-size: var(--fs-sm);
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+  }
+  .mbrs-employment-date:focus {
+    outline: none;
+    border-color: var(--highlight);
+    box-shadow: 0 0 0 3px var(--highlight-soft);
   }
 
   .mbrs-avatar {

@@ -39,7 +39,8 @@ import {
   memberCreditLedger,
 } from '../utils/holidayCredits';
 import { fetchHolidaysForRange } from '../utils/holidaySync';
-import { computeLeaveBreakdown } from '../utils/timeOff';
+import { computeAnnualQuotaUsage, computeLeaveBreakdown } from '../utils/timeOff';
+import { SICK_LEAVE_DAYS_PER_YEAR, SHARED_LEAVE_DAYS_PER_YEAR } from '../types/flizow';
 import { COUNTRIES, countryName, isSupportedByNager } from '../data/countries';
 import { getHolidayPack } from '../data/holidayPacks';
 import { buildHolidayExport, exportFilename, parseHolidayImport } from '../utils/holidayExport';
@@ -1526,6 +1527,12 @@ function MembersSection() {
                           onChange={(patch) => store.updateMember(m.uid, patch)}
                         />
                       )}
+                      {isOwner && dataMember && (
+                        <EmploymentInputs
+                          member={dataMember}
+                          onChange={(patch) => store.updateMember(m.uid, patch)}
+                        />
+                      )}
                     </div>
                   );
                 })}
@@ -2041,6 +2048,12 @@ function TimeOffSection({ focusId }: { focusId?: string } = {}) {
         </div>
       )}
 
+      {/* Phase 8 — annual quota balance card. Probationary members
+          see a banner explaining the entitlement kicks in after
+          regularization; regular members see the two buckets +
+          year-window the buckets reset on. */}
+      <QuotaBalance member={me} requests={data.timeOffRequests} today={today} />
+
       {/* Phase 6C — credit balance summary. Surfaces only when the
           requester has anything in their ledger (earned, spent, or
           a non-zero balance). Click "View ledger" expands the full
@@ -2200,6 +2213,102 @@ function TimeOffSection({ focusId }: { focusId?: string } = {}) {
  *  (a few entries per year) that an accordion-style reveal under
  *  the section header keeps the user in flow. They came here to
  *  manage time off; the ledger is context, not a destination. */
+/** Phase 8 — annual paid-leave quota balance card on the Account →
+ *  Time off panel. Two outcomes:
+ *    • Probationary members see a banner explaining the entitlement
+ *      kicks in after regularization (no quota numbers shown).
+ *    • Regular members see two progress strips: sick (15 days) +
+ *      shared (15 days, casual+emergency combined), with the
+ *      anniversary year window labelled so they know when the
+ *      buckets reset.
+ *
+ *  Reads computeAnnualQuotaUsage which derives the math from the
+ *  member's approved request history. Numbers drift naturally as
+ *  approvals land; no separate balance state to keep in sync. */
+function QuotaBalance({
+  member,
+  requests,
+  today,
+}: {
+  member: Member;
+  requests: ReadonlyArray<TimeOffRequest>;
+  today: string;
+}) {
+  const usage = useMemo(
+    () => computeAnnualQuotaUsage(member, requests, today),
+    [member, requests, today],
+  );
+  if (usage.isProbationary) {
+    return (
+      <div className="timeoff-quota timeoff-quota--probationary">
+        <div className="timeoff-quota-banner-title">Paid leave starts after regularization</div>
+        <p className="timeoff-quota-banner-sub">
+          You can still submit time off — your manager reviews each request — but every approved day will be flagged unpaid until your status is set to regular employee.
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="timeoff-quota">
+      <div className="timeoff-quota-head">
+        <span className="timeoff-quota-title">Paid leave balance</span>
+        <span className="timeoff-quota-window">
+          {formatDateLong(usage.yearStart)} – {formatDateLong(usage.yearEnd)}
+        </span>
+      </div>
+      <div className="timeoff-quota-grid">
+        <QuotaBar
+          label="Sick"
+          used={usage.sickUsed}
+          total={SICK_LEAVE_DAYS_PER_YEAR}
+          remaining={usage.sickRemaining}
+          tone="sick"
+        />
+        <QuotaBar
+          label="Shared (casual + emergency)"
+          used={usage.sharedUsed}
+          total={SHARED_LEAVE_DAYS_PER_YEAR}
+          remaining={usage.sharedRemaining}
+          tone="shared"
+        />
+      </div>
+    </div>
+  );
+}
+
+function QuotaBar({
+  label,
+  used,
+  total,
+  remaining,
+  tone,
+}: {
+  label: string;
+  used: number;
+  total: number;
+  remaining: number;
+  tone: 'sick' | 'shared';
+}) {
+  const pct = total > 0 ? Math.min(100, (used / total) * 100) : 0;
+  return (
+    <div className={`timeoff-quota-row timeoff-quota-row--${tone}`}>
+      <div className="timeoff-quota-row-head">
+        <span className="timeoff-quota-row-label">{label}</span>
+        <span className="timeoff-quota-row-meta">
+          <strong>{remaining}</strong> of {total} {remaining === 1 ? 'day' : 'days'} remaining
+        </span>
+      </div>
+      <div className="timeoff-quota-row-track">
+        <div
+          className="timeoff-quota-row-fill"
+          style={{ width: `${pct}%` }}
+          aria-hidden="true"
+        />
+      </div>
+    </div>
+  );
+}
+
 function CreditSummary({
   member,
   holidays,
@@ -4772,6 +4881,83 @@ function CapInputs({
         onChange={(e) => commitCap('capMax', e.target.value)}
         aria-label={`${member.name} daily max cap`}
       />
+    </div>
+  );
+}
+
+/** Inline employment editor for a Members row. Two controls:
+ *
+ *    [ Probationary ▾ ]    (status)
+ *    [ Regularized YYYY-MM-DD ]   (only when status === 'regular')
+ *
+ *  Picking <i>Regular</i> with no `regularizedAt` set auto-stamps
+ *  today's date so the anniversary boundary lands somewhere
+ *  sensible immediately. The owner can override the date inline
+ *  once the row is in regular status.
+ *
+ *  Owner-only render — gated at the call site. The store method
+ *  trusts the caller; no second permission check here. */
+function EmploymentInputs({
+  member,
+  onChange,
+}: {
+  member: Member;
+  onChange: (patch: Partial<Member>) => void;
+}) {
+  const status = member.employmentStatus ?? 'probationary';
+  const todayISO = new Date().toISOString().slice(0, 10);
+
+  function commitStatus(next: 'probationary' | 'regular') {
+    if (next === 'regular') {
+      // Auto-stamp regularizedAt to today if it's currently empty.
+      // The owner can change the date afterward; an empty value
+      // would break the anniversary math, so we never let regular
+      // status exist without a date.
+      const patch: Partial<Member> = {
+        employmentStatus: 'regular',
+        regularizedAt: member.regularizedAt ?? todayISO,
+      };
+      onChange(patch);
+    } else {
+      // Going back to probationary clears the date so accidentally
+      // flipping back-and-forth doesn't leave a stale anniversary
+      // anchor.
+      onChange({
+        employmentStatus: 'probationary',
+        regularizedAt: undefined,
+      });
+    }
+  }
+
+  function commitDate(raw: string) {
+    if (!raw) return;
+    onChange({ regularizedAt: raw });
+  }
+
+  return (
+    <div
+      className="mbrs-employment"
+      title="Employment status + regularization date. Regular employees get 15 paid sick + 15 paid shared days per year, resetting on the regularization anniversary."
+    >
+      <select
+        className="mbrs-employment-status"
+        value={status}
+        onChange={(e) => commitStatus(e.target.value as 'probationary' | 'regular')}
+        aria-label={`${member.name} employment status`}
+      >
+        <option value="probationary">Probationary</option>
+        <option value="regular">Regular</option>
+      </select>
+      {status === 'regular' && (
+        <input
+          type="date"
+          className="mbrs-employment-date"
+          value={member.regularizedAt ?? ''}
+          max={todayISO}
+          onChange={(e) => commitDate(e.target.value)}
+          aria-label={`${member.name} regularization date`}
+        />
+      )}
     </div>
   );
 }

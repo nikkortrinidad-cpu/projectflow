@@ -21,8 +21,11 @@ import {
   upcomingApprovedPeriods,
   makeTimeOffRequest,
   migrateLegacyTimeOff,
+  workingDaysBetween,
+  computeAnnualQuotaUsage,
+  computeLeaveBreakdown,
 } from '../utils/timeOff';
-import type { Member, TimeOffRequest } from '../types/flizow';
+import type { Member, TimeOffRequest, Holiday } from '../types/flizow';
 
 // ── Fixtures ─────────────────────────────────────────────────────────
 
@@ -253,5 +256,222 @@ describe('migrateLegacyTimeOff()', () => {
     expect(out.requests).toHaveLength(1);
     // Field still cleared (we processed the legacy member).
     expect(out.members[0].timeOff).toBeUndefined();
+  });
+});
+
+// ── Phase 8 — working-day math + quota + leave breakdown ─────────────
+
+describe('workingDaysBetween', () => {
+  it('counts weekdays inclusive of both ends', () => {
+    // Mon 2026-05-11 through Fri 2026-05-15 = 5 working days.
+    expect(workingDaysBetween('2026-05-11', '2026-05-15', [])).toBe(5);
+  });
+
+  it('skips weekends', () => {
+    // Sat 2026-05-16 + Sun 2026-05-17 alone = 0 working days.
+    expect(workingDaysBetween('2026-05-16', '2026-05-17', [])).toBe(0);
+  });
+
+  it('handles a range that straddles a weekend', () => {
+    // Fri 2026-05-15 through Mon 2026-05-18 = 2 working days (Fri + Mon).
+    expect(workingDaysBetween('2026-05-15', '2026-05-18', [])).toBe(2);
+  });
+
+  it('skips active observed holidays for the member country', () => {
+    // Tue 2026-05-12 falls on a PH holiday for a PH-tagged member.
+    const holidays: Holiday[] = [
+      {
+        id: 'h-1',
+        date: '2026-05-12',
+        country: 'PH',
+        type: 'public',
+        observation: 'national',
+        name: 'Test holiday',
+        active: true,
+      } as Holiday,
+    ];
+    expect(workingDaysBetween('2026-05-11', '2026-05-13', holidays, 'PH')).toBe(2);
+  });
+
+  it('returns 0 on invalid ranges', () => {
+    expect(workingDaysBetween('', '2026-05-12', [])).toBe(0);
+    expect(workingDaysBetween('2026-05-13', '2026-05-11', [])).toBe(0);
+  });
+});
+
+describe('computeAnnualQuotaUsage', () => {
+  const regularMember: Member = {
+    id: 'm-reg',
+    initials: 'AB',
+    name: 'Reg User',
+    color: '#000',
+    type: 'operator',
+    employmentStatus: 'regular',
+    regularizedAt: '2025-08-15',
+  };
+  it('flags probationary members + zeroes out the buckets', () => {
+    const usage = computeAnnualQuotaUsage(
+      { id: 'm-1', employmentStatus: 'probationary' },
+      [],
+      '2026-05-12',
+    );
+    expect(usage.isProbationary).toBe(true);
+    expect(usage.sickRemaining).toBe(0);
+    expect(usage.sharedRemaining).toBe(0);
+  });
+
+  it('treats missing regularizedAt as probationary', () => {
+    const usage = computeAnnualQuotaUsage(
+      { id: 'm-1', employmentStatus: 'regular' },
+      [],
+      '2026-05-12',
+    );
+    expect(usage.isProbationary).toBe(true);
+  });
+
+  it('opens the right anniversary window for a regular member', () => {
+    const usage = computeAnnualQuotaUsage(regularMember, [], '2026-05-12');
+    expect(usage.isProbationary).toBe(false);
+    // Anniversary in this case sits on Aug 15, so on May 12 2026 the
+    // active window is Aug 15 2025 → Aug 15 2026.
+    expect(usage.yearStart).toBe('2025-08-15');
+    expect(usage.yearEnd).toBe('2026-08-15');
+    expect(usage.sickRemaining).toBe(15);
+    expect(usage.sharedRemaining).toBe(15);
+  });
+
+  it('counts approved sick days inside the window against the sick bucket', () => {
+    const reqs: TimeOffRequest[] = [
+      makeTimeOffRequest({
+        memberId: 'm-reg',
+        start: '2026-03-02',
+        end: '2026-03-06',
+        status: 'approved',
+        requestedAt: '2026-02-28',
+      }),
+    ];
+    reqs[0].leaveType = 'sick';
+    reqs[0].paidDays = 4;
+    reqs[0].unpaidDays = 0;
+    const usage = computeAnnualQuotaUsage(regularMember, reqs, '2026-05-12');
+    expect(usage.sickUsed).toBe(4);
+    expect(usage.sickRemaining).toBe(11);
+    expect(usage.sharedUsed).toBe(0);
+  });
+
+  it('subtracts creditDays before counting against the shared bucket', () => {
+    const reqs: TimeOffRequest[] = [
+      makeTimeOffRequest({
+        memberId: 'm-reg',
+        start: '2026-03-02',
+        end: '2026-03-06',
+        status: 'approved',
+        requestedAt: '2026-02-28',
+      }),
+    ];
+    reqs[0].leaveType = 'casual';
+    reqs[0].paidDays = 5;
+    reqs[0].creditDays = 2;
+    reqs[0].unpaidDays = 0;
+    const usage = computeAnnualQuotaUsage(regularMember, reqs, '2026-05-12');
+    // 5 paid - 2 from credit = 3 from shared bucket.
+    expect(usage.sharedUsed).toBe(3);
+    expect(usage.sharedRemaining).toBe(12);
+  });
+});
+
+describe('computeLeaveBreakdown', () => {
+  const regular = {
+    id: 'm-1',
+    employmentStatus: 'regular' as const,
+    regularizedAt: '2025-08-15',
+  };
+
+  it('marks everything unpaid for probationary members', () => {
+    const out = computeLeaveBreakdown({
+      leaveType: 'sick',
+      start: '2026-05-11',
+      end: '2026-05-15',
+      member: { id: 'm-1', employmentStatus: 'probationary' },
+      holidays: [],
+      requests: [],
+      creditBalance: 0,
+      todayISO: '2026-05-12',
+    });
+    expect(out.workingDays).toBe(5);
+    expect(out.paidDays).toBe(0);
+    expect(out.unpaidDays).toBe(5);
+  });
+
+  it('draws from sick bucket and flags overflow as unpaid', () => {
+    // Pre-load 14 paid sick days already used.
+    const prior: TimeOffRequest = makeTimeOffRequest({
+      memberId: 'm-1',
+      start: '2026-02-02',
+      end: '2026-02-20',
+      status: 'approved',
+      requestedAt: '2026-02-01',
+    });
+    prior.leaveType = 'sick';
+    prior.paidDays = 14;
+    const out = computeLeaveBreakdown({
+      leaveType: 'sick',
+      start: '2026-05-11',
+      end: '2026-05-15',
+      member: regular,
+      holidays: [],
+      requests: [prior],
+      creditBalance: 0,
+      todayISO: '2026-05-12',
+    });
+    // 5 working days, only 1 sick day left in the bucket.
+    expect(out.workingDays).toBe(5);
+    expect(out.paidDays).toBe(1);
+    expect(out.unpaidDays).toBe(4);
+  });
+
+  it('casual leave burns credits before drawing from the shared bucket', () => {
+    const out = computeLeaveBreakdown({
+      leaveType: 'casual',
+      start: '2026-05-11',
+      end: '2026-05-15',
+      member: regular,
+      holidays: [],
+      requests: [],
+      creditBalance: 2,
+      todayISO: '2026-05-12',
+    });
+    expect(out.workingDays).toBe(5);
+    expect(out.creditDays).toBe(2);
+    // 2 from credit + 3 from shared = 5 paid, 0 unpaid.
+    expect(out.paidDays).toBe(5);
+    expect(out.unpaidDays).toBe(0);
+  });
+
+  it('casual leave overflows to unpaid when credits + shared are exhausted', () => {
+    // Pre-load 15 shared days used.
+    const prior: TimeOffRequest = makeTimeOffRequest({
+      memberId: 'm-1',
+      start: '2026-02-02',
+      end: '2026-02-20',
+      status: 'approved',
+      requestedAt: '2026-02-01',
+    });
+    prior.leaveType = 'emergency';
+    prior.paidDays = 15;
+    const out = computeLeaveBreakdown({
+      leaveType: 'casual',
+      start: '2026-05-11',
+      end: '2026-05-15',
+      member: regular,
+      holidays: [],
+      requests: [prior],
+      creditBalance: 1,
+      todayISO: '2026-05-12',
+    });
+    expect(out.workingDays).toBe(5);
+    expect(out.creditDays).toBe(1);
+    expect(out.paidDays).toBe(1);
+    expect(out.unpaidDays).toBe(4);
   });
 });

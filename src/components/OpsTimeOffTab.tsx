@@ -52,11 +52,14 @@ import {
 } from '../utils/coverageRules';
 import { ACCESS_ROLE_LABEL } from '../utils/access';
 import { visibleHolidays, countryShortLabel, countryTint, holidayAppliesToCountry } from '../utils/holidays';
-import { memberObservationFor } from '../utils/holidayCredits';
+import { creditBalanceFor, memberObservationFor } from '../utils/holidayCredits';
+import { computeLeaveBreakdown } from '../utils/timeOff';
 import type {
   CoverageRule,
   CoverageRuleConstraint,
   CoverageRuleWho,
+  LeaveGuidelinesDoc,
+  LeaveType,
   Member,
   RuleConflict,
   TimeOffRequest,
@@ -65,6 +68,10 @@ import type {
   HolidayObservation,
   JobTitle,
 } from '../types/flizow';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Link from '@tiptap/extension-link';
+import Placeholder from '@tiptap/extension-placeholder';
 
 // ── Date utilities (local, kept tight) ─────────────────────────────
 
@@ -123,7 +130,7 @@ function formatWeekdayShort(iso: string): string {
 
 // ── Top-level component ────────────────────────────────────────────
 
-type RailTab = 'approvals' | 'rules' | 'conflicts';
+type RailTab = 'approvals' | 'rules' | 'conflicts' | 'guidelines';
 
 export function OpsTimeOffTab({ focusId }: { focusId?: string } = {}) {
   const { data } = useFlizow();
@@ -321,6 +328,11 @@ export function OpsTimeOffTab({ focusId }: { focusId?: string } = {}) {
               rules={data.coverageRules}
               approvedRequests={approvedRequests}
               focusId={focusId}
+              holidays={data.holidays}
+              observations={data.holidayObservations}
+              allRequests={data.timeOffRequests}
+              creditPolicy={data.creditExpiryPolicy}
+              todayISO={data.today}
             />
           )}
           {railTab === 'rules' && (
@@ -336,6 +348,9 @@ export function OpsTimeOffTab({ focusId }: { focusId?: string } = {}) {
               members={data.members}
               onSelectDate={setSelectedDate}
             />
+          )}
+          {railTab === 'guidelines' && (
+            <GuidelinesPanel doc={data.leaveGuidelines} />
           )}
         </aside>
       </div>
@@ -678,6 +693,127 @@ function CalendarDayCell({
 
 // ── Rail tabs ──────────────────────────────────────────────────────
 
+// ── Guidelines panel (Phase 8) ─────────────────────────────────────
+//
+// TipTap rich-text editor for the workspace-wide leave guidelines.
+// Owner/Admin reach this through the right-rail sub-tab; everyone
+// else reads it from the Request Time Off modal via the
+// LeaveGuidelinesViewer side-sheet.
+
+function GuidelinesPanel({ doc }: { doc: LeaveGuidelinesDoc | undefined }) {
+  const [savedLabel, setSavedLabel] = useState<string | null>(null);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Track the last-known-saved content so we don't push echo updates
+  // back through TipTap (which would reset the cursor).
+  const lastSavedRef = useRef<string>(doc?.content ?? '');
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({ heading: { levels: [2, 3] } }),
+      Link.configure({
+        openOnClick: true,
+        HTMLAttributes: { rel: 'noreferrer noopener', target: '_blank' },
+      }),
+      Placeholder.configure({
+        placeholder: 'Write your workspace’s leave guidelines here. Team members will see this in the Request Time Off modal.',
+      }),
+    ],
+    content: doc?.content ?? '',
+    editorProps: {
+      attributes: {
+        class: 'guidelines-editor',
+        'aria-label': 'Leave guidelines',
+        role: 'textbox',
+        'aria-multiline': 'true',
+      },
+    },
+    onUpdate: ({ editor: ed }) => {
+      setSavedLabel('Saving…');
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      saveTimer.current = setTimeout(() => {
+        try {
+          const html = ed.getHTML();
+          if (html === lastSavedRef.current) return;
+          flizowStore.updateLeaveGuidelines(html);
+          lastSavedRef.current = html;
+          setSavedLabel('All changes saved');
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.error('[GuidelinesPanel] failed to serialise:', err);
+          setSavedLabel("Couldn’t save — your last changes may not have persisted");
+        }
+      }, 400);
+    },
+  });
+
+  // If the underlying doc changes from a different tab/device, sync
+  // the editor without resetting the cursor when the change is just
+  // our own echo.
+  useEffect(() => {
+    if (!editor) return;
+    const incoming = doc?.content ?? '';
+    if (incoming === lastSavedRef.current) return;
+    if (incoming === editor.getHTML()) return;
+    lastSavedRef.current = incoming;
+    editor.commands.setContent(incoming, { emitUpdate: false });
+  }, [editor, doc?.content]);
+
+  // Flush any pending save on unmount so a tab-switch doesn't drop
+  // the last few characters.
+  useEffect(() => {
+    return () => {
+      if (saveTimer.current) {
+        clearTimeout(saveTimer.current);
+        if (editor) {
+          try {
+            const html = editor.getHTML();
+            if (html !== lastSavedRef.current) {
+              flizowStore.updateLeaveGuidelines(html);
+            }
+          } catch {
+            // No surface to report on; the next mount picks up the
+            // unflushed change from local storage anyway.
+          }
+        }
+      }
+    };
+  }, [editor]);
+
+  return (
+    <div className="rail-section guidelines-panel">
+      <div className="rail-section-head">
+        <h3 className="rail-section-title">Leave guidelines</h3>
+        <span className="rail-section-sub">
+          Workspace-wide. Team members read this from the Request Time Off modal.
+        </span>
+      </div>
+      <div className="guidelines-editor-wrap">
+        <EditorContent editor={editor} />
+      </div>
+      <div className="guidelines-foot">
+        {savedLabel && (
+          <span className="guidelines-saved" aria-live="polite">{savedLabel}</span>
+        )}
+        {doc?.updatedAt && !savedLabel && (
+          <span className="guidelines-saved">
+            Last updated {formatGuidelinesDate(doc.updatedAt)}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function formatGuidelinesDate(iso: string): string {
+  try {
+    return new Date(iso).toLocaleDateString(undefined, {
+      year: 'numeric', month: 'short', day: 'numeric',
+    });
+  } catch {
+    return iso.slice(0, 10);
+  }
+}
+
 function RailTabs({
   active,
   onChange,
@@ -692,9 +828,13 @@ function RailTabs({
   ruleCount: number;
 }) {
   const items: Array<{ id: RailTab; label: string; count: number }> = [
-    { id: 'approvals', label: 'Approvals', count: pendingCount },
-    { id: 'rules',     label: 'Rules',     count: ruleCount },
-    { id: 'conflicts', label: 'Conflicts', count: conflictCount },
+    { id: 'approvals',  label: 'Approvals',  count: pendingCount },
+    { id: 'rules',      label: 'Rules',      count: ruleCount },
+    { id: 'conflicts',  label: 'Conflicts',  count: conflictCount },
+    // Guidelines — count is always 0 (it's a single doc, not a
+    // counted list) so the chip stays clean. Owner/Admin write
+    // here; the read surface lives in the Request modal.
+    { id: 'guidelines', label: 'Guidelines', count: 0 },
   ];
   return (
     <div className="schedules-rail-tabs" role="tablist" aria-label="Schedules side panel sections">
@@ -717,18 +857,109 @@ function RailTabs({
 
 // ── Approval queue ─────────────────────────────────────────────────
 
+/** Compact display map for leave-type chips on the approval card.
+ *  Keeps the colour tokens + tooltip copy in one place. */
+const LEAVE_TYPE_DISPLAY: Record<LeaveType, { label: string; help: string }> = {
+  sick:      { label: 'Sick',      help: 'Health-related leave. Eats the 15-day sick bucket.' },
+  emergency: { label: 'Emergency', help: 'Unexpected event (power, internet, family). Eats the 15-day shared bucket.' },
+  casual:    { label: 'Casual',    help: 'Earned-credit leave. Spends holiday transfer credits first, then the shared bucket.' },
+};
+
+/** Inline paid/unpaid preview on the approval card. Runs the same
+ *  math the request modal showed the requester, so the approver
+ *  sees the EXPECTED outcome before clicking Approve. Note: the
+ *  actual locked breakdown gets re-computed at approval time, so
+ *  this preview can drift slightly if other requests get approved
+ *  between view and click. */
+function ApprovalBreakdown({
+  request,
+  member,
+  holidays,
+  observations,
+  allRequests,
+  creditPolicy,
+  todayISO,
+}: {
+  request: TimeOffRequest;
+  member: Member;
+  holidays: ReadonlyArray<Holiday>;
+  observations: ReadonlyArray<HolidayObservation>;
+  allRequests: ReadonlyArray<TimeOffRequest>;
+  creditPolicy: import('../types/flizow').CreditExpiryPolicy;
+  todayISO: string;
+}) {
+  if (!request.leaveType) return null;
+  const others = allRequests.filter((r) => r.id !== request.id);
+  const creditBalance = creditBalanceFor(
+    member,
+    holidays,
+    observations,
+    others,
+    creditPolicy,
+    todayISO,
+  );
+  const breakdown = computeLeaveBreakdown({
+    leaveType: request.leaveType,
+    start: request.start,
+    end: request.end,
+    member,
+    holidays,
+    requests: others,
+    creditBalance,
+    todayISO,
+  });
+  if (breakdown.workingDays === 0) return null;
+  const sharedPart = breakdown.paidDays - breakdown.creditDays;
+  return (
+    <div className="schedules-request-breakdown">
+      <span className="schedules-request-breakdown-total">
+        {breakdown.workingDays} working {breakdown.workingDays === 1 ? 'day' : 'days'}
+      </span>
+      <span className="schedules-request-breakdown-sep" aria-hidden="true">·</span>
+      {breakdown.creditDays > 0 && (
+        <span className="schedules-request-breakdown-pill schedules-request-breakdown-pill--credit">
+          {breakdown.creditDays} credit
+        </span>
+      )}
+      {sharedPart > 0 && (
+        <span className="schedules-request-breakdown-pill schedules-request-breakdown-pill--paid">
+          {sharedPart} paid
+        </span>
+      )}
+      {breakdown.unpaidDays > 0 && (
+        <span className="schedules-request-breakdown-pill schedules-request-breakdown-pill--unpaid">
+          {breakdown.unpaidDays} unpaid
+        </span>
+      )}
+    </div>
+  );
+}
+
 function ApprovalQueue({
   requests,
   members,
   rules,
   approvedRequests,
   focusId,
+  holidays,
+  observations,
+  allRequests,
+  creditPolicy,
+  todayISO,
 }: {
   requests: ReadonlyArray<TimeOffRequest>;
   members: ReadonlyArray<Member>;
   rules: ReadonlyArray<CoverageRule>;
   approvedRequests: ReadonlyArray<TimeOffRequest>;
   focusId?: string;
+  /** Phase 8 — used by the inline breakdown preview that shows the
+   *  approver "approving this will draw 3 paid + 2 unpaid" before
+   *  they click. */
+  holidays: ReadonlyArray<Holiday>;
+  observations: ReadonlyArray<HolidayObservation>;
+  allRequests: ReadonlyArray<TimeOffRequest>;
+  creditPolicy: import('../types/flizow').CreditExpiryPolicy;
+  todayISO: string;
 }) {
   const [decisionNotes, setDecisionNotes] = useState<Record<string, string>>({});
   const [pending, setPending] = useState<string | null>(null);
@@ -860,9 +1091,44 @@ function ApprovalQueue({
                   {formatMonthDay(r.start)} – {formatMonthDay(r.end)}
                 </div>
               </div>
+              {r.leaveType && (
+                <span
+                  className={`schedules-request-type schedules-request-type--${r.leaveType}`}
+                  title={LEAVE_TYPE_DISPLAY[r.leaveType].help}
+                >
+                  {LEAVE_TYPE_DISPLAY[r.leaveType].label}
+                </span>
+              )}
             </div>
             {r.reason && (
               <div className="schedules-request-reason">"{r.reason}"</div>
+            )}
+            {m && r.leaveType && (
+              <ApprovalBreakdown
+                request={r}
+                member={m}
+                holidays={holidays}
+                observations={observations}
+                allRequests={allRequests}
+                creditPolicy={creditPolicy}
+                todayISO={todayISO}
+              />
+            )}
+            {r.attachments && r.attachments.length > 0 && (
+              <div className="schedules-request-attachments">
+                <div className="schedules-request-attachments-label">
+                  Supporting documents
+                </div>
+                <ul className="schedules-request-attachments-list">
+                  {r.attachments.map((a) => (
+                    <li key={a.id}>
+                      <a href={a.url} target="_blank" rel="noopener noreferrer">
+                        {a.filename}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
             {newConflicts.length > 0 && (
               <div className="schedules-request-conflict">
@@ -911,7 +1177,7 @@ function ApprovalQueue({
               </button>
               <button
                 type="button"
-                className="acct-btn acct-btn--primary"
+                className="acct-btn-solid"
                 onClick={() => handleApprove(r.id)}
                 disabled={pending === r.id}
               >
