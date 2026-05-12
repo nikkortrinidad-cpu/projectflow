@@ -75,6 +75,168 @@ services are all on fire shouldn't read as On Track just because
 nobody updated the field. The override flag preserves AM agency
 while the system carries the boring vigilance.
 
+**Why the current model causes drift (concrete example):**
+
+A real case that surfaced during QA. The AM flagged a task as
+"urgent priority" and the dueDate had already passed (1 day overdue).
+The MY TASKS card pill rendered as **AT RISK**, not **ON FIRE** —
+which felt wrong because urgent overdue work is the loudest possible
+signal.
+
+The chain explains why:
+
+```
+Task: "Review prospect's website copy & messaging"
+  ├─ dueDate: yesterday → overdue
+  ├─ severity: 'critical' (urgent flag)
+  └─ columnId: in-progress (not blocked)
+        │
+        ▼  Service health (DERIVED from tasks)
+Service: any task overdue OR critical OR blocked → service = 'fire'
+        │
+        ▼  Client status (MANUAL — not derived)
+Client: status stays at 'risk' because no AM has flipped it manually
+        │
+        ▼  MY TASKS card pill
+Pill = client.status = AT RISK   ← reads the manual field, not the
+                                    actual ground-truth state
+```
+
+The card pill reads `client.status` (manual). The service underneath
+is technically on fire by the derivation rule, but the client record
+one level up is still hand-marked as at-risk. There's no
+auto-promotion path from "service went on fire" → "client status
+gets bumped to fire."
+
+Worse: the MY TASKS feed only includes clients where `status ===
+'fire' || status === 'risk'`. So a client manually marked `track`
+(On Track) with urgent overdue work **wouldn't appear in MY TASKS
+at all** — silently invisible to whoever is scanning the dashboard.
+
+The auto-derive fix below solves both problems at once.
+
+**Implementation blueprint (for the portal dev):**
+
+**Step 1 — Data model.** Add two fields to the Client record
+alongside the existing `status`:
+
+```ts
+interface Client {
+  // existing
+  status: ClientStatus;
+
+  // new — manual override system
+  statusOverride?: ClientStatus | null;
+  statusOverrideBy?: string | null;   // member id of whoever set it
+  statusOverrideAt?: string | null;   // ISO timestamp
+}
+```
+
+The existing `status` field stays but its meaning shifts: it now
+seeds the initial value (e.g. `'onboard'` when a client is created)
+and stores the operational state (`paused` / `onboard`). The single
+source of truth for the displayed status becomes the derivation
+function below.
+
+**Step 2 — Derivation function.** One pure function, runs on every
+render:
+
+```ts
+function deriveClientStatus(
+  client: Client,
+  services: Service[],
+  tasks: Task[],
+  todayISO: string,
+): ClientStatus {
+  // 1. Manual override always wins.
+  if (client.statusOverride) return client.statusOverride;
+
+  // 2. Operational states are sticky (not health-driven).
+  if (client.status === 'paused' || client.status === 'onboard') {
+    return client.status;
+  }
+
+  // 3. Derive from worst service health across the client's services.
+  const ownedServices = services.filter(s => s.clientId === client.id);
+  if (ownedServices.length === 0) return 'track';
+
+  let worst: ClientStatus = 'track';
+  for (const service of ownedServices) {
+    const health = serviceHealth(service.id, tasks, todayISO);
+    if (health === 'fire') return 'fire';   // short-circuit
+    if (health === 'risk') worst = 'risk';
+  }
+  return worst;
+}
+```
+
+**Step 3 — Override behavior.** When the AM manually picks a status
+via the client-detail kebab menu or the Add Client modal:
+
+- Write to `statusOverride` (NOT `status`).
+- Write `statusOverrideBy = currentMemberId` and `statusOverrideAt
+  = new Date().toISOString()`.
+- A "Use auto" button next to the manual indicator clears all three
+  override fields back to null.
+- The override does NOT auto-expire. If the AM disagrees, they keep
+  the override until they explicitly clear it. Auto-expiry would
+  surprise the AM ("why did this revert overnight?").
+
+**Step 4 — UI swap.** Every place that reads `client.status` today
+swaps to `deriveClientStatus(client, services, tasks, today)`:
+
+| Surface | Today | After |
+|---|---|---|
+| Client detail header pill | `client.status` | derived value |
+| MY TASKS aggregator | filter on `client.status` | filter on derived value |
+| Portfolio Health rollup | count by `client.status` | count by derived value |
+| Clients list filter chips | bucket by `client.status` | bucket by derived value |
+| Clients list row dot color | `client.status` | derived value |
+
+**Step 5 — "Manually set" indicator.** When `statusOverride` is
+non-null on the surface being rendered, display a small caption
+under the status pill:
+
+```
+● ON TRACK
+Manually set by Jane on May 10 · Use auto
+```
+
+Style: 12px muted text. The "Use auto" link clears the override.
+Renders only on surfaces where space allows (client detail header
+yes; Clients list row no — too narrow).
+
+**Step 6 — Migration.** No data migration needed. Existing client
+records keep their `status` field as-is. On the first render after
+the deploy, `deriveClientStatus()` runs and either:
+
+- Returns the existing `status` value (when the derived value happens
+  to match) — no visible change for the AM.
+- Returns a different value (when the manual status drifted from
+  service health) — the pill updates to the new value. If the AM
+  prefers the old value, they click the kebab → set status manually
+  → it writes to `statusOverride` → the manual indicator appears.
+
+The transition is graceful — no broken state, no missing data, the
+worst case is one AM seeing a status they didn't expect and choosing
+whether to keep it or override.
+
+**Step 7 — Edge cases to handle:**
+
+- **No services yet** → return `'track'`. New client with no work
+  shouldn't read as urgent.
+- **All services archived** → archived services are filtered out
+  before derivation runs. If everything is archived, return `'track'`.
+- **Mixed signals** — the priority order (fire > risk > track)
+  handles this. One fire service trumps two track services.
+- **Race conditions** — derivation is pure. Stale UI between a task
+  move and a re-render isn't a problem; the next render computes
+  the right value.
+- **Paused / onboard precedence** — these win over derived health
+  because they're operational, not health-driven. A paused client
+  with one on-fire service should still read as `paused` until the
+  AM un-pauses them.
+
 ### Service statuses
 
 Same three loudest names as clients (`fire` / `risk` / `track`), but
