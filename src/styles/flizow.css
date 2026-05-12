@@ -9147,23 +9147,27 @@
      narrow viewports.
 
      Rail width sized for FIVE sub-tabs (Approvals + Balances + Rules
-     + Conflicts + Guidelines) plus the per-tab pending-count chip,
-     plus enough headroom that "Guidelines" doesn't crowd the right
-     edge. 420px also gives the approval card + Balances row grid
-     enough horizontal room to render their inner three-column
-     layouts without forcing line breaks on labels.
+     + Conflicts + Guidelines). The Approvals tab is the densest
+     (label + count chip when pending requests exist) so it needs
+     the most horizontal room. At 480px the tab strip lands at
+     ~90px per tab — comfortable for the Approvals chip variant
+     AND for the longest single-word label (Guidelines / Conflicts).
 
-     Stack breakpoint bumped from 1100 → 1200 so common 13"
+     480px also gives the approval card + Balances row grid enough
+     horizontal room to render their inner three-column layouts
+     without forcing line breaks on labels.
+
+     Stack breakpoint bumped from 1100 → 1240 so common 13"
      laptop widths (1280–1366px) don't end up with a squeezed
      calendar + narrow rail side-by-side; the stacked layout reads
      cleaner at those widths. */
   .schedules-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 420px;
+    grid-template-columns: minmax(0, 1fr) 480px;
     gap: var(--sp-md);
     align-items: start;
   }
-  @media (max-width: 1200px) {
+  @media (max-width: 1240px) {
     .schedules-grid {
       grid-template-columns: 1fr;
     }
