@@ -6,7 +6,10 @@ and leadership (so the numbers in the report match what's on screen).
 
 Every metric, status, and rollup the app surfaces is listed here. For
 each one: a plain-English explanation, the formal rule, where it shows
-up in the UI, and the source file in code.
+up in the UI, and the source file in code. Each entry also carries a
+**How it should be** section — Nikko's recommendation for the model
+going forward. Some items recommend "Keep as is" (the current rule is
+the right one); others propose meaningful changes.
 
 ---
 
@@ -28,6 +31,12 @@ When the portal disagrees with our build's numbers, the cause is
 almost always one of two things: either the portal is using a
 different *derivation rule*, or it's storing a value the reference
 treats as derived (or vice versa).
+
+**The direction of travel** (covered in the "How it should be"
+sections): the model should move toward **auto-derive by default with
+a manual override flag** for the values that today are fully manual.
+The override flag preserves AM control while letting the system
+catch drift.
 
 ---
 
@@ -55,6 +64,17 @@ it manually via the Add Client modal and via the kebab menu on the
 client detail header. The system never auto-changes it. Type
 definition: `src/types/flizow.ts:22` (`ClientStatus`).
 
+**How it should be:** Auto-derive by default — `client.status =
+worst(service.health for service in client.services)` with the
+priority order fire > risk > track. `onboard` and `paused` stay
+manual (they're operational states, not health states). When the AM
+disagrees with the derived value, they can flip to a manual override
+with a visible "Manually set by [name] on [date]" indicator that
+stays until cleared. Solves the drift problem: a client whose
+services are all on fire shouldn't read as On Track just because
+nobody updated the field. The override flag preserves AM agency
+while the system carries the boring vigilance.
+
 ### Service statuses
 
 Same three loudest names as clients (`fire` / `risk` / `track`), but
@@ -72,6 +92,13 @@ column. The first fire signal short-circuits the loop (no need to
 keep checking other tasks once a fire flag is set).
 
 Source: `src/utils/clientDerived.ts:132` (`serviceHealth`).
+
+**How it should be:** Keep as is. The derivation from tasks is the
+right shape — first urgent signal wins, no priors, no cache that can
+go stale. Service health is the foundation for the client-status
+auto-derive recommended above, so getting this rule pinned down is
+the cornerstone the rest builds on. Short-circuiting on the first
+fire signal stays.
 
 ---
 
@@ -100,6 +127,12 @@ they share one source of truth.
 
 Source: `src/pages/OverviewPage.tsx:166` (`health` memo).
 
+**How it should be:** Keep the count math. Once client status
+auto-derives from service health (per §1), this rollup automatically
+reflects ground-truth service state — no separate work needed. The
+"active = total − paused" formula stays right; paused clients
+shouldn't pad the active rotation.
+
 ### Subtitle ("X clients need you now" / "Steady morning ahead.")
 
 Adaptive copy below the greeting:
@@ -111,6 +144,13 @@ Adaptive copy below the greeting:
   etc.)
 
 The branch table lives in `pickTagline` (same file).
+
+**How it should be:** Keep the adaptive branching. Three states
+(loud / mid / calm) is the right level of resolution. Add one more
+branch at the bottom: when fire = 0 AND overdue = 0 AND there are
+quiet/drifting clients (see §5), surface that as a fourth state —
+"X clients haven't been touched in 2 weeks." Catches the silent
+drift case the urgency model misses.
 
 ### Client list row — right-hand metric
 
@@ -127,6 +167,13 @@ sentence shape depends on the client's status:
 
 Source: `src/utils/clientDerived.ts:79` (`clientMetric`).
 
+**How it should be:** Keep the status-aware sentence shape. Add one
+more state once the drift detector lands: clients with
+`daysSinceLastActivity > 14` AND no urgent signal show "Quiet — last
+touched X days ago" instead of "On track." Surfaces the silent-drift
+case the loud states miss. Same right-aligned slot, same render
+rule, one more branch.
+
 ### Last-activity timestamp
 
 The "6d ago" / "Mon" / "Apr 7" stamp on the right of each list row.
@@ -136,14 +183,16 @@ Today, in the demo data, we use the latest `createdAt` of any task
 tied to the client's services. Falls back to the client's
 `startedAt` so a brand-new client with no tasks yet still has a date.
 
-**Production note:** a real system would track this as a denormalized
-`updatedAt` on the client record, updated whenever any of its
-services, tasks, notes, or contacts change. The portal should add
-that field and write it on every relevant mutation — the demo's
-"latest createdAt" approach is good enough at small scale, but it
-gets slow when you have thousands of clients.
-
 Source: `src/utils/clientDerived.ts:188` (`clientLastTouched`).
+
+**How it should be:** Add a proper `updatedAt` field on each client
+record. Write to it on every operator-driven mutation: task
+add/move/comment, note add, contact change, quick-link change,
+onboarding tick, service add, client field edit, touchpoint logged.
+Drop the demo's "latest task.createdAt" walk — it's slow at scale
+(walks every task) and misses non-task activity (notes, onboarding,
+contacts, touchpoints). Keep the format ladder (§ below) unchanged;
+just feed it a real timestamp.
 
 ### "Xd ago" formatting
 
@@ -163,6 +212,11 @@ output stays stable across re-renders.
 
 Source: `src/utils/clientDerived.ts:205` (`relativeTimeAgo`).
 
+**How it should be:** Keep the format ladder. The buckets (minutes /
+hours / days / weekday / date) match how humans actually think about
+recency. Anchoring on the store's `today` (not `Date.now()`) is also
+right — stable across re-renders, deterministic for tests.
+
 ---
 
 ## 3. Per-service values
@@ -175,12 +229,24 @@ the AM picks it in the Add Service modal.
 
 Source: `src/types/flizow.ts:35` (`ServiceType`).
 
+**How it should be:** Keep the project/retainer split. Two types
+covers the meaningful distinction (one-off vs recurring). Anything
+finer (sprint, audit, content series, growth experiment) becomes a
+template under one of the two types, not a third type. Three types
+would force a label switch in too many surfaces (progress label,
+subtitle shape, retainer-specific UI) for diminishing return.
+
 ### Service health
 
 Derived from tasks (rule listed in §1 above). Surfaces as:
 - A colored dot or pill on each service row in ACTIVE SERVICES
 - The colored health bar on the pinned card on Home (red / amber /
   green)
+
+**How it should be:** Covered in §1 above. Keep the derivation rule.
+This is the calculation the rest of the model leans on (client
+status auto-derive, NEEDS ATTENTION, MY TASKS aggregation) — keeping
+it pure-derived (no cache) means changes propagate instantly.
 
 ### Service progress
 
@@ -193,12 +259,18 @@ updates it manually as work moves.
 
 Source: `src/types/flizow.ts:394` (`Service.progress`).
 
-**For the portal:** if you want progress to auto-update from task
-state, that's a feature change that needs leadership sign-off. Our
-build deliberately keeps it manual because progress on a creative
-project isn't linear with task count (the last 20% takes 50% of the
-time, etc.). The AM judging completion is more accurate than dividing
-done-tasks by total-tasks.
+**How it should be:** Switch to auto-compute by default, with a
+manual override flag:
+
+- `project`: `progress = (tasks where columnId === 'done' and !archived) / (total open + done tasks) × 100`
+- `retainer`: `progress = (hours logged this month) / (hours budgeted this month) × 100` — requires a `hoursBudgeted` field on retainer services + a time-tracking integration or a manual hours field
+
+Manual override (`progressOverride: number | null`) plus a "Manually
+set" indicator. Today's manual model goes stale fast — AMs forget to
+update the number for weeks while the work moves. Auto-compute keeps
+it honest; override lets the AM correct when the count misleads (the
+last 20% taking 50% of the time is real, and the AM judging that is
+fine, but the default should be the count).
 
 ### Service "Next deliverable" date
 
@@ -208,6 +280,15 @@ the "Due May 25" subtitle line on each service row in ACTIVE
 SERVICES (see §4).
 
 Source: `src/types/flizow.ts:396`.
+
+**How it should be:** Derive from the earliest open task in a
+designated "milestone" lane on the service's kanban (or earliest
+open task overall if no milestone lane is designated). Manual
+override allowed via a `nextDeliverableOverride` field. Same drift
+problem as progress: today's manual model goes stale because nobody
+updates the field as new tasks land. Pull the next checkpoint from
+the actual board state and let the AM override only when the
+ground-truth date differs.
 
 ### ACTIVE SERVICES eyebrow ("7 of 7 · 2 projects, 5 retainers")
 
@@ -224,11 +305,16 @@ eyebrow    = "{total} of {total} · {projects} projects, {retainers} retainers"
 services-array length. The prefix exists because the original spec
 wanted "active of total" (excluding archived/paused services) but
 archive at the service level isn't surfaced in this UI yet, so
-they're equal. The portal should still render both numbers for shape
-parity — when archived services land, this slot will start showing
-the real active count.
+they're equal.
 
 Source: `src/pages/ClientDetailPage.tsx:904`.
+
+**How it should be:** Once archive-at-service-level lands, the
+prefix becomes `active of total` where `active = services.filter(s
+=> !s.archived).length`. Already structurally wired (both numbers
+exist); only the UI exposure of archive is missing. The
+project/retainer split stays as is — the breakdown is useful at a
+glance even on small service counts.
 
 ### Service row subtitle ("Template: Brand Refresh · Due May 25")
 
@@ -240,6 +326,14 @@ Two parts separated by a middle dot:
 For retainers, the subtitle still shows the template + next
 deliverable date — the "next deliverable" on a retainer is the next
 monthly checkpoint.
+
+**How it should be:** Keep the two-piece shape (Template · Due).
+It's the right pair of context cues (what kind of work + next
+checkpoint). Replace "Template: None" with "Untemplated service"
+when no template is assigned — clearer signal that the operator
+skipped templating intentionally rather than the data being broken.
+"Due —" placeholder on services with no scheduled next deliverable
+should fall back to "No milestone scheduled."
 
 ### Service progress label ("Progress 35%" vs "This month 33%")
 
@@ -253,6 +347,12 @@ The label switch is purely cosmetic — both pull from
 *means* something different for the two service types: 35% complete
 on a one-off deliverable vs. 35% of this month's retainer hours used.
 
+**How it should be:** Keep the label switch. Once the
+auto-compute math lands (see Service progress above), the
+This-month number gets honest — derived from real hours used
+this month rather than a manually-typed number. Same label, more
+trustworthy number. No UI change needed.
+
 ---
 
 ## 4. Per-task values
@@ -265,10 +365,22 @@ works correctly without parsing because the format is sortable.
 
 Source: `src/utils/clientDerived.ts:164` (`countOverdueTasks`).
 
+**How it should be:** Keep the rule. `dueDate < today` with
+lexicographic comparison on ISO strings is cheap, correct, and
+parses-free. Already excludes done + archived. No change.
+
 ### Blocked
 
 `task.columnId === 'blocked'`. The blocked column is a fixed lane on
 every kanban board.
+
+**How it should be:** Add a time-based escalation. Any task sitting
+in `blocked` for more than 5 days auto-flags `severity === 'critical'`
+(if not already set). The "blocked" state today is silent — only the
+AM eyeballing the board catches that work has been stuck for two
+weeks. Auto-promotion to critical surfaces it in NEEDS ATTENTION,
+MY TASKS, and the client metric without anyone having to remember to
+mark it.
 
 ### Severity (`warning` / `critical`)
 
@@ -282,6 +394,21 @@ modal. Drives:
 
 The system never auto-sets severity — it's the operator's read on
 the work.
+
+**How it should be:** Keep severity as a manual field, BUT add a
+structured `blockingCategory` enum alongside the free-text blocker
+reason:
+
+```
+blockingCategory: 'budget' | 'client-response' | 'asset-delivery'
+                | 'dependency' | 'feedback' | 'other'
+```
+
+Free-text caption stays for the human context. The structured field
+unlocks Stats-tab insights ("60% of blockers this quarter were
+waiting on client response — fix the asset request process") and a
+reporting dimension for leadership that the free-text field can't
+serve.
 
 ---
 
@@ -309,6 +436,22 @@ Enjoy the quiet."
 
 Source: `src/pages/OverviewPage.tsx:1137` (`buildAttentionCards`).
 
+**How it should be:** Two additions on top of the current model:
+
+1. **Secondary view: by reason.** Add a toggle at the top of MY
+   TASKS — "By client" (today's default) vs "By blocker." The
+   by-blocker view groups tasks across clients by `blockingCategory`
+   (see §4): "Waiting on client response (3)" / "Budget approval
+   stalled (2)" / "Reviews overdue (4)." Same data, different cut,
+   optimized for batch-work (the AM can plow through all the
+   review-pending cards together).
+
+2. **Drift section underneath.** Below the urgent cards, a small
+   list: "X clients you haven't touched in 14+ days." Catches the
+   silently-stale case. Each row is a one-liner with the client
+   name + last-touched stamp + a "Open" button. Doesn't compete
+   with the loud cards — it's a quiet reminder underneath them.
+
 ---
 
 ## 6. NEEDS ATTENTION (Client detail Overview tab)
@@ -325,6 +468,14 @@ Timestamp ("As of this morning") signals these are computed at start
 of day, not refreshed live.
 
 Source: `src/pages/ClientDetailPage.tsx:783` (`buildAttentionChips`).
+
+**How it should be:** Keep the two-card pattern. Once
+`blockingCategory` lands (§4), consider a third card type when the
+signal warrants it: "Waiting on client — N cards" (any blocked tasks
+where category is `'client-response'` or `'asset-delivery'`).
+Surfaces externally-blocked work separately from internally-blocked
+work so the AM knows whether to chase the team or chase the client.
+Renders only when count > 0.
 
 ---
 
@@ -353,6 +504,13 @@ the template name + items left (e.g. "Brand Refresh · 3 items left").
 
 Source: `src/pages/ClientDetailPage.tsx:1283`.
 
+**How it should be:** Keep the rollup math. Add one behavior: when a
+service hits "All set" for more than 7 days, collapse its onboarding
+card into a "Completed setups (N)" expandable group at the bottom of
+the tab. Stops the Onboarding tab from accreting a tail of
+done-but-still-listed services. The 7-day delay is a grace window
+so the AM has time to verify completeness before the card hides.
+
 ---
 
 ## 8. Capacity / daily slot load
@@ -377,6 +535,13 @@ intentional rule keeps "who owns this" unambiguous.
 
 Source: `src/utils/capacity.ts:58` (`loadFor`).
 
+**How it should be:** Keep the slot math. The primary-assignee-only
+rule is right — multi-owner contribution would double-count slots
+and break capacity planning. Add a fragmentation indicator alongside
+the load badge in MY SCHEDULE: "4/6 · 3 clients" surfaces switching
+cost (4 slots across 3 different clients is harder than 4 slots on
+one client). Same badge footprint, new secondary number.
+
 ### Soft cap and Max cap
 
 Two numbers per (member, date) pair, with a resolution chain:
@@ -395,6 +560,14 @@ defaults. A holiday or PTO day is modeled by overriding both to 0.
 Source: `src/utils/capacity.ts:88` (`effectiveCapFor`). Defaults at
 lines 29, 33.
 
+**How it should be:** Keep the resolution chain (override → standing
+→ defaults). Add one auto-override: when a member has approved
+time-off for a date, automatically set soft+max to 0 on that date
+(currently the AM has to do this manually via the popover). PTO is
+the most common reason for an override; deriving it from the
+time-off system removes a chore and prevents the case where someone
+forgets to update the cap before going on leave.
+
 ### Load zone (green / amber / red)
 
 ```
@@ -407,6 +580,11 @@ The zone drives the badge color on the day card and the heatmap
 shading on the Team Capacity Heatmap.
 
 Source: `src/utils/capacity.ts:108` (`loadZone`).
+
+**How it should be:** Keep the three-zone rule. Optionally add a
+fourth "deep red" zone for `load > 1.5 × max` — catastrophic
+over-booking that needs a separate visual signal so the AM doesn't
+miss it among normal red days. Polish, not blocking.
 
 ---
 
@@ -432,6 +610,13 @@ the same.
 
 Source: `src/utils/clientDerived.ts:46` (`servicePills`).
 
+**How it should be:** Keep 3-visible + "+N more." Cap is right — a
+row with 8 chips is unscannable. Consider sorting by service health
+instead of creation order: ON FIRE services bubble to the visible
+slots so the worst signals are always seen, not buried under
+"+5 more." Useful when a client has many services and the AM scans
+the list looking for trouble.
+
 ---
 
 ## 10. Notifications
@@ -454,6 +639,15 @@ Categories (in order they appear in the bell):
 
 Source: `src/data/deriveNotifications.ts`.
 
+**How it should be:** Group by client where the underlying signal is
+identical. "Cobalt Auto · 9 overdue cards" as one notification
+(clicks to expand the full list) instead of 9 separate
+notifications. Other categories (digest, time-off, on-fire-client)
+already aggregate correctly — only overdue + due-today benefit from
+grouping. The live-derivation model stays; just the surfacing
+collapses adjacent rows with the same client + same category into
+one row.
+
 ---
 
 ## 11. External / not-derived-by-us
@@ -471,9 +665,14 @@ The "Live · Synced N min ago" indicator shows the freshness of the
 latest pull. Our build doesn't store these numbers — every refresh
 hits the integration's API.
 
-The portal should match this exactly: fetch from each integration,
-display the results, and cache only as long as the freshness
-indicator says (don't snapshot stale numbers into the database).
+**How it should be:** Keep the live-fetch model. Don't cache or
+snapshot — integration data is meant to be fresh, and stale numbers
+on the Stats tab are worse than no numbers (the AM trusts what's on
+screen, so a stale number causes worse decisions than a missing
+one). The "Synced N min ago" indicator already exposes freshness;
+that's the right contract. Per-integration rate limits should be
+handled in the integration adapter, not by snapshotting into our
+database.
 
 ---
 
@@ -484,7 +683,8 @@ When a new metric, status, or rollup lands in our build:
 1. Add it to the relevant section (clients / services / tasks /
    rollups / capacity).
 2. Use the same shape: plain-English summary, formal rule, where
-   it surfaces in the UI, source file + function.
+   it surfaces in the UI, source file + function, and a "How it
+   should be" recommendation.
 3. If it's stored (not derived), note it loudly so the portal knows
    to add the field.
 4. If it's derived, paste the rule literally — exact field names,
