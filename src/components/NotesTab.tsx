@@ -448,6 +448,30 @@ function NoteEditor({ note, store, onDelete }: {
 
 // ── Toolbar ───────────────────────────────────────────────────────────────
 
+/** Platform-aware modifier prefix for keyboard-shortcut display.
+ *  Mac users see "⌘B"; Windows/Linux users see "Ctrl+B". TipTap's
+ *  StarterKit binds Mod-* which the browser resolves to the right
+ *  physical key on each OS, so the shortcut WORKS either way — this
+ *  helper just makes the displayed string honest about which key to
+ *  press. Computed once at module load (the platform doesn't change
+ *  mid-session). */
+const IS_MAC = typeof navigator !== 'undefined' &&
+  /Mac|iPhone|iPad|iPod/.test(navigator.platform);
+const SHORTCUT = {
+  bold:        IS_MAC ? '⌘B' : 'Ctrl+B',
+  italic:      IS_MAC ? '⌘I' : 'Ctrl+I',
+  strike:      IS_MAC ? '⌘⇧X' : 'Ctrl+Shift+X',
+  h2:          IS_MAC ? '⌘⌥2' : 'Ctrl+Alt+2',
+  h3:          IS_MAC ? '⌘⌥3' : 'Ctrl+Alt+3',
+  bulletList:  IS_MAC ? '⌘⇧8' : 'Ctrl+Shift+8',
+  orderedList: IS_MAC ? '⌘⇧7' : 'Ctrl+Shift+7',
+  // No shortcut for link — ⌘K is already bound to the Flizow
+  // Command Palette workspace-wide, so claiming it for "insert
+  // link" would conflict. The toolbar button remains the only
+  // path to the link dialog.
+  link:        undefined,
+} as const;
+
 function Toolbar({ editor, disabled }: { editor: Editor; disabled: boolean }) {
   // Insert-link dialog state lives on the toolbar so the button can flip
   // to the dialog without lifting through NoteEditor. wip-modal-overlay is
@@ -455,51 +479,69 @@ function Toolbar({ editor, disabled }: { editor: Editor; disabled: boolean }) {
   // mount it in the tree.
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
 
+  // Each button carries one data attribute the tooltip CSS reads:
+  //   data-tooltip-full — the full label + shortcut, e.g. "Bold · ⌘B"
+  // The middle dot is a visual separator that reads cleanly without
+  // parentheses noise. When there's no shortcut (Link button), we
+  // pass just the label. The CSS pseudo-element renders a styled
+  // card above the button on hover/focus, with a 250ms delay so it
+  // doesn't flash during quick mouse traversal. The native `title`
+  // attribute is intentionally NOT set — the styled tooltip
+  // replaces it; aria-label carries the same info for screen
+  // readers so SR users don't depend on hover behaviour.
   const btn = (
-    key: string, label: string, active: boolean, run: () => void, icon: React.ReactNode,
-  ) => (
-    <button
-      key={key}
-      type="button"
-      className="notes-fmt-btn"
-      data-active={active ? 'true' : undefined}
-      onClick={run}
-      disabled={disabled}
-      aria-label={label}
-      aria-pressed={active}
-      title={label}
-    >
-      {icon}
-    </button>
-  );
+    key: string,
+    label: string,
+    shortcut: string | undefined,
+    active: boolean,
+    run: () => void,
+    icon: React.ReactNode,
+  ) => {
+    const tooltip = shortcut ? `${label} · ${shortcut}` : label;
+    return (
+      <button
+        key={key}
+        type="button"
+        className="notes-fmt-btn"
+        data-active={active ? 'true' : undefined}
+        data-tooltip-full={tooltip}
+        onClick={run}
+        disabled={disabled}
+        aria-label={tooltip}
+        aria-pressed={active}
+      >
+        {icon}
+      </button>
+    );
+  };
 
   return (
     <div className="notes-toolbar" role="toolbar" aria-label="Formatting">
-      {btn('h2', 'Heading', editor.isActive('heading', { level: 2 }), () => editor.chain().focus().toggleHeading({ level: 2 }).run(),
+      {btn('h2', 'Heading', SHORTCUT.h2, editor.isActive('heading', { level: 2 }), () => editor.chain().focus().toggleHeading({ level: 2 }).run(),
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 12h16M4 18V6M20 18V6" /></svg>
       )}
-      {btn('h3', 'Sub-heading', editor.isActive('heading', { level: 3 }), () => editor.chain().focus().toggleHeading({ level: 3 }).run(),
+      {btn('h3', 'Sub-heading', SHORTCUT.h3, editor.isActive('heading', { level: 3 }), () => editor.chain().focus().toggleHeading({ level: 3 }).run(),
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 10h12M6 14h8M6 18V6M18 18V6" /></svg>
       )}
       <span className="notes-toolbar-divider" />
-      {btn('b', 'Bold', editor.isActive('bold'), () => editor.chain().focus().toggleBold().run(),
+      {btn('b', 'Bold', SHORTCUT.bold, editor.isActive('bold'), () => editor.chain().focus().toggleBold().run(),
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 4h8a4 4 0 0 1 0 8H6zM6 12h9a4 4 0 0 1 0 8H6z" /></svg>
       )}
-      {btn('i', 'Italic', editor.isActive('italic'), () => editor.chain().focus().toggleItalic().run(),
+      {btn('i', 'Italic', SHORTCUT.italic, editor.isActive('italic'), () => editor.chain().focus().toggleItalic().run(),
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 4h-9M14 20H5M15 4L9 20" /></svg>
       )}
-      {btn('s', 'Strikethrough', editor.isActive('strike'), () => editor.chain().focus().toggleStrike().run(),
+      {btn('s', 'Strikethrough', SHORTCUT.strike, editor.isActive('strike'), () => editor.chain().focus().toggleStrike().run(),
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 12h16M7 7a4 4 0 0 1 8 0M17 17a4 4 0 0 1-8 0" /></svg>
       )}
       <span className="notes-toolbar-divider" />
-      {btn('ul', 'Bullet list', editor.isActive('bulletList'), () => editor.chain().focus().toggleBulletList().run(),
+      {btn('ul', 'Bullet list', SHORTCUT.bulletList, editor.isActive('bulletList'), () => editor.chain().focus().toggleBulletList().run(),
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="9" y1="6" x2="21" y2="6" /><line x1="9" y1="12" x2="21" y2="12" /><line x1="9" y1="18" x2="21" y2="18" /><circle cx="4" cy="6" r="1" fill="currentColor" /><circle cx="4" cy="12" r="1" fill="currentColor" /><circle cx="4" cy="18" r="1" fill="currentColor" /></svg>
       )}
-      {btn('ol', 'Numbered list', editor.isActive('orderedList'), () => editor.chain().focus().toggleOrderedList().run(),
+      {btn('ol', 'Numbered list', SHORTCUT.orderedList, editor.isActive('orderedList'), () => editor.chain().focus().toggleOrderedList().run(),
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="10" y1="6" x2="21" y2="6" /><line x1="10" y1="12" x2="21" y2="12" /><line x1="10" y1="18" x2="21" y2="18" /><path d="M4 6h1v4M4 10h2M6 18H4c0-1 2-2 2-3s-1-1.5-2-1" /></svg>
       )}
       <span className="notes-toolbar-divider" />
-      {btn('link', 'Link', editor.isActive('link'), () => {
+      {btn('link', editor.isActive('link') ? 'Remove link' : 'Link', SHORTCUT.link, editor.isActive('link'), () => {
         // If the caret already sits inside a link, treat the button as
         // "remove link" — matches the toggle pattern of every other
         // formatting button in the row. Otherwise flip open the themed
