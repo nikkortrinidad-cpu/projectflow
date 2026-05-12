@@ -10998,6 +10998,17 @@
     overflow: hidden;
   }
 
+  /* Lift overflow + stacking while the per-day cap popover is open.
+     The default overflow:hidden protects rounded corners + long task
+     lists from poking out the bottom, but the popover (240px wide)
+     intentionally exceeds the column's footprint and gets clipped
+     against the column's left edge without this escape hatch. Raised
+     z-index so the open popover paints over sibling day cards. */
+  .week-col:has(.day-cap-popover) {
+    overflow: visible;
+    z-index: 10;
+  }
+
   /* Today highlight — monochrome: solid black in light, solid white in dark */
   .week-col.is-today {
     border-color: var(--text);
