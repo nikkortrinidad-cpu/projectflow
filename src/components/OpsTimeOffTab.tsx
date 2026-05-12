@@ -1090,8 +1090,17 @@ function RailTabs({
   conflictCount: number;
   ruleCount: number;
 }) {
+  // Approvals chip dropped per Nikko 2026-05-12 — the count was
+  // adding visual weight to the tab without changing behaviour
+  // (the pending requests render as soon as the user clicks in).
+  // Approvals always passes count: 0 so the chip never renders;
+  // the underlying pendingCount prop stays threaded for future use.
+  // Rules + Conflicts keep their counts because those are
+  // reference numbers the OM uses to scan workspace state without
+  // entering each tab.
+  void pendingCount;
   const items: Array<{ id: RailTab; label: string; count: number }> = [
-    { id: 'approvals',  label: 'Approvals',  count: pendingCount },
+    { id: 'approvals',  label: 'Approvals',  count: 0 },
     { id: 'balances',   label: 'Balances',   count: 0 },
     { id: 'rules',      label: 'Rules',      count: ruleCount },
     { id: 'conflicts',  label: 'Conflicts',  count: conflictCount },
