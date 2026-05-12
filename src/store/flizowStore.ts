@@ -4057,21 +4057,39 @@ class FlizowStore {
   // ── Notes ────────────────────────────────────────────────────────────
 
   addNote(note: Note) {
-    this.data.notes.push(note);
+    // Replace the array reference so useMemo([data.notes]) consumers
+    // recompute — NotesTab derives clientNotes via useMemo and was
+    // missing new notes when this method mutated with .push(). The
+    // house style says splice-replace, not in-place mutation, for
+    // exactly this reason; see CLAUDE.md → Known Patterns → Store
+    // mutations.
+    this.data.notes = [...this.data.notes, note];
     this.save();
   }
 
   /** Update the body, pinned state, or lock on a note. Bumps updatedAt
    *  whenever the body changed so the list sort stays honest. */
   updateNote(id: string, patch: Partial<Note>) {
-    const n = this.data.notes.find(n => n.id === id);
-    if (!n) return;
+    const idx = this.data.notes.findIndex(n => n.id === id);
+    if (idx === -1) return;
+    const current = this.data.notes[idx];
     // Only bump updatedAt when the body actually moved — tagging a note
     // as pinned shouldn't re-shuffle the sort order by modification time.
-    if (patch.body !== undefined && patch.body !== n.body) {
-      n.updatedAt = new Date().toISOString();
-    }
-    Object.assign(n, patch);
+    const bumpedAt =
+      patch.body !== undefined && patch.body !== current.body
+        ? new Date().toISOString()
+        : current.updatedAt;
+    // Splice-replace: build a new note object + a new array reference
+    // so memoized consumers (NotesTab's clientNotes / filtered useMemo
+    // chain) recompute. Object.assign on the row alone keeps the array
+    // and row references identical and the editor doesn't reflect
+    // changes until something else triggers a re-render.
+    const next: Note = { ...current, ...patch, updatedAt: bumpedAt };
+    this.data.notes = [
+      ...this.data.notes.slice(0, idx),
+      next,
+      ...this.data.notes.slice(idx + 1),
+    ];
     this.save();
   }
 
@@ -4095,16 +4113,28 @@ class FlizowStore {
   }
 
   toggleNotePinned(id: string) {
-    const n = this.data.notes.find(n => n.id === id);
-    if (!n) return;
-    n.pinned = !n.pinned;
+    // Splice-replace per the house style — see addNote comment for
+    // why mutating in place breaks the NotesTab useMemo chain.
+    const idx = this.data.notes.findIndex(n => n.id === id);
+    if (idx === -1) return;
+    const current = this.data.notes[idx];
+    this.data.notes = [
+      ...this.data.notes.slice(0, idx),
+      { ...current, pinned: !current.pinned },
+      ...this.data.notes.slice(idx + 1),
+    ];
     this.save();
   }
 
   toggleNoteLocked(id: string) {
-    const n = this.data.notes.find(n => n.id === id);
-    if (!n) return;
-    n.locked = !n.locked;
+    const idx = this.data.notes.findIndex(n => n.id === id);
+    if (idx === -1) return;
+    const current = this.data.notes[idx];
+    this.data.notes = [
+      ...this.data.notes.slice(0, idx),
+      { ...current, locked: !current.locked },
+      ...this.data.notes.slice(idx + 1),
+    ];
     this.save();
   }
 
