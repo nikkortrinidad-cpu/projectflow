@@ -679,6 +679,28 @@ export interface Member {
    *  entries here, mints an approved TimeOffRequest per entry, then
    *  clears the field. New writes never land here. */
   timeOff?: Array<{ start: string; end: string }>;
+
+  /** Employment status — gates paid-leave entitlement. Probationary
+   *  members can still submit + get requests approved, but every
+   *  approved working day flows to `unpaidDays` rather than drawing
+   *  from the annual quota (they haven't earned it yet). Regular
+   *  members get the 15 + 15 quota that resets on their
+   *  `regularizedAt` anniversary.
+   *
+   *  Owners flip members from probationary → regular through the
+   *  Members admin panel once their probation period ends. The
+   *  flip stamps `regularizedAt` to that day, which becomes the
+   *  anniversary boundary for the annual reset.
+   *
+   *  Optional + treated as 'probationary' when absent so a freshly-
+   *  migrated workspace doesn't accidentally hand out paid leave
+   *  the owner never authorised. Audit: time-off Phase 8. */
+  employmentStatus?: EmploymentStatus;
+  /** ISO date the member became regular. Anchors the annual quota
+   *  cycle — the 15 + 15 buckets reset on this date each year.
+   *  Required when `employmentStatus === 'regular'`; the Members
+   *  admin form enforces this. Audit: time-off Phase 8. */
+  regularizedAt?: string;
 }
 
 /**
@@ -696,6 +718,89 @@ export interface Member {
  *  Phase 6 builds the approval queue.
  */
 export type TimeOffStatus = 'pending' | 'approved' | 'denied' | 'cancelled';
+
+/** Leave-type classification. Drives the credit + quota math on
+ *  approval — see utils/timeOff.computeLeaveBreakdown for the rules.
+ *
+ *  - sick: health-related (planned or same-day). Eats from the annual
+ *    sick bucket (15 working days for regular employees).
+ *  - emergency: unexpected events (power, internet, family). Eats
+ *    from the shared casual+emergency bucket (15 working days).
+ *  - casual: redeems holiday transfer credits first (1 credit per
+ *    working day, earned by working through a holiday). Falls back
+ *    to the shared bucket when credits run out.
+ *
+ *  Past the relevant bucket and/or credits, additional working days
+ *  in a request flow through approval but get flagged unpaid.
+ *
+ *  Optional on TimeOffRequest because pre-Phase-8 entries don't have
+ *  it — display as "Not specified" until manually classified. */
+export type LeaveType = 'sick' | 'emergency' | 'casual';
+
+/** One uploaded supporting document on a time-off request — medical
+ *  certificate, screenshot of a power outage notice, anything the
+ *  approver might want to see before deciding. Stored in Firebase
+ *  Storage under `workspaces/{wsId}/timeoff/{requestId}/{filename}`;
+ *  the URL here is the long-lived download URL (cache-busted on
+ *  first upload). */
+export interface TimeOffAttachment {
+  /** Stable opaque id used to remove a specific attachment without
+   *  ambiguity if two files share a name. */
+  id: string;
+  /** Original filename, preserved verbatim so the requester sees the
+   *  same name on download that they uploaded. */
+  filename: string;
+  /** Long-lived Firebase Storage download URL. */
+  url: string;
+  /** MIME type from File.type (e.g. 'application/pdf', 'image/jpeg').
+   *  Drives the file-icon picker in the UI. */
+  contentType: string;
+  /** Size in bytes — surfaced next to the filename so a 9.8 MB cert
+   *  reads as different from a 100 KB screenshot. */
+  sizeBytes: number;
+  /** ISO timestamp the upload completed. */
+  uploadedAt: string;
+}
+
+/** Employment status — gates paid-leave entitlement. Probationary
+ *  members can still submit + get requests approved, but every day
+ *  is marked unpaid because they haven't earned the annual bucket
+ *  yet. Once regularized, the 15+15 annual quota kicks in (resetting
+ *  each anniversary year — see Member.regularizedAt).
+ *
+ *  Optional on Member because pre-Phase-8 records don't have it.
+ *  The runtime treats absence as 'probationary' so a workspace that
+ *  hasn't migrated doesn't accidentally hand out paid leave the
+ *  owner never authorised. Owners explicitly flip each member to
+ *  'regular' once that's true. */
+export type EmploymentStatus = 'probationary' | 'regular';
+
+/** Workspace-wide leave guidelines doc. Owner + Admin write through
+ *  the Ops → Time off Schedules → Guidelines sub-tab; everyone else
+ *  reads through the link in the Request modal + the Account → Time
+ *  off section. Stored as a TipTap-serialised HTML string so the
+ *  read surface can drop it straight into a `dangerouslySetInnerHTML`
+ *  (or render via TipTap's read-only editor) without parsing. */
+export interface LeaveGuidelinesDoc {
+  /** TipTap HTML content. Empty string treated as "no guidelines
+   *  yet" by the viewer. */
+  content: string;
+  /** ISO timestamp of last edit. */
+  updatedAt: string;
+  /** uid of the user who last edited — surfaces a "Last edited by
+   *  Alex on May 12, 2026" line in the read-only viewer. */
+  updatedByUid?: string;
+}
+
+/** Annual quota caps for a regular employee. Per 121 Group policy:
+ *  15 working days sick + 15 working days shared (casual + emergency
+ *  combined), resetting on each member's regularization anniversary.
+ *
+ *  Constants here rather than tunable per-workspace because the
+ *  policy is fixed for now. If a future client needs different
+ *  numbers we can promote these to a workspace-level config. */
+export const SICK_LEAVE_DAYS_PER_YEAR = 15;
+export const SHARED_LEAVE_DAYS_PER_YEAR = 15;
 
 /** Country for holiday assignment + display. ISO 3166-1 alpha-2
  *  codes (e.g. 'US', 'PH', 'AU', 'GB', 'JP'). Phase 8 (May 2026)
@@ -911,12 +1016,45 @@ export interface TimeOffRequest {
   decidedAt?: string;
   decidedBy?: string;
   decisionNote?: string;
-  /** Phase 6C: when true, this request consumes a holiday transfer
-   *  credit (earned by working through a holiday). The request
-   *  flows through normal approval; on approval the credit
-   *  deducts from the requester's balance. Computed live — the
-   *  ledger view filters approved requests with this flag set. */
+  /** @deprecated since Phase 8 — replaced by `leaveType === 'casual'`.
+   *  Pre-Phase-8 requests that had this flag set are migrated to
+   *  `leaveType: 'casual'` on workspace load. New writes should not
+   *  set it; the field stays on the type so existing rows parse and
+   *  the credit ledger can keep reading the legacy shape during the
+   *  rolling migration window. */
   useTransferCredit?: boolean;
+
+  // ── Phase 8 — leave-type + attachments + paid/unpaid math ─────────
+  //
+  // Three additions, all optional so historical entries parse cleanly:
+  //
+  //   leaveType   — sick / emergency / casual (see LeaveType)
+  //   attachments — supporting docs uploaded by the requester
+  //   paidDays / unpaidDays / creditDays — breakdown locked at the
+  //     moment of approval, so a request approved against a 12/15
+  //     remaining balance stays "12 paid + N unpaid" forever even if
+  //     other requests get approved later that would have shifted
+  //     the math at submit time.
+
+  leaveType?: LeaveType;
+  attachments?: TimeOffAttachment[];
+
+  /** Working days within the request range marked PAID at approval.
+   *  Includes any portion drawn from holiday transfer credits (the
+   *  credit subset surfaces separately on `creditDays`). Computed by
+   *  utils/timeOff.computeLeaveBreakdown using the member's
+   *  anniversary year window + their country's holiday observation.
+   *  Undefined on pre-Phase-8 entries — display as "Not computed". */
+  paidDays?: number;
+  /** Working days that exceeded the relevant bucket + credits and
+   *  were marked unpaid. paidDays + unpaidDays === total working
+   *  days in the range. */
+  unpaidDays?: number;
+  /** Subset of paidDays drawn from the holiday transfer-credit
+   *  ledger. Only set on casual leave when the member had credits
+   *  available at approval. The credit ledger view in
+   *  utils/holidayCredits filters approved requests by this field. */
+  creditDays?: number;
 }
 
 /**
@@ -1471,6 +1609,13 @@ export interface FlizowData {
    *  to 'end-of-year'. Editable in Settings → Holidays. Audit:
    *  time-off Phase 6C. */
   creditExpiryPolicy: CreditExpiryPolicy;
+  /** Workspace-wide leave guidelines, written by Owner/Admin from
+   *  Ops → Time off Schedules → Guidelines. Surfaces as a read-only
+   *  side-sheet from the Request Time Off modal + the Account
+   *  Settings → Time off panel. Undefined on workspaces that haven't
+   *  authored guidelines yet — the viewer renders an explainer empty
+   *  state in that case. Audit: time-off Phase 8. */
+  leaveGuidelines?: LeaveGuidelinesDoc;
   /** Light vs dark mode. Used to be owned by the legacy BoardStore;
    *  moved here so we can retire that store. App.tsx reads this and
    *  syncs to `document.documentElement` (class + data-theme attr).

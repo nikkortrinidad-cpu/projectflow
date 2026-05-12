@@ -12,6 +12,7 @@ import type {
   JobTitle, TimeOffRequest, TimeOffStatus,
   CoverageRule,
   Holiday, CreditExpiryPolicy,
+  LeaveType, TimeOffAttachment, LeaveGuidelinesDoc,
 } from '../types/flizow';
 import { ONBOARDING_TEMPLATES } from '../data/onboardingTemplates';
 import { TASK_POOLS } from '../data/taskPools';
@@ -19,11 +20,15 @@ import { findTemplate } from '../data/templates';
 import { OPS_TEAM_MEMBERS, OPS_TASK_SEED } from '../data/opsSeed';
 import { migrateAccessRole } from '../utils/access';
 import { DEFAULT_JOB_TITLES, pickMigratedJobTitleId } from '../utils/jobTitles';
-import { makeTimeOffRequest, migrateLegacyTimeOff } from '../utils/timeOff';
+import {
+  computeLeaveBreakdown,
+  makeTimeOffRequest,
+  migrateLegacyTimeOff,
+} from '../utils/timeOff';
 // DEFAULT_HOLIDAYS no longer seeds new workspaces (Phase 8 — empty
 // by default; owner syncs from public calendar). Still imported by
 // data/demoData.ts so the demo path feels populated.
-import { makeHolidayObservation } from '../utils/holidayCredits';
+import { makeHolidayObservation, creditBalanceFor } from '../utils/holidayCredits';
 import { fetchHolidaysForRange, staleCountriesForSync } from '../utils/holidaySync';
 import { nextDueDate } from '../utils/recurrence';
 
@@ -308,8 +313,18 @@ function migrate(parsed: Partial<FlizowData>): FlizowData {
     // Time-off ledger — backfill with [] for docs that predate
     // Phase 3. The legacy-timeOff sweep in the snapshot handler
     // walks Member.timeOff and appends migrated entries here.
+    //
+    // Phase 8 backfill: any request flagged `useTransferCredit: true`
+    // that pre-dates the leave-type classification gets stamped
+    // `leaveType: 'casual'` so the new UI surfaces show it correctly.
+    // We don't touch the legacy `useTransferCredit` flag itself —
+    // utils/holidayCredits.spentCreditsFor reads both shapes.
     timeOffRequests: Array.isArray(parsed.timeOffRequests)
-      ? parsed.timeOffRequests
+      ? parsed.timeOffRequests.map((r) =>
+          r.leaveType === undefined && r.useTransferCredit === true
+            ? { ...r, leaveType: 'casual' as const }
+            : r,
+        )
       : base.timeOffRequests,
     // Coverage rules — backfill with [] for docs that predate
     // Phase 5. The evaluator returns an empty conflict list when
@@ -332,6 +347,11 @@ function migrate(parsed: Partial<FlizowData>): FlizowData {
       ? parsed.holidayObservations
       : base.holidayObservations,
     creditExpiryPolicy: parsed.creditExpiryPolicy ?? base.creditExpiryPolicy,
+    // Phase 8 — workspace-wide leave guidelines. Optional; undefined
+    // means the workspace hasn't authored guidelines yet, and the
+    // viewer renders an explainer empty state. No backfill needed
+    // because the field is purely additive.
+    leaveGuidelines: parsed.leaveGuidelines,
   };
 }
 
@@ -3257,9 +3277,16 @@ class FlizowStore {
     reason?: string;
     status?: TimeOffStatus;
     decidedBy?: string;
-    /** Phase 6C — when true, this request consumes one holiday
-     *  transfer credit on approval. Stored verbatim on the request
-     *  so the ledger view (utils/holidayCredits) can subtract it. */
+    /** Phase 8 — leave classification. Drives the paid/unpaid math
+     *  on approval. */
+    leaveType?: LeaveType;
+    /** Phase 8 — supporting documents already uploaded to Storage.
+     *  Files are uploaded ahead of submit so the request lands with
+     *  a complete attachment list. */
+    attachments?: TimeOffAttachment[];
+    /** @deprecated Phase 8 — pass `leaveType: 'casual'` instead. The
+     *  flag is still accepted (mirrored into `leaveType`) so callers
+     *  that haven't been updated yet keep working. */
     useTransferCredit?: boolean;
   }): TimeOffRequest {
     const status = input.status ?? 'pending';
@@ -3273,6 +3300,12 @@ class FlizowStore {
           decidedBy: input.decidedBy ?? this.userId ?? undefined,
         }
       : {};
+    // Legacy fall-through: if a caller still passes the old flag,
+    // mirror it into the new leaveType so the new code paths see
+    // the request as casual. Once the modal swaps, this branch
+    // stops firing.
+    const leaveType = input.leaveType
+      ?? (input.useTransferCredit ? ('casual' as const) : undefined);
     const req: TimeOffRequest = {
       ...makeTimeOffRequest({
         memberId: input.memberId,
@@ -3283,11 +3316,64 @@ class FlizowStore {
         requestedAt: now,
         ...decidedFields,
       }),
+      leaveType,
+      attachments: input.attachments && input.attachments.length > 0
+        ? input.attachments
+        : undefined,
       useTransferCredit: input.useTransferCredit,
     };
+    // When the submit goes straight to 'approved' (e.g. an admin
+    // submitting on behalf of a member who's already on leave),
+    // compute the paid/unpaid breakdown now so the ledger is honest
+    // immediately — same logic the approval path runs below.
+    if (status === 'approved' && leaveType) {
+      const locked = this.computeBreakdownAt(req);
+      Object.assign(req, locked);
+    }
     this.data.timeOffRequests = [...this.data.timeOffRequests, req];
     this.save();
     return req;
+  }
+
+  /** Internal: run the paid/unpaid breakdown against the current
+   *  store state and return the patch to lock onto a request. Used
+   *  by submitTimeOffRequest (when status === 'approved' on submit)
+   *  and by decideTimeOffRequest (on approve). Pulling it into one
+   *  place keeps the two surfaces in lockstep. */
+  private computeBreakdownAt(req: TimeOffRequest): Pick<
+    TimeOffRequest,
+    'paidDays' | 'unpaidDays' | 'creditDays'
+  > {
+    const member = this.data.members.find((m) => m.id === req.memberId);
+    if (!member || !req.leaveType) {
+      return { paidDays: undefined, unpaidDays: undefined, creditDays: undefined };
+    }
+    // Pass requests EXCLUDING this one so the current request's own
+    // (about-to-be-set) paidDays don't get double-counted in usage.
+    const others = this.data.timeOffRequests.filter((r) => r.id !== req.id);
+    const creditBalance = creditBalanceFor(
+      member,
+      this.data.holidays,
+      this.data.holidayObservations,
+      others,
+      this.data.creditExpiryPolicy,
+      this.data.today,
+    );
+    const breakdown = computeLeaveBreakdown({
+      leaveType: req.leaveType,
+      start: req.start,
+      end: req.end,
+      member,
+      holidays: this.data.holidays,
+      requests: others,
+      creditBalance,
+      todayISO: this.data.today,
+    });
+    return {
+      paidDays: breakdown.paidDays,
+      unpaidDays: breakdown.unpaidDays,
+      creditDays: breakdown.creditDays > 0 ? breakdown.creditDays : undefined,
+    };
   }
 
   /** Approve a pending request. No-op when the id is unknown or the
@@ -3317,6 +3403,18 @@ class FlizowStore {
     if (!r) return;
     if (r.status === status) return;
     const now = new Date().toISOString();
+    // On approve: lock the paid/unpaid breakdown to this moment in
+    // time. The math reads the member's current quota balance, which
+    // can drift as other requests get approved later — by stamping
+    // the breakdown here we guarantee a request approved against
+    // "12/15 remaining" stays "X paid / Y unpaid" forever, never
+    // retroactively shifting if another request lands first.
+    // On deny: leave the breakdown fields alone so they stay null /
+    // pre-Phase-8 shape; nothing was paid out.
+    const breakdown =
+      status === 'approved' && r.leaveType
+        ? this.computeBreakdownAt(r)
+        : undefined;
     this.data.timeOffRequests = this.data.timeOffRequests.map((x) =>
       x.id === id
         ? {
@@ -3325,6 +3423,7 @@ class FlizowStore {
             decidedAt: now,
             decidedBy: this.userId ?? x.decidedBy,
             decisionNote: decisionNote ?? x.decisionNote,
+            ...(breakdown ?? {}),
           }
         : x,
     );
@@ -3352,13 +3451,131 @@ class FlizowStore {
    *  — `updateTimeOffRequest` intentionally excludes status. */
   updateTimeOffRequest(
     id: string,
-    patch: Partial<Pick<TimeOffRequest, 'start' | 'end' | 'reason' | 'useTransferCredit'>>,
+    patch: Partial<Pick<TimeOffRequest,
+      'start' | 'end' | 'reason' | 'useTransferCredit' |
+      'leaveType' | 'attachments'
+    >>,
   ): void {
     const r = this.data.timeOffRequests.find((x) => x.id === id);
     if (!r) return;
     this.data.timeOffRequests = this.data.timeOffRequests.map((x) =>
       x.id === id ? { ...x, ...patch } : x,
     );
+    this.save();
+  }
+
+  /** Upload one supporting document for a time-off request to
+   *  Firebase Storage and return the TimeOffAttachment metadata the
+   *  caller will tack onto the request payload. The modal stages
+   *  uploads in memory and submits them together with the request,
+   *  so files land in Storage before the Firestore write — the URL
+   *  is valid the moment the request is visible to an approver.
+   *
+   *  Path shape: `workspaces/{wsId}/timeoff/staged/{uuid}-{filename}`.
+   *  Keeping a unique prefix per file means two uploads with the
+   *  same filename don't clobber each other; "staged" makes it
+   *  obvious in the Storage browser which subtree belongs to
+   *  time-off attachments vs. logos / photos.
+   *
+   *  Caller is responsible for client-side limits (max 5 files,
+   *  ≤10MB each, whitelist of contentTypes). The store doesn't
+   *  enforce those because the Members admin path might lift the
+   *  limits for HR uploads later. */
+  async uploadTimeOffAttachment(file: File): Promise<TimeOffAttachment> {
+    if (!this.workspaceId) {
+      throw new Error('Cannot upload attachment — no active workspace');
+    }
+    const uuid = crypto.randomUUID();
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const objectPath = `workspaces/${this.workspaceId}/timeoff/staged/${uuid}-${safeName}`;
+    const objectRef = storageRef(storage, objectPath);
+    // 60-second timeout matches the workspace-logo uploader — a
+    // misconfigured Storage bucket hangs the modal otherwise.
+    const timeoutMs = 60_000;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(
+        () => reject(new Error(
+          `Upload timed out after ${timeoutMs / 1000}s. Check Storage rules in docs/firestore-rules.md.`,
+        )),
+        timeoutMs,
+      );
+    });
+    await Promise.race([
+      uploadBytes(objectRef, file, {
+        contentType: file.type || 'application/octet-stream',
+      }),
+      timeoutPromise,
+    ]);
+    const url = await Promise.race([getDownloadURL(objectRef), timeoutPromise]);
+    return {
+      id: `att-${uuid}`,
+      filename: file.name,
+      url,
+      contentType: file.type || 'application/octet-stream',
+      sizeBytes: file.size,
+      uploadedAt: new Date().toISOString(),
+    };
+  }
+
+  /** Remove a single attachment from an existing time-off request.
+   *  Patches the request to drop it from `attachments[]` and
+   *  best-effort deletes the underlying Storage object. Storage
+   *  failures are swallowed (orphaned files are harmless; the
+   *  Firestore clear is what matters for rendering). */
+  async removeTimeOffAttachment(
+    requestId: string,
+    attachmentId: string,
+  ): Promise<void> {
+    const r = this.data.timeOffRequests.find((x) => x.id === requestId);
+    if (!r) return;
+    const att = r.attachments?.find((a) => a.id === attachmentId);
+    if (!att) return;
+    const remaining = (r.attachments ?? []).filter((a) => a.id !== attachmentId);
+    this.data.timeOffRequests = this.data.timeOffRequests.map((x) =>
+      x.id === requestId
+        ? { ...x, attachments: remaining.length > 0 ? remaining : undefined }
+        : x,
+    );
+    this.save();
+    // Best-effort delete the Storage object. We don't await the
+    // delete inside the patch path because a slow delete shouldn't
+    // block the optimistic UI clear. Lift to await if a future
+    // surface needs to wait for the storage round-trip.
+    try {
+      // Recover the storage path by re-deriving from the public URL.
+      // Firebase download URLs look like:
+      //   https://firebasestorage.googleapis.com/.../o/{encodedPath}?alt=media&token=...
+      // Pull the encoded path out, decode, point storageRef at it.
+      const m = att.url.match(/\/o\/([^?]+)/);
+      if (m) {
+        const objectPath = decodeURIComponent(m[1]);
+        await deleteObject(storageRef(storage, objectPath));
+      }
+    } catch {
+      // Non-fatal — see comment above.
+    }
+  }
+
+  // ── Leave guidelines (Phase 8) ──────────────────────────────────────
+  //
+  // Workspace-wide rich-text doc. Owner + Admin edit through Ops →
+  // Time off Schedules → Guidelines; everyone reads through the
+  // link in the Request modal + the Account → Time off panel. The
+  // viewer renders the HTML string directly; the editor mounts a
+  // TipTap instance against it.
+
+  /** Replace the workspace's leave guidelines content. Stamps
+   *  `updatedAt` + `updatedByUid` so the read-only viewer can
+   *  show "Last edited by Alex on May 12, 2026" provenance.
+   *  Caller-side permission checks (`can('manage:workspace')`)
+   *  gate the editor surface; this method trusts the caller. */
+  updateLeaveGuidelines(content: string): void {
+    const doc: LeaveGuidelinesDoc = {
+      content,
+      updatedAt: new Date().toISOString(),
+      updatedByUid: this.userId ?? undefined,
+    };
+    this.data.leaveGuidelines = doc;
     this.save();
   }
 

@@ -1525,6 +1525,222 @@
     flex-shrink: 0;
   }
 
+  /* ── Phase 8 — Request modal extensions ──────────────────────────
+     The modal renders four distinct blocks now (type + dates + reason
+     + attachments + breakdown), so the head needs a "Leave guidelines"
+     text-link sitting between the title and the X close. Layout:
+       title | spring (1fr) | guidelines link | close button
+     The link sits at the text-link tier of the blue-highlight
+     hierarchy — secondary action, never competing with the footer
+     primary. */
+  .timeoff-modal-head {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-md);
+  }
+  .timeoff-modal-head .wip-modal-title {
+    flex: 1 1 auto;
+  }
+  .timeoff-guidelines-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-micro);
+    padding: 6px 10px;
+    border: 0;
+    background: transparent;
+    color: var(--highlight);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.12s;
+  }
+  .timeoff-guidelines-link:hover {
+    background: var(--highlight-soft);
+  }
+  .timeoff-guidelines-link:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
+  }
+
+  /* Guidelines viewer — stacks over the Request modal so the
+     overlay's z-index lifts it above the parent. */
+  .timeoff-guidelines-overlay {
+    z-index: 1100;
+  }
+  .timeoff-guidelines-content {
+    font-size: var(--fs-md);
+    line-height: 1.55;
+    color: var(--text);
+  }
+  .timeoff-guidelines-content h1,
+  .timeoff-guidelines-content h2,
+  .timeoff-guidelines-content h3 {
+    margin: var(--sp-md) 0 var(--sp-xs);
+  }
+  .timeoff-guidelines-content p { margin: 0 0 var(--sp-md); }
+  .timeoff-guidelines-content ul,
+  .timeoff-guidelines-content ol { padding-left: var(--sp-3xl); margin: 0 0 var(--sp-md); }
+  .timeoff-guidelines-foot {
+    margin-top: var(--sp-lg);
+    padding-top: var(--sp-md);
+    border-top: 1px solid var(--hairline);
+    font-size: var(--fs-sm);
+    color: var(--text-faint);
+  }
+  .timeoff-guidelines-empty {
+    padding: var(--sp-2xl) 0;
+    text-align: center;
+  }
+
+  /* Attachments block — "Attach file" button on the right of a label
+     row, then a hint paragraph, then a list of attached files (with
+     filename + size + remove control). */
+  .timeoff-attachments-block {
+    margin-top: var(--sp-md);
+    padding: var(--sp-md);
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+  }
+  .timeoff-attachments-head {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-md);
+  }
+  .timeoff-attachments-head .member-profile-field-label {
+    flex: 1 1 auto;
+    margin: 0;
+  }
+  .timeoff-attachments-add {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-micro);
+    padding: 6px 12px;
+    border: 1px solid var(--hairline);
+    background: var(--bg-elev);
+    color: var(--text);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background 0.12s, border-color 0.12s;
+  }
+  .timeoff-attachments-add:hover:not(:disabled) {
+    background: var(--hover-tint);
+    border-color: var(--highlight);
+  }
+  .timeoff-attachments-add:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .timeoff-attachments-hint {
+    margin: var(--sp-xs) 0 0;
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+  }
+  .timeoff-attachments-list {
+    list-style: none;
+    margin: var(--sp-md) 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-xs);
+  }
+  .timeoff-attachment-row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-sm);
+    padding: var(--sp-xs) var(--sp-sm);
+    background: var(--bg-elev);
+    border-radius: 8px;
+    font-size: var(--fs-sm);
+  }
+  .timeoff-attachment-name {
+    flex: 1 1 auto;
+    color: var(--text);
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .timeoff-attachment-name:hover { color: var(--highlight); text-decoration: underline; }
+  .timeoff-attachment-size {
+    color: var(--text-faint);
+    font-variant-numeric: tabular-nums;
+  }
+  .timeoff-attachment-remove {
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: background 0.12s, color 0.12s;
+  }
+  .timeoff-attachment-remove:hover {
+    background: var(--accent-soft, rgba(255, 59, 48, 0.12));
+    color: var(--accent);
+  }
+
+  /* Breakdown preview — three colored rows showing where the days
+     get drawn from. Lives below the form so the user sees the math
+     before clicking Submit. */
+  .timeoff-breakdown {
+    margin-top: var(--sp-md);
+    padding: var(--sp-md);
+    background: var(--bg-soft);
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+  }
+  .timeoff-breakdown-head {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: var(--sp-sm);
+  }
+  .timeoff-breakdown-days {
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    color: var(--text);
+  }
+  .timeoff-breakdown-sub {
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+  }
+  .timeoff-breakdown-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-xs);
+  }
+  .timeoff-breakdown-row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-sm);
+    font-size: var(--fs-md);
+  }
+  .timeoff-breakdown-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .timeoff-breakdown-row--credit .timeoff-breakdown-dot { background: var(--highlight); }
+  .timeoff-breakdown-row--paid   .timeoff-breakdown-dot { background: #22c55e; }
+  .timeoff-breakdown-row--unpaid .timeoff-breakdown-dot { background: var(--text-faint); }
+  .timeoff-breakdown-label {
+    flex: 1 1 auto;
+    color: var(--text);
+  }
+  .timeoff-breakdown-meta {
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+  }
+
   /* Full-width empty state — replaces every list when the user has
      never submitted a request. */
   .timeoff-empty--full {

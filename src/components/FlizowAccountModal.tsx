@@ -11,8 +11,10 @@ import {
   ClipboardDocumentIcon,
   DocumentTextIcon,
   LinkIcon,
+  BookOpenIcon,
   ListBulletIcon,
   MagnifyingGlassIcon,
+  PaperClipIcon,
   PlusIcon,
   RectangleStackIcon,
   TrashIcon,
@@ -22,7 +24,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useFlizow } from '../store/useFlizow';
 import { flizowStore } from '../store/flizowStore';
-import type { AccessRole, CreditExpiryPolicy, Holiday, HolidayCountry, HolidayObservationDefault, JobTitle, JobTitleKind, Member, TimeOffRequest, TrashEntry, TrashKind, WorkspaceMembership } from '../types/flizow';
+import type { AccessRole, CreditExpiryPolicy, Holiday, HolidayCountry, HolidayObservationDefault, JobTitle, JobTitleKind, LeaveGuidelinesDoc, LeaveType, Member, TimeOffAttachment, TimeOffRequest, TrashEntry, TrashKind, WorkspaceMembership } from '../types/flizow';
 import { initialsOf, bestTextColor } from '../utils/avatar';
 import { ConfirmDangerDialog } from './ConfirmDangerDialog';
 import { useMemberProfile } from '../contexts/MemberProfileContext';
@@ -37,6 +39,7 @@ import {
   memberCreditLedger,
 } from '../utils/holidayCredits';
 import { fetchHolidaysForRange } from '../utils/holidaySync';
+import { computeLeaveBreakdown } from '../utils/timeOff';
 import { COUNTRIES, countryName, isSupportedByNager } from '../data/countries';
 import { getHolidayPack } from '../data/holidayPacks';
 import { buildHolidayExport, exportFilename, parseHolidayImport } from '../utils/holidayExport';
@@ -1811,6 +1814,10 @@ function TimeOffSection({ focusId }: { focusId?: string } = {}) {
   // a new request," a string id means "edit that one." Drafts live
   // on the modal itself so cancelling doesn't need a manual reset.
   const [modalOpen, setModalOpen] = useState<{ requestId: string | null } | null>(null);
+  // Phase 8 — the read-only Leave Guidelines viewer. Stacks over
+  // the Request modal so users can read the rules without losing
+  // their form state.
+  const [guidelinesOpen, setGuidelinesOpen] = useState(false);
 
   if (!currentId || !me) {
     return (
@@ -1920,6 +1927,8 @@ function TimeOffSection({ focusId }: { focusId?: string } = {}) {
       start: denied.start,
       end: denied.end,
       reason: denied.reason,
+      leaveType: denied.leaveType,
+      attachments: denied.attachments,
       // status defaults to 'pending' — the Phase-4 default.
     });
   }
@@ -1935,29 +1944,33 @@ function TimeOffSection({ focusId }: { focusId?: string } = {}) {
     store.updateTimeOffRequest(activeRequest.id, { end: safeEnd });
   }
 
-  function handleSave(period: { start: string; end: string; reason?: string; useTransferCredit?: boolean }) {
+  function handleSave(period: {
+    start: string;
+    end: string;
+    reason?: string;
+    leaveType: LeaveType;
+    attachments?: TimeOffAttachment[];
+  }) {
     if (!modalOpen) return;
     if (!modalOpen.requestId) {
-      // New submission: 'pending' by default (Phase-4 flip from
-      // 'approved'). The OM/Admin sees this in the approval queue
-      // (Phase 6) and decides.
+      // New submission: 'pending' by default. The OM/Admin sees this
+      // in the approval queue and decides.
       store.submitTimeOffRequest({
         memberId: meId,
         start: period.start,
         end: period.end,
         reason: period.reason,
-        useTransferCredit: period.useTransferCredit,
+        leaveType: period.leaveType,
+        attachments: period.attachments,
       });
     } else {
-      // Edit-in-place. Phase 6 may revisit this — editing an
-      // approved request arguably should re-submit through approval
-      // — but for v1 the assumption is the requester is doing a
-      // small adjustment within the already-approved window.
+      // Edit-in-place.
       store.updateTimeOffRequest(modalOpen.requestId, {
         start: period.start,
         end: period.end,
         reason: period.reason,
-        useTransferCredit: period.useTransferCredit,
+        leaveType: period.leaveType,
+        attachments: period.attachments,
       });
     }
     setModalOpen(null);
@@ -2153,11 +2166,24 @@ function TimeOffSection({ focusId }: { focusId?: string } = {}) {
           initialStart={editingRequest?.start ?? today}
           initialEnd={editingRequest?.end ?? isoOffsetDays(today, 1)}
           initialReason={editingRequest?.reason}
-          initialUseCredit={editingRequest?.useTransferCredit}
-          creditsAvailable={creditBalance}
+          initialLeaveType={editingRequest?.leaveType}
+          initialAttachments={editingRequest?.attachments}
+          member={me}
+          requests={data.timeOffRequests}
+          holidays={data.holidays}
+          creditBalance={creditBalance}
+          todayISO={today}
           isEditing={!!editingRequest}
+          onOpenGuidelines={() => setGuidelinesOpen(true)}
+          onUploadAttachment={(file) => store.uploadTimeOffAttachment(file)}
           onSave={handleSave}
           onClose={() => setModalOpen(null)}
+        />
+      )}
+      {guidelinesOpen && (
+        <LeaveGuidelinesViewer
+          doc={data.leaveGuidelines}
+          onClose={() => setGuidelinesOpen(false)}
         />
       )}
     </section>
@@ -2389,40 +2415,133 @@ function TimeOffStatusBadge({ status }: { status: TimeOffRequest['status'] }) {
   );
 }
 
-/** Modal for submitting or editing a time-off request. Uses native
- *  `<input type="date">` for the calendar pickers — every modern
- *  browser pops a date grid on click without us shipping a third-
- *  party library. Phase-4 additions: optional reason textarea
- *  alongside the date inputs, footer copy clarifies that the OM
- *  reviews before approval. Phase 6C adds the "Use credit"
- *  checkbox when the requester has any holiday transfer credits
- *  available. */
+/** ───── Leave-type metadata ──────────────────────────────────────────
+ *
+ *  Single source of truth for the dropdown options, the per-type
+ *  hint copy, and the attachment-policy rules. Renderers + handlers
+ *  read from here so a change to the policy doesn't have to fan out
+ *  across the modal. */
+const LEAVE_TYPE_META: Record<LeaveType, {
+  label: string;
+  hint: string;
+  attachmentHint: string;
+  /** Number of working days at which an attachment becomes required.
+   *  Sick at 2+ working days needs a medical cert; emergency + casual
+   *  never require one (set to Infinity so the gate doesn't fire). */
+  attachmentRequiredFromDays: number;
+}> = {
+  sick: {
+    label: 'Sick leave',
+    hint: 'Health-related leave, planned or same-day.',
+    attachmentHint: 'Attach a medical certificate if your sick leave is 2 or more working days.',
+    attachmentRequiredFromDays: 2,
+  },
+  emergency: {
+    label: 'Emergency leave',
+    hint: 'Power outage, internet down, or a family emergency — anything unexpected that affects your day.',
+    attachmentHint: 'Documentation is optional. Attach anything that helps explain the day.',
+    attachmentRequiredFromDays: Infinity,
+  },
+  casual: {
+    label: 'Casual leave',
+    hint: 'Redeem an earned holiday credit (one credit per working day). Falls back to your shared paid-leave bucket when credits run out.',
+    attachmentHint: 'Documentation is optional.',
+    attachmentRequiredFromDays: Infinity,
+  },
+};
+
+/** File-attachment client-side guardrails. Mirror the server-side
+ *  expectation; the store doesn't enforce these because the Members
+ *  admin path may need to lift the cap for HR. */
+const ATTACHMENT_MAX_FILES = 5;
+const ATTACHMENT_MAX_BYTES = 10 * 1024 * 1024;
+const ATTACHMENT_MIME_WHITELIST = [
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'image/heic',
+  'image/heif',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+];
+
+/** Modal for submitting or editing a time-off request.
+ *
+ *  Phase 8 rewrite — adds the leave-type dropdown, multi-file
+ *  attachments, a live paid/unpaid breakdown preview, and a
+ *  "Leave Guidelines" header link. The Phase-6C "Use credit"
+ *  checkbox is deprecated: picking <i>Casual</i> in the dropdown is
+ *  the canonical "use credit" path now (credits get spent first,
+ *  then the shared bucket fills in, then unpaid).
+ *
+ *  Native `<input type="date">` for the calendar pickers — every
+ *  modern browser pops a date grid on click without a third-party
+ *  library. Native `<input type="file" multiple>` for attachments
+ *  for the same reason. */
 function TimeOffPeriodModal({
   initialStart,
   initialEnd,
   initialReason,
-  initialUseCredit,
-  creditsAvailable,
+  initialLeaveType,
+  initialAttachments,
+  member,
+  requests,
+  holidays,
+  creditBalance,
+  todayISO,
   isEditing,
+  onOpenGuidelines,
+  onUploadAttachment,
   onSave,
   onClose,
 }: {
   initialStart: string;
   initialEnd: string;
   initialReason?: string;
-  initialUseCredit?: boolean;
-  /** Number of holiday transfer credits the requester has on hand
-   *  right now. Drives whether the checkbox renders + whether it's
-   *  enabled. */
-  creditsAvailable: number;
+  initialLeaveType?: LeaveType;
+  initialAttachments?: TimeOffAttachment[];
+  /** The requester (signed-in member). Feeds the breakdown math —
+   *  probationary members see all-unpaid + a banner; regulars see
+   *  the bucket draws. */
+  member: Member;
+  /** All workspace time-off requests. The breakdown subtracts this
+   *  request's own row (matched by date) so the math doesn't double-
+   *  count when editing. */
+  requests: ReadonlyArray<TimeOffRequest>;
+  holidays: ReadonlyArray<Holiday>;
+  creditBalance: number;
+  todayISO: string;
   isEditing: boolean;
-  onSave: (period: { start: string; end: string; reason?: string; useTransferCredit?: boolean }) => void;
+  /** Opens the Leave Guidelines viewer over this modal. */
+  onOpenGuidelines: () => void;
+  /** Hands the file to flizowStore.uploadTimeOffAttachment. Returned
+   *  attachment is appended to the local list and persisted on
+   *  Submit. */
+  onUploadAttachment: (file: File) => Promise<TimeOffAttachment>;
+  onSave: (period: {
+    start: string;
+    end: string;
+    reason?: string;
+    leaveType: LeaveType;
+    attachments?: TimeOffAttachment[];
+  }) => void;
   onClose: () => void;
 }) {
   const [start, setStart] = useState(initialStart);
   const [end, setEnd] = useState(initialEnd);
   const [reason, setReason] = useState(initialReason ?? '');
-  const [useCredit, setUseCredit] = useState<boolean>(initialUseCredit ?? false);
+  // Leave type starts unset on a brand-new submission so the user
+  // has to make a deliberate pick. On edit, pre-fill from the row.
+  const [leaveType, setLeaveType] = useState<LeaveType | ''>(initialLeaveType ?? '');
+  const [attachments, setAttachments] = useState<TimeOffAttachment[]>(
+    initialAttachments ?? [],
+  );
+  const [uploadingCount, setUploadingCount] = useState(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  // Tracks whether the user clicked Submit at least once. Drives
+  // whether we paint the required-field error states (we don't want
+  // to yell at someone who just opened the modal).
+  const [submitTouched, setSubmitTouched] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
 
   // Esc closes; same convention as the other modals in the app.
@@ -2437,22 +2556,103 @@ function TimeOffPeriodModal({
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  const valid = start && end && start <= end;
+  // Live breakdown — recomputes on every input change. Cheap
+  // (O(working days)) so we can render it eagerly without any
+  // memoisation gymnastics.
+  const breakdown = useMemo(() => {
+    if (!start || !end || start > end) {
+      return { workingDays: 0, paidDays: 0, unpaidDays: 0, creditDays: 0 };
+    }
+    return computeLeaveBreakdown({
+      leaveType: leaveType === '' ? undefined : leaveType,
+      start,
+      end,
+      member,
+      holidays,
+      // Exclude any in-flight edit of this same request from the
+      // usage math — we don't want the user's own pending request to
+      // count against itself.
+      requests,
+      creditBalance,
+      todayISO,
+    });
+  }, [start, end, leaveType, member, holidays, requests, creditBalance, todayISO]);
+
+  // Attachment rule per leave type + working-day count.
+  const meta = leaveType !== '' ? LEAVE_TYPE_META[leaveType] : null;
+  const attachmentRequired =
+    meta !== null &&
+    breakdown.workingDays >= meta.attachmentRequiredFromDays;
+
+  const datesValid = !!start && !!end && start <= end;
+  const typeValid = leaveType !== '';
+  const attachmentsValid = !attachmentRequired || attachments.length > 0;
+  const valid = datesValid && typeValid && attachmentsValid;
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const list = e.target.files;
+    if (!list || list.length === 0) return;
+    const newFiles = Array.from(list);
+    e.target.value = ''; // let the same file be picked again after a remove
+    setUploadError(null);
+
+    // Client-side gates. Match server expectations + give the user a
+    // human error instead of a Storage permission failure.
+    if (attachments.length + newFiles.length > ATTACHMENT_MAX_FILES) {
+      setUploadError(`You can attach up to ${ATTACHMENT_MAX_FILES} files per request.`);
+      return;
+    }
+    for (const f of newFiles) {
+      if (f.size > ATTACHMENT_MAX_BYTES) {
+        setUploadError(`${f.name} is over the 10 MB limit.`);
+        return;
+      }
+      if (!ATTACHMENT_MIME_WHITELIST.includes(f.type)) {
+        setUploadError(
+          `${f.name} isn't an accepted type. Use PDF, JPG, PNG, HEIC, or DOCX.`,
+        );
+        return;
+      }
+    }
+
+    setUploadingCount((c) => c + newFiles.length);
+    try {
+      const uploaded = await Promise.all(
+        newFiles.map((f) => onUploadAttachment(f)),
+      );
+      setAttachments((prev) => [...prev, ...uploaded]);
+    } catch (err) {
+      setUploadError(
+        err instanceof Error
+          ? err.message
+          : 'Upload failed. Try again.',
+      );
+    } finally {
+      setUploadingCount((c) => Math.max(0, c - newFiles.length));
+    }
+  }
+
+  function removeAttachment(id: string) {
+    // Local-only remove — the file IS already in Storage but the
+    // request hasn't been submitted yet, so we just drop it from
+    // the staged list. Orphan files in Storage are non-fatal; a
+    // future cleanup job can sweep `timeoff/staged/`.
+    setAttachments((prev) => prev.filter((a) => a.id !== id));
+  }
 
   function handleSave() {
+    setSubmitTouched(true);
     if (!valid) return;
+    // After `!valid` returns, TypeScript narrows `leaveType` to the
+    // non-empty union via `valid`'s `typeValid` dependency. No need
+    // for an extra empty-string guard here.
     const trimmed = reason.trim();
     onSave({
       start,
       end,
       reason: trimmed.length > 0 ? trimmed : undefined,
-      // Only flag the credit when the user explicitly ticked it
-      // AND credits are actually available. Defensive against a
-      // stale state where the user opens the modal, the OM
-      // approves another request that drains them, and they then
-      // try to submit. The submit path may still over-draw on
-      // approval; that's surfaced in the workspace ledger.
-      useTransferCredit: useCredit && creditsAvailable > 0 ? true : undefined,
+      leaveType: leaveType as LeaveType,
+      attachments: attachments.length > 0 ? attachments : undefined,
     });
   }
 
@@ -2468,11 +2668,24 @@ function TimeOffPeriodModal({
       aria-labelledby="timeoff-modal-title"
       onClick={handleBackdropClick}
     >
-      <div ref={dialogRef} className="wip-modal" role="document" style={{ maxWidth: 480 }}>
-        <header className="wip-modal-head">
+      <div ref={dialogRef} className="wip-modal" role="document" style={{ maxWidth: 520 }}>
+        <header className="wip-modal-head timeoff-modal-head">
           <h2 className="wip-modal-title" id="timeoff-modal-title">
             {isEditing ? 'Edit time off' : 'Request time off'}
           </h2>
+          {/* Secondary action — read-only viewer link. Sits in the
+              header alongside the title so the two CTAs (submit
+              below, read above) don't compete with the primary
+              footer button. Text-link tier per the blue-highlight
+              hierarchy: solid → ring → tint → text. */}
+          <button
+            type="button"
+            className="timeoff-guidelines-link"
+            onClick={onOpenGuidelines}
+          >
+            <BookOpenIcon width={14} height={14} aria-hidden="true" />
+            Leave guidelines
+          </button>
           <button
             type="button"
             className="wip-modal-close"
@@ -2486,11 +2699,54 @@ function TimeOffPeriodModal({
           </button>
         </header>
         <div className="wip-modal-body">
-          <p className="acct-section-sub" style={{ marginBottom: 'var(--sp-base)' }}>
-            Pick the first and last day you'll be away. Both dates are inclusive —
-            "May 13 to May 15" means you're out all three days.
-          </p>
-          <div className="timeoff-modal-grid">
+          {/* Leave-type dropdown — required. No default so the user
+              has to deliberately pick (the three types map to very
+              different downstream behaviour). */}
+          <label className="member-profile-field">
+            <span className="member-profile-field-label">
+              Type of leave <span aria-hidden="true" style={{ color: 'var(--accent)' }}>*</span>
+            </span>
+            <select
+              className="acct-input"
+              value={leaveType}
+              onChange={(e) => setLeaveType(e.target.value as LeaveType | '')}
+              aria-invalid={submitTouched && !typeValid ? true : undefined}
+              aria-describedby="timeoff-leavetype-hint"
+            >
+              <option value="" disabled>
+                Pick a leave type…
+              </option>
+              {(Object.keys(LEAVE_TYPE_META) as LeaveType[]).map((t) => (
+                <option key={t} value={t}>
+                  {LEAVE_TYPE_META[t].label}
+                </option>
+              ))}
+            </select>
+            {meta && (
+              <span
+                id="timeoff-leavetype-hint"
+                className="member-profile-field-hint"
+                style={{ marginTop: 'var(--sp-micro)' }}
+              >
+                {meta.hint}
+              </span>
+            )}
+            {submitTouched && !typeValid && (
+              <span
+                role="alert"
+                style={{
+                  fontSize: 'var(--fs-sm)',
+                  color: 'var(--accent)',
+                  marginTop: 'var(--sp-micro)',
+                }}
+              >
+                Pick a leave type to continue.
+              </span>
+            )}
+          </label>
+
+          {/* Date pickers — From + To on one grid row. */}
+          <div className="timeoff-modal-grid" style={{ marginTop: 'var(--sp-md)' }}>
             <label className="member-profile-field">
               <span className="member-profile-field-label">From</span>
               <input
@@ -2499,9 +2755,6 @@ function TimeOffPeriodModal({
                 value={start}
                 onChange={(e) => {
                   setStart(e.target.value);
-                  // Auto-bump end if the user picks a start date that's
-                  // after the current end. Keeps the form consistent
-                  // without needing a separate validation toast.
                   if (end < e.target.value) setEnd(e.target.value);
                 }}
               />
@@ -2517,10 +2770,8 @@ function TimeOffPeriodModal({
               />
             </label>
           </div>
-          {/* Reason — optional. Helps the OM decide; surfaces
-              alongside the request in the approval queue (Phase 6).
-              Plain textarea, not rich text, so the input stays
-              quick to fill. */}
+
+          {/* Reason — optional. */}
           <label
             className="member-profile-field"
             style={{ marginTop: 'var(--sp-md)' }}
@@ -2537,28 +2788,108 @@ function TimeOffPeriodModal({
               maxLength={280}
             />
           </label>
-          {/* Phase 6C — "Use holiday transfer credit" checkbox. Only
-              renders when the user has at least one credit on the
-              ledger. Subtitle clarifies what happens on approval. */}
-          {creditsAvailable > 0 && (
-            <label className="timeoff-credit-row">
-              <input
-                type="checkbox"
-                checked={useCredit}
-                onChange={(e) => setUseCredit(e.target.checked)}
-              />
-              <span className="timeoff-credit-text">
-                <span className="timeoff-credit-title">
-                  Use 1 holiday transfer credit for this request
-                </span>
-                <span className="timeoff-credit-sub">
-                  You have {creditsAvailable} {creditsAvailable === 1 ? 'credit' : 'credits'} available.
-                  Earned by working through holidays.
-                </span>
+
+          {/* Attachments — multi-file, drag-drop friendly via the
+              hidden native input. Required when sick + 2+ working
+              days; the gate paints a red border below if not met. */}
+          <div className="timeoff-attachments-block">
+            <div className="timeoff-attachments-head">
+              <span className="member-profile-field-label">
+                Supporting documents
+                {attachmentRequired && (
+                  <span aria-hidden="true" style={{ color: 'var(--accent)' }}> *</span>
+                )}
+                {!attachmentRequired && (
+                  <span className="member-profile-field-hint"> (optional)</span>
+                )}
               </span>
-            </label>
+              <button
+                type="button"
+                className="timeoff-attachments-add"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={attachments.length >= ATTACHMENT_MAX_FILES || uploadingCount > 0}
+              >
+                <PaperClipIcon width={14} height={14} aria-hidden="true" />
+                {uploadingCount > 0 ? `Uploading ${uploadingCount}…` : 'Attach file'}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept=".pdf,.jpg,.jpeg,.png,.heic,.heif,.docx"
+                style={{ display: 'none' }}
+                onChange={handleFileChange}
+              />
+            </div>
+            {meta && (
+              <p className="timeoff-attachments-hint">{meta.attachmentHint}</p>
+            )}
+            {attachments.length > 0 && (
+              <ul className="timeoff-attachments-list">
+                {attachments.map((a) => (
+                  <li key={a.id} className="timeoff-attachment-row">
+                    <PaperClipIcon width={14} height={14} aria-hidden="true" />
+                    <a
+                      href={a.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="timeoff-attachment-name"
+                    >
+                      {a.filename}
+                    </a>
+                    <span className="timeoff-attachment-size">
+                      {formatBytes(a.sizeBytes)}
+                    </span>
+                    <button
+                      type="button"
+                      className="timeoff-attachment-remove"
+                      onClick={() => removeAttachment(a.id)}
+                      aria-label={`Remove ${a.filename}`}
+                    >
+                      Remove
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {uploadError && (
+              <p
+                role="alert"
+                style={{
+                  fontSize: 'var(--fs-sm)',
+                  color: 'var(--accent)',
+                  marginTop: 'var(--sp-micro)',
+                }}
+              >
+                {uploadError}
+              </p>
+            )}
+            {submitTouched && !attachmentsValid && (
+              <p
+                role="alert"
+                style={{
+                  fontSize: 'var(--fs-sm)',
+                  color: 'var(--accent)',
+                  marginTop: 'var(--sp-micro)',
+                }}
+              >
+                Attach a medical certificate to continue.
+              </p>
+            )}
+          </div>
+
+          {/* Breakdown preview — only renders when we have enough
+              info to compute something meaningful. */}
+          {leaveType !== '' && breakdown.workingDays > 0 && (
+            <BreakdownPreview
+              leaveType={leaveType}
+              breakdown={breakdown}
+              member={member}
+              creditBalance={creditBalance}
+            />
           )}
-          {!valid && (
+
+          {!datesValid && (
             <p className="acct-section-sub" style={{
               color: 'var(--accent)',
               marginTop: 'var(--sp-md)',
@@ -2569,10 +2900,6 @@ function TimeOffPeriodModal({
           )}
         </div>
         <footer className="wip-modal-foot timeoff-modal-foot">
-          {/* Footer hint reminds the user this isn't auto-approved.
-              Lives in the modal (not the section header) so the
-              "approval expected" framing lands at the moment of
-              commit, not when the user is just browsing the page. */}
           {!isEditing && (
             <span className="timeoff-modal-foot-hint">
               Goes to your manager for review.
@@ -2589,7 +2916,7 @@ function TimeOffPeriodModal({
             type="button"
             className="wip-btn wip-btn-primary"
             onClick={handleSave}
-            disabled={!valid}
+            disabled={!valid || uploadingCount > 0}
           >
             {isEditing ? 'Save changes' : 'Submit request'}
           </button>
@@ -2597,6 +2924,159 @@ function TimeOffPeriodModal({
       </div>
     </div>
   );
+}
+
+/** Inline preview of how a request will be paid out. Lives inside
+ *  the Request modal so the user can see the math BEFORE submitting
+ *  — no surprises when the approver looks at it. */
+function BreakdownPreview({
+  leaveType,
+  breakdown,
+  member,
+  creditBalance,
+}: {
+  leaveType: LeaveType;
+  breakdown: { workingDays: number; paidDays: number; unpaidDays: number; creditDays: number };
+  member: Member;
+  creditBalance: number;
+}) {
+  const isProbationary =
+    !member.regularizedAt || member.employmentStatus !== 'regular';
+
+  return (
+    <div className="timeoff-breakdown">
+      <div className="timeoff-breakdown-head">
+        <span className="timeoff-breakdown-days">
+          {breakdown.workingDays} working {breakdown.workingDays === 1 ? 'day' : 'days'}
+        </span>
+        <span className="timeoff-breakdown-sub">
+          Weekends and observed holidays in the range don't count.
+        </span>
+      </div>
+      <ul className="timeoff-breakdown-list">
+        {breakdown.creditDays > 0 && (
+          <li className="timeoff-breakdown-row timeoff-breakdown-row--credit">
+            <span className="timeoff-breakdown-dot" aria-hidden="true" />
+            <span className="timeoff-breakdown-label">
+              {breakdown.creditDays} {breakdown.creditDays === 1 ? 'day' : 'days'} from holiday credits
+            </span>
+            <span className="timeoff-breakdown-meta">
+              {creditBalance} available
+            </span>
+          </li>
+        )}
+        {breakdown.paidDays - breakdown.creditDays > 0 && (
+          <li className="timeoff-breakdown-row timeoff-breakdown-row--paid">
+            <span className="timeoff-breakdown-dot" aria-hidden="true" />
+            <span className="timeoff-breakdown-label">
+              {breakdown.paidDays - breakdown.creditDays} paid {breakdown.paidDays - breakdown.creditDays === 1 ? 'day' : 'days'}
+            </span>
+            <span className="timeoff-breakdown-meta">
+              {leaveType === 'sick' ? 'from your sick bucket' : 'from your shared bucket'}
+            </span>
+          </li>
+        )}
+        {breakdown.unpaidDays > 0 && (
+          <li className="timeoff-breakdown-row timeoff-breakdown-row--unpaid">
+            <span className="timeoff-breakdown-dot" aria-hidden="true" />
+            <span className="timeoff-breakdown-label">
+              {breakdown.unpaidDays} unpaid {breakdown.unpaidDays === 1 ? 'day' : 'days'}
+            </span>
+            <span className="timeoff-breakdown-meta">
+              {isProbationary
+                ? 'Paid leave activates after regularization'
+                : 'Bucket exhausted'}
+            </span>
+          </li>
+        )}
+      </ul>
+    </div>
+  );
+}
+
+/** Read-only side-sheet that renders the workspace's leave
+ *  guidelines. Owner/Admin write through the Ops surface; everyone
+ *  else reads here. Renders an explainer empty state when the
+ *  workspace hasn't authored guidelines yet. */
+function LeaveGuidelinesViewer({
+  doc,
+  onClose,
+}: {
+  doc: LeaveGuidelinesDoc | undefined;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  function handleBackdropClick(e: React.MouseEvent<HTMLDivElement>) {
+    if (e.target === e.currentTarget) onClose();
+  }
+
+  return (
+    <div
+      className="wip-modal-overlay timeoff-guidelines-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="timeoff-guidelines-title"
+      onClick={handleBackdropClick}
+    >
+      <div className="wip-modal" role="document" style={{ maxWidth: 640 }}>
+        <header className="wip-modal-head">
+          <h2 className="wip-modal-title" id="timeoff-guidelines-title">
+            <BookOpenIcon width={18} height={18} aria-hidden="true" />
+            Leave guidelines
+          </h2>
+          <button
+            type="button"
+            className="wip-modal-close"
+            onClick={onClose}
+            aria-label="Close"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </header>
+        <div className="wip-modal-body">
+          {doc && doc.content.trim().length > 0 ? (
+            <>
+              <div
+                className="timeoff-guidelines-content"
+                dangerouslySetInnerHTML={{ __html: doc.content }}
+              />
+              <p className="timeoff-guidelines-foot">
+                Last updated {formatDateLong(doc.updatedAt.slice(0, 10))}
+              </p>
+            </>
+          ) : (
+            <div className="timeoff-guidelines-empty">
+              <p style={{ fontSize: 'var(--fs-md)', color: 'var(--text-muted)' }}>
+                Your workspace hasn't published leave guidelines yet. Owners and admins can author them in
+                <strong> Ops → Time off Schedules → Guidelines</strong>.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Human-readable byte count for an attachment row.
+ *  "1.4 MB" reads cleaner than "1416322 bytes". */
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 /** ISO date "2026-05-15" → "Wed, May 15". Used for the toggle's

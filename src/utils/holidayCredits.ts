@@ -142,21 +142,43 @@ export function spentCreditsFor(
   member: Pick<Member, 'id'>,
   requests: ReadonlyArray<TimeOffRequest>,
 ): SpentCredit[] {
-  return requests
-    .filter(
-      (r) =>
-        r.memberId === member.id &&
-        r.status === 'approved' &&
-        r.useTransferCredit === true,
-    )
-    .map((r) => ({
-      id: `spent-${r.id}`,
-      requestId: r.id,
-      date: r.start,
-      start: r.start,
-      end: r.end,
-    }))
-    .sort((a, b) => a.date.localeCompare(b.date));
+  // Phase 8 changed credit semantics from flat-rate ("1 credit per
+  // approved request") to per-working-day ("N credits for an N-day
+  // casual request"). Both shapes need to coexist during the rolling
+  // migration window:
+  //   • New rows carry `creditDays` directly — emit one SpentCredit
+  //     per day so the existing balance math (earned − spent.length)
+  //     subtracts the right number without any other changes.
+  //   • Legacy rows carry `useTransferCredit: true` with no
+  //     `creditDays` field — count as 1 spent credit each so the
+  //     ledger view continues to show every historical redemption.
+  const out: SpentCredit[] = [];
+  for (const r of requests) {
+    if (r.memberId !== member.id) continue;
+    if (r.status !== 'approved') continue;
+    const creditDays = r.creditDays ?? 0;
+    if (creditDays > 0) {
+      for (let i = 0; i < creditDays; i++) {
+        out.push({
+          id: `spent-${r.id}-${i}`,
+          requestId: r.id,
+          date: r.start,
+          start: r.start,
+          end: r.end,
+        });
+      }
+    } else if (r.useTransferCredit === true) {
+      // Legacy flat-rate row — treat as 1 spent credit per request.
+      out.push({
+        id: `spent-${r.id}`,
+        requestId: r.id,
+        date: r.start,
+        start: r.start,
+        end: r.end,
+      });
+    }
+  }
+  return out.sort((a, b) => a.date.localeCompare(b.date));
 }
 
 // ── Balance ────────────────────────────────────────────────────────
