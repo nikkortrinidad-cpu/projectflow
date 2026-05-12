@@ -566,7 +566,7 @@ function pickLogoClass(existingClients: Client[]): LogoClass {
   return best;
 }
 
-const INDUSTRY_CATEGORIES: { value: IndustryCategory; label: string }[] = [
+export const INDUSTRY_CATEGORIES: { value: IndustryCategory; label: string }[] = [
   { value: 'saas',         label: 'SaaS / Tech' },
   { value: 'ecommerce',    label: 'E-commerce / Retail' },
   { value: 'healthcare',   label: 'Healthcare / Wellness' },

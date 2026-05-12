@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   BriefcaseIcon,
+  BuildingOffice2Icon,
   ChatBubbleLeftRightIcon,
   CheckIcon,
   ChevronDownIcon,
@@ -20,12 +21,13 @@ import { useRoute, navigate } from '../router';
 import { useFlizow } from '../store/useFlizow';
 import type {
   Client, Service, Task, Member, FlizowData, ClientStatus, ColumnId,
-  OnboardingItem, Contact, QuickLink, JobTitle,
+  OnboardingItem, Contact, QuickLink, JobTitle, IndustryCategory,
 } from '../types/flizow';
 import { flizowStore, type FlizowStore } from '../store/flizowStore';
 import { formatMonthYear, formatMonthDay, daysBetween } from '../utils/dateFormat';
 import { categoryLabel, serviceHealth, serviceHealthLabel, type ServiceHealth } from '../utils/clientDerived';
-import { isOperator } from '../utils/jobTitles';
+import { isAccountManager, isOperator } from '../utils/jobTitles';
+import { INDUSTRY_CATEGORIES } from './ClientsPage';
 import { NotesTab } from '../components/NotesTab';
 // Touchpoints panel hidden 2026-04-28 by product call — see TABS
 // comment below. Restore: uncomment this import + the tab entry +
@@ -37,6 +39,7 @@ import { defaultNextDeliverableAt, defaultTemplateKey } from '../data/serviceTem
 import { ServiceMetadataForm } from '../components/shared/ServiceMetadataForm';
 import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
 import { useModalAutofocus } from '../hooks/useModalAutofocus';
+import { useModalKeyboard } from '../hooks/useModalKeyboard';
 import { useUndoToast } from '../contexts/UndoToastContext';
 import { useMemberProfile } from '../contexts/MemberProfileContext';
 
@@ -119,6 +122,11 @@ function ClientDetail({ client, data, store }: DetailProps) {
   const [servicesEditMode, setServicesEditMode] = useState(false);
   const [deleteServiceId, setDeleteServiceId] = useState<string | null>(null);
   const [showDeleteClient, setShowDeleteClient] = useState(false);
+  // Edit Client modal — opened from the hero kebab. Covers every header
+  // field the inline rename can't reach (industry, manager, website,
+  // status, client-since). Keeping it on the same level as the other
+  // modal flags so a client switch wipes it via the reset effect below.
+  const [showEditClient, setShowEditClient] = useState(false);
 
   // Reset to Overview whenever the user lands on a different client, so the
   // first thing they see on a new row isn't whatever tab they peeked at on
@@ -135,6 +143,7 @@ function ClientDetail({ client, data, store }: DetailProps) {
     setServicesEditMode(false);
     setDeleteServiceId(null);
     setShowDeleteClient(false);
+    setShowEditClient(false);
   }, [client.id]);
 
   useEffect(() => {
@@ -144,6 +153,7 @@ function ClientDetail({ client, data, store }: DetailProps) {
       setServicesEditMode(false);
       setDeleteServiceId(null);
       setShowDeleteClient(false);
+      setShowEditClient(false);
     }
     window.addEventListener('flizow:reset-client-tab', onReset);
     return () => window.removeEventListener('flizow:reset-client-tab', onReset);
@@ -199,6 +209,7 @@ function ClientDetail({ client, data, store }: DetailProps) {
         // back to "Archive client" on the next render).
         onUnarchive={() => flizowStore.unarchiveClient(client.id)}
         onRequestDelete={() => setShowDeleteClient(true)}
+        onRequestEdit={() => setShowEditClient(true)}
       />
       <TabsRow tabs={TABS} activeTab={activeTab} onChange={setActiveTab} />
 
@@ -274,6 +285,15 @@ function ClientDetail({ client, data, store }: DetailProps) {
         <AddServiceModal
           clientId={client.id}
           onClose={() => setShowAddService(false)}
+        />
+      )}
+
+      {showEditClient && (
+        <EditClientModal
+          client={client}
+          members={data.members}
+          jobTitles={data.jobTitles}
+          onClose={() => setShowEditClient(false)}
         />
       )}
 
@@ -390,12 +410,17 @@ function deriveInitialsLocal(name: string): string {
   return (words[0][0] + words[1][0]).toUpperCase();
 }
 
-function Hero({ client, am, onArchive, onUnarchive, onRequestDelete }: {
+function Hero({ client, am, onArchive, onUnarchive, onRequestDelete, onRequestEdit }: {
   client: Client;
   am: Member | null;
   onArchive: () => void;
   onUnarchive: () => void;
   onRequestDelete: () => void;
+  /** Opens the Edit Client modal. The hero hosts inline rename for the
+   *  name field — every other header field (industry, manager, website,
+   *  status, client-since) has no inline affordance, so the kebab funnels
+   *  to a single modal that owns all of them in one save. */
+  onRequestEdit: () => void;
 }) {
   const profile = useMemberProfile();
   const statusLabel = statusChipLabel(client.status);
@@ -637,6 +662,30 @@ function Hero({ client, am, onArchive, onUnarchive, onRequestDelete }: {
           <EllipsisVerticalIcon width={16} height={16} aria-hidden="true" />
         </button>
         <div className={`tb-menu${menuOpen ? ' open' : ''}`} role="menu">
+          {/* Edit client details — opens a modal with every header field
+              that doesn't have an inline editor (industry, manager,
+              website, status, client-since). Sits at the top of the menu
+              because it's the everyday action; Archive and Delete are
+              both lifecycle events that happen far less often. */}
+          <div
+            className="tb-menu-item"
+            role="menuitem"
+            tabIndex={0}
+            onClick={() => {
+              setMenuOpen(false);
+              onRequestEdit();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setMenuOpen(false);
+                onRequestEdit();
+              }
+            }}
+          >
+            Edit client details…
+          </div>
+          <div className="tb-menu-divider" />
           <div
             className="tb-menu-item"
             role="menuitem"
@@ -2404,6 +2453,319 @@ function AddServiceModal({ clientId, onClose }: {
         navigate(`#board/${id}`);
       }}
     />
+  );
+}
+
+// ── Edit Client Modal ─────────────────────────────────────────────────────
+
+/**
+ * Edit the client's header fields in one place. The hero already supports
+ * inline rename for the name; everything else (industry, manager, website,
+ * status, client-since) had no edit affordance at all before this modal.
+ *
+ * Mirrors the Add Client modal's field grid so the two screens read as
+ * one family — same two-column layout, same asterisk + red-border
+ * validation, same ⌘/Ctrl+Enter save shortcut. Contact-management lives
+ * on the Client Detail page's About tab via AddContactModal, so this
+ * modal deliberately stays focused on the client record itself.
+ *
+ * Save calls `flizowStore.updateClient` with the diff; initials re-derive
+ * from the (possibly new) name so the hero logo stays in sync the way the
+ * inline rename already does.
+ */
+function EditClientModal({ client, members, jobTitles, onClose }: {
+  client: Client;
+  members: Member[];
+  jobTitles: JobTitle[];
+  onClose: () => void;
+}) {
+  const [name, setName] = useState(client.name);
+  const [industryCategory, setIndustryCategory] = useState<IndustryCategory>(client.industryCategory);
+  const [amId, setAmId] = useState<string>(client.amId ?? '');
+  const [website, setWebsite] = useState(client.website ?? '');
+  const [status, setStatus] = useState<ClientStatus>(client.status);
+  // Date input wants a YYYY-MM-DD value. startedAt is stored ISO-8601 so
+  // slicing the first 10 chars is safe for both "2024-03-15" and
+  // "2024-03-15T00:00:00.000Z" shapes. The save handler reads the input
+  // back as YYYY-MM-DD; we don't reattach a time component because the
+  // hero only ever renders month + year.
+  const [startedAt, setStartedAt] = useState<string>(
+    client.startedAt ? client.startedAt.slice(0, 10) : '',
+  );
+
+  // Per-field error map mirrors AddClientModal. Three gates that can
+  // actually trip: name, website, amId. Industry + Status carry the
+  // asterisk for consistency but their dropdowns can't be empty.
+  const [errors, setErrors] = useState<Record<string, boolean>>({});
+
+  const nameRef = useRef<HTMLInputElement>(null);
+  const websiteRef = useRef<HTMLInputElement>(null);
+  const amRef = useRef<HTMLSelectElement>(null);
+
+  // AM picker filters to members categorised as 'account-manager' — same
+  // rule the Add Client modal uses. Keeps the dropdown short and routes
+  // urgency to people whose job is to own the relationship. If the
+  // client's current AM happens to no longer be categorised as one
+  // (rare: someone changed their job title later), they still appear in
+  // the list because the option mapping below adds a fallback row, so
+  // saving without explicitly reassigning doesn't silently drop them.
+  const ams = useMemo(
+    () => members.filter((m) => isAccountManager(m, jobTitles)),
+    [members, jobTitles],
+  );
+  // If the current AM isn't in the filtered list, prepend them so the
+  // dropdown reflects the actual state. The user can pick someone else
+  // (or the empty "Unassigned" option) to reassign.
+  const amOptions = useMemo(() => {
+    if (!client.amId) return ams;
+    if (ams.some(m => m.id === client.amId)) return ams;
+    const current = members.find(m => m.id === client.amId);
+    return current ? [current, ...ams] : ams;
+  }, [ams, members, client.amId]);
+
+  // Autofocus the name field and select all so a quick typo fix is one
+  // keystroke. Matches the AddContactModal edit-mode behaviour.
+  useModalAutofocus(nameRef, { select: true });
+
+  const clearError = (key: string) => {
+    if (errors[key]) {
+      setErrors(prev => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+    }
+  };
+
+  function handleSave() {
+    const trimmedName    = name.trim();
+    const trimmedWebsite = website.trim();
+
+    const newErrors: Record<string, boolean> = {};
+    if (!trimmedName)    newErrors.name = true;
+    if (!trimmedWebsite) newErrors.website = true;
+    if (!amId)           newErrors.amId = true;
+    // Date input enforces a valid YYYY-MM-DD shape natively — we just
+    // need to make sure the user didn't clear it. Empty startedAt
+    // breaks the "Client since {month}" line on the hero.
+    if (!startedAt)      newErrors.startedAt = true;
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      // Focus the first invalid field in DOM order so the user lands on
+      // what they need to fix.
+      const focusOrder: Array<[string, React.RefObject<HTMLInputElement | HTMLSelectElement | null>]> = [
+        ['name',    nameRef],
+        ['website', websiteRef],
+        ['amId',    amRef],
+      ];
+      const firstErr = focusOrder.find(([k]) => newErrors[k]);
+      firstErr?.[1].current?.focus();
+      return;
+    }
+
+    // Build the patch. Initials re-derive from the new name so the hero
+    // logo stays in sync — mirrors the inline-rename behaviour above.
+    flizowStore.updateClient(client.id, {
+      name: trimmedName,
+      initials: deriveInitialsLocal(trimmedName),
+      industryCategory,
+      amId: amId || null,
+      website: trimmedWebsite,
+      status,
+      startedAt,
+    });
+    onClose();
+  }
+
+  // Esc closes; ⌘/Ctrl+Enter saves. Same hook AddClientModal uses.
+  useModalKeyboard({ onClose, onSave: handleSave });
+
+  function handleBackdropClick(e: React.MouseEvent<HTMLDivElement>) {
+    if (e.target === e.currentTarget) onClose();
+  }
+
+  return (
+    <div
+      className="wip-modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="edit-client-title"
+      onClick={handleBackdropClick}
+    >
+      <div className="wip-modal" role="document" style={{ maxWidth: 560 }}>
+        <header className="wip-modal-head">
+          <h2 className="wip-modal-title" id="edit-client-title">
+            <BuildingOffice2Icon width={18} height={18} aria-hidden="true" />
+            Edit client details
+          </h2>
+          <button type="button" className="wip-modal-close" onClick={onClose} aria-label="Close">
+            <XMarkIcon width={14} height={14} aria-hidden="true" />
+          </button>
+        </header>
+
+        <div className="wip-modal-body">
+          <label className="wip-field">
+            <span className="wip-field-label">
+              Client name
+              <span style={{ color: 'var(--status-fire)' }} aria-hidden="true"> *</span>
+            </span>
+            <input
+              ref={nameRef}
+              type="text"
+              className="wip-field-input"
+              value={name}
+              onChange={(e) => { setName(e.target.value); clearError('name'); }}
+              placeholder="e.g. Acme Industries"
+              style={errors.name ? { borderColor: 'var(--status-fire)' } : undefined}
+              aria-invalid={errors.name || undefined}
+              aria-required="true"
+              aria-describedby={errors.name ? 'edit-err-name' : undefined}
+            />
+            {errors.name && (
+              <span id="edit-err-name" style={{ fontSize: 'var(--fs-xs)', color: 'var(--status-fire)', marginTop: 4 }}>
+                Client name is required to save.
+              </span>
+            )}
+          </label>
+
+          {/* Industry + Website share a row — the two "what is this
+              account at a glance" descriptors. Same pairing as Add
+              Client so the two modals read as one family. */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <label className="wip-field">
+              <span className="wip-field-label">
+                Industry
+                <span style={{ color: 'var(--status-fire)' }} aria-hidden="true"> *</span>
+              </span>
+              <select
+                className="wip-field-input"
+                value={industryCategory}
+                onChange={(e) => setIndustryCategory(e.target.value as IndustryCategory)}
+                aria-required="true"
+              >
+                {INDUSTRY_CATEGORIES.map(c => (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
+              </select>
+            </label>
+            <label className="wip-field">
+              <span className="wip-field-label">
+                Website
+                <span style={{ color: 'var(--status-fire)' }} aria-hidden="true"> *</span>
+              </span>
+              <input
+                ref={websiteRef}
+                type="url"
+                inputMode="url"
+                autoComplete="url"
+                className="wip-field-input"
+                value={website}
+                onChange={(e) => { setWebsite(e.target.value); clearError('website'); }}
+                placeholder="https://acme.com"
+                style={errors.website ? { borderColor: 'var(--status-fire)' } : undefined}
+                aria-invalid={errors.website || undefined}
+                aria-required="true"
+                aria-describedby={errors.website ? 'edit-err-website' : undefined}
+              />
+              {errors.website && (
+                <span id="edit-err-website" style={{ fontSize: 'var(--fs-xs)', color: 'var(--status-fire)', marginTop: 4 }}>
+                  Website is required to save.
+                </span>
+              )}
+            </label>
+          </div>
+
+          {/* Account Manager + Status share a row — the two "how are we
+              engaging this account" descriptors. AM is required so
+              urgency routing always has a target; Status carries the
+              asterisk for consistency but its dropdown can't be empty. */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <label className="wip-field">
+              <span className="wip-field-label">
+                Account Manager
+                <span style={{ color: 'var(--status-fire)' }} aria-hidden="true"> *</span>
+              </span>
+              <select
+                ref={amRef}
+                className="wip-field-input"
+                value={amId}
+                onChange={(e) => { setAmId(e.target.value); clearError('amId'); }}
+                style={errors.amId ? { borderColor: 'var(--status-fire)' } : undefined}
+                aria-invalid={errors.amId || undefined}
+                aria-required="true"
+                aria-describedby={errors.amId ? 'edit-err-amId' : undefined}
+              >
+                <option value="">Choose an Account Manager…</option>
+                {amOptions.map(m => (
+                  <option key={m.id} value={m.id}>{m.name}</option>
+                ))}
+              </select>
+              {errors.amId && (
+                <span id="edit-err-amId" style={{ fontSize: 'var(--fs-xs)', color: 'var(--status-fire)', marginTop: 4 }}>
+                  Account Manager is required to save.
+                </span>
+              )}
+            </label>
+            <label className="wip-field">
+              <span className="wip-field-label">
+                Status
+                <span style={{ color: 'var(--status-fire)' }} aria-hidden="true"> *</span>
+              </span>
+              <select
+                className="wip-field-input"
+                value={status}
+                onChange={(e) => setStatus(e.target.value as ClientStatus)}
+                aria-required="true"
+              >
+                <option value="onboard">Onboarding (first 30 days)</option>
+                <option value="track">On track</option>
+                <option value="risk">At risk</option>
+                <option value="fire">On fire</option>
+                <option value="paused">Paused</option>
+              </select>
+            </label>
+          </div>
+
+          {/* Client since — the start date used by the hero "Client
+              since {month}" line and downstream relationship-tenure
+              math. New row of its own because Add Client doesn't
+              expose this field at all (it auto-stamps `todayISO` at
+              creation), so a back-dated edit is the only way to
+              correct the value once it's been set. */}
+          <label className="wip-field">
+            <span className="wip-field-label">
+              Client since
+              <span style={{ color: 'var(--status-fire)' }} aria-hidden="true"> *</span>
+            </span>
+            <input
+              type="date"
+              className="wip-field-input"
+              value={startedAt}
+              onChange={(e) => { setStartedAt(e.target.value); clearError('startedAt'); }}
+              style={errors.startedAt ? { borderColor: 'var(--status-fire)' } : undefined}
+              aria-invalid={errors.startedAt || undefined}
+              aria-required="true"
+              aria-describedby={errors.startedAt ? 'edit-err-startedAt' : undefined}
+            />
+            {errors.startedAt && (
+              <span id="edit-err-startedAt" style={{ fontSize: 'var(--fs-xs)', color: 'var(--status-fire)', marginTop: 4 }}>
+                Client-since date is required to save.
+              </span>
+            )}
+          </label>
+        </div>
+
+        <footer className="wip-modal-foot">
+          <button type="button" className="wip-btn wip-btn-ghost" onClick={onClose}>
+            Cancel
+          </button>
+          <button type="button" className="wip-btn wip-btn-primary" onClick={handleSave}>
+            Save changes
+          </button>
+        </footer>
+      </div>
+    </div>
   );
 }
 
