@@ -53,7 +53,12 @@ import {
 import { ACCESS_ROLE_LABEL } from '../utils/access';
 import { visibleHolidays, countryShortLabel, countryTint, holidayAppliesToCountry } from '../utils/holidays';
 import { creditBalanceFor, memberObservationFor } from '../utils/holidayCredits';
-import { computeLeaveBreakdown } from '../utils/timeOff';
+import { computeAnnualQuotaUsage, computeLeaveBreakdown } from '../utils/timeOff';
+import { useMemberProfile } from '../contexts/MemberProfileContext';
+import {
+  SHARED_LEAVE_DAYS_PER_YEAR,
+  SICK_LEAVE_DAYS_PER_YEAR,
+} from '../types/flizow';
 import type {
   CoverageRule,
   CoverageRuleConstraint,
@@ -130,7 +135,7 @@ function formatWeekdayShort(iso: string): string {
 
 // ── Top-level component ────────────────────────────────────────────
 
-type RailTab = 'approvals' | 'rules' | 'conflicts' | 'guidelines';
+type RailTab = 'approvals' | 'rules' | 'conflicts' | 'guidelines' | 'balances';
 
 export function OpsTimeOffTab({ focusId }: { focusId?: string } = {}) {
   const { data } = useFlizow();
@@ -351,6 +356,16 @@ export function OpsTimeOffTab({ focusId }: { focusId?: string } = {}) {
           )}
           {railTab === 'guidelines' && (
             <GuidelinesPanel doc={data.leaveGuidelines} />
+          )}
+          {railTab === 'balances' && (
+            <BalancesPanel
+              members={data.members}
+              requests={data.timeOffRequests}
+              holidays={data.holidays}
+              observations={data.holidayObservations}
+              creditPolicy={data.creditExpiryPolicy}
+              todayISO={data.today}
+            />
           )}
         </aside>
       </div>
@@ -814,6 +829,254 @@ function formatGuidelinesDate(iso: string): string {
   }
 }
 
+// ── Balances panel (Phase 9) ───────────────────────────────────────
+//
+// Team-wide paid-leave overview for Operations. Renders one row per
+// member with their current quota usage (Sick + Shared bars), holiday
+// transfer credit balance, and the anniversary year boundaries.
+// Search filters by name; sort flips between "most depleted" views
+// and alphabetical. Click a row to pop the MemberProfilePanel for
+// the full request history.
+
+type BalancesSort = 'sick-asc' | 'shared-asc' | 'name';
+
+function BalancesPanel({
+  members,
+  requests,
+  holidays,
+  observations,
+  creditPolicy,
+  todayISO,
+}: {
+  members: ReadonlyArray<Member>;
+  requests: ReadonlyArray<TimeOffRequest>;
+  holidays: ReadonlyArray<Holiday>;
+  observations: ReadonlyArray<HolidayObservation>;
+  creditPolicy: import('../types/flizow').CreditExpiryPolicy;
+  todayISO: string;
+}) {
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<BalancesSort>('sick-asc');
+  const profile = useMemberProfile();
+
+  // One pass over members → fully-derived row data. Heavy in
+  // member-count but each piece is O(requests) and the workspace
+  // realistically lives in the low hundreds. Recomputes whenever
+  // the requests array changes (any approval landing live).
+  const rows = useMemo(() => {
+    return members.map((m) => {
+      const usage = computeAnnualQuotaUsage(m, requests, todayISO);
+      const credits = creditBalanceFor(
+        m,
+        holidays,
+        observations,
+        requests,
+        creditPolicy,
+        todayISO,
+      );
+      return { member: m, usage, credits };
+    });
+  }, [members, requests, todayISO, holidays, observations, creditPolicy]);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const matching = q.length === 0
+      ? rows
+      : rows.filter((r) => r.member.name.toLowerCase().includes(q));
+    // Probationary rows sink to the bottom regardless of sort —
+    // they're not actionable from a quota perspective, so the
+    // depletion sorts shouldn't bury at-risk regulars below them.
+    const sorter = (a: typeof rows[number], b: typeof rows[number]) => {
+      if (a.usage.isProbationary !== b.usage.isProbationary) {
+        return a.usage.isProbationary ? 1 : -1;
+      }
+      if (sort === 'name') {
+        return a.member.name.localeCompare(b.member.name);
+      }
+      if (sort === 'sick-asc') {
+        return a.usage.sickRemaining - b.usage.sickRemaining;
+      }
+      // shared-asc
+      return a.usage.sharedRemaining - b.usage.sharedRemaining;
+    };
+    return matching.slice().sort(sorter);
+  }, [rows, search, sort]);
+
+  if (members.length === 0) {
+    return (
+      <div className="schedules-rail-empty">
+        No team members yet.
+      </div>
+    );
+  }
+
+  return (
+    <div className="rail-section balances-panel">
+      <div className="rail-section-head">
+        <h3 className="rail-section-title">Team paid-leave balances</h3>
+        <span className="rail-section-sub">
+          Annual entitlement is {SICK_LEAVE_DAYS_PER_YEAR} sick days +{' '}
+          {SHARED_LEAVE_DAYS_PER_YEAR} shared (casual + emergency)
+          days per regular employee, resetting on each member's
+          regularization anniversary.
+        </span>
+      </div>
+      <div className="balances-controls">
+        <input
+          type="search"
+          className="balances-search"
+          placeholder="Search members…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          aria-label="Search members"
+        />
+        <select
+          className="balances-sort"
+          value={sort}
+          onChange={(e) => setSort(e.target.value as BalancesSort)}
+          aria-label="Sort by"
+        >
+          <option value="sick-asc">Most depleted: Sick</option>
+          <option value="shared-asc">Most depleted: Shared</option>
+          <option value="name">Name (A–Z)</option>
+        </select>
+      </div>
+      {filtered.length === 0 ? (
+        <div className="schedules-rail-empty">
+          No members match "{search}".
+        </div>
+      ) : (
+        <ul className="balances-list">
+          {filtered.map(({ member, usage, credits }) => (
+            <BalanceRow
+              key={member.id}
+              member={member}
+              usage={usage}
+              credits={credits}
+              onOpen={() => profile.open(member.id)}
+            />
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function BalanceRow({
+  member,
+  usage,
+  credits,
+  onOpen,
+}: {
+  member: Member;
+  usage: ReturnType<typeof computeAnnualQuotaUsage>;
+  credits: number;
+  onOpen: () => void;
+}) {
+  const avatarStyle = member.bg
+    ? { background: member.bg, color: member.color }
+    : { background: member.color, color: '#fff' };
+  return (
+    <li className="balances-row">
+      <button
+        type="button"
+        className="balances-row-btn"
+        onClick={onOpen}
+        aria-label={`Open ${member.name}'s profile`}
+      >
+        <span className="balances-row-avatar" style={avatarStyle}>
+          {member.initials}
+        </span>
+        <div className="balances-row-identity">
+          <span className="balances-row-name">{member.name}</span>
+          {usage.isProbationary ? (
+            <span className="balances-row-status balances-row-status--probationary">
+              Probationary
+            </span>
+          ) : (
+            <span className="balances-row-window">
+              {formatBalancesWindow(usage.yearStart, usage.yearEnd)}
+            </span>
+          )}
+        </div>
+        {usage.isProbationary ? (
+          <span className="balances-row-empty">No paid-leave entitlement yet</span>
+        ) : (
+          <div className="balances-row-bars">
+            <BalanceBar
+              label="Sick"
+              used={usage.sickUsed}
+              total={SICK_LEAVE_DAYS_PER_YEAR}
+              remaining={usage.sickRemaining}
+              tone="sick"
+            />
+            <BalanceBar
+              label="Shared"
+              used={usage.sharedUsed}
+              total={SHARED_LEAVE_DAYS_PER_YEAR}
+              remaining={usage.sharedRemaining}
+              tone="shared"
+            />
+            <div className="balances-row-credits">
+              <span className="balances-row-credits-label">Credits</span>
+              <span className="balances-row-credits-value">{credits}</span>
+            </div>
+          </div>
+        )}
+      </button>
+    </li>
+  );
+}
+
+function BalanceBar({
+  label,
+  used,
+  total,
+  remaining,
+  tone,
+}: {
+  label: string;
+  used: number;
+  total: number;
+  remaining: number;
+  tone: 'sick' | 'shared';
+}) {
+  const pct = total > 0 ? Math.min(100, (used / total) * 100) : 0;
+  return (
+    <div className={`balances-bar balances-bar--${tone}`}>
+      <div className="balances-bar-head">
+        <span className="balances-bar-label">{label}</span>
+        <span className="balances-bar-meta">
+          <strong>{remaining}</strong> / {total}
+        </span>
+      </div>
+      <div className="balances-bar-track">
+        <div
+          className="balances-bar-fill"
+          style={{ width: `${pct}%` }}
+          aria-hidden="true"
+        />
+      </div>
+    </div>
+  );
+}
+
+function formatBalancesWindow(startISO: string, endISO: string): string {
+  if (!startISO || !endISO) return '';
+  // "Aug 15, 2025 → Aug 15, 2026" — enough context to spot which
+  // year resets and when, without bloating the row.
+  const fmt = (iso: string) => {
+    try {
+      return new Date(iso).toLocaleDateString(undefined, {
+        month: 'short', day: 'numeric', year: 'numeric',
+      });
+    } catch {
+      return iso;
+    }
+  };
+  return `${fmt(startISO)} → ${fmt(endISO)}`;
+}
+
 function RailTabs({
   active,
   onChange,
@@ -829,6 +1092,7 @@ function RailTabs({
 }) {
   const items: Array<{ id: RailTab; label: string; count: number }> = [
     { id: 'approvals',  label: 'Approvals',  count: pendingCount },
+    { id: 'balances',   label: 'Balances',   count: 0 },
     { id: 'rules',      label: 'Rules',      count: ruleCount },
     { id: 'conflicts',  label: 'Conflicts',  count: conflictCount },
     // Guidelines — count is always 0 (it's a single doc, not a

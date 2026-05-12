@@ -1860,6 +1860,193 @@
     text-decoration: underline;
   }
 
+  /* Balances sub-tab — team-wide paid-leave overview for Operations.
+     One row per workspace member with their quota strips, credit
+     balance, and year window. Each row is a button — clicking opens
+     the MemberProfilePanel for the full request history. */
+  .balances-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-md);
+  }
+  .balances-controls {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--sp-sm);
+  }
+  .balances-search,
+  .balances-sort {
+    padding: 6px 10px;
+    font-size: var(--fs-sm);
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+  }
+  .balances-search:focus,
+  .balances-sort:focus {
+    outline: none;
+    border-color: var(--highlight);
+    box-shadow: 0 0 0 3px var(--highlight-soft);
+  }
+  .balances-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-xs);
+  }
+  .balances-row {
+    /* The clickable button fills the row, so the li is just a
+       structural wrapper. */
+    margin: 0;
+    padding: 0;
+  }
+  .balances-row-btn {
+    width: 100%;
+    display: grid;
+    grid-template-columns: auto 1fr 2fr;
+    grid-template-areas: 'avatar identity bars';
+    align-items: center;
+    gap: var(--sp-md);
+    padding: var(--sp-sm) var(--sp-md);
+    background: var(--bg-elev);
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: left;
+    color: inherit;
+    transition: background 0.12s, border-color 0.12s, transform 0.06s;
+  }
+  .balances-row-btn:hover {
+    background: var(--hover-tint);
+    border-color: var(--highlight);
+  }
+  .balances-row-btn:active {
+    transform: scale(0.998);
+  }
+  .balances-row-btn:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
+  }
+  .balances-row-avatar {
+    grid-area: avatar;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .balances-row-identity {
+    grid-area: identity;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .balances-row-name {
+    font-size: var(--fs-md);
+    font-weight: 500;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .balances-row-window {
+    font-size: var(--fs-xs);
+    color: var(--text-faint);
+    font-variant-numeric: tabular-nums;
+  }
+  .balances-row-status {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    width: fit-content;
+  }
+  .balances-row-status--probationary {
+    background: var(--bg-soft);
+    color: var(--text-muted);
+  }
+  .balances-row-empty {
+    grid-area: bars;
+    font-size: var(--fs-sm);
+    color: var(--text-faint);
+    text-align: right;
+  }
+  .balances-row-bars {
+    grid-area: bars;
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: var(--sp-md);
+    align-items: center;
+  }
+  .balances-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+  .balances-bar-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    font-size: var(--fs-xs);
+  }
+  .balances-bar-label {
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+  }
+  .balances-bar-meta {
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .balances-bar-meta strong { color: var(--text); }
+  .balances-bar-track {
+    height: 5px;
+    background: var(--bg);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .balances-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.2s ease-out;
+  }
+  .balances-bar--sick .balances-bar-fill { background: #f43f5e; }
+  .balances-bar--shared .balances-bar-fill { background: var(--highlight); }
+  .balances-row-credits {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    min-width: 48px;
+  }
+  .balances-row-credits-label {
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  .balances-row-credits-value {
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+
   /* Ops Guidelines sub-tab — TipTap rich-text editor for the
      workspace-wide leave guidelines. Owner/Admin write here; the
      read surface in the Request modal renders the resulting HTML
