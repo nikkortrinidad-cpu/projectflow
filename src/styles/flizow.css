@@ -9144,14 +9144,26 @@
   }
 
   /* Two-pane layout — calendar left, side rail right. Stacks on
-     narrow viewports. */
+     narrow viewports.
+
+     Rail width sized for FIVE sub-tabs (Approvals + Balances + Rules
+     + Conflicts + Guidelines) plus the per-tab pending-count chip,
+     plus enough headroom that "Guidelines" doesn't crowd the right
+     edge. 420px also gives the approval card + Balances row grid
+     enough horizontal room to render their inner three-column
+     layouts without forcing line breaks on labels.
+
+     Stack breakpoint bumped from 1100 → 1200 so common 13"
+     laptop widths (1280–1366px) don't end up with a squeezed
+     calendar + narrow rail side-by-side; the stacked layout reads
+     cleaner at those widths. */
   .schedules-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 320px;
+    grid-template-columns: minmax(0, 1fr) 420px;
     gap: var(--sp-md);
     align-items: start;
   }
-  @media (max-width: 1100px) {
+  @media (max-width: 1200px) {
     .schedules-grid {
       grid-template-columns: 1fr;
     }
@@ -9291,8 +9303,9 @@
     flex-shrink: 0;
   }
   .schedules-rail-tab {
-    flex: 1;
-    padding: 8px;
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 8px 6px;
     border: 0;
     background: transparent;
     color: var(--text-muted);
@@ -9304,6 +9317,16 @@
     align-items: center;
     justify-content: center;
     gap: 6px;
+    /* Five tabs share the strip — label wrapping inside a tab
+       breaks the row alignment, and a clipped Guidelines tab
+       (the original report) means we lose readability rather
+       than gracefully degrading. White-space:nowrap forces the
+       overflow to surface as ellipses on the rare narrow render,
+       while the wider rail container (420px) means it shouldn't
+       trip in practice. */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .schedules-rail-tab:hover { color: var(--text); }
   .schedules-rail-tab.on {
