@@ -1509,6 +1509,21 @@
   .timeoff-request-cta {
     margin-bottom: var(--sp-md);
   }
+  /* Inline-flex so the PlusIcon and the label share a baseline and
+     don't stack. Slightly heavier padding than the default
+     .acct-btn-solid so the CTA reads as the most prominent thing in
+     the panel — the section header above is the only competition,
+     and we want the button to win that contest. */
+  .timeoff-request-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-xs);
+    padding: 10px 18px;
+    font-weight: 600;
+  }
+  .timeoff-request-btn svg {
+    flex-shrink: 0;
+  }
 
   /* Full-width empty state — replaces every list when the user has
      never submitted a request. */

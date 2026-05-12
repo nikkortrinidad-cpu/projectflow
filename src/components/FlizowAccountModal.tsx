@@ -13,6 +13,7 @@ import {
   LinkIcon,
   ListBulletIcon,
   MagnifyingGlassIcon,
+  PlusIcon,
   RectangleStackIcon,
   TrashIcon,
   UserIcon,
@@ -2041,14 +2042,23 @@ function TimeOffSection({ focusId }: { focusId?: string } = {}) {
       />
 
       {/* Primary CTA — always present so the path to "request time
-          off" is one click regardless of which sections render below. */}
+          off" is one click regardless of which sections render below.
+          Uses .acct-btn-solid (the defined brand-blue pill the rest of
+          the modal uses for primary actions) — the previous markup
+          referenced .acct-btn / .acct-btn--primary which aren't real
+          classes, so the button rendered as unstyled inline text and
+          looked like a heading instead of a CTA. PlusIcon prefix
+          mirrors the "+ Add ..." pattern used everywhere else for
+          "create new" actions, making this scannable as a button at
+          a glance. */}
       <div className="timeoff-request-cta">
         <button
           type="button"
-          className="acct-btn acct-btn--primary"
+          className="acct-btn-solid timeoff-request-btn"
           onClick={handleRequest}
         >
-          Request time off
+          <PlusIcon width={16} height={16} aria-hidden="true" />
+          <span>Request time off</span>
         </button>
       </div>
 
