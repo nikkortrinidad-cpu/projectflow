@@ -11087,7 +11087,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: background var(--dur-fast), color var(--dur-fast), border-color var(--dur-fast);
+    transition: background var(--dur-fast), color var(--dur-fast), border-color var(--dur-fast), opacity var(--dur-fast);
   }
   .week-col-cap-edit:hover {
     background: var(--bg-soft);
@@ -11097,6 +11097,23 @@
   .week-col-cap-edit:focus-visible {
     outline: 2px solid var(--hover-blue);
     outline-offset: 1px;
+  }
+  /* Auto-hide the per-day cap edit affordance until the user interacts
+     with the day. Reveals on hover, keyboard focus (focus-within so the
+     button shows the moment Tab lands on it), or while the popover is
+     open. Scoped to mouse devices via @media (hover: hover) — touch
+     users have no hover state, so the button stays visible there. */
+  @media (hover: hover) {
+    .week-col-cap-edit {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .week-col:hover .week-col-cap-edit,
+    .week-col:focus-within .week-col-cap-edit,
+    .week-col:has(.day-cap-popover) .week-col-cap-edit {
+      opacity: 1;
+      pointer-events: auto;
+    }
   }
   /* Override marker — a dotted underline on the badge to signal "this
      day's cap is custom, not your standing one." Quieter than a colour

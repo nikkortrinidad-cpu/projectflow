@@ -3,6 +3,7 @@ import {
   BellAlertIcon,
   CalendarDaysIcon,
   CheckIcon,
+  EllipsisVerticalIcon,
   ExclamationTriangleIcon,
   FireIcon,
   HeartIcon,
@@ -590,7 +591,7 @@ export function OverviewPage() {
                         title="Set cap for this day"
                         onClick={() => setCapPopoverDate(d.iso)}
                       >
-                        ⋯
+                        <EllipsisVerticalIcon width={14} height={14} aria-hidden="true" />
                       </button>
                       {capPopoverDate === d.iso && currentMemberId && (
                         <DayCapPopover
