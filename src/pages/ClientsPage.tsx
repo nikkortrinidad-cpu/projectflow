@@ -262,13 +262,37 @@ export function ClientsPage() {
               <div></div>
             </div>
 
-            {filtered.map((client) => (
-              <ClientRow
-                key={client.id}
-                client={client}
-                selected={client.id === selectedId}
-              />
-            ))}
+            {(() => {
+              // Inject a sticky letter header before each new alphabetic
+              // group. Filtered is already alphabetically sorted upstream
+              // (filterClients), so we just track the last letter seen
+              // and emit a divider when it changes.
+              const items: React.ReactNode[] = [];
+              let lastLetter = '';
+              for (const client of filtered) {
+                const letter = firstLetterBucket(client.name);
+                if (letter !== lastLetter) {
+                  items.push(
+                    <div
+                      key={`letter-${letter}`}
+                      className="clients-list-letter"
+                      aria-hidden="true"
+                    >
+                      {letter}
+                    </div>
+                  );
+                  lastLetter = letter;
+                }
+                items.push(
+                  <ClientRow
+                    key={client.id}
+                    client={client}
+                    selected={client.id === selectedId}
+                  />
+                );
+              }
+              return items;
+            })()}
           </div>
         )}
       </main>
@@ -485,7 +509,27 @@ function filterClients(
     if (def.status && c.status === def.status) filtered.push(c);
   }
 
+  // Default sort is alphabetical, case-insensitive, locale-aware. The
+  // store appends in creation order; rendering that way at 100+ clients
+  // is unscannable. Alphabetical gives users muscle memory for where
+  // each client lives in the list. Status urgency is carried by the
+  // dot + the filter chips, not by row order.
+  filtered.sort((a, b) =>
+    a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+  );
+
   return { filtered, counts };
+}
+
+// Sticky letter headers group the list into A / B / C buckets. Strip
+// diacritics so "Émile" lands in E, normalise case, and bucket anything
+// that doesn't start with a letter (numbers, symbols) under "#".
+function firstLetterBucket(name: string): string {
+  // NFD splits "É" into "E" + combining acute (U+0301). Stripping the
+  // U+0300-U+036F combining-mark block leaves the bare letter.
+  const stripped = name.trim().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const first = stripped[0]?.toUpperCase() ?? '';
+  return /[A-Z]/.test(first) ? first : '#';
 }
 
 // ── Add client modal ──────────────────────────────────────────────────────

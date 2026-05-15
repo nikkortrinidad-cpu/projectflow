@@ -12606,6 +12606,28 @@
     color: var(--text-soft);
     text-transform: uppercase; letter-spacing: 0.06em;
   }
+  /* Sticky letter header. Sits between groups of rows in the
+     alphabetically-sorted list. In split mode the list is the
+     scrolling container so sticky to top: 0 lands naturally; in
+     full-list mode the page scrolls and sticky attaches to the
+     viewport, which means the letter sits at the top of the screen
+     once the user has scrolled past the column header. Visual
+     register matches the column header (uppercase, tracked, muted)
+     so it reads as a continuation of the same row vocabulary. */
+  .clients-list-letter {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--bg-soft);
+    padding: 6px 20px;
+    font-size: var(--fs-xs); font-weight: 700;
+    color: var(--text-soft);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    border-bottom: 1px solid var(--hairline-soft);
+  }
+  .clients-split-wrapper .clients-list-letter {
+    padding: 6px 18px;
+  }
   .client-row {
     display: grid;
     grid-template-columns:
