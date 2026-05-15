@@ -702,7 +702,7 @@ function Hero({ client, am, onArchive, onUnarchive, onRequestDelete, onRequestEd
               }
             }}
           >
-            {client.archived ? 'Unarchive client' : 'Archive client'}
+            {client.archived ? 'Restore client' : 'Archive client'}
           </div>
           <div className="tb-menu-divider" />
           <div
