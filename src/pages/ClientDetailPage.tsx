@@ -666,26 +666,37 @@ function Hero({ client, am, onArchive, onUnarchive, onRequestDelete, onRequestEd
               that doesn't have an inline editor (industry, manager,
               website, status, client-since). Sits at the top of the menu
               because it's the everyday action; Archive and Delete are
-              both lifecycle events that happen far less often. */}
-          <div
-            className="tb-menu-item"
-            role="menuitem"
-            tabIndex={0}
-            onClick={() => {
-              setMenuOpen(false);
-              onRequestEdit();
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                setMenuOpen(false);
-                onRequestEdit();
-              }
-            }}
-          >
-            Edit client details…
-          </div>
-          <div className="tb-menu-divider" />
+              both lifecycle events that happen far less often.
+
+              Hidden when the client is archived: editing a dormant
+              record doesn't make sense as a primary action. If the user
+              wants to fix something on an archived client they restore
+              it first, then edit. Keeps the archived-state menu to two
+              clean options (Restore / Delete) which matches what a
+              "this client is dormant" surface should offer. */}
+          {!client.archived && (
+            <>
+              <div
+                className="tb-menu-item"
+                role="menuitem"
+                tabIndex={0}
+                onClick={() => {
+                  setMenuOpen(false);
+                  onRequestEdit();
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setMenuOpen(false);
+                    onRequestEdit();
+                  }
+                }}
+              >
+                Edit client details…
+              </div>
+              <div className="tb-menu-divider" />
+            </>
+          )}
           <div
             className="tb-menu-item"
             role="menuitem"
